@@ -52,7 +52,8 @@ class Geometries(object):
         if len(geometries) == 0:
             raise ValueError("empty geometries!")
         self.geometries = geometries
-        
+        self.n_geometries = len(geometries)
+
         # check that there is one symbol list for every geometry
         if len(geometries) != len(all_symbols_list):
             raise ValueError("mismatch in list sizes between geometries and symbols!")
@@ -123,7 +124,7 @@ class Geometries(object):
     
     # write the specified geometry (0-indexed) to a .gjf
     # filename should include the .gjf extension
-    def write_gjf(self, geometry_index, filename, header, footer):
+    def write_gjf(self, geometry_index, filename, header="#\n\ntitle\n\n0 1", footer="\n\n"):
         # ensure geometry_number is valid
         if geometry_index < 0 or geometry_index >= len(self.geometries):
             raise ValueError("invalid geometry index for gjf dump")
@@ -187,6 +188,8 @@ class Geometries(object):
         
         # extract and center geometries for alignment
         atom_indices = self._get_atom_indices(atom_numbers, heavy_atoms)
+        if len(atom_indices) < 3:
+            raise ValueError("not enough atoms for alignment")
         partial_geometries = self.geometries[:,atom_indices,:]
         partial_geometry_centroids = [ geometry.mean(axis=0) for geometry in partial_geometries ]
         partial_geometries = [ geometry - centroid for geometry,centroid in 
@@ -451,3 +454,69 @@ def read_conformers_from_mol2(filename):
     result = Geometries(all_geometries, all_symbol_lists, all_bonds)
     print("%s read." % str(result))
     return result
+
+### GJF file format reader
+# reads a bunch of gjf files into a Geometries object
+def read_conformers_from_gjfs(input_mask):
+    input_filenames = list(glob(input_mask))
+    input_filenames.sort()
+
+    # initialize some lists
+    all_geometries = []
+    all_symbol_lists = []
+    all_bonds = None
+    this_geometry = []
+    this_symbol_list = []
+
+    for filename in input_filenames:
+        this_geometry = []
+        this_symbol_list = []
+        with open(filename, 'r') as filehandle:
+            lines = filehandle.read().splitlines()
+        i = 0
+        blanks = 0
+        previous_line_was_blank = False
+        found_geometry = False
+        while i < len(lines):
+            # read the current line
+            line = lines[i].strip()
+
+            # check for blank sections
+            if len(line)==0 and not previous_line_was_blank:
+                blanks += 1
+                previous_line_was_blank = True
+            else:
+                previous_line_was_blank = False
+
+            # skip to geometry section
+            if blanks == 2 and not found_geometry:
+                # skip charge and multiplicity card
+                i += 2
+                line = lines[i].strip()
+                found_geometry = True
+            if blanks == 3:
+                break
+
+            # parse geometry
+            if blanks == 2:
+                fields = re.split(' +', line)
+                try:
+                    x,y,z = float(fields[1]), float(fields[2]), float(fields[3])
+                    this_geometry.append([x,y,z])
+                    symbol = fields[0]
+                    this_symbol_list.append(symbol)
+                except:
+                    print("Error parsing file:")
+                    print("Line = '%s'" % line.strip())
+                    print(fields)
+                    raise ValueError()
+
+            # go to next line
+            i += 1
+
+        all_geometries.append(np.array(this_geometry))
+        all_symbol_lists.append(this_symbol_list)
+    all_geometries = np.array(all_geometries)
+    return Geometries(all_geometries,all_symbol_lists,all_bonds)
+
+
