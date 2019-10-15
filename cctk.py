@@ -1,4 +1,5 @@
 import numpy as np
+from glob import glob
 import re
 
 ### Helper Functions ###
@@ -47,11 +48,12 @@ class Geometries(object):
     # is_conformers: True if the geometries belong to conformers
     # bonds: list of lists of 3-tuples (1-indexed atom numbers, bond order)
     #        outer list is geometries
-    def __init__(self, geometries, all_symbols_list, bonds):
+    # energies: parallel list of energies or None if no energies
+    def __init__(self, geometries, all_symbols_list, bonds, energies=None):
         # check that there is at least one geometry
         if len(geometries) == 0:
             raise ValueError("empty geometries!")
-        self.geometries = geometries
+        self.geometries = np.array(geometries)
         self.n_geometries = len(geometries)
 
         # check that there is one symbol list for every geometry
@@ -82,6 +84,21 @@ class Geometries(object):
                 self._is_conformers = False
                 break
         
+        # store energies
+        if energies is None:
+            self.energies = None
+        else:
+            if not isinstance(energies,list):
+                raise ValueError("energies must be a list")
+            if len(energies) != len(geometries):
+                raise ValueError("mismatch in number of energies (%d) vs. geometries (%d)" % (len(energies), len(geometries)))
+            for e in energies:
+                if e is None:
+                    raise ValueError("cannot have None as an energy type")
+                elif not isinstance(e, float):
+                    raise ValueError("got unexpected energy type")
+            self.energies = np.array(energies)
+
     def __str__(self):
         n_geometries = len(self.geometries)
         min_atoms = len(self.geometries[0])
@@ -518,5 +535,117 @@ def read_conformers_from_gjfs(input_mask):
         all_symbol_lists.append(this_symbol_list)
     all_geometries = np.array(all_geometries)
     return Geometries(all_geometries,all_symbol_lists,all_bonds)
+
+### Gaussian output file reader
+def read_geometries_from_gaussian_out(input_mask, read_intermediate_geometries = False, successful_jobs_only = True):
+    input_filenames = list(glob(input_mask))
+    input_filenames.sort()
+
+    # initialize some lists
+    all_geometries = []
+    all_symbol_lists = []
+    all_bonds = None
+    all_energies = []
+    
+    for filename in input_filenames:
+        # initialize some arrays
+        file_geometries = []
+        file_symbol_lists = []
+        file_energies = []
+
+        this_geometry = []
+        this_symbol_list = []
+        this_energy = None
+
+        with open(filename, 'r') as filehandle:
+            lines = filehandle.read().splitlines()
+        if successful_jobs_only and not lines[-1].strip().startswith("Normal termination"):
+            print("Skipping %s as the job did not terminate normally." % filename)
+            continue
+
+        i = 0
+        in_geometry_block = False
+        while i < len(lines):
+            # read the current line
+            line = lines[i].strip()
+
+            # detect geometry block
+            if line == "Standard orientation:":
+                i += 5
+                in_geometry_block = True
+                continue
+            elif in_geometry_block and line.startswith("------"):
+                i += 1
+                in_geometry_block = False
+                continue
+
+            # read geometry if applicable
+            if in_geometry_block:
+                fields = re.split(' +', line)
+                if len(fields) != 6:
+                    print("error parsing >>> " + line)
+                    raise ValueError("unexpected number of fields on geometry line")
+                if len(this_geometry) > 0 and fields[0] == "1":
+                    # reset fields
+                    this_geometry = []
+                    this_symbol_list = []
+                    this_energy = None
+                try:
+                    x,y,z = float(fields[3]), float(fields[4]), float(fields[5])
+                    this_geometry.append([x,y,z])
+                    symbol = fields[1]
+                    this_symbol_list.append(symbol)
+                except:
+                    print("error parsing >>> %s" % line)
+                    print(fields)
+                    raise ValueError("error parsing geometry")
+
+            # read energy if applicable
+            if not in_geometry_block and line.startswith("SCF Done"):
+                fields = re.split(' +', line)
+                if len(fields) != 9:
+                    print("error parsing >>> " + line)
+                    raise ValueError("unexpected number of fields on energy line")
+                this_energy = float(fields[4])
+            
+                if len(this_geometry) == 0:
+                    raise ValueError("energy without geometry")
+                
+                # store results
+                #print(filename, len(this_geometry), len(this_symbol_list), this_energy, this_geometry[0])
+                file_geometries.append(this_geometry)
+                file_symbol_lists.append(this_symbol_list)
+                file_energies.append(this_energy)
+
+                # reinitialize arrays
+                this_geometry = []
+                this_symbol_list = []
+                this_energy = None
+ 
+            # go to next line
+            i += 1
+
+        # store results
+        if read_intermediate_geometries:
+            # store all geometries and energies from this file
+            all_geometries.extend(file_geometries)
+            all_symbol_lists.extend(file_symbol_lists)
+            all_energies.extend(file_energies)
+        elif len(file_geometries) > 0:
+            # only store the last geometry and energy
+            # (assuming there is something to store)
+            all_geometries.append(file_geometries[-1])
+            all_symbol_lists.append(file_symbol_lists[-1])
+            all_energies.append(file_energies[-1])
+
+        # reinitialize lsits
+        file_geometries = []
+        file_symbol_lists = []
+        file_energies = []
+
+    # return result
+    return Geometries(all_geometries,all_symbol_lists,all_bonds,all_energies)
+
+   
 
 
