@@ -49,7 +49,7 @@ class Geometries(object):
     # bonds: list of lists of 3-tuples (1-indexed atom numbers, bond order)
     #        outer list is geometries
     # energies: parallel list of energies or None if no energies
-    def __init__(self, geometries, all_symbols_list, bonds, energies=None):
+    def __init__(self, geometries, all_symbols_list, bonds=None, energies=None):
         # check that there is at least one geometry
         if len(geometries) == 0:
             raise ValueError("empty geometries!")
@@ -70,7 +70,7 @@ class Geometries(object):
                         raise ValueError("invalid bond: %d-%d" % (i,j))
             self.bonds = bonds
         else:
-            self.bonds = []
+            self.bonds = None
         
         # determine if this is a group of conformers
         self._is_conformers = True
@@ -88,7 +88,7 @@ class Geometries(object):
         if energies is None:
             self.energies = None
         else:
-            if not isinstance(energies,list):
+            if not isinstance(energies,list) and not isinstance(energies,np.ndarray):
                 raise ValueError("energies must be a list")
             if len(energies) != len(geometries):
                 raise ValueError("mismatch in number of energies (%d) vs. geometries (%d)" % (len(energies), len(geometries)))
@@ -225,7 +225,13 @@ class Geometries(object):
         
         # return result
         aligned_geometries = np.array(aligned_geometries)
-        return Geometries(aligned_geometries, self.all_symbols_list.copy(), self.bonds.copy())
+        new_bonds = None
+        if self.bonds is not None:
+            new_bonds = self.bonds.copy()
+        new_energies = None
+        if self.energies is not None:
+            new_energies = self.energies.copy()
+        return Geometries(aligned_geometries, self.all_symbols_list.copy(), new_bonds, new_energies)
 
     # compute RMSD between two geometries (0-indexed)
     # geometries are taken as is
@@ -246,8 +252,13 @@ class Geometries(object):
     def extract_geometries(self, geometry_indices):
         new_geometries = self.geometries[geometry_indices].copy()
         new_symbols = [ self.all_symbols_list[i] for i in geometry_indices ]
-        new_bonds = [ self.bonds[i] for i in geometry_indices ]
-        return Geometries(new_geometries,new_symbols,new_bonds)
+        new_bonds = None
+        if self.bonds is not None:
+            new_bonds = [ self.bonds[i] for i in geometry_indices ]
+        new_energies = None
+        if self.energies is not None:
+            new_energies = [ self.energies[i] for i in energies ]
+        return Geometries(new_geometries,new_symbols,new_bonds,new_energies)
     
     # get a 0-indexed list of atom indices corresponding to the specified atoms
     # atom_numbers: an explicit of 1-indexed atoms, or None for all atoms
@@ -372,7 +383,13 @@ class Geometries(object):
         # the retained partial geometries and return the result
         new_complete_geometries = self.geometries[new_partial_geometry_indices,:,:]
         new_symbols_list = [ self.all_symbols_list[0].copy() for i in range(len(new_complete_geometries)) ]
-        return Geometries(new_complete_geometries, new_symbols_list.copy(), self.bonds.copy())
+        new_bonds = None
+        if self.bonds is not None:
+            new_bonds = [ self.bonds[0].copy() for i in range(len(new_complete_geometries)) ]
+        new_energies = None
+        if self.energies is not None:
+            new_energies = [ self.energies[i] for i in new_partial_geometry_indices ]
+        return Geometries(new_complete_geometries, new_symbols_list, new_bonds, new_energies)
 
 ### Mol2 File Format Reader ###
 # reads a mol2 file and
