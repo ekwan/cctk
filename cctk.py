@@ -118,7 +118,10 @@ class Geometries(object):
     # filename should include the .mol2 extension
     def write_mol2(self, filename, molecule_name="untitled"):
         with open(filename, "w") as mol2:
-              for geometry, symbols, bonds in zip(self.geometries, self.all_symbols_list, self.bonds):
+            temp_bonds = []
+            if self.bonds is not None:
+                temp_bonds = self_bonds
+            for geometry, symbols, bonds in zip(self.geometries, self.all_symbols_list, temp_bonds):
                     n_atoms = len(geometry)
                     n_bonds = len(bonds)
                     print("@<TRIPOS>MOLECULE", file=mol2)
