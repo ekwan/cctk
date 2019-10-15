@@ -4,6 +4,16 @@ import re
 
 ### Helper Functions ###
 
+# element dictionary
+ELEMENT_DICTIONARY = {"1":"H", "6":"C", "7":"N", "8":"O", "9":"F"}
+def get_symbol(atomic_number):
+    if isinstance(atomic_number, int):
+        atomic_number = str(atomic_number)
+    if atomic_number in ELEMENT_DICTIONARY:
+        return ELEMENT_DICTIONARY[atomic_number]
+    else:
+        raise ValueError("unknown atomic number: ", atomic_number)
+
 # compute the L2 distance between v1 and v2
 def compute_distance_between(v1, v2):
      return np.linalg.norm(v1-v2)
@@ -118,29 +128,31 @@ class Geometries(object):
     # filename should include the .mol2 extension
     def write_mol2(self, filename, molecule_name="untitled"):
         with open(filename, "w") as mol2:
-            temp_bonds = []
-            if self.bonds is not None:
-                temp_bonds = self_bonds
-            for geometry, symbols, bonds in zip(self.geometries, self.all_symbols_list, temp_bonds):
-                    n_atoms = len(geometry)
-                    n_bonds = len(bonds)
-                    print("@<TRIPOS>MOLECULE", file=mol2)
-                    print(molecule_name, file=mol2)
-                    print("%d %d" % (n_atoms, n_bonds), file=mol2)
-                    print("SMALL\nNO CHARGES\n", file=mol2)
-                    print("@<TRIPOS>ATOM", file=mol2)
-                    i=0
-                    for symbol,xyz in zip(symbols,geometry):
-                        i += 1
-                        x,y,z = xyz
-                        print("%d %s%d %12.8f %12.8f %12.8f %s" %
-                              (i, symbol, i, x, y, z, symbol), file=mol2)
-                    print("@<TRIPOS>BOND",file=mol2)
-                    i=0
-                    for atom1,atom2,bond_order in bonds:
-                        i += 1
-                        print("%d %d %d %d" % (i, atom1, atom2, bond_order), file=mol2)
-                    print("", file=mol2)
+            for i in range(self.n_geometries):
+                geometry = self.geometries[i]
+                symbols = self.all_symbols_list[i]
+                bonds = []
+                if self.bonds is not None:
+                    bonds = self.bonds[i]
+                n_atoms = len(geometry)
+                n_bonds = len(bonds)
+                print("@<TRIPOS>MOLECULE", file=mol2)
+                print(molecule_name, file=mol2)
+                print("%d %d" % (n_atoms, n_bonds), file=mol2)
+                print("SMALL\nNO CHARGES\n", file=mol2)
+                print("@<TRIPOS>ATOM", file=mol2)
+                i=0
+                for symbol,xyz in zip(symbols,geometry):
+                    i += 1
+                    x,y,z = xyz
+                    print("%d %s%d %12.8f %12.8f %12.8f %s" %
+                          (i, symbol, i, x, y, z, symbol), file=mol2)
+                print("@<TRIPOS>BOND",file=mol2)
+                i=0
+                for atom1,atom2,bond_order in bonds:
+                    i += 1
+                    print("%d %d %d %d" % (i, atom1, atom2, bond_order), file=mol2)
+                print("", file=mol2)
     
     # write the specified geometry (0-indexed) to a .gjf
     # filename should include the .gjf extension
@@ -613,7 +625,7 @@ def read_geometries_from_gaussian_out(input_mask, read_intermediate_geometries =
                 try:
                     x,y,z = float(fields[3]), float(fields[4]), float(fields[5])
                     this_geometry.append([x,y,z])
-                    symbol = fields[1]
+                    symbol = get_symbol(fields[1])
                     this_symbol_list.append(symbol)
                 except:
                     print("error parsing >>> %s" % line)
