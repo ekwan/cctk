@@ -13,8 +13,6 @@ with open('data/isotopes.csv', mode='r') as isotope_file:
             continue
         ELEMENT_DICTIONARY[number] = symbol
 
-print(ELEMENT_DICTIONARY)
-
 def get_symbol(atomic_number):
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
