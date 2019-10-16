@@ -5,7 +5,16 @@ import re
 ### Helper Functions ###
 
 # element dictionary
-ELEMENT_DICTIONARY = {"1":"H", "6":"C", "7":"N", "8":"O", "9":"F"}
+ELEMENT_DICTIONARY = {}
+with open('data/isotopes.csv', mode='r') as isotope_file:
+    for line in isotope_file: 
+        symbol, number, mass, abundance  = line.split(',')
+        if symbol == "Symbol":
+            continue
+        ELEMENT_DICTIONARY[number] = symbol
+
+print(ELEMENT_DICTIONARY)
+
 def get_symbol(atomic_number):
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
