@@ -1,0 +1,51 @@
+class Molecule:
+    '''
+    id = int, for use with conformational ensembles
+    name = string, for identification
+    theory = dict, containing information about theory, to keep track for basis set scans
+    atoms = list of atomic symbols
+    coordinates  = list of 3-tuples of xyz coordinates
+    bonds = Graph object containing connectivity information
+    '''
+
+    def __init__(self, atoms, coordinates, name=None, theory=None, id=None, bonds=None):
+
+    def write_gjf():
+
+    def write_mol2():
+
+    def write_inp():
+
+    def calculate_bonds():
+
+    def adjust_distance():
+
+    def adjust_angle():
+
+    def adjust_dihedral():
+
+    def calculate_mass_spectrum():
+
+
+class Ensemble: 
+    '''
+    name = string, for identification
+    molecules = list of molecules
+    '''
+
+    def __init__(self, name=None): 
+
+    def eliminate_redundant():
+
+    def lowest_energy(self, n=1):
+    
+    def write_gjf():
+
+    def write_mol2():
+
+    def write_inp():
+
+    def adjust_distance():
+        for molecule in molecules:
+            amolecule.adjust_distance()
+
