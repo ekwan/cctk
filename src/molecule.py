@@ -1,6 +1,7 @@
 import sys
 import re
 import numpy as np
+import NetworkX as nx
 
 from geom_utility import distance, angle, dihedral
 
@@ -15,6 +16,8 @@ class Molecule():
     energy = holds the calculated energy of the molecule, optional
     '''
     def __init__(self, atoms, coordinates, name=None, theory=None, id=None, bonds=None):
+        
+        self.bonds = nx.Graph()
         pass
 
     def formula():
@@ -28,6 +31,28 @@ class Molecule():
         Appends to GaussianInputFile object; to be appended in .gjf file using Link1 command
         '''
         pass
+
+    def _get_bond_fragments(atom1, atom2):
+        '''
+        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ValueError if the atoms are in a ring. 
+        Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.   
+        ''' 
+        bond_order = self.bonds[atom1, atom2]['weight']
+        if bond_order == 0:
+            ValueError("No bond between atom {} and atom {}!".format(atom1,atom2))
+        
+        self.bonds.remove_edge(atom1, atom2)
+        
+        fragment1 = self.bonds[atom1]
+        fragment2 = self.bonds[atom2]
+
+        if atom1 in fragment2:
+            ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2)
+
+        self.bonds.add_edge(atom1,atom2,weight=bond_order)
+
+        return fragment1, fragment2
+
 
     def write_mol2_input(header, footer=None):
         pass
