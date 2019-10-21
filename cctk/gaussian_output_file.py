@@ -2,6 +2,9 @@ import sys
 import re
 import numpy as np
 
+from cctk import OutputFile
+from cctk.helper_functions import get_symbol
+
 class GaussianOutputFile(OutputFile):
     '''
     title = title from file
@@ -14,13 +17,13 @@ class GaussianOutputFile(OutputFile):
         self.successful = False
         self.read_file(filename)    
 
-    def read_file(filename):
+    def read_file(self, filename):
         '''
         Read a Gaussian output file.
         Automatically determines the theory line and if the job was successful. 
         Returns an array of geometries and energies. 
         '''        
-        lines = super.read_file(filename)
+        lines = super().read_file(filename)
 
         file_geometries = []
         file_symbol_lists = []
@@ -32,10 +35,10 @@ class GaussianOutputFile(OutputFile):
         #### search for route card 
         for line in lines:
             if route_card:
-                if re.match(r"----", line) 
+                if re.match(r"----", line): 
                     break
             else:
-                if route_pattern.match(line)
+                if route_pattern.match(line):
                     route_card = route_card + line
 
         self.header = route_card
@@ -45,7 +48,7 @@ class GaussianOutputFile(OutputFile):
 
         return lines
 
-    def read_geometries_and_energies(lines):
+    def read_geometries_and_energies(self, lines):
         '''
         Reads geometries, symbol lists, and energies from the file.
         Returns an array of geometries, a SINGLE array of the symbols, an array of energies, and an array of # SCF cycles from the file.
@@ -55,6 +58,10 @@ class GaussianOutputFile(OutputFile):
         file_symbol_lists = []
         file_energies = []
         file_scf_iterations = []
+
+        this_geometry = []
+        this_symbol_list = []
+        this_energy = None
 
         i = 0 
         in_geometry_block = False

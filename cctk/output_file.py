@@ -6,7 +6,7 @@ class OutputFile():
     def __init__(self):
         pass    
 
-    def read_file(filename):
+    def read_file(self, filename):
         '''
         Read a file.
         '''

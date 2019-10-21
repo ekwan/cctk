@@ -2,6 +2,8 @@ import sys
 import re
 import numpy as np
 
+from cctk import GaussianOutputFile
+
 class GaussianOptOutputFile(GaussianOutputFile):
     '''
     energies = list of energies for each cycle
@@ -13,12 +15,13 @@ class GaussianOptOutputFile(GaussianOutputFile):
     geometries = list of geometrries for each cycle
     done = Boolean
     '''
-    def __init__(self):
+    def __init__(self, filename):
+        self.read_file(filename)   
         pass    
 
-    def read_file(filename,text):
-        lines = super.read_file(filename)
-        geometries, atom_list, energies, scf_iterations = super.read_geometries_and_energies(lines)
+    def read_file(self, filename):
+        lines = super().read_file(filename)
+        geometries, atom_list, energies, scf_iterations = super().read_geometries_and_energies(lines)
 
         self.geometries = geometries
         self.energies = energies
@@ -28,7 +31,7 @@ class GaussianOptOutputFile(GaussianOutputFile):
     def get_lowest_energy_geometry():
         pass
         
-    def create_molecule()
+    def create_molecule():
         mol_geom = self.get_lowest_energy_geometry()
         pass
 
