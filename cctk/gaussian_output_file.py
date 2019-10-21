@@ -122,4 +122,4 @@ class GaussianOutputFile(OutputFile):
         
     def energy():
         pass
-     
+
