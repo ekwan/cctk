@@ -26,8 +26,23 @@ class GaussianOptOutputFile(GaussianOutputFile):
         self.geometries = geometries
         self.energies = energies
         self.scf_iterations = scf_iterations
+        
+        self.rms_forces = self._find_parameter(lines, "RMS\s+Force")
+        self.rms_displacements= self._find_parameter(lines, "RMS\s+Displacement")
 
-
+    def _find_parameter(self, lines, parameter):
+        matches = []
+        pattern = re.compile(parameter)
+        for line in lines:
+            if pattern.search(line):
+                fields = re.split(' +', line)
+                fields = list(filter(None, fields))
+                if len(fields) != 5:
+#                    print("error parsing >>> " + line)
+#                    raise ValueError("unexpected number of fields on line")
+                    continue
+                matches.append(float(fields[2]))
+        return matches
     def get_lowest_energy_geometry():
         pass
         
