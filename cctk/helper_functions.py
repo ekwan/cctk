@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 ELEMENT_DICTIONARY = {}
 with open('data/isotopes.csv', mode='r') as isotope_file:
@@ -9,6 +10,9 @@ with open('data/isotopes.csv', mode='r') as isotope_file:
         ELEMENT_DICTIONARY[number] = symbol
 
 def get_symbol(atomic_number):
+    ''' 
+    Get element symbol from a given atomic number.
+    ''' 
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
     if atomic_number in ELEMENT_DICTIONARY:
@@ -53,4 +57,34 @@ def compute_dihedral_between(p0,p1,p2,p3):
     y = np.dot(np.cross(b1, v), w)
     return np.degrees(np.arctan2(y, x))
 
+def search_for_block(lines, start, end, count=1):
+    '''
+    Search through a file (lines) and locate a block starting with "start" and ending with "end".
+    Returns a string if count == 1 or an array of strings if count > 1.
+    '''
+    current_match = '' 
+    match = [None] * count
 
+    start_pattern = re.compile(start)
+    end_pattern = re.compile(end)
+
+    index = 0
+    for line in lines:
+        if current_match:
+            if end_pattern.search(line): 
+                match[index] = current_match
+                current_match = None
+                index += 1
+
+                if index == count:
+                    break
+            else:
+                current_match = current_match + line 
+        else:
+            if start_pattern.search(line):
+                current_match = line
+
+    if count == 1:
+        return match[0]
+    else:
+        return match

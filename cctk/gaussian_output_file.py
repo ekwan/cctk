@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 from cctk import OutputFile
-from cctk.helper_functions import get_symbol
+from cctk.helper_functions import get_symbol, search_for_block
 
 class GaussianOutputFile(OutputFile):
     '''
@@ -29,19 +29,7 @@ class GaussianOutputFile(OutputFile):
         file_symbol_lists = []
         file_energies = []
 
-        route_card = ''
-        route_pattern = re.compile("#p")
-        
-        #### search for route card 
-        for line in lines:
-            if route_card:
-                if re.match(r"----", line): 
-                    break
-            else:
-                if route_pattern.match(line):
-                    route_card = route_card + line
-
-        self.header = route_card
+        self.header = search_for_block(lines, "#p", "----")
 
         if lines[-1].strip().startswith("Normal termination"):
             self.successful = True
