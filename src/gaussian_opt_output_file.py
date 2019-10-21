@@ -17,7 +17,13 @@ class GaussianOptOutputFile(GaussianOutputFile):
         pass    
 
     def read_file(filename,text):
-        super.read_file()
+        lines = super.read_file(filename)
+        geometries, atom_list, energies, scf_iterations = super.read_geometries_and_energies(lines)
+
+        self.geometries = geometries
+        self.energies = energies
+        self.scf_iterations = scf_iterations
+
 
     def get_lowest_energy_geometry():
         pass

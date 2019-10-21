@@ -6,6 +6,11 @@ class OutputFile():
     def __init__(self):
         pass    
 
-    def read_file(filename,text):
-        pass
- 
+    def read_file(filename):
+        '''
+        Read a file.
+        '''
+        with open(filename, 'r') as filehandle:
+            lines = filehandle.read().splitlines()
+            return lines
+             
