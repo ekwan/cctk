@@ -3,14 +3,14 @@ import re
 import numpy as np
 
 from cctk import GaussianOutputFile
-from cctk.helper_functions import compute_distance_between
+from cctk.helper_functions import compute_distance_between, get_number
 
 class GaussianOptOutputFile(GaussianOutputFile):
     """
     Class for Gaussian output files originating from a geometry optimization. 
 
     Attributes:
-        atoms (list): list of atoms 
+        atoms (list): list of atomic numbers 
         energies (list): list of energies for each cycle
         scf_iterations (list): number of iterations per cycle
         max_displacements (list): list of max displacement values for each cycle 
@@ -33,7 +33,7 @@ class GaussianOptOutputFile(GaussianOutputFile):
         lines = super().read_file(filename)
         geometries, atom_list, energies, scf_iterations = super().read_geometries_and_energies(lines)
 
-        self.atoms = atom_list
+        self.atoms = list(map(get_number, atom_list))
         self.geometries = geometries
         self.energies = energies
         self.scf_iterations = scf_iterations
@@ -69,7 +69,7 @@ class GaussianOptOutputFile(GaussianOutputFile):
         """
         Returns the last geometry from the out file.
         """
-        return geometries[-1]
+        return self.geometries[-1]
         
     def create_molecule():
         mol_geom = self.get_final_geometry()

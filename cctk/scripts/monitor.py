@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile
+from cctk import GaussianOptOutputFile, Molecule
 
 output_file = GaussianOptOutputFile('cctk/scripts/acetaldehyde.out')
 
@@ -24,3 +24,13 @@ min_energy = np.min(energies)
 for i, energy in enumerate(energies):
     rel_energy = (energy - min_energy) * 627.509 #### convert to kcal
     print("{0:5d} {1:20.5f} {2:20.5f} {3:15d} {4:15.5f} {5:20.5f} {6:15.3f}".format(i+1, energy, rel_energy, scf_iter[i], rms_forces[i], rms_displacements[i], distances[i]))
+
+
+if output_file.successful:
+    print(output_file.atoms)
+    molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
+    molecule.assign_connectivity()
+
+    print(molecule.bonds)
+
+    molecule._get_bond_fragments(1,2)

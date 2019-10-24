@@ -15,6 +15,8 @@ for line in isotope_file:
         continue
     ELEMENT_DICTIONARY[number] = symbol
 
+INV_ELEMENT_DICTIONARY = {v: k for k, v in ELEMENT_DICTIONARY.items()}
+
 def get_symbol(atomic_number):
     """ 
     Gets element symbol from a given atomic number.
@@ -32,16 +34,37 @@ def get_symbol(atomic_number):
     else:
         raise ValueError("unknown atomic number: ", atomic_number)
 
+def get_number(atomic_symbol):
+    """
+    Gets atomic number from a given element symbol. 
+
+    Args: 
+        atomic_symbol (str): the two-character symbol
+
+    Returns:
+        the atomic number
+
+    """
+    if atomic_symbol in INV_ELEMENT_DICTIONARY:
+        return INV_ELEMENT_DICTIONARY[atomic_symbol]
+    else:
+        raise ValueError("unknown atomic symbol: ", atomic_symbol)
+
+   
+
+
 """
 This code populates COVALENT_RADII_DICTIONARY from a static datafile.
 """
 COVALENT_RADII_DICTIONARY = {}
 covalent_radii = pkg_resources.open_text(data, 'covalent_radii.csv')
 for line in covalent_radii:
-    number, symbol, radius, stddev, num_samples = line.split(',')
-    if symbol == "Symbol":
+    line_fragments = line.split(',')
+
+    #### There's a variable number from line to line, but the first three are always number, symbol, radius
+    if line_fragments[1] == "Symbol":
         continue
-    COVALENT_RADII_DICTIONARY[number] = radius
+    COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
 
 def get_covalent_radius(atomic_number):
     """
@@ -57,7 +80,7 @@ def get_covalent_radius(atomic_number):
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
     if atomic_number in COVALENT_RADII_DICTIONARY:
-        return COVALENT_RADII_DICTIONARY[atomic_number]
+        return float(COVALENT_RADII_DICTIONARY[atomic_number])
     else:
         raise ValueError("no covalent radius defined for atomic number ", atomic_number) 
 
