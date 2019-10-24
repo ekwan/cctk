@@ -32,10 +32,38 @@ def get_symbol(atomic_number):
     else:
         raise ValueError("unknown atomic number: ", atomic_number)
 
-# compute the L2 distance between v1 and v2
+"""
+This code populates COVALENT_RADII_DICTIONARY from a static datafile.
+"""
+COVALENT_RADII_DICTIONARY = {}
+covalent_radii = pkg_resources.open_text(data, 'covalent_radii.csv')
+for line in covalent_radii:
+    number, symbol, radius, stddev, num_samples = line.split(',')
+    if symbol == "Symbol":
+        continue
+    COVALENT_RADII_DICTIONARY[number] = radius
+
+def get_covalent_radius(atomic_number):
+    """
+    Gets the covalent radius for a given element.
+    
+    Args: 
+        atomic_number (int): the number of the given element
+        
+    Returns: 
+        the covalent radius in Angstroms (float)
+    """
+    
+    if isinstance(atomic_number, int):
+        atomic_number = str(atomic_number)
+    if atomic_number in COVALENT_RADII_DICTIONARY:
+        return COVALENT_RADII_DICTIONARY[atomic_number]
+    else:
+        raise ValueError("no covalent radius defined for atomic number ", atomic_number) 
+
 def compute_distance_between(v1, v2):
     """ 
-    Computes the distance between two vectors.
+    Computes the L2 distance between two vectors.
     """
     return np.linalg.norm(v1-v2)
 
