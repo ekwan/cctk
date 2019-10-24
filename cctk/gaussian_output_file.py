@@ -7,11 +7,14 @@ from cctk.helper_functions import get_symbol, search_for_block
 
 class GaussianOutputFile(OutputFile):
     '''
-    title = title from file
-    theory = dict, containing information from header
-    header = header from input file
-    footer = footer from input file
-    success = Bool, if 
+    Generic class for all Gaussian output files. 
+
+    Attributes: 
+        title (str): the title from the Gaussian file
+        theory (dict): contains information from header
+        header (str):  header from input file (e.g. "#p opt freq=noraman b3lyp/6-31g(d)").
+        footer (str):  footer from input file, if any. genecp commands or opt=modredundant specifications go here. 
+        success (Bool): if the file terminated successfully
     '''
     def __init__(self, filename):
         self.successful = False
@@ -37,10 +40,18 @@ class GaussianOutputFile(OutputFile):
         return lines
 
     def read_geometries_and_energies(self, lines):
-        '''
+        """
         Reads geometries, symbol lists, and energies from the file.
-        Returns an array of geometries, a SINGLE array of the symbols, an array of energies, and an array of # SCF cycles from the file.
-        '''
+        
+        Args:
+            lines (list): the list of lines in the file
+
+        Returns:
+            array of geometries (each of which itself is an array of arrays)
+            list of atomic symbols
+            array of energies
+            array containing the number of SCF iterations per step 
+        """
         
         file_geometries = []
         file_symbol_lists = []

@@ -1,18 +1,30 @@
 import numpy as np
 import re
+import importlib.resources as pkg_resources
+from . import data # relative-import the *package* containing the templates
 
+"""
+This code populates ELEMENT_DICTIONARY from a static datafile.
+"""
 ELEMENT_DICTIONARY = {}
-with open('data/isotopes.csv', mode='r') as isotope_file:
-    for line in isotope_file: 
-        symbol, number, mass, abundance  = line.split(',')
-        if symbol == "Symbol":
-            continue
-        ELEMENT_DICTIONARY[number] = symbol
+#with open('data/isotopes.csv', mode='r') as isotope_file:
+isotope_file = pkg_resources.open_text(data, 'isotopes.csv')
+for line in isotope_file: 
+    symbol, number, mass, abundance  = line.split(',')
+    if symbol == "Symbol":
+        continue
+    ELEMENT_DICTIONARY[number] = symbol
 
 def get_symbol(atomic_number):
-    ''' 
-    Get element symbol from a given atomic number.
-    ''' 
+    """ 
+    Gets element symbol from a given atomic number.
+    
+    Args:
+        atomic_number (int): the number of the given element
+
+    Returns: 
+        the two-character atomic symbol string
+    """
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
     if atomic_number in ELEMENT_DICTIONARY:
@@ -22,20 +34,32 @@ def get_symbol(atomic_number):
 
 # compute the L2 distance between v1 and v2
 def compute_distance_between(v1, v2):
-     return np.linalg.norm(v1-v2)
+    """ 
+    Computes the distance between two vectors.
+    """
+    return np.linalg.norm(v1-v2)
 
 # normalizes the given vector so that it has unit length
 def compute_unit_vector(vector):
+    """
+    Normalizes a vector, returning a unit vector pointing in the same direction.
+    """
     return vector / np.linalg.norm(vector)
 
 # compute the angle between two vectors in degrees
 def compute_angle_between(v1, v2):
+    """
+    Computes the angle between two vectors.
+    """
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 # compute the dihedral angle in degrees
 def compute_dihedral_between(p0,p1,p2,p3):
+    """
+    Computes the dihedral angle between four points.
+    """
     b0 = -1.0*(p1 - p0)
     b1 = p2 - p1
     b2 = p3 - p2
@@ -58,10 +82,18 @@ def compute_dihedral_between(p0,p1,p2,p3):
     return np.degrees(np.arctan2(y, x))
 
 def search_for_block(lines, start, end, count=1):
-    '''
+    """
     Search through a file (lines) and locate a block starting with "start" and ending with "end".
-    Returns a string if count == 1 or an array of strings if count > 1.
-    '''
+    
+    Args: 
+        lines (list): a list of the lines in the file
+        start (str): a pattern that matches the start of the block (can contain special characters)
+        end (str): a pattern that matches the end of the block (can contain special characters)
+        count (int): how many matches to search for
+    
+    Returns: 
+        a single match (str) if count == 1 or a list of matches (str) if count > 1.
+    """
     current_match = '' 
     match = [None] * count
 

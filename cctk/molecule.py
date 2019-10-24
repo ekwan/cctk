@@ -1,9 +1,7 @@
 import sys
 import re
 import numpy as np
-import NetworkX as nx
-
-from geom_utility import distance, angle, dihedral
+import networkx as nx
 
 class Molecule():
     '''
@@ -47,7 +45,7 @@ class Molecule():
         fragment2 = self.bonds[atom2]
 
         if atom1 in fragment2:
-            ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2)
+            ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2))
 
         self.bonds.add_edge(atom1,atom2,weight=bond_order)
 

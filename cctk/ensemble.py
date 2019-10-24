@@ -2,8 +2,6 @@ import sys
 import re
 import numpy as np
 
-from geom_utility import distance, angle, dihedral, align_molecules
-
 class Ensemble():
     '''
     name = string, for identification

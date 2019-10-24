@@ -2,6 +2,8 @@ import sys
 import re
 import numpy as np
 
+from cctk import GaussianOutputFile
+
 class GaussianIRCOutputFile(GaussianOutputFile):
     '''
     energies = list of energies for each cycle
