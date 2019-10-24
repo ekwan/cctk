@@ -3,14 +3,14 @@
 
 *This is a Python 3-based library for working with computational chemistry data*.
 
-# Dependencies:
+#### Dependencies:
 * Python 3.x
 * Numpy
 * NetworkX
 * Sphinx
 
 
-# External Data:
+#### External Data:
 
 Atomic weights taken from the [NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some). 
 
