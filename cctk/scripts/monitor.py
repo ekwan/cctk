@@ -27,10 +27,9 @@ for i, energy in enumerate(energies):
 
 
 if output_file.successful:
-    print(output_file.atoms)
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
     molecule.assign_connectivity()
 
-    print(molecule.bonds)
-
-    molecule._get_bond_fragments(1,2)
+    fragment, fragment2 = molecule._get_bond_fragments(1,0)
+    print(fragment) 
+    print(fragment2) 

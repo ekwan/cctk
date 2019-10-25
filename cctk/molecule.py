@@ -33,26 +33,31 @@ class Molecule():
             pass
         else: 
             self.bonds = nx.Graph()
+            self.bonds.add_nodes_from(range(1,len(atoms)+1))
             
     def assign_connectivity(self):            
         for i in range(1,len(self.atoms) + 1):
-            for j in range(i, len(self.atoms) + 1):
+            for j in range(i+1, len(self.atoms) + 1):
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i)) 
                 r_j = get_covalent_radius(self.get_atomic_number(j)) 
                 
-                if distance < (r_i + r_j):
+                print("{} is i {} is j {} is distance {} is radius sum".format(i, j, distance, r_i + r_j))
+               
+                # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically  
+                if distance < (r_i + r_j + 0.5):
                     self.add_bond(i, j) 
 
-    def add_bond(self, atom1, atom2):
+    def add_bond(self, atom1, atom2, bond_order=1):
         """
         Adds a new bond to the bonding graph.
 
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
+            bond_order (int): bond order of bond between atom1 and atom2
         """
-        self.bonds.add_edge(atom1-1, atom2-1)
+        self.bonds.add_edge(atom1-1, atom2-1, weight=bond_order)
 
     def formula():
         pass
@@ -66,28 +71,36 @@ class Molecule():
         '''
         pass
 
-    def _get_bond_fragments(self, atom1, atom2):
+    def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         '''
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ValueError if the atoms are in a ring. 
         Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.   
+        
+        Args: 
+            atom1 (int): the number of the first atom
+            atom2 (int): the number of the second atom
+            bond_order (int): bond order of bond between atom1 and atom2
+
+        Returns:
+            fragment1: the list of atoms in fragment 1 (containing atom1)
+            fragment2: the list of atoms in fragment 2 (containing atom2)
+        
         ''' 
-        bond_order = self.bonds[atom1, atom2]['weight']
-        if bond_order == 0:
+
+        if self.bonds.has_edge(atom1, atom2):
+            self.bonds.remove_edge(atom1, atom2)
+            
+            fragment1 = list(self.bonds[atom1].keys()) + [atom1]
+            fragment2 = list(self.bonds[atom2].keys()) + [atom2]
+
+            if atom1 in fragment2:
+                ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2))
+
+            self.bonds.add_edge(atom1,atom2,weight=bond_order)
+            return fragment1, fragment2
+        else:
             ValueError("No bond between atom {} and atom {}!".format(atom1,atom2))
         
-        self.bonds.remove_edge(atom1, atom2)
-        
-        fragment1 = self.bonds[atom1]
-        fragment2 = self.bonds[atom2]
-
-        if atom1 in fragment2:
-            ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2))
-
-        self.bonds.add_edge(atom1,atom2,weight=bond_order)
-
-        return fragment1, fragment2
-
-
     def write_mol2_input(header, footer=None):
         pass
 
