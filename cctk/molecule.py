@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import compute_distance_between, compute_unit_vector, get_covalent_radius
+from cctk.helper_functions import get_symbol, compute_distance_between, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -25,10 +25,32 @@ class Molecule():
         if len(atoms) != len(geometry):
             raise ValueError("length of geometry and atoms does not match!")
         
+        if not all(isinstance(z, int) for z in atoms) or len(atoms) == 0:
+            raise ValueError("invalid atom list")
+        
+        if not all(isinstance(x, tuple) for x in geometry) or len(geometry) == 0:
+            raise ValueError("invalid geometry list")
+
+        if not all(all(isinstance(y, float) for y in x) for x in geometry):
+            raise TypeError("each element of self.geometry must be a 3-tuple")
+       
+        if not isinstance(theory, dict):
+            raise TypeError("theory must be a dictionary!")
+        
+        if not isinstance(name, str):
+            raise TypeError("name must be a string!")
+
+        for atom in atoms: 
+            try:
+                get_symbol(atom)
+            except ValueError:
+                raise ValueError(f"unknwon atomic number {atom}")
+
         self.name = name
         self.atoms = atoms
         self.theory = theory
         self.geometry = geometry
+        
         if bonds:
             pass
         else: 
@@ -52,15 +74,35 @@ class Molecule():
 
     def add_bond(self, atom1, atom2, bond_order=1):
         """
-        Adds a new bond to the bonding graph.
+        Adds a new bond to the bond graph, or updates the existing bond order. Will not throw an error if the bond already exists..
 
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             bond_order (int): bond order of bond between atom1 and atom2
         """
-        self.bonds.add_edge(atom1-1, atom2-1, weight=bond_order)
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
 
+        if self.bonds.has_edge(atom1-1, atom2-1):
+            if self.bonds[atom1][atom2]['weight'] != bond_order:
+                self.bonds[atom1][atom2]['weight'] = bond_order
+        else: 
+            self.bonds.add_edge(atom1-1, atom2-1, weight=bond_order)
+
+    def _check_atom_number(self, number):
+        """
+        Helper method which performs quick checks on the validity of a given atom number.
+        """ 
+        if not isinstance(number, int):
+            raise TypeError("atom number must be integer")
+
+        if number > len(self.atoms): 
+            raise ValueError("atom numbers too large!")
+
+        if atom1 <= 0:
+            raise ValueError("atom number must be a positive integer!")
+    
     def formula():
         pass
 
@@ -88,6 +130,12 @@ class Molecule():
             fragment2: the list of atoms in fragment 2 (containing atom2)
         
         ''' 
+
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+
+        if (not isinstance(bond_order, int)) or (bond_order < 0):
+            raise ValueError("invalid bond order!")
 
         # Users see indexing from one but system requires zero-indexing
         atom1 += -1
@@ -127,6 +175,13 @@ class Molecule():
             distance (float): distance in Angstroms of the final bond
             move (str): determines how fragment moving is handled 
         """
+
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+
+        if (not isinstance(distance, float)) or (distance < 0):
+            raise ValueError(f"invalid value {distance} for distance!")
+
         atoms_to_move = []
         if move == 'group':
             _, atoms_to_move = self._get_bond_fragments(atom1, atom2)
@@ -177,18 +232,23 @@ class Molecule():
         """ 
         Get the atomic number for a given atom.
         """
+        self_check_atom_number(atom)
         return self.atoms[atom-1]
     
     def get_geometry(self, atom):
         """
         Get the geometry vector for a given atom.
         """
+        self_check_atom_number(atom)
         return np.array(self.geometry[atom-1])
 
     def get_distance(self, atom1, atom2):
         """
         Wrapper to compute distance between two atoms. 
         """
+        self_check_atom_number(atom1)
+        self_check_atom_number(atom2)
+
         v1 = np.array(self.geometry[atom1-1])
         v2 = np.array(self.geometry[atom2-1])
         return compute_distance_between(v1, v2)
