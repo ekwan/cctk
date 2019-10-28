@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, Molecule
+from cctk import GaussianOptOutputFile, Molecule, GaussianInputFile
 
 output_file = GaussianOptOutputFile('cctk/scripts/acetaldehyde.out')
 
@@ -30,6 +30,5 @@ if output_file.successful:
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
     molecule.assign_connectivity()
 
-    fragment, fragment2 = molecule._get_bond_fragments(1,0)
-    print(fragment) 
-    print(fragment2) 
+    input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 
+    input_file.write_file(filename='cctk/scripts/acetaldehyde.gjf')

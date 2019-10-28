@@ -36,14 +36,16 @@ class Molecule():
             self.bonds.add_nodes_from(range(1,len(atoms)+1))
             
     def assign_connectivity(self):            
+        """
+        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent raii + 0.5 Angstroms, then they are considered bonded. 
+        """
+            
         for i in range(1,len(self.atoms) + 1):
             for j in range(i+1, len(self.atoms) + 1):
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i)) 
                 r_j = get_covalent_radius(self.get_atomic_number(j)) 
                 
-                print("{} is i {} is j {} is distance {} is radius sum".format(i, j, distance, r_i + r_j))
-               
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically  
                 if distance < (r_i + r_j + 0.5):
                     self.add_bond(i, j) 
