@@ -29,6 +29,8 @@ for i, energy in enumerate(energies):
 if output_file.successful:
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
     molecule.assign_connectivity()
+    print(molecule.bonds.edges)  
+    molecule.set_distance(1, 2, 2.0)
 
     input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 
     input_file.write_file(filename='cctk/scripts/acetaldehyde.gjf')

@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import compute_distance_between, get_covalent_radius
+from cctk.helper_functions import compute_distance_between, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -89,25 +89,74 @@ class Molecule():
         
         ''' 
 
+        # Users see indexing from one but system requires zero-indexing
+        atom1 += -1
+        atom2 += -1
+
         if self.bonds.has_edge(atom1, atom2):
             self.bonds.remove_edge(atom1, atom2)
             
             fragment1 = list(self.bonds[atom1].keys()) + [atom1]
             fragment2 = list(self.bonds[atom2].keys()) + [atom2]
 
+            print(fragment1)
+            print(fragment2)
+
             if atom1 in fragment2:
-                ValueError("Atom {} and atom {} are in a ring or otherwise connected!".format(atom1,atom2))
+                raise ValueError(f"Atom {atom1+1} and atom {atom2+1} are in a ring or otherwise connected!")
 
             self.bonds.add_edge(atom1,atom2,weight=bond_order)
             return fragment1, fragment2
         else:
-            ValueError("No bond between atom {} and atom {}!".format(atom1,atom2))
+            raise ValueError(f"No bond between atom {atom1+1} and atom {atom2+1}!")
         
     def write_mol2_input(header, footer=None):
         pass
 
-    def set_distance():
-        pass
+    def set_distance(self, atom1, atom2, distance, move='group'):
+        """
+        Adjusts the `atom1`&ndash;`atom2` bond length to be a fixed distance by moving atom2. 
+
+        If `move` is set to "group", then all atoms bonded to `atom2` will also be moved. 
+        
+        If `move` is set to "atom", then only atom2 will be moved. 
+        
+        Args:
+            atom1 (int): the number of the first atom
+            atom2 (int): the number of the second atom
+            distance (float): distance in Angstroms of the final bond
+            move (str): determines how fragment moving is handled 
+        """
+        atoms_to_move = []
+        if move == 'group':
+            _, atoms_to_move = self._get_bond_fragments(atom1, atom2)
+        elif move == 'atom':
+            atoms_to_move = [atom2-1]
+        else:
+            raise ValueError(f"Invalid option {move} for parameter 'move'!")
+
+        current_distance = self.get_distance(atom1,atom2)  
+        
+        v1 = self.get_geometry(atom1)
+        v2 = self.get_geometry(atom2)
+        vb = v2 - v1
+
+        if np.linalg.norm(vb) - current_distance > 0.00001:
+            raise ValueError(f"Error calculating bond distance!") 
+
+        #### move all the atoms
+        delta = distance - current_distance
+        unitv = compute_unit_vector(vb) 
+        for atom in atoms_to_move:
+            self.geometry[atom] = self.geometry[atom] + (delta * unitv) 
+
+        #### check everything worked okay...
+        v1f = self.get_geometry(atom1)
+        v2f = self.get_geometry(atom2)
+        vbf = v2f - v1f
+        
+        if np.linalg.norm(vbf) - distance > 0.00001:
+            raise ValueError(f"Error moving bonds -- operation failed!") 
 
     def set_angle():
         pass
@@ -130,6 +179,12 @@ class Molecule():
         """
         return self.atoms[atom-1]
     
+    def get_geometry(self, atom):
+        """
+        Get the geometry vector for a given atom.
+        """
+        return np.array(self.geometry[atom-1])
+
     def get_distance(self, atom1, atom2):
         """
         Wrapper to compute distance between two atoms. 
