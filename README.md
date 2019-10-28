@@ -4,12 +4,12 @@
 *This is a Python 3-based library for working with computational chemistry data*.
 
 #### Requirements:
-* Python 3.x
+* Python 3.7 or newer
 * Numpy
 * NetworkX
 * Sphinx
 
-Use of a package management system like `conda` or `miniconda` is heavily recommended. To install all requirements, run:
+Use of a package management system like `conda` or `miniconda` is recommended. To install all requirements, run:
 
 ```
 pip install -r requirements.txt
@@ -23,6 +23,8 @@ To build the documentation, run:
 cd docs/
 make html
 ```
+
+The documentation files can then be found in `docs/_build/html`.
 
 #### External Data:
 

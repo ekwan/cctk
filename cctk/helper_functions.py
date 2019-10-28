@@ -1,6 +1,12 @@
 import numpy as np
 import re
-import importlib.resources as pkg_resources
+
+#### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    import importlib_resources as pkg_resources 
+
 from . import data # relative-import the *package* containing the templates
 
 """
