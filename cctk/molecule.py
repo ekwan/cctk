@@ -106,15 +106,6 @@ class Molecule():
     def formula():
         pass
 
-    def write_gaussian_input(header, footer=None):
-        pass
-    
-    def append_to_gaussian_input(header, footer=None):
-        '''
-        Appends to GaussianInputFile object; to be appended in .gjf file using Link1 command
-        '''
-        pass
-
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         '''
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ValueError if the atoms are in a ring. 
@@ -158,9 +149,6 @@ class Molecule():
         else:
             raise ValueError(f"No bond between atom {atom1+1} and atom {atom2+1}!")
         
-    def write_mol2_input(header, footer=None):
-        pass
-
     def set_distance(self, atom1, atom2, distance, move='group'):
         """
         Adjusts the `atom1`&ndash;`atom2` bond length to be a fixed distance by moving atom2. 
@@ -222,9 +210,6 @@ class Molecule():
     def calculate_mass_spectrum():
         pass
     
-    def calculate_bonds_from_vdw():
-        pass
-
     def add_atom_at_centroid(self, symbol, atom_numbers):
         pass
 
