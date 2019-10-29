@@ -23,7 +23,7 @@ class InputFile():
             raise TypeError("cannot write non-string to file!")
             return False
 
-        if os.path.exists(filename) and overwrite_existing=False:
+        if os.path.exists(filename) and overwrite_existing==False:
             raise ValueError("file already exists; overwrite_existing set to False!")
             return False
         else:

@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_cross_product, compute_unit_vector, get_covalent_radius
+from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_angle_between, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -27,17 +27,17 @@ class Molecule():
         
         if not all(isinstance(z, int) for z in atoms) or len(atoms) == 0:
             raise ValueError("invalid atom list")
-        
-        if not all(isinstance(x, tuple) for x in geometry) or len(geometry) == 0:
+       
+        if len(geometry) == 0:
             raise ValueError("invalid geometry list")
 
         if not all(all(isinstance(y, float) for y in x) for x in geometry):
             raise TypeError("each element of self.geometry must be a 3-tuple")
        
-        if not isinstance(theory, dict):
+        if theory and not isinstance(theory, dict):
             raise TypeError("theory must be a dictionary!")
         
-        if not isinstance(name, str):
+        if name and not isinstance(name, str):
             raise TypeError("name must be a string!")
 
         for atom in atoms: 
@@ -98,10 +98,10 @@ class Molecule():
             raise TypeError("atom number must be integer")
 
         if number > len(self.atoms): 
-            raise ValueError("atom numbers too large!")
+            raise ValueError(f"atom number {number} too large!")
 
-        if atom1 <= 0:
-            raise ValueError("atom number must be a positive integer!")
+        if number <= 0:
+            raise ValueError(f"atom number {number} invalid: must be a positive integer!")
     
     def formula():
         pass
@@ -137,9 +137,6 @@ class Molecule():
             
             fragment1 = list(self.bonds[atom1].keys()) + [atom1]
             fragment2 = list(self.bonds[atom2].keys()) + [atom2]
-
-            print(fragment1)
-            print(fragment2)
 
             if atom1 in fragment2:
                 raise ValueError(f"Atom {atom1+1} and atom {atom2+1} are in a ring or otherwise connected!")
@@ -221,6 +218,11 @@ class Molecule():
         self._check_atom_number(atom2)
         self._check_atom_number(atom3)
 
+        try:
+            angle = float(angle)
+        except: 
+            raise TypeError(f"angle {angle} cannot be converted to float!")
+
         if (not isinstance(angle, float)) or ((angle < 0) or (angle > 360)):
             raise ValueError(f"invalid value {angle} for angle!")
 
@@ -235,7 +237,7 @@ class Molecule():
         current_angle = self.get_angle(atom1, atom2, atom3)
         delta = angle - current_angle
 
-        if delta < 0.001: 
+        if np.abs(delta) < 0.001: 
             return
 
         #### now the real work begins...
@@ -247,17 +249,17 @@ class Molecule():
         self.translate_molecule(-v2)        
 
         #### perform the actual rotation
-        rot_axis = compute_cross_product(v1,v3)
-        rot_matrix = compute_rotation_matrix(rot_axis, theta) 
-        
-        for atom in atoms_to_move
-            self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom))
+        rot_axis = np.cross(v1,v3)
+        rot_matrix = compute_rotation_matrix(rot_axis, delta) 
+
+        for atom in atoms_to_move:
+            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
 
         #### and move it back!
         self.translate_molecule(v2)        
         
         final_angle = self.get_angle(atom1, atom2, atom3)
-        if (final_angle - angle) < 0.001:
+        if np.abs(final_angle - angle) < 0.001:
             raise ValueError("Error rotating atoms -- operation failed!")
 
     def set_dihedral():
@@ -265,7 +267,7 @@ class Molecule():
 
     def translate_molecule(self, vector):
         for atom in range(1,len(self.atoms)): 
-            self.geometry[atom] = self.geometry[atom] + vector
+            self.geometry[atom] = list(self.geometry[atom] + vector)
 
     def rotate_molecule(self, axis, degrees):
         pass
@@ -280,21 +282,35 @@ class Molecule():
         """ 
         Get the atomic number for a given atom.
         """
-        self_check_atom_number(atom)
+        self._check_atom_number(atom)
         return self.atoms[atom-1]
     
     def get_vector(self, atom):
         """
         Get the geometry vector for a given atom.
         """
-        self_check_atom_number(atom)
+        self._check_atom_number(atom)
         return np.array(self.geometry[atom-1])
 
     def get_distance(self, atom1, atom2):
         """
         Wrapper to compute distance between two atoms. 
         """
-        self_check_atom_number(atom1)
-        self_check_atom_number(atom2)
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
 
         return compute_distance_between(self.get_vector(atom1), self.get_vector(atom2))
+
+    def get_angle(self, atom1, atom2, atom3):
+        """
+        Wrapper to compute angle between three atoms. 
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        self._check_atom_number(atom3)
+       
+        v1 = self.get_vector(atom1)
+        v2 = self.get_vector(atom2)
+        v3 = self.get_vector(atom3)
+        
+        return compute_angle_between(v1-v2, v3-v2)

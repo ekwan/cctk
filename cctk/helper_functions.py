@@ -53,7 +53,7 @@ def get_number(atomic_symbol):
 
     """
     if atomic_symbol in INV_ELEMENT_DICTIONARY:
-        return INV_ELEMENT_DICTIONARY[atomic_symbol]
+        return int(INV_ELEMENT_DICTIONARY[atomic_symbol])
     else:
         raise ValueError("unknown atomic symbol: ", atomic_symbol)
 
@@ -103,13 +103,27 @@ def compute_unit_vector(vector):
     return vector / np.linalg.norm(vector)
 
 # compute the angle between two vectors in degrees
-def compute_angle_between(v1, v2):
+def compute_angle_between(v1, v2, unit='degree'):
     """
     Computes the angle between two vectors.
+
+    Args:
+        v1 (ndarray): first vector
+        v2 (ndarray): second vector
+        unit (str): 'degree' or 'radian'
+
+    Returns:
+        the angle between the two vectors
     """
     v1_u = compute_unit_vector(v1)
     v2_u = compute_unit_vector(v2)
-    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+    angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+    if unit == 'degree':
+        return angle * 180 / math.pi
+    elif unit == 'radian':
+        return angle
+    else: 
+        raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
 # compute the dihedral angle in degrees
 def compute_dihedral_between(p0,p1,p2,p3):
@@ -190,7 +204,7 @@ def compute_rotation_matrix(axis, theta):
         the 3x3 rotation matrix
     """
 
-    if (not isinstance(axis, np.ndarray)) or (len(axis) != 3:
+    if (not isinstance(axis, np.ndarray)) or (len(axis) != 3):
         raise TypeError("axis must be np array with 3 elements")
 
     if not isinstance(theta, float):
