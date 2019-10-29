@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import re
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
@@ -57,8 +58,6 @@ def get_number(atomic_symbol):
         raise ValueError("unknown atomic symbol: ", atomic_symbol)
 
    
-
-
 """
 This code populates COVALENT_RADII_DICTIONARY from a static datafile.
 """
@@ -108,8 +107,8 @@ def compute_angle_between(v1, v2):
     """
     Computes the angle between two vectors.
     """
-    v1_u = unit_vector(v1)
-    v2_u = unit_vector(v2)
+    v1_u = compute_unit_vector(v1)
+    v2_u = compute_unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 # compute the dihedral angle in degrees
@@ -123,7 +122,7 @@ def compute_dihedral_between(p0,p1,p2,p3):
 
     # normalize b1 so that it does not influence magnitude of vector
     # rejections that come next
-    b1 /= np.linalg.norm(b1)
+    b1 = compute_unit_vector(b1)
 
     # v = projection of b0 onto plane perpendicular to b1
     #   = b0 minus component that aligns with b1
@@ -177,3 +176,35 @@ def search_for_block(lines, start, end, count=1):
         return match[0]
     else:
         return match
+
+def compute_rotation_matrix(axis, theta):
+    """
+    Return the rotation matrix for rotation around `axis` by `theta` degrees..
+    Adapted from user "unutbu" on StackExchange. 
+    
+    Args:
+        axis (vector): the vector to rotate about
+        theta (float): how much to rotate
+    
+    Returns: 
+        the 3x3 rotation matrix
+    """
+
+    if (not isinstance(axis, np.ndarray)) or (len(axis) != 3:
+        raise TypeError("axis must be np array with 3 elements")
+
+    if not isinstance(theta, float):
+        raise TypeError("theta must be float!")
+
+    # convert to radians
+    theta = theta * math.pi / 180
+    axis = compute_unit_vector(axis) 
+    
+    a = math.cos(theta / 2.0)
+    b, c, d = -axis * math.sin(theta / 2.0)
+    
+    aa, bb, cc, dd = a * a, b * b, c * c, d * d
+    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])

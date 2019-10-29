@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_unit_vector, get_covalent_radius
+from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_cross_product, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -180,8 +180,8 @@ class Molecule():
 
         current_distance = self.get_distance(atom1,atom2)  
         
-        v1 = self.get_geometry(atom1)
-        v2 = self.get_geometry(atom2)
+        v1 = self.get_vector(atom1)
+        v2 = self.get_vector(atom2)
         vb = v2 - v1
 
         if np.linalg.norm(vb) - current_distance > 0.00001:
@@ -194,17 +194,80 @@ class Molecule():
             self.geometry[atom] = self.geometry[atom] + (delta * unitv) 
 
         #### check everything worked okay...
-        v1f = self.get_geometry(atom1)
-        v2f = self.get_geometry(atom2)
+        v1f = self.get_vector(atom1)
+        v2f = self.get_vector(atom2)
         vbf = v2f - v1f
         
-        if np.linalg.norm(vbf) - distance > 0.00001:
+        if np.linalg.norm(vbf) - distance > 0.001:
             raise ValueError(f"Error moving bonds -- operation failed!") 
 
-    def set_angle():
-        pass
+    def set_angle(self, atom1, atom2, atom3, angle, move='group'):
+        """
+        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3` bond length to be a fixed distance by moving atom3. 
+
+        If `move` is set to "group", then all atoms bonded to `atom3` will also be moved. 
+        
+        If `move` is set to "atom", then only `atom3` will be moved. 
+        
+        Args:
+            atom1 (int): the number of the first atom
+            atom2 (int): the number of the second atom
+            atom3 (int): the number of the third atom
+            angle (float): final value in degrees of the `atom1`&ndash;`atom2`&ndash;`atom3` angle
+            move (str): determines how fragment moving is handled 
+        """
+
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        self._check_atom_number(atom3)
+
+        if (not isinstance(angle, float)) or ((angle < 0) or (angle > 360)):
+            raise ValueError(f"invalid value {angle} for angle!")
+
+        atoms_to_move = []
+        if move == 'group':
+            _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+        elif move == 'atom':
+            atoms_to_move = [atom3-1]
+        else:
+            raise ValueError(f"Invalid option {move} for parameter 'move'!")
+
+        current_angle = self.get_angle(atom1, atom2, atom3)
+        delta = angle - current_angle
+
+        if delta < 0.001: 
+            return
+
+        #### now the real work begins...
+        v1 = self.get_vector(atom1)
+        v2 = self.get_vector(atom2)
+        v3 = self.get_vector(atom3)
+
+        #### move everything to place atom2 at the origin
+        self.translate_molecule(-v2)        
+
+        #### perform the actual rotation
+        rot_axis = compute_cross_product(v1,v3)
+        rot_matrix = compute_rotation_matrix(rot_axis, theta) 
+        
+        for atom in atoms_to_move
+            self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom))
+
+        #### and move it back!
+        self.translate_molecule(v2)        
+        
+        final_angle = self.get_angle(atom1, atom2, atom3)
+        if (final_angle - angle) < 0.001:
+            raise ValueError("Error rotating atoms -- operation failed!")
 
     def set_dihedral():
+        pass
+
+    def translate_molecule(self, vector):
+        for atom in range(1,len(self.atoms)): 
+            self.geometry[atom] = self.geometry[atom] + vector
+
+    def rotate_molecule(self, axis, degrees):
         pass
 
     def calculate_mass_spectrum():
@@ -220,7 +283,7 @@ class Molecule():
         self_check_atom_number(atom)
         return self.atoms[atom-1]
     
-    def get_geometry(self, atom):
+    def get_vector(self, atom):
         """
         Get the geometry vector for a given atom.
         """
@@ -234,6 +297,4 @@ class Molecule():
         self_check_atom_number(atom1)
         self_check_atom_number(atom2)
 
-        v1 = np.array(self.geometry[atom1-1])
-        v2 = np.array(self.geometry[atom2-1])
-        return compute_distance_between(v1, v2)
+        return compute_distance_between(self.get_vector(atom1), self.get_vector(atom2))
