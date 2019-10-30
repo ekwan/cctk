@@ -99,8 +99,12 @@ def compute_distance_between(v1, v2):
 def compute_unit_vector(vector):
     """
     Normalizes a vector, returning a unit vector pointing in the same direction.
+    Returns the zero vector if the zero vector is given. 
     """
-    return vector / np.linalg.norm(vector)
+    if np.linalg.norm(vector) == 0:
+        return vector
+    else:
+        return vector / np.linalg.norm(vector)
 
 # compute the angle between two vectors in degrees
 def compute_angle_between(v1, v2, unit='degree'):
@@ -119,7 +123,7 @@ def compute_angle_between(v1, v2, unit='degree'):
     v2_u = compute_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
     if unit == 'degree':
-        return angle * 180 / math.pi
+        return to_degrees(angle)
     elif unit == 'radian':
         return angle
     else: 
@@ -207,11 +211,13 @@ def compute_rotation_matrix(axis, theta):
     if (not isinstance(axis, np.ndarray)) or (len(axis) != 3):
         raise TypeError("axis must be np array with 3 elements")
 
-    if not isinstance(theta, float):
+    try:
+        theta = float(theta)
+    except:
         raise TypeError("theta must be float!")
 
     # convert to radians
-    theta = theta * math.pi / 180
+    theta = to_radians(theta)
     axis = compute_unit_vector(axis) 
     
     a = math.cos(theta / 2.0)
@@ -222,3 +228,9 @@ def compute_rotation_matrix(axis, theta):
     return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
                      [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+
+def to_radians(theta):
+    return (theta * math.pi) / 180
+
+def to_degrees(theta):
+    return (theta * 180) / math.pi

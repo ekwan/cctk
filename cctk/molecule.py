@@ -31,6 +31,12 @@ class Molecule():
         if len(geometry) == 0:
             raise ValueError("invalid geometry list")
 
+        try:
+            geometry = np.array(geometry)
+            geometry = geometry.astype(float)
+        except:
+            raise TypeError("geometry cannot be cast to ndarray of floats!")  
+
         if not all(all(isinstance(y, float) for y in x) for x in geometry):
             raise TypeError("each element of self.geometry must be a 3-tuple")
        
@@ -134,12 +140,19 @@ class Molecule():
 
         if self.bonds.has_edge(atom1, atom2):
             self.bonds.remove_edge(atom1, atom2)
-            
-            fragment1 = list(self.bonds[atom1].keys()) + [atom1]
-            fragment2 = list(self.bonds[atom2].keys()) + [atom2]
+           
+            fragments = nx.connected_components(self.bonds)
+            fragment1 = []
+            fragment2 = []
 
-            if atom1 in fragment2:
-                raise ValueError(f"Atom {atom1+1} and atom {atom2+1} are in a ring or otherwise connected!")
+            for fragment in fragments:
+                if atom1 in fragment:
+                    if atom2 in fragment:
+                        raise ValueError(f"Atom {atom1+1} and atom {atom2+1} are in a ring or otherwise connected!")
+                    else:
+                        fragment1 = fragment
+                if atom2 in fragment:
+                    fragment2 = fragment
 
             self.bonds.add_edge(atom1,atom2,weight=bond_order)
             return fragment1, fragment2
@@ -247,20 +260,19 @@ class Molecule():
 
         #### move everything to place atom2 at the origin
         self.translate_molecule(-v2)        
-
+        
         #### perform the actual rotation
         rot_axis = np.cross(v1,v3)
         rot_matrix = compute_rotation_matrix(rot_axis, delta) 
 
         for atom in atoms_to_move:
-            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
-
+            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom+1)))
         #### and move it back!
         self.translate_molecule(v2)        
         
         final_angle = self.get_angle(atom1, atom2, atom3)
-        if np.abs(final_angle - angle) < 0.001:
-            raise ValueError("Error rotating atoms -- operation failed!")
+        if np.abs(final_angle - angle) > 0.001:
+            raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
 
     def set_dihedral():
         pass
