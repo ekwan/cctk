@@ -1,11 +1,17 @@
 import sys
-import os 
+import os
 import re
 import numpy as np
+from abc import ABC, abstractmethod
 
-class InputFile():
+class InputFile(ABC):
+    """
+    Represents a text file for use as input to another program like Gaussian.
+    This class is abstract.
+    """
+    @abstractmethod
     def __init__(self):
-        pass    
+        pass
 
     def write_file(self, filename,text, overwrite_existing=True):
         """
@@ -15,7 +21,7 @@ class InputFile():
             filename (str): path to file, including name (e.g. "path/to/input.gjf")
             text (str): desired contents of file
             overwrite_existing (Bool): whether any existing files should be overwritten or not
-        
+
         Returns:
             `True` if write succeeded, `False` otherwise
         """
@@ -23,13 +29,13 @@ class InputFile():
             raise TypeError("cannot write non-string to file!")
             return False
 
-        if os.path.exists(filename) and overwrite_existing==False:
-            raise ValueError("file already exists; overwrite_existing set to False!")
-            return False
+        if not overwrite_existing and os.path.exists(filename):
+            raise ValueError(f"{filename} already exists but not allowed to overwrite")
         else:
-            try:   
+            try:
                 with open(filename, 'w+') as output_file:
-                    output_file.write(text) 
+                    output_file.write(text)
                 return True
-            except OSError:
+            except OSError as e:
+                print(e)
                 return False
