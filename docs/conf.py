@@ -19,6 +19,8 @@ import os
 print(os.getcwd())
 print(sys.path)
 
+master_doc = 'index'
+
 # -- Project information -----------------------------------------------------
 
 project = 'cctk'
