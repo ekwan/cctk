@@ -158,7 +158,25 @@ class Molecule():
             return fragment1, fragment2
         else:
             raise ValueError(f"No bond between atom {atom1+1} and atom {atom2+1}!")
+       
+    def _get_fragment_containing(self, atom):
+        """ 
+        Get the fragment containing the atom with number `atom`.
         
+        Args:
+            atom (int): the number of the atom
+        
+        Returns:
+            a list of all the atoms in the fragment 
+        """
+
+        self._check_atom_number(atom)
+        fragments = nx.connected_components(self.bonds)
+        for fragment in fragments:
+            if atom in fragment: 
+                return fragment
+                break
+
     def set_distance(self, atom1, atom2, distance, move='group'):
         """
         Adjusts the `atom1`&ndash;`atom2` bond length to be a fixed distance by moving atom2. 
@@ -182,7 +200,10 @@ class Molecule():
 
         atoms_to_move = []
         if move == 'group':
-            _, atoms_to_move = self._get_bond_fragments(atom1, atom2)
+            if self.get_bond_order(atom2, atom3):
+                _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            else:
+                atoms_to_move = self._get_fragment_containing(atom3)
         elif move == 'atom':
             atoms_to_move = [atom2-1]
         else:
@@ -231,6 +252,15 @@ class Molecule():
         self._check_atom_number(atom2)
         self._check_atom_number(atom3)
 
+        if self.get_distance(atom1, atom2) < 0.01: 
+            raise ValueError(f"atom {atom1} and atom {atom2} are too close!")
+
+        if self.get_distance(atom2, atom3) < 0.01: 
+            raise ValueError(f"atom {atom2} and atom {atom3} are too close!")
+        
+        if self.get_distance(atom1, atom3) < 0.01: 
+            raise ValueError(f"atom {atom1} and atom {atom3} are too close!")
+
         try:
             angle = float(angle)
         except: 
@@ -241,7 +271,10 @@ class Molecule():
 
         atoms_to_move = []
         if move == 'group':
-            _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            if self.get_bond_order(atom2, atom3):
+                _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            else:
+                atoms_to_move = self._get_fragment_containing(atom3)
         elif move == 'atom':
             atoms_to_move = [atom3-1]
         else:
@@ -326,3 +359,15 @@ class Molecule():
         v3 = self.get_vector(atom3)
         
         return compute_angle_between(v1-v2, v3-v2)
+
+    def get_bond_order(self, atom1, atom2):
+        """
+        Wrapper to get bond order between two atoms.
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        
+        if self.bonds.has_edge(atom1, atom2):
+            return self.bonds[atom1][atom2]['weight']
+        else:
+            return 0
