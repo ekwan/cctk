@@ -30,7 +30,8 @@ if output_file.successful:
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
     molecule.assign_connectivity()
     print(molecule.geometry )  
-    molecule.set_angle(1, 2, 6, 9.7)
+    molecule.set_angle(1, 2, 6, 120)
+    molecule.set_dihedral(7, 1, 2, 6, 100)
     print(molecule.geometry )  
 
     input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 

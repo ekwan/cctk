@@ -129,8 +129,8 @@ def compute_angle_between(v1, v2, unit='degree'):
     else: 
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
-# compute the dihedral angle in degrees
-def compute_dihedral_between(p0,p1,p2,p3):
+# compute the dihedral angle 
+def compute_dihedral_between(p0, p1, p2, p3, unit='degree'):
     """
     Computes the dihedral angle between four points.
     """
@@ -153,7 +153,15 @@ def compute_dihedral_between(p0,p1,p2,p3):
     # v and w may not be normalized but that's fine since tan is y/x
     x = np.dot(v, w)
     y = np.dot(np.cross(b1, v), w)
-    return np.degrees(np.arctan2(y, x))
+    
+    angle = np.arctan2(y, x)
+    
+    if unit == 'degree':
+        return to_degrees(angle)
+    elif unit == 'radian':
+        return angle
+    else:
+        raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!") 
 
 def search_for_block(lines, start, end, count=1):
     """

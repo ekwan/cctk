@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_angle_between, compute_unit_vector, get_covalent_radius
+from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_angle_between, compute_dihedral_between, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -236,7 +236,7 @@ class Molecule():
 
     def set_angle(self, atom1, atom2, atom3, angle, move='group'):
         """
-        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3` bond length to be a fixed distance by moving atom3. 
+        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3` bond angle to be a fixed value by moving atom3. 
 
         If `move` is set to "group", then all atoms bonded to `atom3` will also be moved. 
         
@@ -318,8 +318,112 @@ class Molecule():
         if np.abs(final_angle - angle) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
 
-    def set_dihedral():
-        pass
+    def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move='group34'):
+        """
+        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3`&ndash;`atom4` dihedral angle to be a fixed value by moving atom 4.. 
+
+        If `move` is set to "atom", then only `atom4` will be moved. 
+        
+        If `move` is set to "group4", then all atoms bonded to `atom4` will also be moved. 
+       
+        If `move` is set to "group34", then all atoms bonded to `atom3` and `atom4` will also be moved. 
+        
+        Args:
+            atom1 (int): the number of the first atom
+            atom2 (int): the number of the second atom
+            atom3 (int): the number of the third atom
+            atom4 (int): the number of the fourth atom
+            dihedral (float): final value in degrees of the `atom1`&ndash;`atom2`&ndash;`atom3`&ndash;`atom4` angle
+            move (str): determines how fragment moving is handled 
+        """
+
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        self._check_atom_number(atom3)
+        self._check_atom_number(atom4)
+
+        for x in [atom1, atom2, atom3, atom4]:
+            for y in [atom1, atom2, atom3, atom4]:
+                if x == y:
+                    continue
+                else: 
+                    if self.get_distance(x, y) < 0.01:
+                        raise ValueError(f"atom {x} and atom {y} are too close!")
+        
+        try:
+            dihedral = float(dihedral)
+        except: 
+            raise TypeError(f"dihedral angle {dihedral} cannot be converted to float!")
+
+        if (not isinstance(dihedral, float)) or ((dihedral < 0) or (dihedral > 360)):
+            raise ValueError(f"invalid value {dihedral} for dihedral angle!")
+
+        atoms_to_move = []
+        if move == 'group34':
+            #### add atom3's fragment to atom4
+            if self.get_bond_order(atom2, atom3):
+                _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            elif self.are_connected(atom2, atom3):
+                raise ValueError(f"atom {atom2} and atom {atom3} are connected but not bonded -- cannot adjust dihedral angle! try manually removing one or more bonds.")
+            else:
+                atoms_to_move = self._get_fragment_containing(atom3)
+            
+            #### and make sure atom4 is in there too!
+            if atom4-1 not in atoms_to_move:
+                atoms_to_move += self._get_fragment_containing(atom4)
+        elif move == 'group4':
+            if self.get_bond_order(atom3, atom4):
+                _, atoms_to_move = self._get_bond_fragments(atom3, atom4)
+            elif self.are_connected(atom3, atom4):
+                raise ValueError(f"atom {atom3} and atom {atom4} are connected but not bonded -- cannot adjust dihedral angle! try manually removing one or more bonds.")
+            else:
+                atoms_to_move = self._get_fragment_containing(atom4)
+        elif move == 'atom':
+            atoms_to_move = [atom4-1]
+        else:
+            raise ValueError(f"Invalid option {move} for parameter 'move'!")
+
+        #### atoms to move is zero-indexed
+        if atom1-1 in atoms_to_move:
+            raise ValueError(f"atom {atom1} and atom {atom4} are connected in multiple ways -- cannot adjust dihedral angle! try manually removing one or more bonds.")
+        
+        if atom2-1 in atoms_to_move:
+            raise ValueError(f"atom {atom2} and atom {atom4} are connected in multiple ways -- cannot adjust dihedral angle! try manually removing one or more bonds.")
+        
+        if atom4-1 not in atoms_to_move:
+            raise ValueError(f"atom {atom4} is not going to be moved... this operation is doomed to fail!")
+        
+        current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
+        delta = dihedral - current_dihedral
+
+        if np.abs(delta) < 0.001: 
+            return
+
+        #### now the real work begins...
+
+        #### move everything to place atom2 at the origin
+        v3 = self.get_vector(atom3)
+        self.translate_molecule(-v3)        
+
+        v1 = self.get_vector(atom1)
+        v2 = self.get_vector(atom2)
+        v4 = self.get_vector(atom4)
+        
+        #### perform the actual rotation
+        #### rot_axis is formally v3 - v2, but v3 is the zero vector after the translation... 
+        rot_axis = -v2 
+        rot_matrix = compute_rotation_matrix(rot_axis, delta) 
+
+        for atom in atoms_to_move:
+            #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
+            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom+1)))
+        
+        #### and move it back!
+        self.translate_molecule(v3) 
+        
+        final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
+        if np.abs(final_dihedral - dihedral) > 0.001:
+            raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
 
     def translate_molecule(self, vector):
         for atom in range(0,len(self.atoms)): 
@@ -370,6 +474,23 @@ class Molecule():
         v3 = self.get_vector(atom3)
         
         return compute_angle_between(v1-v2, v3-v2)
+     
+    def get_dihedral(self, atom1, atom2, atom3, atom4):
+        """
+        Wrapper to compute angle between three atoms. 
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        self._check_atom_number(atom3)
+        self._check_atom_number(atom4)
+       
+        v1 = self.get_vector(atom1)
+        v2 = self.get_vector(atom2)
+        v3 = self.get_vector(atom3)
+        v4 = self.get_vector(atom4)
+        
+        return compute_dihedral_between(v1, v2, v3, v4)
+
 
     def get_bond_order(self, atom1, atom2):
         """
