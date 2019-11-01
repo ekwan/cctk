@@ -9,6 +9,8 @@ class Molecule():
     """
     Class that represents a single molecule, abstractly.
 
+    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). Internal methods (prefixed with ``_``) are generally zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. 
+
     Attributes:
         name (str): for identification, optional
         theory (dict): containing information about theory, to keep track for basis set scans, optional
@@ -65,7 +67,7 @@ class Molecule():
             
     def assign_connectivity(self):            
         """
-        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent raii + 0.5 Angstroms, then they are considered bonded. 
+        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded. 
         """
             
         for i in range(1,len(self.atoms) + 1):
@@ -114,7 +116,7 @@ class Molecule():
 
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         '''
-        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ValueError if the atoms are in a ring. 
+        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring. 
         Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.   
         
         Args: 
@@ -161,7 +163,7 @@ class Molecule():
        
     def _get_fragment_containing(self, atom):
         """ 
-        Get the fragment containing the atom with number `atom`.
+        Get the fragment containing the atom with number ``atom``.
         
         Args:
             atom (int): the number of the atom (indexed from one)
@@ -181,11 +183,11 @@ class Molecule():
 
     def set_distance(self, atom1, atom2, distance, move='group'):
         """
-        Adjusts the `atom1`&ndash;`atom2` bond length to be a fixed distance by moving atom2. 
+        Adjusts the ``atom1`` -- ``atom2`` bond length to be a fixed distance by moving atom2. 
 
-        If `move` is set to "group", then all atoms bonded to `atom2` will also be moved. 
+        If ``move`` is set to "group", then all atoms bonded to ``atom2`` will also be moved. 
         
-        If `move` is set to "atom", then only atom2 will be moved. 
+        If ``move`` is set to "atom", then only atom2 will be moved. 
         
         Args:
             atom1 (int): the number of the first atom
@@ -236,17 +238,17 @@ class Molecule():
 
     def set_angle(self, atom1, atom2, atom3, angle, move='group'):
         """
-        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3` bond angle to be a fixed value by moving atom3. 
+        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``. 
 
-        If `move` is set to "group", then all atoms bonded to `atom3` will also be moved. 
+        If `move` is set to "group", then all atoms bonded to ``atom3`` will also be moved. 
         
-        If `move` is set to "atom", then only `atom3` will be moved. 
+        If `move` is set to "atom", then only ``atom3`` will be moved. 
         
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             atom3 (int): the number of the third atom
-            angle (float): final value in degrees of the `atom1`&ndash;`atom2`&ndash;`atom3` angle
+            angle (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` angle
             move (str): determines how fragment moving is handled 
         """
 
@@ -320,20 +322,20 @@ class Molecule():
 
     def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move='group34'):
         """
-        Adjusts the `atom1`&ndash;`atom2`&ndash;`atom3`&ndash;`atom4` dihedral angle to be a fixed value by moving atom 4.. 
+        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4.. 
 
-        If `move` is set to "atom", then only `atom4` will be moved. 
+        If ``move`` is set to "atom", then only ``atom4`` will be moved. 
         
-        If `move` is set to "group4", then all atoms bonded to `atom4` will also be moved. 
+        If ``move`` is set to "group4", then all atoms bonded to ``atom4`` will also be moved. 
        
-        If `move` is set to "group34", then all atoms bonded to `atom3` and `atom4` will also be moved. 
+        If ``move`` is set to "group34", then all atoms bonded to ``atom3`` and ``atom4`` will also be moved. 
         
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             atom3 (int): the number of the third atom
             atom4 (int): the number of the fourth atom
-            dihedral (float): final value in degrees of the `atom1`&ndash;`atom2`&ndash;`atom3`&ndash;`atom4` angle
+            dihedral (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` angle
             move (str): determines how fragment moving is handled 
         """
 
