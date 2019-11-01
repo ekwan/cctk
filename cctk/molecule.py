@@ -59,11 +59,13 @@ class Molecule():
         self.theory = theory
         self.geometry = geometry
         
+        self.bonds = nx.Graph()
+        self.bonds.add_nodes_from(range(1,len(atoms)+1))
         if bonds:
-            pass
-        else: 
-            self.bonds = nx.Graph()
-            self.bonds.add_nodes_from(range(1,len(atoms)+1))
+            for bond in bonds:
+                self._check_atom_number(bond[0])
+                self._check_atom_number(bond[1])
+                self.add_bond(bond[0], bond[1]) 
             
     def assign_connectivity(self):            
         """

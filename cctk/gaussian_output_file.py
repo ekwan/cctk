@@ -128,6 +128,55 @@ class GaussianOutputFile(OutputFile):
         # return result
         return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
 
+    def read_bonds(self, lines):
+        """
+        Reads bonding information from the output file. 
+        
+        Args:
+            lines (list): the list of lines in the file
+
+        Returns:
+        """
+        
+        bond_array = []
+        current_array = []
+
+        i = 0 
+        in_bonding_section = False
+        while i < len(lines):
+            # read the current line
+            line = lines[i].strip()
+            
+            if in_bonding_section == False:
+                if re.search(r"Initial Parameters", line):
+                    i += 5
+                    in_bonding_section = True
+                    continue
+                else: 
+                    i += 1
+                    continue
+            else:
+                if re.search(r"! R", line):
+                    pieces = list(filter(None, line.split(" ")))
+                    atoms = pieces[2].replace("R", '').replace("(", "").replace(")","").split(",")
+                    try:
+                        current_array.append([int(atoms[0]), int(atoms[1])])
+                    except:
+                        raise ValueError(f"error parsing line {i} - can't extract atoms!")
+                    i += 1
+                    continue
+                elif re.search(r"! A", line):
+                    in_bonding_section = False
+                    bond_array = current_array
+                    current_array = []
+                    i += 1
+                    continue
+                else: 
+                    raise ValueError(f"can't parse line {i} for bonding!")
+
+        return bond_array
+
+
     def geometry():
         pass
         

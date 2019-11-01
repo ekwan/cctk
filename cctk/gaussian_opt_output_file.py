@@ -32,6 +32,9 @@ class GaussianOptOutputFile(GaussianOutputFile):
         """
         lines = super().read_file(filename)
         geometries, atom_list, energies, scf_iterations = super().read_geometries_and_energies(lines)
+        bonds = super().read_bonds(lines)
+
+        print(bonds)
 
         self.atoms = list(map(get_number, atom_list))
         self.geometries = geometries
