@@ -219,7 +219,7 @@ def compute_rotation_matrix(axis, theta):
     # convert to radians
     theta = to_radians(theta)
     axis = compute_unit_vector(axis) 
-    
+   
     a = math.cos(theta / 2.0)
     b, c, d = -axis * math.sin(theta / 2.0)
     

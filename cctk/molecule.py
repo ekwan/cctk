@@ -164,16 +164,18 @@ class Molecule():
         Get the fragment containing the atom with number `atom`.
         
         Args:
-            atom (int): the number of the atom
+            atom (int): the number of the atom (indexed from one)
         
         Returns:
-            a list of all the atoms in the fragment 
+            a (zero-indexed) list of all the atoms in the fragment 
         """
 
         self._check_atom_number(atom)
         fragments = nx.connected_components(self.bonds)
+        
+        ### fragment is zero-indexed
         for fragment in fragments:
-            if atom in fragment: 
+            if atom-1 in fragment: 
                 return fragment
                 break
 
@@ -273,12 +275,18 @@ class Molecule():
         if move == 'group':
             if self.get_bond_order(atom2, atom3):
                 _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            elif self.are_connected(atom2, atom3):
+                raise ValueError(f"atom {atom2} and atom {atom3} are connected but not bonded -- cannot adjust angle! try manually removing one or more bonds.")
             else:
                 atoms_to_move = self._get_fragment_containing(atom3)
         elif move == 'atom':
             atoms_to_move = [atom3-1]
         else:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
+
+        #### atoms to move is zero-indexed
+        if atom1-1 in atoms_to_move:
+            raise ValueError(f"atom {atom1} and atom {atom3} are connected in multiple ways -- cannot adjust angle! try manually removing one or more bonds.")
 
         current_angle = self.get_angle(atom1, atom2, atom3)
         delta = angle - current_angle
@@ -287,21 +295,24 @@ class Molecule():
             return
 
         #### now the real work begins...
-        v1 = self.get_vector(atom1)
-        v2 = self.get_vector(atom2)
-        v3 = self.get_vector(atom3)
 
         #### move everything to place atom2 at the origin
+        v2 = self.get_vector(atom2)
         self.translate_molecule(-v2)        
+
+        v1 = self.get_vector(atom1)
+        v3 = self.get_vector(atom3)
         
         #### perform the actual rotation
         rot_axis = np.cross(v1,v3)
         rot_matrix = compute_rotation_matrix(rot_axis, delta) 
 
         for atom in atoms_to_move:
+            #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
             self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom+1)))
+        
         #### and move it back!
-        self.translate_molecule(v2)        
+        self.translate_molecule(v2) 
         
         final_angle = self.get_angle(atom1, atom2, atom3)
         if np.abs(final_angle - angle) > 0.001:
@@ -311,7 +322,7 @@ class Molecule():
         pass
 
     def translate_molecule(self, vector):
-        for atom in range(1,len(self.atoms)): 
+        for atom in range(0,len(self.atoms)): 
             self.geometry[atom] = list(self.geometry[atom] + vector)
 
     def rotate_molecule(self, axis, degrees):
@@ -367,7 +378,19 @@ class Molecule():
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
         
-        if self.bonds.has_edge(atom1, atom2):
-            return self.bonds[atom1][atom2]['weight']
+        if self.bonds.has_edge(atom1-1, atom2-1):
+            return self.bonds[atom1-1][atom2-1]['weight']
         else:
             return 0
+
+    def are_connected(self, atom1, atom2):
+        """
+        Wrapper to tell if two atoms are connected. 
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        
+        if atom1-1 in self._get_fragment_containing(atom2):
+            return True
+        else:
+            return False
