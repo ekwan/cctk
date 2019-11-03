@@ -3,6 +3,7 @@ import re
 import numpy as np
 
 from cctk import GaussianOutputFile
+from cctk.helper_functions import get_number
 
 class GaussianFreqOutputFile(GaussianOutputFile):
     '''
@@ -21,15 +22,107 @@ class GaussianFreqOutputFile(GaussianOutputFile):
         gibbs_free_energy (float): gibbs free energy, from vibrational correction
         enthalpy (float): enthalpy, from vibrational correction
     '''
-    def __init__(self):
+    def __init__(self, filename):
+        self.read_file(filename)   
         pass    
 
-    def read_file(filename,text):
-        super.read_file()
+    def read_file(self, filename):
+        """
+        Reads a Gaussian optimization out file and populates the attributes accordingly. 
 
-    def create_molecule():
-        mol_geom = self.geometry()
-        pass
+        Args:   
+            filename (str): path to the out file
+        """
+        lines = super().read_file(filename)
+        geometries, atom_list, energies, scf_iterations = super().read_geometries_and_energies(lines)
+        bonds = super().read_bonds(lines)
 
-    def num_imaginary():
-        pass
+        self.atoms = list(map(get_number, atom_list))
+        self.geometries = geometries
+        self.energies = energies
+        self.scf_iterations = scf_iterations
+        
+        self.rms_forces = super()._find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
+        self.rms_displacements= super()._find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+
+        enthalpies = super()._find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
+        if len(enthalpies) == 1:
+            self.enthalpy = enthalpies[0]
+        elif len(enthalpies) > 1:
+            raise ValueError("too many enthalpies found!")
+        
+        gibbs_vals = super()._find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
+        if len(gibbs_vals) == 1:
+            self.gibbs_free_energy = gibbs_vals[0]
+        elif len(gibbs_vals) > 1:
+            raise ValueError("too many gibbs free energies found!")
+
+        frequencies = []
+        try:
+            frequencies += super()._find_parameter(lines, "Frequencies", expected_length=5, which_field=2)
+            frequencies += super()._find_parameter(lines, "Frequencies", expected_length=5, which_field=3)
+            frequencies += super()._find_parameter(lines, "Frequencies", expected_length=5, which_field=4)
+            self.frequencies = sorted(frequencies)
+        except:
+            raise ValueError("error finding frequencies")
+
+    def num_imaginary(self):
+        """ 
+        Returns the number of imaginary frequencies.
+        """
+        return int(np.sum(np.array(self.frequencies) <= 0, axis=0))
+    
+    def get_final_geometry(self):
+        """
+        Returns the last geometry from the out file.
+        """
+        return self.geometries[-1]
+        
+    def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
+        """
+        Computes and outputs geometric parameters (bond distances, angles, or dihedral angles) for every geometry. 
+
+        Args:
+            parameter (str): one of ``angle``, ``distance``, or ``dihedral``
+            atom1 (int): number of the atom in question 
+            atom2 (int): same, but for the second atom
+            atom3 (int): same, but for the third atom (only required for parameter ``angle`` or ``dihedral``)
+            atom4 (int): same, but for the fourth atom (only required for parameter ``dihedral``)
+        
+        Returns:
+            a list of the specified parameter's values for each geometry
+        """
+        output = [None] * len(self.geometries)
+        for index, geometry in enumerate(self.geometries):
+            if parameter == "distance":
+                output[index] = self.get_distance(geometry, atom1, atom2)
+            elif parameter == "angle":
+                if atom3 == None: 
+                    raise ValueError("need atom3 to calculate angle!")
+                output[index] = self.get_angle(geometry, atom1, atom2, atom3)
+            elif parameter == "dihedral":
+                if (atom3 == None) or (atom4 == None):
+                    raise ValueError("need atom3 and atom4 to calculate dihedral!")
+                output[index] = self.get_dihedral(geometry, atom1, atom2, atom3, atom4)
+            else:
+                ValueError("Invalid parameter {}!".format(parameter))
+        
+        return output            
+
+    def get_distance(self, geometry, atom1, atom2):
+        """
+        Wrapper to compute distance between two atoms. 
+        """
+        return super().get_distance(geometry, atom1, atom2)
+   
+    def get_angle(self, geometry, atom1, atom2, atom3):
+        """
+        Wrapper to compute angle between two atoms. 
+        """
+        return super().get_distance(geometry, atom1, atom2, atom3)
+   
+    def get_dihedral(self, geometry, atom1, atom2, atom3, atom4):
+        """
+        Wrapper to compute dihedral between two atoms. 
+        """
+        return super().get_distance(geometry, atom1, atom2, atom3, atom4)

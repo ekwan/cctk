@@ -4,9 +4,9 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, Molecule, GaussianInputFile
+from cctk import GaussianOptOutputFile, GaussianFreqOutputFile, Molecule, GaussianInputFile
 
-output_file = GaussianOptOutputFile('cctk/scripts/acetaldehyde.out')
+output_file = GaussianFreqOutputFile('cctk/scripts/acetaldehyde.out')
 
 energies = output_file.energies
 scf_iter = output_file.scf_iterations
@@ -15,7 +15,9 @@ rms_forces = output_file.rms_forces
 
 if output_file.successful: 
     print("Optimization converged!")
+    print(f"{output_file.num_imaginary()} imaginary frequencies")
 
+print(output_file.frequencies)
 print("{0:5} {1:20} {2:20} {3:15} {4:15} {5:20} {6:15}".format("#", "Energy (Hartree)", "Rel Energy (kcal)", "SCF Cycles", "RMS Force", "RMS Displacement", "Distance(2,5)"))
 
 distances = output_file.print_geometric_parameters('distance',2,5)

@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 from cctk import OutputFile
-from cctk.helper_functions import get_symbol, search_for_block
+from cctk.helper_functions import get_symbol, search_for_block, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 class GaussianOutputFile(OutputFile):
     '''
@@ -176,10 +176,96 @@ class GaussianOutputFile(OutputFile):
 
         return bond_array
 
+    def _find_parameter(self, lines, parameter, expected_length, which_field):
+        """
+        Helper method to search through the output file and find key forces and displacements. 
 
-    def geometry():
-        pass
+        Args:
+            lines (list): list of lines in file
+            parameter (string): test to search for
+            expected_length (int): how many fields there should be
+            which_field (int): which field the parameter is (zero-indexed) 
+        Returns:
+            a list of all the extracted values
+        """
         
-    def energy():
-        pass
+        if (not isinstance(expected_length, int)) or (not isinstance(which_field, int)):
+            raise TypeError("expected_length and which_field must be type int!")
+     
+        if which_field >= expected_length:
+            raise ValueError("can't expect a field after the last field!") 
+       
+        matches = []
+        pattern = False
+        
+        try:
+            pattern = re.compile(parameter)
+        except: 
+            raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
+        
+        if pattern:
+            for line in lines:
+                if pattern.search(line):
+                    fields = re.split(' +', line)
+                    fields = list(filter(None, fields))
+                 
+                    if len(fields) == expected_length:
+                        matches.append(float(fields[which_field]))
+            return matches
 
+    def get_distance(self, geometry, atom1, atom2):
+        """
+        Wrapper to compute distance between two atoms. 
+        """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+        except:
+            raise TypeError("atom1 and atom2 must be int!")
+        
+        if (atom1 <= len(geometry)) and (atom2 <= len(geometry)):
+            v1 = np.array(geometry[atom1-1])
+            v2 = np.array(geometry[atom2-1])
+            return compute_distance_between(v1, v2)
+        else:
+            raise ValueError(f"atom numbers {atom1} or {atom2} too big!")
+
+    def get_angle(self, geometry, atom1, atom2, atom3):
+        """
+        Wrapper to compute angle between two atoms. 
+        """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+            atom3 = int(atom3)
+        except:
+            raise TypeError("atom1, atom2, and atom3 must be int!")
+        
+        if ((atom1 <= len(geometry)) and (atom2 <= len(geometry))) and (atom3 <= len(geometry)):
+            v1 = np.array(geometry[atom1-1])
+            v2 = np.array(geometry[atom2-1])
+            v3 = np.array(geometry[atom3-1])
+            return compute_angle_between(v1, v2, v3)
+        else:
+            raise ValueError(f"atom numbers {atom1}, {atom2}, or {atom3} too big!")
+   
+    def get_dihedral(self, geometry, atom1, atom2, atom3, atom4):
+        """
+        Wrapper to compute dihedral angle between two atoms. 
+        """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+            atom3 = int(atom3)
+            atom4 = int(atom4)
+        except:
+            raise TypeError("atom1, atom2, atom3, and atom4 must be int!")
+        
+        if ((atom1 <= len(geometry)) and (atom2 <= len(geometry))) and ((atom3 <= len(geometry)) and (atom4 <= len(geometry))):
+            v1 = np.array(geometry[atom1-1])
+            v2 = np.array(geometry[atom2-1])
+            v3 = np.array(geometry[atom3-1])
+            v4 = np.array(geometry[atom4-1])
+            return compute_dihedral_between(v1, v2, v3, v4)
+        else:
+            raise ValueError(f"atom numbers {atom1}, {atom2}, {atom3}, or {atom4} too big!")

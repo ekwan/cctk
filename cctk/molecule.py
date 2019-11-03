@@ -177,7 +177,7 @@ class Molecule():
         self._check_atom_number(atom)
         fragments = nx.connected_components(self.bonds)
         
-        ### fragment is zero-indexed
+        #### fragment is zero-indexed
         for fragment in fragments:
             if atom-1 in fragment: 
                 return fragment
