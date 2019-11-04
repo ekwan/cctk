@@ -23,5 +23,12 @@ molecule.set_dihedral(43, 27, 10, 12, 0)
 for angle in angles:    
     molecule.set_dihedral(49, 9, 27, 43, angle)
 
+    chlorines = molecule.get_atoms_by_symbol('Cl')
+    for chlorine in chlorines: 
+        molecule.remove_atom(chlorine)
+
+    number = molecule.add_atom_at_centroid('Cl', [42, 43])
+    molecule.set_distance(9, number, 2.5)
+
     input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 
     input_file.write_file(filename=f"cctk/scripts/scan_angle/catalyst_{angle}.gjf")

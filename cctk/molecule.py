@@ -3,7 +3,7 @@ import re
 import numpy as np
 import networkx as nx
 
-from cctk.helper_functions import get_symbol, compute_rotation_matrix, compute_distance_between, compute_angle_between, compute_dihedral_between, compute_unit_vector, get_covalent_radius
+from cctk.helper_functions import get_symbol, get_number, compute_rotation_matrix, compute_distance_between, compute_angle_between, compute_dihedral_between, compute_unit_vector, get_covalent_radius
 
 class Molecule():
     """
@@ -15,8 +15,8 @@ class Molecule():
         name (str): for identification, optional
         theory (dict): containing information about theory, to keep track for basis set scans, optional
         atoms (list): list of atomic symbols 
-        geometry (list):  list of 3-tuples of xyz coordinates
-        bonds (nx.Graph): Graph object containing connectivity information
+        geometry (list): Numpy array of 3-tuples of xyz coordinates
+        bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         energy (float): holds the calculated energy of the molecule, optional
     """
     
@@ -94,11 +94,11 @@ class Molecule():
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
-        if self.bonds.has_edge(atom1-1, atom2-1):
+        if self.bonds.has_edge(atom1, atom2):
             if self.bonds[atom1][atom2]['weight'] != bond_order:
                 self.bonds[atom1][atom2]['weight'] = bond_order
         else: 
-            self.bonds.add_edge(atom1-1, atom2-1, weight=bond_order)
+            self.bonds.add_edge(atom1, atom2, weight=bond_order)
 
     def _check_atom_number(self, number):
         """
@@ -181,10 +181,6 @@ class Molecule():
         if (not isinstance(bond_order, int)) or (bond_order < 0):
             raise ValueError("invalid bond order!")
 
-        # Users see indexing from one but system requires zero-indexing
-        atom1 += -1
-        atom2 += -1
-
         if self.bonds.has_edge(atom1, atom2):
             self.bonds.remove_edge(atom1, atom2)
            
@@ -195,7 +191,7 @@ class Molecule():
             for fragment in fragments:
                 if atom1 in fragment:
                     if atom2 in fragment:
-                        raise ValueError(f"Atom {atom1+1} and atom {atom2+1} are in a ring or otherwise connected!")
+                        raise ValueError(f"Atom {atom1} and atom {atom2} are in a ring or otherwise connected!")
                     else:
                         fragment1 = fragment
                 if atom2 in fragment:
@@ -204,7 +200,7 @@ class Molecule():
             self.bonds.add_edge(atom1,atom2,weight=bond_order)
             return fragment1, fragment2
         else:
-            raise ValueError(f"No bond between atom {atom1+1} and atom {atom2+1}!")
+            raise ValueError(f"No bond between atom {atom1} and atom {atom2}!")
        
     def _get_fragment_containing(self, atom):
         """ 
@@ -222,7 +218,7 @@ class Molecule():
         
         #### fragment is zero-indexed
         for fragment in fragments:
-            if atom-1 in fragment: 
+            if atom in fragment: 
                 return fragment
                 break
 
@@ -249,12 +245,12 @@ class Molecule():
 
         atoms_to_move = []
         if move == 'group':
-            if self.get_bond_order(atom2, atom3):
-                _, atoms_to_move = self._get_bond_fragments(atom2, atom3)
+            if self.get_bond_order(atom1, atom2):
+                _, atoms_to_move = self._get_bond_fragments(atom1, atom2)
             else:
-                atoms_to_move = self._get_fragment_containing(atom3)
+                atoms_to_move = self._get_fragment_containing(atom2)
         elif move == 'atom':
-            atoms_to_move = [atom2-1]
+            atoms_to_move = [atom2]
         else:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
 
@@ -271,7 +267,7 @@ class Molecule():
         delta = distance - current_distance
         unitv = compute_unit_vector(vb) 
         for atom in atoms_to_move:
-            self.geometry[atom] = self.geometry[atom] + (delta * unitv) 
+            self.geometry[atom-1] = self.geometry[atom-1] + (delta * unitv) 
 
         #### check everything worked okay...
         v1f = self.get_vector(atom1)
@@ -327,12 +323,11 @@ class Molecule():
             else:
                 atoms_to_move = self._get_fragment_containing(atom3)
         elif move == 'atom':
-            atoms_to_move = [atom3-1]
+            atoms_to_move = [atom3]
         else:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
 
-        #### atoms to move is zero-indexed
-        if atom1-1 in atoms_to_move:
+        if atom1 in atoms_to_move:
             raise ValueError(f"atom {atom1} and atom {atom3} are connected in multiple ways -- cannot adjust angle! try manually removing one or more bonds.")
 
         current_angle = self.get_angle(atom1, atom2, atom3)
@@ -355,8 +350,7 @@ class Molecule():
         rot_matrix = compute_rotation_matrix(rot_axis, delta) 
 
         for atom in atoms_to_move:
-            #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
-            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom+1)))
+            self.geometry[atom-1] = list(np.dot(rot_matrix, self.get_vector(atom)))
         
         #### and move it back!
         self.translate_molecule(v2) 
@@ -416,7 +410,7 @@ class Molecule():
                 atoms_to_move = self._get_fragment_containing(atom3)
             
             #### and make sure atom4 is in there too!
-            if atom4-1 not in atoms_to_move:
+            if atom4 not in atoms_to_move:
                 atoms_to_move += self._get_fragment_containing(atom4)
         elif move == 'group4':
             if self.get_bond_order(atom3, atom4):
@@ -426,18 +420,17 @@ class Molecule():
             else:
                 atoms_to_move = self._get_fragment_containing(atom4)
         elif move == 'atom':
-            atoms_to_move = [atom4-1]
+            atoms_to_move = [atom4]
         else:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
 
-        #### atoms to move is zero-indexed
-        if atom1-1 in atoms_to_move:
+        if atom1 in atoms_to_move:
             raise ValueError(f"atom {atom1} and atom {atom4} are connected in multiple ways -- cannot adjust dihedral angle! try manually removing one or more bonds.")
         
-        if atom2-1 in atoms_to_move:
+        if atom2 in atoms_to_move:
             raise ValueError(f"atom {atom2} and atom {atom4} are connected in multiple ways -- cannot adjust dihedral angle! try manually removing one or more bonds.")
         
-        if atom4-1 not in atoms_to_move:
+        if atom4 not in atoms_to_move:
             raise ValueError(f"atom {atom4} is not going to be moved... this operation is doomed to fail!")
         
         current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
@@ -463,7 +456,7 @@ class Molecule():
 
         for atom in atoms_to_move:
             #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
-            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom+1)))
+            self.geometry[atom-1] = list(np.dot(rot_matrix, self.get_vector(atom)))
         
         #### and move it back!
         self.translate_molecule(v3) 
@@ -473,17 +466,90 @@ class Molecule():
             raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
 
     def translate_molecule(self, vector):
+        """
+        Translates the whole molecule by the given vector.
+        """
         for atom in range(0,len(self.atoms)): 
             self.geometry[atom] = list(self.geometry[atom] + vector)
 
     def rotate_molecule(self, axis, degrees):
-        pass
+        """
+        Rotates the whole molecule around the given axis. 
+        """ 
+        rot_matrix = compute_rotation_matrix(axis, degrees) 
+
+        for atom in range(0,len(self.atoms)): 
+            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
 
     def calculate_mass_spectrum():
         pass
     
-    def add_atom_at_centroid(self, symbol, atom_numbers):
-        pass
+    def add_atom_at_centroid(self, symbol, atom_numbers, weighted=False):
+        """
+        Adds atom with symbol ``symbol`` at the centroid of the atoms in ``atom_numbers``.
+
+        If ``weighted`` is ``True``, then the centroid calculation will take into account the atomic numbers of the atoms in question (placing the atom closer to more massive atoms). 
+
+        Otherwise, the average is unweighted.
+        
+        Args: 
+            symbol (str): the atomic symbol of the atom to be added
+            atom_numbers (list): which atoms to put the new atom between
+            weighted (Bool): if the centroid calculation should be weighted (see above)
+        
+        Returns:
+            the number of the new atom
+        """         
+        
+        if (not isinstance(atom_numbers, list)) or (len(atom_numbers) < 2):
+            raise TypeError("atom_numbers must be list with at least two elements")
+
+        if not isinstance(symbol, str):
+            raise TypeError(f"symbol {symbol} must be a string!")
+
+        coords = [None] * len(atom_numbers)
+        weights = [1] * len(atom_numbers)
+        for index, atom in enumerate(atom_numbers): 
+            self._check_atom_number(atom)
+            coords[index] = self.get_vector(atom)
+            if weighted == True:
+                weights[index] = self.atoms[atom-1]
+
+        new_coord = list(np.average(coords, weights=weights, axis=0))
+        return self.add_atom(coordinates=new_coord, symbol=symbol)
+
+    def add_atom(self,symbol,coordinates):
+        """
+        Add an atom with symbol ``symbol`` at position ``coordinates``. 
+        """
+        
+        if (not isinstance(coordinates, list)) or (len(coordinates) != 3):
+            raise TypeError("coordinates must be list with three elements")
+
+        if not isinstance(symbol, str):
+            raise TypeError(f"symbol {symbol} must be a string!")
+    
+        number = get_number(symbol)
+        self.atoms.append(number)
+        self.geometry = np.append(self.geometry, [coordinates], axis=0)
+        self.bonds.add_node(len(self.atoms))
+
+        return len(self.atoms)
+
+    def remove_atom(self, number):
+        """
+        Remove the atom with number ``number``.
+        """
+
+        self._check_atom_number(number)
+
+        try:
+            self.bonds.remove_node(number)
+            self.geometry = np.delete(self.geometry, number-1, axis=0)
+            self.atoms.pop(number-1)
+            return True
+        except: 
+            raise ValueError("removing atom {number} failed!")
 
     def get_atomic_number(self, atom):
         """ 
@@ -546,8 +612,8 @@ class Molecule():
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
         
-        if self.bonds.has_edge(atom1-1, atom2-1):
-            return self.bonds[atom1-1][atom2-1]['weight']
+        if self.bonds.has_edge(atom1, atom2):
+            return self.bonds[atom1][atom2]['weight']
         else:
             return 0
 
@@ -562,3 +628,19 @@ class Molecule():
             return True
         else:
             return False
+
+    def get_atoms_by_symbol(self, symbol):
+        """ 
+        Returns all the numbers of atoms of type ``symbol`` in the molecule. 
+        """
+        if not isinstance(symbol, str):
+            raise TypeError("symbol {symbol} must be a string")
+
+        number = get_number(symbol)
+        atoms = []
+        
+        for index, atom in enumerate(self.atoms):
+            if atom == number:
+                atoms.append(index+1)
+
+        return atoms
