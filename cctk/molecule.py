@@ -113,8 +113,51 @@ class Molecule():
         if number <= 0:
             raise ValueError(f"atom number {number} invalid: must be a positive integer!")
     
-    def formula():
-        pass
+    def formula(self, string=False):
+        """
+        Returns the atomic formula. 
+        
+        If ``string`` is ``False``, then returns a ``dictionary`` with keys elemental symbols and values the number of occurrences. 
+        
+        For instance, ``water.formula()`` would return ``{'O': 1, 'H': 2}``. 
+        
+        If ``string`` is ``True``, then returns a stringified version of the formula according to standard rules. 
+
+        For instance, ``water.formula()`` would return ``H2O``. 
+        
+        Args:
+            string (Bool): if the method should return a string or a dictionary
+
+        Returns:
+            a dictionary or string representing the molecule's formula
+        """
+
+        formula_dict = {}
+        for atom in self.atoms:
+            symbol = get_symbol(atom)
+            if symbol in formula_dict:
+                formula_dict[symbol] += 1
+            else:
+                formula_dict[symbol] = 1
+        if string == False:
+            return formula_dict
+        else:
+            formula = '' 
+            elements = list(formula_dict.keys())
+                    
+            #### H and C always come first  
+            if 'H' in elements: 
+                elements.remove('H')
+                formula += f"H{formula_dict['H']}"
+
+            if 'C' in elements: 
+                elements.remove('C')
+                formula += f"C{formula_dict['C']}"
+
+            for element in sorted(elements):
+                formula += f"{element}{formula_dict[element]}"
+            
+            return formula 
 
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         '''

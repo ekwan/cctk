@@ -30,6 +30,7 @@ for i, energy in enumerate(energies):
 
 if output_file.successful:
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
+    print(molecule.formula(string=True))
     molecule.assign_connectivity()
     print(molecule.geometry )  
     molecule.set_angle(1, 2, 6, 120)

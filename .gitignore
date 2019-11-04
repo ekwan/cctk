@@ -3,3 +3,4 @@
 corin_notes
 docs/_build/*
 test/*
+cctk/scripts/scan_angle/*

@@ -12,6 +12,7 @@ if output_file.successful is False:
     print("not successful!")
 
 molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
+print(molecule.formula(string=True))
 molecule.assign_connectivity()
 
 if not os.path.exists('cctk/scripts/scan_angle'):
