@@ -5,5 +5,6 @@ from .gaussian_freq_output_file import GaussianFreqOutputFile
 
 from .input_file import InputFile
 from .gaussian_input_file import GaussianInputFile
+from .gaussian_job import GaussianJob
 
 from .molecule import Molecule

@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, GaussianFreqOutputFile, Molecule, GaussianInputFile
+from cctk import GaussianOptOutputFile, GaussianFreqOutputFile, Molecule, GaussianJob
 
 output_file = GaussianFreqOutputFile('cctk/scripts/acetaldehyde.out')
 
@@ -37,5 +37,5 @@ if output_file.successful:
     molecule.set_dihedral(7, 1, 2, 6, 100)
     print(molecule.geometry )  
 
-    input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 
+    input_file = GaussianJob.create_opt(molecule.atoms, molecule.geometry)
     input_file.write_file(filename='cctk/scripts/acetaldehyde.gjf')

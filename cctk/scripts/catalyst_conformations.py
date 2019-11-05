@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, Molecule, GaussianInputFile
+from cctk import GaussianOptOutputFile, Molecule, GaussianJob
 
 output_file = GaussianOptOutputFile('cctk/scripts/thiourea_catalyst.out')
 
@@ -30,5 +30,5 @@ for angle in angles:
     number = molecule.add_atom_at_centroid('Cl', [42, 43])
     molecule.set_distance(9, number, 2.5)
 
-    input_file = GaussianInputFile(molecule.atoms, molecule.geometry, header='#p opt b3lyp/midix') 
+    input_file = GaussianJob.create_constrained_opt(molecule.atoms, molecule.geometry, [['D', 49, 9, 27, 43, 'F']])
     input_file.write_file(filename=f"cctk/scripts/scan_angle/catalyst_{angle}.gjf")

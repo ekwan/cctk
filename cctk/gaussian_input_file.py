@@ -19,7 +19,7 @@ class GaussianInputFile(InputFile):
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
     """
 
-    def __init__(self, atoms, geometry, theory=None, header=None, footer=None, title=None, charge=0, multiplicity=1):
+    def __init__(self, atoms, geometry, theory=None, header=None, footer=None, title='title', charge=0, multiplicity=1):
         """
         Create new GaussianInputFile object.
         """

@@ -1,8 +1,8 @@
 %nprocshared=16GB
 %mem=32GB
-#p opt b3lyp/midix
+#p opt=(ts, calcfc, noeigentest) freq=noraman b3lyp/6-31g(d)
 
-None
+title
 
 0 1
  6 0.23402700 0.39962000 -0.00000200
