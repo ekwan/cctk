@@ -7,7 +7,7 @@ class GaussianJob():
     Creates input files of the specific type through factory methods.
     """
     
-    @classmethod
+    @staticmethod
     def _check_atoms_geometry(cls, atoms, geometry):
         """
         Performs basic checks on ``atoms``and ``geometry`` prior to creating a ``GaussianInputFile``.   
@@ -25,7 +25,8 @@ class GaussianJob():
         for vector in geometry: 
             if len(vector) != 3:
                 raise TypeError("each element of geometry must be a 3-element list!")
-    @classmethod
+
+    @staticmethod
     def create_opt(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', freq=True, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
         """
         Creates a basic Gaussian optimization job. 
@@ -58,7 +59,7 @@ class GaussianJob():
         
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
     
-    @classmethod
+    @staticmethod
     def create_ts_opt(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', freq=True, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
         """
         Creates a basic Gaussian transition state optimization job. 
@@ -91,7 +92,7 @@ class GaussianJob():
 
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
 
-    @classmethod
+    @staticmethod
     def create_constrained_opt(cls, atoms, geometry, constraints, functional='b3lyp', basis='6-31g(d)', freq=False, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
         """
         Creates a basic Gaussian optimization job. 
@@ -132,7 +133,7 @@ class GaussianJob():
         
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=footer, charge=charge, multiplicity=multiplicity)
     
-    @classmethod
+    @staticmethod
     def create_nmr(cls, atoms, geometry, nmr="giao" functional='b3lyp', basis='6-31g(d)', scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
         """
         Creates a Gaussian NMR job. 
@@ -164,7 +165,7 @@ class GaussianJob():
         
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
     
-    @classmethod
+    @staticmethod
     def create_irc(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
         """
         Creates two Gaussian IRC jobs, one in the forward direction and one in the reverse direction. The ``CalcFc`` option is used. 

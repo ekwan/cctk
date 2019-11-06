@@ -113,20 +113,20 @@ class Molecule():
         if number <= 0:
             raise ValueError(f"atom number {number} invalid: must be a positive integer!")
     
-    def formula(self, string=False):
+    def formula(self, return_dict=False):
         """
         Returns the atomic formula. 
         
-        If ``string`` is ``False``, then returns a ``dictionary`` with keys elemental symbols and values the number of occurrences. 
+        If ``return_dict`` is ``True``, then returns a ``dictionary`` with keys elemental symbols and values the number of occurrences. 
         
         For instance, ``water.formula()`` would return ``{'O': 1, 'H': 2}``. 
         
-        If ``string`` is ``True``, then returns a stringified version of the formula according to standard rules. 
+        If ``return_dict`` is ``False``, then returns a stringified version of the formula according to standard rules. 
 
         For instance, ``water.formula()`` would return ``H2O``. 
         
         Args:
-            string (Bool): if the method should return a string or a dictionary
+            return_dict (Bool): if the method should return a string or a dictionary
 
         Returns:
             a dictionary or string representing the molecule's formula
