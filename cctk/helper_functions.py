@@ -6,23 +6,24 @@ import re
 try:
     import importlib.resources as pkg_resources
 except ImportError:
-    import importlib_resources as pkg_resources 
+    import importlib_resources as pkg_resources
 
-from . import data # relative-import the *package* containing the templates
+from . import data  # relative-import the *package* containing the templates
 
 """
 This code populates ELEMENT_DICTIONARY from a static datafile.
 """
 ELEMENT_DICTIONARY = {}
-#with open('data/isotopes.csv', mode='r') as isotope_file:
-isotope_file = pkg_resources.open_text(data, 'isotopes.csv')
-for line in isotope_file: 
-    symbol, number, mass, abundance  = line.split(',')
+# with open('data/isotopes.csv', mode='r') as isotope_file:
+isotope_file = pkg_resources.open_text(data, "isotopes.csv")
+for line in isotope_file:
+    symbol, number, mass, abundance = line.split(",")
     if symbol == "Symbol":
         continue
     ELEMENT_DICTIONARY[number] = symbol
 
 INV_ELEMENT_DICTIONARY = {v: k for k, v in ELEMENT_DICTIONARY.items()}
+
 
 def get_symbol(atomic_number):
     """ 
@@ -41,6 +42,7 @@ def get_symbol(atomic_number):
     else:
         raise ValueError("unknown atomic number: ", atomic_number)
 
+
 def get_number(atomic_symbol):
     """
     Gets atomic number from a given element symbol. 
@@ -57,19 +59,20 @@ def get_number(atomic_symbol):
     else:
         raise ValueError("unknown atomic symbol: ", atomic_symbol)
 
-   
+
 """
 This code populates COVALENT_RADII_DICTIONARY from a static datafile.
 """
 COVALENT_RADII_DICTIONARY = {}
-covalent_radii = pkg_resources.open_text(data, 'covalent_radii.csv')
+covalent_radii = pkg_resources.open_text(data, "covalent_radii.csv")
 for line in covalent_radii:
-    line_fragments = line.split(',')
+    line_fragments = line.split(",")
 
     #### There's a variable number from line to line, but the first three are always number, symbol, radius
     if line_fragments[1] == "Symbol":
         continue
     COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
+
 
 def get_covalent_radius(atomic_number):
     """
@@ -81,19 +84,21 @@ def get_covalent_radius(atomic_number):
     Returns: 
         the covalent radius in Angstroms (float)
     """
-    
+
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
     if atomic_number in COVALENT_RADII_DICTIONARY:
         return float(COVALENT_RADII_DICTIONARY[atomic_number])
     else:
-        raise ValueError("no covalent radius defined for atomic number ", atomic_number) 
+        raise ValueError("no covalent radius defined for atomic number ", atomic_number)
+
 
 def compute_distance_between(v1, v2):
     """ 
     Computes the L2 distance between two vectors.
     """
-    return np.linalg.norm(v1-v2)
+    return np.linalg.norm(v1 - v2)
+
 
 # normalizes the given vector so that it has unit length
 def compute_unit_vector(vector):
@@ -106,8 +111,9 @@ def compute_unit_vector(vector):
     else:
         return vector / np.linalg.norm(vector)
 
+
 # compute the angle between two vectors in degrees
-def compute_angle_between(v1, v2, unit='degree'):
+def compute_angle_between(v1, v2, unit="degree"):
     """
     Computes the angle between two vectors.
 
@@ -122,19 +128,20 @@ def compute_angle_between(v1, v2, unit='degree'):
     v1_u = compute_unit_vector(v1)
     v2_u = compute_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
-    if unit == 'degree':
+    if unit == "degree":
         return to_degrees(angle)
-    elif unit == 'radian':
+    elif unit == "radian":
         return angle
-    else: 
+    else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
-# compute the dihedral angle 
-def compute_dihedral_between(p0, p1, p2, p3, unit='degree'):
+
+# compute the dihedral angle
+def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     """
     Computes the dihedral angle between four points.
     """
-    b0 = -1.0*(p1 - p0)
+    b0 = -1.0 * (p1 - p0)
     b1 = p2 - p1
     b2 = p3 - p2
 
@@ -146,22 +153,23 @@ def compute_dihedral_between(p0, p1, p2, p3, unit='degree'):
     #   = b0 minus component that aligns with b1
     # w = projection of b2 onto plane perpendicular to b1
     #   = b2 minus component that aligns with b1
-    v = b0 - np.dot(b0, b1)*b1
-    w = b2 - np.dot(b2, b1)*b1
+    v = b0 - np.dot(b0, b1) * b1
+    w = b2 - np.dot(b2, b1) * b1
 
     # angle between v and w in a plane is the torsion angle
     # v and w may not be normalized but that's fine since tan is y/x
     x = np.dot(v, w)
     y = np.dot(np.cross(b1, v), w)
-    
+
     angle = np.arctan2(y, x)
-    
-    if unit == 'degree':
+
+    if unit == "degree":
         return to_degrees(angle)
-    elif unit == 'radian':
+    elif unit == "radian":
         return angle
     else:
-        raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!") 
+        raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
+
 
 def compute_rotation_matrix(axis, theta):
     """
@@ -186,19 +194,25 @@ def compute_rotation_matrix(axis, theta):
 
     # convert to radians
     theta = to_radians(theta)
-    axis = compute_unit_vector(axis) 
-   
+    axis = compute_unit_vector(axis)
+
     a = math.cos(theta / 2.0)
     b, c, d = -axis * math.sin(theta / 2.0)
-    
+
     aa, bb, cc, dd = a * a, b * b, c * c, d * d
     bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+    return np.array(
+        [
+            [aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+            [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+            [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc],
+        ]
+    )
+
 
 def to_radians(theta):
     return (theta * math.pi) / 180
+
 
 def to_degrees(theta):
     return (theta * 180) / math.pi

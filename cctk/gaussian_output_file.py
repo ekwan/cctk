@@ -5,8 +5,9 @@ import numpy as np
 from cctk import OutputFile
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
+
 class GaussianOutputFile(OutputFile):
-    '''
+    """
     Generic class for all Gaussian output files. 
 
     Attributes: 
@@ -28,24 +29,25 @@ class GaussianOutputFile(OutputFile):
         frequencies (list): list of frequencies
         gibbs_free_energy (float): gibbs free energy, from vibrational correction
         enthalpy (float): enthalpy, from vibrational correction
-    '''
+    """
+
     def __init__(self, atoms, geometries, bonds=None):
-        if (len(atoms) == 0) or (len(geometries) == 0): 
+        if (len(atoms) == 0) or (len(geometries) == 0):
             raise ValueError("can't have a molecule without atoms or geometries!")
 
-        for atom in atoms: 
+        for atom in atoms:
             try:
                 atom = int(atom)
                 get_symbol(atom)
-            except: 
+            except:
                 raise ValueError(f"atom number {atom} is not valid!")
 
-        for geometry in geometries: 
-            if (len(geometry) != len(atoms)):
-                raise ValueError("length of atoms and geometry do not match!")        
+        for geometry in geometries:
+            if len(geometry) != len(atoms):
+                raise ValueError("length of atoms and geometry do not match!")
 
         if bonds:
-            for bond in bonds: 
+            for bond in bonds:
                 if len(bond) != 2:
                     raise ValueError("while 3-center bonding is possible, it's a no-go in cctk")
                 if (not isinstance(bond[0], int)) or (not isinstance(bond[1], int)):
@@ -54,10 +56,10 @@ class GaussianOutputFile(OutputFile):
                     raise ValueError(f"invalid atom {bond[0]}")
                 if (bond[1] > len(atoms)) or (bond[1] <= 0):
                     raise ValueError(f"invalid atom {bond[1]}")
-        
+
         self.atoms = atoms
         self.geometries = geometries
-        self.bonds = bonds 
+        self.bonds = bonds
 
     def get_distance(self, geometry, atom1, atom2):
         """
@@ -68,10 +70,10 @@ class GaussianOutputFile(OutputFile):
             atom2 = int(atom2)
         except:
             raise TypeError("atom1 and atom2 must be int!")
-        
+
         if (atom1 <= len(geometry)) and (atom2 <= len(geometry)):
-            v1 = np.array(geometry[atom1-1])
-            v2 = np.array(geometry[atom2-1])
+            v1 = np.array(geometry[atom1 - 1])
+            v2 = np.array(geometry[atom2 - 1])
             return compute_distance_between(v1, v2)
         else:
             raise ValueError(f"atom numbers {atom1} or {atom2} too big!")
@@ -86,15 +88,15 @@ class GaussianOutputFile(OutputFile):
             atom3 = int(atom3)
         except:
             raise TypeError("atom1, atom2, and atom3 must be int!")
-        
+
         if ((atom1 <= len(geometry)) and (atom2 <= len(geometry))) and (atom3 <= len(geometry)):
-            v1 = np.array(geometry[atom1-1])
-            v2 = np.array(geometry[atom2-1])
-            v3 = np.array(geometry[atom3-1])
+            v1 = np.array(geometry[atom1 - 1])
+            v2 = np.array(geometry[atom2 - 1])
+            v3 = np.array(geometry[atom3 - 1])
             return compute_angle_between(v1, v2, v3)
         else:
             raise ValueError(f"atom numbers {atom1}, {atom2}, or {atom3} too big!")
-   
+
     def get_dihedral(self, geometry, atom1, atom2, atom3, atom4):
         """
         Wrapper to compute dihedral angle between two atoms. 
@@ -106,12 +108,12 @@ class GaussianOutputFile(OutputFile):
             atom4 = int(atom4)
         except:
             raise TypeError("atom1, atom2, atom3, and atom4 must be int!")
-        
+
         if ((atom1 <= len(geometry)) and (atom2 <= len(geometry))) and ((atom3 <= len(geometry)) and (atom4 <= len(geometry))):
-            v1 = np.array(geometry[atom1-1])
-            v2 = np.array(geometry[atom2-1])
-            v3 = np.array(geometry[atom3-1])
-            v4 = np.array(geometry[atom4-1])
+            v1 = np.array(geometry[atom1 - 1])
+            v2 = np.array(geometry[atom2 - 1])
+            v3 = np.array(geometry[atom3 - 1])
+            v4 = np.array(geometry[atom4 - 1])
             return compute_dihedral_between(v1, v2, v3, v4)
         else:
             raise ValueError(f"atom numbers {atom1}, {atom2}, {atom3}, or {atom4} too big!")
@@ -121,13 +123,13 @@ class GaussianOutputFile(OutputFile):
         Returns the number of imaginary frequencies.
         """
         return int(np.sum(np.array(self.frequencies) <= 0, axis=0))
-    
+
     def get_final_geometry(self):
         """
         Returns the last geometry from the out file.
         """
         return self.geometries[-1]
-        
+
     def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """
         Computes and outputs geometric parameters (bond distances, angles, or dihedral angles) for every geometry. 
@@ -147,7 +149,7 @@ class GaussianOutputFile(OutputFile):
             if parameter == "distance":
                 output[index] = self.get_distance(geometry, atom1, atom2)
             elif parameter == "angle":
-                if atom3 == None: 
+                if atom3 == None:
                     raise ValueError("need atom3 to calculate angle!")
                 output[index] = self.get_angle(geometry, atom1, atom2, atom3)
             elif parameter == "dihedral":
@@ -156,6 +158,5 @@ class GaussianOutputFile(OutputFile):
                 output[index] = self.get_dihedral(geometry, atom1, atom2, atom3, atom4)
             else:
                 ValueError("Invalid parameter {}!".format(parameter))
-        
-        return output            
 
+        return output

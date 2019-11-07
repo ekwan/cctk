@@ -7,6 +7,7 @@ from cctk.helper_functions import get_symbol
 Functions to help with parsing Gaussian files
 """
 
+
 def read_geometries_and_energies(lines):
     """
     A large and unwieldy method - reads geometries, symbol lists, and energies from the file.
@@ -20,7 +21,7 @@ def read_geometries_and_energies(lines):
         array of energies
         array containing the number of SCF iterations per step 
     """
-    
+
     file_geometries = []
     file_symbol_lists = []
     file_energies = []
@@ -30,7 +31,7 @@ def read_geometries_and_energies(lines):
     this_symbol_list = []
     this_energy = None
 
-    i = 0 
+    i = 0
     in_geometry_block = False
     while i < len(lines):
         # read the current line
@@ -48,7 +49,7 @@ def read_geometries_and_energies(lines):
 
         # read geometry if applicable
         if in_geometry_block:
-            fields = re.split(' +', line)
+            fields = re.split(" +", line)
             if len(fields) != 6:
                 print("error parsing >>> " + line)
                 raise ValueError("unexpected number of fields on geometry line")
@@ -58,8 +59,8 @@ def read_geometries_and_energies(lines):
                 this_symbol_list = []
                 this_energy = None
             try:
-                x,y,z = float(fields[3]), float(fields[4]), float(fields[5])
-                this_geometry.append([x,y,z])
+                x, y, z = float(fields[3]), float(fields[4]), float(fields[5])
+                this_geometry.append([x, y, z])
                 symbol = get_symbol(fields[1])
                 this_symbol_list.append(symbol)
             except:
@@ -69,16 +70,16 @@ def read_geometries_and_energies(lines):
 
         # read energy if applicable
         if not in_geometry_block and line.startswith("SCF Done"):
-            fields = re.split(' +', line)
+            fields = re.split(" +", line)
             if len(fields) != 9:
                 print("error parsing >>> " + line)
                 raise ValueError("unexpected number of fields on energy line")
             this_energy = float(fields[4])
             num_cycles = int(fields[7])
-             
+
             if len(this_geometry) == 0:
                 raise ValueError("energy without geometry")
-            
+
             # store results
             file_geometries.append(this_geometry)
             file_symbol_lists.append(this_symbol_list)
@@ -96,6 +97,7 @@ def read_geometries_and_energies(lines):
     # return result
     return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
 
+
 def search_for_block(lines, start, end, count=1):
     """
     Search through a file (lines) and locate a block starting with "start" and ending with "end".
@@ -109,7 +111,7 @@ def search_for_block(lines, start, end, count=1):
     Returns: 
         a single match (str) if count == 1 or a list of matches (str) if count > 1.
     """
-    current_match = '' 
+    current_match = ""
     match = [None] * count
 
     start_pattern = re.compile(start)
@@ -118,7 +120,7 @@ def search_for_block(lines, start, end, count=1):
     index = 0
     for line in lines:
         if current_match:
-            if end_pattern.search(line): 
+            if end_pattern.search(line):
                 match[index] = current_match
                 current_match = None
                 index += 1
@@ -126,7 +128,7 @@ def search_for_block(lines, start, end, count=1):
                 if index == count:
                     break
             else:
-                current_match = current_match + line 
+                current_match = current_match + line
         else:
             if start_pattern.search(line):
                 current_match = line
@@ -135,6 +137,7 @@ def search_for_block(lines, start, end, count=1):
         return match[0]
     else:
         return match
+
 
 def read_bonds(lines):
     """
@@ -146,28 +149,28 @@ def read_bonds(lines):
     Returns:
         array of atoms that are bonded to each other
     """
-    
+
     bond_array = []
     current_array = []
 
-    i = 0 
+    i = 0
     in_bonding_section = False
     while i < len(lines):
         # read the current line
         line = lines[i].strip()
-        
+
         if in_bonding_section == False:
             if re.search(r"Initial Parameters", line):
                 i += 5
                 in_bonding_section = True
                 continue
-            else: 
+            else:
                 i += 1
                 continue
         else:
             if re.search(r"! R", line):
                 pieces = list(filter(None, line.split(" ")))
-                atoms = pieces[2].replace("R", '').replace("(", "").replace(")","").split(",")
+                atoms = pieces[2].replace("R", "").replace("(", "").replace(")", "").split(",")
                 try:
                     current_array.append([int(atoms[0]), int(atoms[1])])
                 except:
@@ -180,10 +183,11 @@ def read_bonds(lines):
                 current_array = []
                 i += 1
                 continue
-            else: 
+            else:
                 raise ValueError(f"can't parse line {i} for bonding!")
 
     return bond_array
+
 
 def find_parameter(lines, parameter, expected_length, which_field):
     """
@@ -197,29 +201,27 @@ def find_parameter(lines, parameter, expected_length, which_field):
     Returns:
         a list of all the extracted values
     """
-    
+
     if (not isinstance(expected_length, int)) or (not isinstance(which_field, int)):
         raise TypeError("expected_length and which_field must be type int!")
- 
+
     if which_field >= expected_length:
-        raise ValueError("can't expect a field after the last field!") 
-   
+        raise ValueError("can't expect a field after the last field!")
+
     matches = []
     pattern = False
-    
+
     try:
         pattern = re.compile(parameter)
-    except: 
+    except:
         raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
-    
+
     if pattern:
         for line in lines:
             if pattern.search(line):
-                fields = re.split(' +', line)
+                fields = re.split(" +", line)
                 fields = list(filter(None, fields))
-             
+
                 if len(fields) == expected_length:
                     matches.append(float(fields[which_field]))
         return matches
-
-

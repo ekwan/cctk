@@ -1,15 +1,22 @@
 import numpy as np
 
 from cctk import GaussianOutputFile, OutputFile
-from cctk.helper_functions import get_number, get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between
+from cctk.helper_functions import (
+    get_number,
+    get_symbol,
+    compute_distance_between,
+    compute_angle_between,
+    compute_dihedral_between,
+)
 
 import cctk.parse_gaussian as parse
+
 
 class GaussianData(OutputFile):
     """
     Creates output file instances of the specific type through factory methods.
     """
-    
+
     @classmethod
     def read_opt(cls, filename, return_lines=False):
         """
@@ -23,25 +30,25 @@ class GaussianData(OutputFile):
             GaussianOutputFile object
             (optional) the lines of the file
         """
-        lines, header, success  = cls._read_file(filename)
-        geometries, atom_list, energies, scf_iterations = parse.read_geometries_and_energies(lines)
+        lines, header, success = cls._read_file(filename)
+        (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
         atoms = list(map(get_number, atom_list))
         bonds = parse.read_bonds(lines)
 
         f = GaussianOutputFile(atoms, geometries, bonds)
-        
+
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
         f.success = success
 
         f.rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
-        f.rms_displacements= parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
-        
+        f.rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+
         if return_lines:
             return f, lines
-        else: 
-            return f 
+        else:
+            return f
 
     @classmethod
     def read_opt_freq(cls, filename):
@@ -61,7 +68,7 @@ class GaussianData(OutputFile):
             f.enthalpy = enthalpies[0]
         elif len(enthalpies) > 1:
             raise ValueError("too many enthalpies found!")
-        
+
         gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
         if len(gibbs_vals) == 1:
             f.gibbs_free_energy = gibbs_vals[0]
@@ -78,10 +85,10 @@ class GaussianData(OutputFile):
             raise ValueError("error finding frequencies")
 
         return f
-    
+
     @classmethod
     def _read_file(cls, filename):
-        '''
+        """
         Read a Gaussian output file. Automatically determines the theory line and if the job was successful. 
         
         Args:
@@ -91,7 +98,7 @@ class GaussianData(OutputFile):
             lines (list): a list of all the lines
             header (str): the header string
             success (int): how many of the subjobs succeeded
-        '''        
+        """
         lines = super().read_file(filename)
         header = parse.search_for_block(lines, "#p", "----")
 
@@ -101,5 +108,3 @@ class GaussianData(OutputFile):
                 success += 1
 
         return lines, header, success
-
-    

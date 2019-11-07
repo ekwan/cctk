@@ -2,11 +2,12 @@ import numpy as np
 
 from cctk import GaussianInputFile
 
-class GaussianJob():
+
+class GaussianJob:
     """
     Creates input files of the specific type through factory methods.
     """
-    
+
     @classmethod
     def _check_atoms_geometry(cls, atoms, geometry):
         """
@@ -14,20 +15,22 @@ class GaussianJob():
         """
         if len(atoms) != len(geometry):
             raise ValueError("length of atoms and length of geometry arrays must be the same!")
-       
-        for atom in atoms: 
+
+        for atom in atoms:
             if not isinstance(atom, int):
-                raise TypeError(f"atom {atom} is not int")    
+                raise TypeError(f"atom {atom} is not int")
 
             if atom <= 0:
                 raise ValueError(f"{atom} is not a valid atom number")
 
-        for vector in geometry: 
+        for vector in geometry:
             if len(vector) != 3:
                 raise TypeError("each element of geometry must be a 3-element list!")
 
     @classmethod
-    def create_opt(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', freq=True, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
+    def create_opt(
+        cls, atoms, geometry, functional="b3lyp", basis="6-31g(d)", freq=True, scrf=False, solvent="", disp=False, charge=0, multiplicity=1
+    ):
         """
         Creates a basic Gaussian optimization job. 
 
@@ -47,20 +50,22 @@ class GaussianJob():
             the created GaussianInputFile object
         """
         cls._check_atoms_geometry(atoms, geometry)
-        
+
         header = "#p opt"
         if freq:
             header += " freq=noraman"
         header += f" {functional}/{basis}"
-        if (scrf and solvent):
-            header += f" scrf=({scrf}, solvent={solvent})" 
+        if scrf and solvent:
+            header += f" scrf=({scrf}, solvent={solvent})"
         if disp:
             header += f" empiricaldispersion={disp}"
-        
+
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
-    
+
     @classmethod
-    def create_ts_opt(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', freq=True, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
+    def create_ts_opt(
+        cls, atoms, geometry, functional="b3lyp", basis="6-31g(d)", freq=True, scrf=False, solvent="", disp=False, charge=0, multiplicity=1
+    ):
         """
         Creates a basic Gaussian transition state optimization job. 
 
@@ -80,20 +85,33 @@ class GaussianJob():
             the created GaussianInputFile object
         """
         cls._check_atoms_geometry(atoms, geometry)
-        
+
         header = "#p opt=(ts, calcfc, noeigentest)"
         if freq:
             header += " freq=noraman"
         header += f" {functional}/{basis}"
-        if (scrf and solvent):
-            header += f" scrf=({scrf}, solvent={solvent})" 
+        if scrf and solvent:
+            header += f" scrf=({scrf}, solvent={solvent})"
         if disp:
             header += f" empiricaldispersion={disp}"
 
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
 
     @classmethod
-    def create_constrained_opt(cls, atoms, geometry, constraints, functional='b3lyp', basis='6-31g(d)', freq=False, scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
+    def create_constrained_opt(
+        cls,
+        atoms,
+        geometry,
+        constraints,
+        functional="b3lyp",
+        basis="6-31g(d)",
+        freq=False,
+        scrf=False,
+        solvent="",
+        disp=False,
+        charge=0,
+        multiplicity=1,
+    ):
         """
         Creates a basic Gaussian optimization job. 
 
@@ -116,25 +134,27 @@ class GaussianJob():
         cls._check_atoms_geometry(atoms, geometry)
         if len(constraints) == 0:
             raise TypeError("no constraints -- perhaps a regular opt would be better?")
-        
+
         header = "#p opt=modredundant"
         if freq:
             header += " freq=noraman"
         header += f" {functional}/{basis}"
-        if (scrf and solvent):
-            header += f" scrf=({scrf}, solvent={solvent})" 
+        if scrf and solvent:
+            header += f" scrf=({scrf}, solvent={solvent})"
         if disp:
             header += f" empiricaldispersion={disp}"
 
-        footer = ''
+        footer = ""
         for constraint in constraints:
             footer += " ".join(str(x) for x in constraint)
-            footer += "\n"    
-        
+            footer += "\n"
+
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=footer, charge=charge, multiplicity=multiplicity)
-    
+
     @classmethod
-    def create_nmr(cls, atoms, geometry, nmr="giao", functional='b3lyp', basis='6-31g(d)', scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
+    def create_nmr(
+        cls, atoms, geometry, nmr="giao", functional="b3lyp", basis="6-31g(d)", scrf=False, solvent="", disp=False, charge=0, multiplicity=1
+    ):
         """
         Creates a Gaussian NMR job. 
 
@@ -156,17 +176,17 @@ class GaussianJob():
         cls._check_atoms_geometry(atoms, geometry)
         if (not nmr) or (not isinstance(nmr, str)):
             raise TypeError("can't run nmr job without keyword nmr!")
-        
+
         header = f"#p nmr={nmr} {functional}/{basis}"
-        if (scrf and solvent):
-            header += f" scrf=({scrf}, solvent={solvent})" 
+        if scrf and solvent:
+            header += f" scrf=({scrf}, solvent={solvent})"
         if disp:
             header += f" empiricaldispersion={disp}"
-        
+
         return GaussianInputFile(atoms, geometry, theory=None, header=header, footer=None, charge=charge, multiplicity=multiplicity)
-    
+
     @classmethod
-    def create_irc(cls, atoms, geometry, functional='b3lyp', basis='6-31g(d)', scrf=False, solvent='', disp=False, charge=0, multiplicity=1):
+    def create_irc(cls, atoms, geometry, functional="b3lyp", basis="6-31g(d)", scrf=False, solvent="", disp=False, charge=0, multiplicity=1):
         """
         Creates two Gaussian IRC jobs, one in the forward direction and one in the reverse direction. The ``CalcFc`` option is used. 
 
@@ -185,16 +205,16 @@ class GaussianJob():
             the created GaussianInputFile objects, forward first and then reverse
         """
         cls._check_atoms_geometry(atoms, geometry)
-        
+
         header_f = f"#p irc=(calcfc, forward) {functional}/{basis}"
         header_r = f"#p irc=(calcfc, reverse) {functional}/{basis}"
-        if (scrf and solvent):
-            header_f += f" scrf=({scrf}, solvent={solvent})" 
-            header_r += f" scrf=({scrf}, solvent={solvent})" 
+        if scrf and solvent:
+            header_f += f" scrf=({scrf}, solvent={solvent})"
+            header_r += f" scrf=({scrf}, solvent={solvent})"
         if disp:
             header_f += f" empiricaldispersion={disp}"
-            header_r += f" scrf=({scrf}, solvent={solvent})" 
-        
+            header_r += f" scrf=({scrf}, solvent={solvent})"
+
         job_f = GaussianInputFile(atoms, geometry, theory=None, header=header_f, footer=None, charge=charge, multiplicity=multiplicity)
         job_r = GaussianInputFile(atoms, geometry, theory=None, header=header_r, footer=None, charge=charge, multiplicity=multiplicity)
         return job_f, job_r

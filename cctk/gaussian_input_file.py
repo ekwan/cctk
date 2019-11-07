@@ -4,6 +4,7 @@ import numpy as np
 
 from cctk import InputFile
 
+
 class GaussianInputFile(InputFile):
     """
     Class for Gaussian input files 
@@ -19,7 +20,7 @@ class GaussianInputFile(InputFile):
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
     """
 
-    def __init__(self, atoms, geometry, theory=None, header=None, footer=None, title='title', charge=0, multiplicity=1):
+    def __init__(self, atoms, geometry, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1):
         """
         Create new GaussianInputFile object.
         """
@@ -39,31 +40,31 @@ class GaussianInputFile(InputFile):
         """ 
         Write a .gjf file, using object attributes. 
         """
-        
+
         if self.header:
-            text = ''
-            text += "%nprocshared={}GB\n".format(cores) 
-            text += "%mem={}GB\n".format(memory) 
-            
+            text = ""
+            text += "%nprocshared={}GB\n".format(cores)
+            text += "%mem={}GB\n".format(memory)
+
             if chk_path:
-                text += "%chk={}\n".format(chk_path)   
-            
+                text += "%chk={}\n".format(chk_path)
+
             text += self.header.rstrip()
             text += "\n"
             text += "\n"
             text += "{}\n".format(self.title)
             text += "\n"
-           
+
             text += "{} {}\n".format(self.charge, self.multiplicity)
             for index, line in enumerate(self.geometry):
                 text += "{:2d} {:.8f} {:.8f} {:.8f}\n".format(self.atoms[index], line[0], line[1], line[2])
-            
-            text += "\n" 
+
+            text += "\n"
             if self.footer:
                 text += self.footer.rstrip()
                 text += "\n"
                 text += "\n"
 
             super().write_file(filename, text)
-        else: 
+        else:
             raise ValueError("need header to write input file!")
