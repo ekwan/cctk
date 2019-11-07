@@ -15,8 +15,9 @@ class OutputFile(ABC):
     @abstractmethod
     def __init__(self):
         pass
-
-    def read_file(self, filename):
+    
+    @staticmethod
+    def read_file(filename):
         '''
         Reads a file and parses into lines.
 

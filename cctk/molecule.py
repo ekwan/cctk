@@ -9,7 +9,7 @@ class Molecule():
     """
     Class that represents a single molecule, abstractly.
 
-    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). Internal methods (prefixed with ``_``) are generally zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. 
+    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). Internal methods (prefixed with ``_``) are sometimes zero-indezed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.  
 
     Attributes:
         name (str): for identification, optional
@@ -139,7 +139,7 @@ class Molecule():
                 formula_dict[symbol] += 1
             else:
                 formula_dict[symbol] = 1
-        if string == False:
+        if return_dict == True:
             return formula_dict
         else:
             formula = '' 

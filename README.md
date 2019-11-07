@@ -6,7 +6,7 @@
 ## Contents: 
  - [Overview](#overview) 
  - [Requirements](#requirements)
- - [Installation](#installation)i
+ - [Installation](#installation)
  - [Structure](#structure)
  - [Documentation](#requirements)
  - [External Data](#external-data)

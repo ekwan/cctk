@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 from cctk import OutputFile
-from cctk.helper_functions import get_symbol, search_for_block, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
+from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 class GaussianOutputFile(OutputFile):
     '''
@@ -11,207 +11,53 @@ class GaussianOutputFile(OutputFile):
 
     Attributes: 
         title (str): the title from the Gaussian file
+        atoms (list): list of atomic numbers 
+        geometries (list): list of geometries for each cycle (so really a list of lists, which may have only one element for single point jobs)
+        bonds (list): list of atoms bonded to each other (so a list of 2-element lists)
+        success (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
         theory (dict): contains information from header
         header (str):  header from input file (e.g. "#p opt freq=noraman b3lyp/6-31g(d)").
         footer (str):  footer from input file, if any. genecp commands or opt=modredundant specifications go here. 
-        success (Bool): if the file terminated successfully
+        energies (list): list of energies for each cycle
+        scf_iterations (list): number of iterations per cycle
+        max_displacements (list): list of max displacement values for each cycle 
+        rms_displacements (list): list of rms displacement values for each cycle 
+        max_forces (list): list of max force values for each cycle 
+        rms_forces (list): list of rms force values for each cycle 
+        gradients (list): list of gradient values for each cycle
+        frequencies (list): list of frequencies
+        gibbs_free_energy (float): gibbs free energy, from vibrational correction
+        enthalpy (float): enthalpy, from vibrational correction
     '''
-    def __init__(self, filename):
-        self.successful = False
-        self.read_file(filename)    
+    def __init__(self, atoms, geometries, bonds=None):
+        if (len(atoms) == 0) or (len(geometries) == 0): 
+            raise ValueError("can't have a molecule without atoms or geometries!")
 
-    def read_file(self, filename):
-        '''
-        Read a Gaussian output file.
-        Automatically determines the theory line and if the job was successful. 
-        Returns an array of geometries and energies. 
-        '''        
-        lines = super().read_file(filename)
+        for atom in atoms: 
+            try:
+                atom = int(atom)
+                get_symbol(atom)
+            except: 
+                raise ValueError(f"atom number {atom} is not valid!")
 
-        file_geometries = []
-        file_symbol_lists = []
-        file_energies = []
+        for geometry in geometries: 
+            if (len(geometry) != len(atoms)):
+                raise ValueError("length of atoms and geometry do not match!")        
 
-        self.header = search_for_block(lines, "#p", "----")
-
-        if lines[-1].strip().startswith("Normal termination"):
-            self.successful = True
-
-        return lines
-
-    def read_geometries_and_energies(self, lines):
-        """
-        Reads geometries, symbol lists, and energies from the file.
+        if bonds:
+            for bond in bonds: 
+                if len(bond) != 2:
+                    raise ValueError("while 3-center bonding is possible, it's a no-go in cctk")
+                if (not isinstance(bond[0], int)) or (not isinstance(bond[1], int)):
+                    raise ValueError(f"atoms {bond[0]} and {bond[1]} must be integers!")
+                if (bond[0] > len(atoms)) or (bond[0] <= 0):
+                    raise ValueError(f"invalid atom {bond[0]}")
+                if (bond[1] > len(atoms)) or (bond[1] <= 0):
+                    raise ValueError(f"invalid atom {bond[1]}")
         
-        Args:
-            lines (list): the list of lines in the file
-
-        Returns:
-            array of geometries (each of which itself is an array of arrays)
-            list of atomic symbols
-            array of energies
-            array containing the number of SCF iterations per step 
-        """
-        
-        file_geometries = []
-        file_symbol_lists = []
-        file_energies = []
-        file_scf_iterations = []
-
-        this_geometry = []
-        this_symbol_list = []
-        this_energy = None
-
-        i = 0 
-        in_geometry_block = False
-        while i < len(lines):
-            # read the current line
-            line = lines[i].strip()
-
-            # detect geometry block
-            if line == "Standard orientation:":
-                i += 5
-                in_geometry_block = True
-                continue
-            elif in_geometry_block and line.startswith("------"):
-                i += 1
-                in_geometry_block = False
-                continue
-
-            # read geometry if applicable
-            if in_geometry_block:
-                fields = re.split(' +', line)
-                if len(fields) != 6:
-                    print("error parsing >>> " + line)
-                    raise ValueError("unexpected number of fields on geometry line")
-                if len(this_geometry) > 0 and fields[0] == "1":
-                    # reset fields
-                    this_geometry = []
-                    this_symbol_list = []
-                    this_energy = None
-                try:
-                    x,y,z = float(fields[3]), float(fields[4]), float(fields[5])
-                    this_geometry.append([x,y,z])
-                    symbol = get_symbol(fields[1])
-                    this_symbol_list.append(symbol)
-                except:
-                    print("error parsing >>> %s" % line)
-                    print(fields)
-                    raise ValueError("error parsing geometry")
-
-            # read energy if applicable
-            if not in_geometry_block and line.startswith("SCF Done"):
-                fields = re.split(' +', line)
-                if len(fields) != 9:
-                    print("error parsing >>> " + line)
-                    raise ValueError("unexpected number of fields on energy line")
-                this_energy = float(fields[4])
-                num_cycles = int(fields[7])
-                 
-                if len(this_geometry) == 0:
-                    raise ValueError("energy without geometry")
-                
-                # store results
-                file_geometries.append(this_geometry)
-                file_symbol_lists.append(this_symbol_list)
-                file_energies.append(this_energy)
-                file_scf_iterations.append(num_cycles)
-
-                # reinitialize arrays
-                this_geometry = []
-                this_symbol_list = []
-                this_energy = None
- 
-            # go to next line
-            i += 1
-
-        # return result
-        return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
-
-    def read_bonds(self, lines):
-        """
-        Reads bonding information from the output file. 
-        
-        Args:
-            lines (list): the list of lines in the file
-
-        Returns:
-        """
-        
-        bond_array = []
-        current_array = []
-
-        i = 0 
-        in_bonding_section = False
-        while i < len(lines):
-            # read the current line
-            line = lines[i].strip()
-            
-            if in_bonding_section == False:
-                if re.search(r"Initial Parameters", line):
-                    i += 5
-                    in_bonding_section = True
-                    continue
-                else: 
-                    i += 1
-                    continue
-            else:
-                if re.search(r"! R", line):
-                    pieces = list(filter(None, line.split(" ")))
-                    atoms = pieces[2].replace("R", '').replace("(", "").replace(")","").split(",")
-                    try:
-                        current_array.append([int(atoms[0]), int(atoms[1])])
-                    except:
-                        raise ValueError(f"error parsing line {i} - can't extract atoms!")
-                    i += 1
-                    continue
-                elif re.search(r"! A", line):
-                    in_bonding_section = False
-                    bond_array = current_array
-                    current_array = []
-                    i += 1
-                    continue
-                else: 
-                    raise ValueError(f"can't parse line {i} for bonding!")
-
-        return bond_array
-
-    def _find_parameter(self, lines, parameter, expected_length, which_field):
-        """
-        Helper method to search through the output file and find key forces and displacements. 
-
-        Args:
-            lines (list): list of lines in file
-            parameter (string): test to search for
-            expected_length (int): how many fields there should be
-            which_field (int): which field the parameter is (zero-indexed) 
-        Returns:
-            a list of all the extracted values
-        """
-        
-        if (not isinstance(expected_length, int)) or (not isinstance(which_field, int)):
-            raise TypeError("expected_length and which_field must be type int!")
-     
-        if which_field >= expected_length:
-            raise ValueError("can't expect a field after the last field!") 
-       
-        matches = []
-        pattern = False
-        
-        try:
-            pattern = re.compile(parameter)
-        except: 
-            raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
-        
-        if pattern:
-            for line in lines:
-                if pattern.search(line):
-                    fields = re.split(' +', line)
-                    fields = list(filter(None, fields))
-                 
-                    if len(fields) == expected_length:
-                        matches.append(float(fields[which_field]))
-            return matches
+        self.atoms = atoms
+        self.geometries = geometries
+        self.bonds = bonds 
 
     def get_distance(self, geometry, atom1, atom2):
         """
@@ -269,3 +115,47 @@ class GaussianOutputFile(OutputFile):
             return compute_dihedral_between(v1, v2, v3, v4)
         else:
             raise ValueError(f"atom numbers {atom1}, {atom2}, {atom3}, or {atom4} too big!")
+
+    def num_imaginary(self):
+        """ 
+        Returns the number of imaginary frequencies.
+        """
+        return int(np.sum(np.array(self.frequencies) <= 0, axis=0))
+    
+    def get_final_geometry(self):
+        """
+        Returns the last geometry from the out file.
+        """
+        return self.geometries[-1]
+        
+    def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
+        """
+        Computes and outputs geometric parameters (bond distances, angles, or dihedral angles) for every geometry. 
+
+        Args:
+            parameter (str): one of ``angle``, ``distance``, or ``dihedral``
+            atom1 (int): number of the atom in question 
+            atom2 (int): same, but for the second atom
+            atom3 (int): same, but for the third atom (only required for parameter ``angle`` or ``dihedral``)
+            atom4 (int): same, but for the fourth atom (only required for parameter ``dihedral``)
+        
+        Returns:
+            a list of the specified parameter's values for each geometry
+        """
+        output = [None] * len(self.geometries)
+        for index, geometry in enumerate(self.geometries):
+            if parameter == "distance":
+                output[index] = self.get_distance(geometry, atom1, atom2)
+            elif parameter == "angle":
+                if atom3 == None: 
+                    raise ValueError("need atom3 to calculate angle!")
+                output[index] = self.get_angle(geometry, atom1, atom2, atom3)
+            elif parameter == "dihedral":
+                if (atom3 == None) or (atom4 == None):
+                    raise ValueError("need atom3 and atom4 to calculate dihedral!")
+                output[index] = self.get_dihedral(geometry, atom1, atom2, atom3, atom4)
+            else:
+                ValueError("Invalid parameter {}!".format(parameter))
+        
+        return output            
+

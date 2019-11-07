@@ -4,12 +4,12 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, Molecule, GaussianJob
+from cctk import GaussianData, Molecule, GaussianJob
 
-output_file = GaussianOptOutputFile('cctk/scripts/thiourea_catalyst.out')
+output_file = GaussianData.read_opt('cctk/scripts/thiourea_catalyst.out')
 
-if output_file.successful is False: 
-    print("not successful!")
+if output_file.success == 0: 
+    print("termination not successful!")
 
 molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
 print(molecule.formula())

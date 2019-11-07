@@ -163,46 +163,6 @@ def compute_dihedral_between(p0, p1, p2, p3, unit='degree'):
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!") 
 
-def search_for_block(lines, start, end, count=1):
-    """
-    Search through a file (lines) and locate a block starting with "start" and ending with "end".
-    
-    Args: 
-        lines (list): a list of the lines in the file
-        start (str): a pattern that matches the start of the block (can contain special characters)
-        end (str): a pattern that matches the end of the block (can contain special characters)
-        count (int): how many matches to search for
-    
-    Returns: 
-        a single match (str) if count == 1 or a list of matches (str) if count > 1.
-    """
-    current_match = '' 
-    match = [None] * count
-
-    start_pattern = re.compile(start)
-    end_pattern = re.compile(end)
-
-    index = 0
-    for line in lines:
-        if current_match:
-            if end_pattern.search(line): 
-                match[index] = current_match
-                current_match = None
-                index += 1
-
-                if index == count:
-                    break
-            else:
-                current_match = current_match + line 
-        else:
-            if start_pattern.search(line):
-                current_match = line
-
-    if count == 1:
-        return match[0]
-    else:
-        return match
-
 def compute_rotation_matrix(axis, theta):
     """
     Return the rotation matrix for rotation around `axis` by `theta` degrees..

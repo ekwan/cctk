@@ -4,16 +4,16 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianOptOutputFile, GaussianFreqOutputFile, Molecule, GaussianJob
+from cctk import GaussianData, Molecule, GaussianJob
 
-output_file = GaussianFreqOutputFile('cctk/scripts/acetaldehyde.out')
+output_file = GaussianData.read_opt_freq('cctk/scripts/acetaldehyde.out')
 
 energies = output_file.energies
 scf_iter = output_file.scf_iterations
 rms_displacements = output_file.rms_displacements
 rms_forces = output_file.rms_forces
 
-if output_file.successful: 
+if output_file.success: 
     print("Optimization converged!")
     print(f"{output_file.num_imaginary()} imaginary frequencies")
 
@@ -28,9 +28,9 @@ for i, energy in enumerate(energies):
     print("{0:5d} {1:20.5f} {2:20.5f} {3:15d} {4:15.5f} {5:20.5f} {6:15.3f}".format(i+1, energy, rel_energy, scf_iter[i], rms_forces[i], rms_displacements[i], distances[i]))
 
 
-if output_file.successful:
+if output_file.success > 0:
     molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
-    print(molecule.formula(string=True))
+    print(molecule.formula(return_dict=False))
     molecule.assign_connectivity()
     print(molecule.geometry )  
     molecule.set_angle(1, 2, 6, 120)
