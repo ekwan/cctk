@@ -216,3 +216,33 @@ def to_radians(theta):
 
 def to_degrees(theta):
     return (theta * 180) / math.pi
+
+def align_matrices(P_partial,P_full,Q_partial):
+    """
+    Rotates one set of points onto another using the Kabsch algorithm. 
+    The rotation that best aligns P_partial into Q_partial will be found and then applied to P_full. 
+
+    Args: 
+        P_partial (matrix): atoms of P that correspond to Q
+        P_full (matrix): full matrix to rotate
+        Q (matrix): matrix to align to
+    
+    Returns:
+        rotated P matrix
+    """        
+    
+    assert(np.shape(P_partial) == np.shape(Q_partial))
+
+    C = P_partial.T @ Q_partial
+    U,S,Vt = np.linalg.svd(C)
+    
+    V = Vt.T
+    d = np.linalg.det(V @ U.T)
+    middle = np.identity(3)
+    
+    if d < 0.0:
+        middle[2][2]=-1.0
+    
+    rotation = U @ middle @ Vt
+    return P_full @ rotation
+ 
