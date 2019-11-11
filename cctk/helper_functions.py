@@ -217,7 +217,7 @@ def to_radians(theta):
 def to_degrees(theta):
     return (theta * 180) / math.pi
 
-def align_matrices(P_partial,P_full,Q_partial):
+def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     """
     Rotates one set of points onto another using the Kabsch algorithm. 
     The rotation that best aligns P_partial into Q_partial will be found and then applied to P_full. 
