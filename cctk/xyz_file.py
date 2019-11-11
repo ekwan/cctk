@@ -2,11 +2,11 @@ import sys
 import re
 import numpy as np
 
-from cctk import InputFile 
+from cctk import InputFile
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 
-class XYZFile (InputFile):
+class XYZFile(InputFile):
     """
     Generic class for all xyz files. 
 

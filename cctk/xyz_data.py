@@ -4,10 +4,10 @@ from cctk import XYZFile, OutputFile
 from cctk.helper_functions import get_number
 
 
-class XYZData (OutputFile):
+class XYZData(OutputFile):
     """
     Creates output file instances of the specific type through factory methods.
-    """ 
+    """
 
     @classmethod
     def read_xyz(cls, filename):
@@ -35,4 +35,3 @@ class XYZData (OutputFile):
                 raise ValueError(f"can't parse line {index+2}!")
 
         return XYZFile(atoms, geometry, title)
-
