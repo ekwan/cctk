@@ -6,4 +6,7 @@ from .input_file import InputFile
 from .gaussian_input_file import GaussianInputFile
 from .gaussian_job import GaussianJob
 
+from .xyz_file import XYZFile
+from .xyz_data import XYZData
+
 from .molecule import Molecule
