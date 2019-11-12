@@ -20,7 +20,7 @@ Potential uses for *cctk* include:
  - Extracting geometry from output files, changing geometric parameters, and creating new input files. 
  - Calculating molecular properties (e.g. NICS) along a reaction coordinate. 
  - Screening different functionals and basis sets. 
- - Generating potential energy surfaces in one or more dimensions (e.g. More-O'Ferrall-Jencks plots). 
+ - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
  
 ### Compatible File Types:
  - Gaussian 16 `.out` (read) and `.gjf` (write).
@@ -28,6 +28,8 @@ Potential uses for *cctk* include:
  - `.mol2` (read/write)
 
 ## Installation:
+
+For now, just use `git clone <git url>` - a more advanced way is coming.
 
 ## Structure: 
 

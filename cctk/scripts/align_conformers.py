@@ -13,7 +13,7 @@ molecule = Molecule(output_file.atoms, output_file.geometry)
 molecule.assign_connectivity()
 ensemble = Ensemble(name='cpg conformers')
 
-angles = [0, 60, 120, 180, 240, 300]
+angles = [0, 60, 120, 180, 240, 240.5]
 for x in angles:
     for y in angles:
         molecule.set_dihedral(1, 7, 6, 8, x)
@@ -21,7 +21,8 @@ for x in angles:
 
         ensemble.add_molecule(molecule)
 
-ensemble.align(atoms=[1, 53, 25])
+#ensemble.align(atoms=[1, 53, 25])
+ensemble.eliminate_redundant()
 
 for molecule in ensemble.molecules:
     input_file = GaussianJob.create_opt(molecule.atoms, molecule.geometry)

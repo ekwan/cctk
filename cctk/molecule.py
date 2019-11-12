@@ -374,6 +374,8 @@ class Molecule:
         self.translate_molecule(v2)
 
         final_angle = self.get_angle(atom1, atom2, atom3)
+
+        #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
         if np.abs(math.cos(math.radians(final_angle)) - math.cos(math.radians(angle))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
 
@@ -488,6 +490,8 @@ class Molecule:
         self.translate_molecule(v3)
 
         final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
+        
+        #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
         if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
 
@@ -667,5 +671,17 @@ class Molecule:
         for index, atom in enumerate(self.atoms):
             if atom == number:
                 atoms.append(index + 1)
+
+        return atoms
+
+    def get_heavy_atoms(self):
+        """
+        Returns a zero-indexed list of all the heavy atoms in the molecule (i.e., not hydrogen), for array indexing. 
+        """
+        atoms = []
+
+        for index, atom in enumerate(self.atoms):
+            if atom != 1:
+                atoms.append(index)
 
         return atoms

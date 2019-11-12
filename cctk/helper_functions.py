@@ -166,7 +166,7 @@ def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     if unit == "degree":
         return to_degrees(angle) % 360
     elif unit == "radian":
-        return angle % math.pi
+        return angle % (2 * math.pi)
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
@@ -246,3 +246,25 @@ def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     rotation = U @ middle @ Vt
     return P_full @ rotation
  
+def compute_RMSD(geometry1, geometry2):
+    """
+    Computes the root mean squared difference between two geometries.
+    
+    Args:
+        geometry1 (list, or equivalent): first geometry 
+        geometry2 (list, or equivalent): second geometry 
+    """
+    if (len(geometry1) != len(geometry2)):
+        raise ValueError("can't compare two geometries with different lengths!")
+
+    try:
+        geometry1 = np.array(geometry1)
+        geometry2 = np.array(geometry2)
+    except:
+        raise TypeError("geometries cannot be cast to numpy arrays!")
+
+    squared_difference = np.square(geometry1 - geometry2)
+    temp = np.sum(squared_difference) / (3*len(geometry1))
+    return np.sqrt(temp)
+
+

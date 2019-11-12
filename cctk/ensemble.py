@@ -4,7 +4,7 @@ import numpy as np
 import copy
 
 from cctk import Molecule
-from cctk.helper_functions import align_matrices 
+from cctk.helper_functions import align_matrices, compute_RMSD
 
 class Ensemble():
     """
@@ -65,18 +65,62 @@ class Ensemble():
 
             assert len(molecule.geometry) == len(molecule.atoms), "wrong number of geometry elements!"
         
-    def eliminate_redundant(self, cutoff=0.05):
-        pass    
+    def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
+        """
+        Returns non-redundant conformations. When redundancies are found, only the first geometry is kept.
+        
+        Args:
+            cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated. 
+            heavy_only (Bool): if `True`, then only heavy atoms are considered for the RMSD calculation
+            atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides `heavy_only`
+        """
+        if atom_numbers:
+            atom_numbers = [n-1 for n in atom_numbers]
+        else:
+            if heavy_only: 
+                atom_numbers = self.molecules[0].get_heavy_atoms()        
+            else:
+                atom_numbers = list(range(len(self.molecules[0])))
+        
+        for m in self.molecules:
+            for n in atom_numbers:
+                try:
+                    #### atom_numbers is 0-indexed
+                    m._check_atom_number(n+1)
+                except:
+                    raise ValueError(f"molecule in ensemble does not have atom {n}!")
+       
+        #### align all molecules 
+        self.align(atoms=atom_numbers)
 
-    def lowest_energy(self, n=1):
+        to_delete = [False] * len(self.molecules)
+
+        for i in range(len(self.molecules)):
+            if to_delete[i]:
+                continue
+            for j in range(i+1, len(self.molecules)):
+                if to_delete[j]:
+                    continue
+                
+                geometry1 = self.molecules[i].geometry[atom_numbers]
+                geometry2 = self.molecules[j].geometry[atom_numbers]
+              
+                rmsd = compute_RMSD(geometry1, geometry2) 
+                if rmsd < cutoff:
+                    to_delete[j] = True       
+
+        #### still need to write delete code....
+        print(to_delete)
         pass    
 
     def _check_molecule_number(self, number):
         """
         Helper method which performs quick checks on the validity of a given molecule number.
         """
-        if not isinstance(number, int):
-            raise TypeError("atom number must be integer")
+        try:
+            number = int(number)
+        except:
+            raise TypeError(f"atom number {number} must be integer")
 
         if number > len(self.molecules):
             raise ValueError(f"atom number {number} too large!")
