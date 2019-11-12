@@ -10,3 +10,5 @@ from .xyz_file import XYZFile
 from .xyz_data import XYZData
 
 from .molecule import Molecule
+
+from .ensemble import Ensemble

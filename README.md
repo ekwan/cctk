@@ -22,7 +22,10 @@ Potential uses for *cctk* include:
  - Screening different functionals and basis sets. 
  - Generating potential energy surfaces in one or more dimensions (e.g. More-O'Ferrall-Jencks plots). 
  
- Currently *cctk* is compatible only with Gaussian 16 files (`.gjf` and `.out`). However, we anticipate extension to `.mol2` files in the near future.   
+### Compatible File Types:
+ - Gaussian 16 `.out` (read) and `.gjf` (write).
+ - `.xyz` (read/write)
+ - `.mol2` (read/write)
 
 ## Installation:
 

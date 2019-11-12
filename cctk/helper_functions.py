@@ -97,7 +97,7 @@ def compute_distance_between(v1, v2):
     """ 
     Computes the L2 distance between two vectors.
     """
-    return np.linalg.norm(v1 - v2)
+    return np.linalg.norm(v1 - v2) 
 
 
 # normalizes the given vector so that it has unit length
@@ -129,9 +129,9 @@ def compute_angle_between(v1, v2, unit="degree"):
     v2_u = compute_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
     if unit == "degree":
-        return to_degrees(angle)
+        return to_degrees(angle) % 360
     elif unit == "radian":
-        return angle
+        return angle % (2 * math.pi)
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
@@ -164,9 +164,9 @@ def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     angle = np.arctan2(y, x)
 
     if unit == "degree":
-        return to_degrees(angle)
+        return to_degrees(angle) % 360
     elif unit == "radian":
-        return angle
+        return angle % math.pi
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 

@@ -2,6 +2,7 @@ import sys
 import re
 import numpy as np
 import networkx as nx
+import math
 
 from cctk.helper_functions import (
     get_symbol,
@@ -77,9 +78,12 @@ class Molecule:
                 self._check_atom_number(bond[1])
                 self.add_bond(bond[0], bond[1])
 
-    def assign_connectivity(self):
+    def assign_connectivity(self, cutoff=0.5):
         """
         Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded. 
+        
+        Args:
+            cutoff (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered bonded
         """
 
         for i in range(1, len(self.atoms) + 1):
@@ -89,7 +93,7 @@ class Molecule:
                 r_j = get_covalent_radius(self.get_atomic_number(j))
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
-                if distance < (r_i + r_j + 0.5):
+                if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
 
     def add_bond(self, atom1, atom2, bond_order=1):
@@ -370,7 +374,7 @@ class Molecule:
         self.translate_molecule(v2)
 
         final_angle = self.get_angle(atom1, atom2, atom3)
-        if np.abs(final_angle - angle) > 0.001:
+        if np.abs(math.cos(math.radians(final_angle)) - math.cos(math.radians(angle))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
 
     def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move="group34"):
@@ -456,7 +460,7 @@ class Molecule:
             raise ValueError(f"atom {atom4} is not going to be moved... this operation is doomed to fail!")
 
         current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
-        delta = dihedral - current_dihedral
+        delta = (dihedral - current_dihedral) % 360
 
         if np.abs(delta) < 0.001:
             return
@@ -484,7 +488,7 @@ class Molecule:
         self.translate_molecule(v3)
 
         final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
-        if np.abs(final_dihedral - dihedral) > 0.001:
+        if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
 
     def translate_molecule(self, vector):
