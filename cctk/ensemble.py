@@ -68,6 +68,7 @@ class Ensemble():
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """
         Returns non-redundant conformations. When redundancies are found, only the first geometry is kept.
+        This will change the numbering of all the ensembles!
         
         Args:
             cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated. 
@@ -109,9 +110,10 @@ class Ensemble():
                 if rmsd < cutoff:
                     to_delete[j] = True       
 
-        #### still need to write delete code....
-        print(to_delete)
-        pass    
+        #### you have to delete in reverse order or you'll throw off the subsequent indices 
+        for i in sorted(range(len(self.molecules)), reverse=True):
+            if to_delete[i]:
+                del self.molecules[i]
 
     def _check_molecule_number(self, number):
         """

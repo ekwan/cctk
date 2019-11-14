@@ -25,6 +25,7 @@ for x in angles:
 ensemble.eliminate_redundant()
 
 for molecule in ensemble.molecules:
+    molecule.check_for_conflicts() 
     input_file = GaussianJob.create_opt(molecule.atoms, molecule.geometry)
     x = molecule.get_dihedral(1, 7, 6, 8)
     y = molecule.get_dihedral(23, 24, 25, 1)

@@ -95,6 +95,31 @@ class Molecule:
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
+    
+    def check_for_conflicts(self, min_buffer=-1):
+        """
+        Automatically checks for conflicts based on covalent radii. If two atoms are closer than the sum of their covalent radii + buffer, then they are considered clashing. 
+        
+        Args:
+            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing
+
+        Returns:
+            True if there are no conflicts, False (+ error) if there are
+        """
+
+        for i in range(1, len(self.atoms) + 1):
+            for j in range(i + 1, len(self.atoms) + 1):
+                distance = self.get_distance(i, j)
+                r_i = get_covalent_radius(self.get_atomic_number(i))
+                r_j = get_covalent_radius(self.get_atomic_number(j))
+
+                # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
+                if distance < (r_i + r_j + min_buffer):
+                    raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
+                    return False
+
+        return True
+
 
     def add_bond(self, atom1, atom2, bond_order=1):
         """
