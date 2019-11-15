@@ -12,3 +12,5 @@ from .xyz_data import XYZData
 from .molecule import Molecule
 
 from .ensemble import Ensemble
+
+from .group import Group

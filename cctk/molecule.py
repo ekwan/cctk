@@ -20,7 +20,9 @@ class Molecule:
     """
     Class that represents a single molecule, abstractly.
 
-    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). Internal methods (prefixed with ``_``) are sometimes zero-indezed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.  
+    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). 
+    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. 
+    Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.  
 
     Attributes:
         name (str): for identification, optional
@@ -34,6 +36,8 @@ class Molecule:
     def __init__(self, atoms, geometry, name=None, theory=None, bonds=None):
         """
         Create new Molecule object, and assign connectivity if needed. 
+
+        ``bonds`` must be a list of edges (i.e. an n x 2 ndarray). 
         """
         if len(atoms) != len(geometry):
             raise ValueError("length of geometry and atoms does not match!")
@@ -96,19 +100,31 @@ class Molecule:
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
     
-    def check_for_conflicts(self, min_buffer=-1):
+    def check_for_conflicts(self, min_buffer=-1, group1=None, group2=None):
         """
         Automatically checks for conflicts based on covalent radii. If two atoms are closer than the sum of their covalent radii + buffer, then they are considered clashing. 
-        
+        If `group1` and `group2` are selected, then conflicts will only be evaluated between these two groups of atoms. 
+
         Args:
-            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing
+            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing. -1.0 A is default, for no particular reason. 
+            group1 (list): atoms to evaluate against `group2` (if `None`, defaults to all atoms) 
+            group2 (list): atoms to evaluate against `group1` (if `None`, defaults to all atoms) 
 
         Returns:
             True if there are no conflicts, False (+ error) if there are
         """
 
-        for i in range(1, len(self.atoms) + 1):
-            for j in range(i + 1, len(self.atoms) + 1):
+        if group1 is None:
+            group1 = list(range(1, len(self.atoms) + 1))
+
+        if group2 is None:
+            group2 = list(range(1, len(self.atoms) + 1))
+        
+        for atom in group1 + group2:
+            self._check_atom_number(atom)
+
+        for i in group1: 
+            for j in group2: 
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i))
                 r_j = get_covalent_radius(self.get_atomic_number(j))
@@ -613,12 +629,17 @@ class Molecule:
         self._check_atom_number(atom)
         return self.atoms[atom - 1]
 
-    def get_vector(self, atom):
+    def get_vector(self, atom, atom2=None):
         """
-        Get the geometry vector for a given atom.
+        Get the geometry vector for a given atom. If two atoms are specified, gives the vector connecting them (from ``atom2`` to ``atom``).
+        ``mol.get_vector(atom)`` is thus equivalent to ``mol.get_vector(atom, origin)``.
         """
         self._check_atom_number(atom)
-        return np.array(self.geometry[atom - 1])
+        if atom2:
+            self._check_atom_number(atom2)
+            return np.array(self.geometry[atom - 1]) - np.array(self.geometry[atom2-1])
+        else:
+            return np.array(self.geometry[atom - 1])
 
     def get_distance(self, atom1, atom2):
         """
@@ -710,3 +731,10 @@ class Molecule:
                 atoms.append(index)
 
         return atoms
+
+    def get_adjacent_atoms(self, atom):
+        """
+        Returns a list of the neighbors of `atom`. If `atom` has no neighbors, an empty list will be returned. 
+        """
+        self._check_atom_number(atom)
+        return list(self.bonds.neighbors(atom))
