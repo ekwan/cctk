@@ -2,21 +2,42 @@ import re
 import numpy as np
 import networkx as nx
 
-### Mol2 File Format Reader ###
-# reads a mol2 file
-#
-# returns:
-# geometries: np.array(conformer, atom number, xyz)
-# symbols:  np.array(conformer, atom number) -> symbol (str)
-# bonds:    np.array(conformer) -> nx.graph
-#
-# If save_memory_for_conformers is True, the conformer dimension will be dropped
-# from geometries, symbols, and bonds.  Additionally, only one copy of the symbols
-# and bonds will be stored.  That is, symbols will be just an np.array of strings
-# and bonds will be just a single nx.Graph.
-#
-# contains_conformers can be 'check', True, or False
-def read_mol2(filename, contains_conformers='check', save_memory_for_conformers=True, print_status_messages=True):
+
+def read_mol2(
+    filename,
+    contains_conformers="check",
+    save_memory_for_conformers=True,
+    print_status_messages=True,
+):
+    """Reads .mol2 files into cctk.
+
+    Args:
+        filename (:obj:`str`): the name of the .mol2 file
+
+        contains_conformers('check' or bool): if set to 'check', multiple geometries
+                                              in the same file will be compared to see
+                                              if they are conformers.  Alternatively,
+                                              force the geometries to be treated as
+                                              conformers (True) or not (False).  This
+                                              latter option increases performance,
+                                              particularly for large files.
+
+        save_memory_for_conformers (bool): if True, the first dimension (geometry number) will be
+                                           dropped from the symbols and bonds to prevent
+                                           the storage of redundant information.  Thus,
+                                           symbols will be a one-dimensional :obj:`np.array` of
+                                           :obj:`str` and bonds will be a single :obj:`nx.Graph`.
+
+        print_status_messages (bool): if True, update the progerss of the parsing operation to stdout.
+
+    Returns:
+        all_geometries, all_symbols, all_bonds, contains_conformers
+
+        all_geometries: np.array(geometry number, atom number, xyz) -> position (float)
+        all_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
+        all_bonds: np.array(geometry_number) -> bond connectivity (:obj:`nx.Graph`)
+        contains_conformers: bool (True if the geometries correspond to conformers.)
+    """
     # read file
     if print_status_messages:
         print(f"Reading {filename}...", end="", flush=True)
@@ -116,8 +137,8 @@ def read_mol2(filename, contains_conformers='check', save_memory_for_conformers=
 
         # store geometry and reinitialize if appropriate
         end_of_file = i == len(lines)
-        end_of_blocks = (not in_geometry_block and not in_bond_block)
-        if ( end_of_file or end_of_blocks ) and len(this_geometry) > 0:
+        end_of_blocks = not in_geometry_block and not in_bond_block
+        if (end_of_file or end_of_blocks) and len(this_geometry) > 0:
             all_geometries.append(this_geometry)
             all_symbols.append(this_symbols)
             all_bonds.append(this_bonds)
@@ -130,14 +151,16 @@ def read_mol2(filename, contains_conformers='check', save_memory_for_conformers=
     all_symbols = np.array(all_symbols)
 
     # determine if these are conformers
-    if contains_conformers == 'check':
+    if contains_conformers == "check":
         contains_conformers = True
         for symbols, bonds in zip(all_symbols[1:], all_bonds[1:]):
             # must have the same symbols and bonds
-            if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(all_bonds[0], bonds):
+            if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(
+                all_bonds[0], bonds
+            ):
                 contains_conformers = False
                 break
-    elif isinstance(contains_conformers,bool):
+    elif isinstance(contains_conformers, bool):
         pass
     else:
         raise ValueError("contains_conformers must be 'check' or boolean")
@@ -154,7 +177,9 @@ def read_mol2(filename, contains_conformers='check', save_memory_for_conformers=
             if contains_conformers:
                 n_atoms = len(all_geometries[0])
                 n_bonds = all_bonds.number_of_edges()
-                print(f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds).")
+                print(
+                    f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
+                )
             else:
                 min_n_atoms = len(all_geometries[0])
                 max_n_atoms = len(all_geometries[0])
@@ -178,4 +203,3 @@ def read_mol2(filename, contains_conformers='check', save_memory_for_conformers=
             n_bonds = all_bonds.number_of_edges()
             print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
     return (all_geometries, all_symbols, all_bonds, contains_conformers)
-
