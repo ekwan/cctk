@@ -1,6 +1,6 @@
 import numpy as np
 
-from cctk import GaussianOutputFile, OutputFile
+from cctk import GaussianOutputFile, File
 from cctk.helper_functions import (
     get_number,
     get_symbol,
@@ -12,7 +12,7 @@ from cctk.helper_functions import (
 import cctk.parse_gaussian as parse
 
 
-class GaussianData(OutputFile):
+class GaussianData(File):
     """
     Creates output file instances of the specific type through factory methods.
     """

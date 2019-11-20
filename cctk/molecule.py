@@ -20,24 +20,25 @@ class Molecule:
     """
     Class that represents a single molecule, abstractly.
 
-    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry). 
-    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently. 
-    Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.  
+    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry).
+    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently.
+    Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.
 
     Attributes:
         name (str): for identification, optional
-        theory (dict): containing information about theory, to keep track for basis set scans, optional
-        atoms (list): list of atomic symbols 
+        atoms (list): list of atomic symbols
         geometry (list): Numpy array of 3-tuples of xyz coordinates
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         energy (float): holds the calculated energy of the molecule, optional
+        charge (int): the charge of the molecule
+        multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
     """
 
-    def __init__(self, atoms, geometry, name=None, theory=None, bonds=None):
+    def __init__(self, atoms, geometry, name=None, bonds=None, charge=0, multiplicity=1):
         """
-        Create new Molecule object, and assign connectivity if needed. 
+        Create new Molecule object, and assign connectivity if needed.
 
-        ``bonds`` must be a list of edges (i.e. an n x 2 ndarray). 
+        ``bonds`` must be a list of edges (i.e. an n x 2 `numpy` array).
         """
         if len(atoms) != len(geometry):
             raise ValueError("length of geometry and atoms does not match!")
@@ -57,9 +58,6 @@ class Molecule:
         if not all(all(isinstance(y, float) for y in x) for x in geometry):
             raise TypeError("each element of self.geometry must be a 3-tuple")
 
-        if theory and not isinstance(theory, dict):
-            raise TypeError("theory must be a dictionary!")
-
         if name and not isinstance(name, str):
             raise TypeError("name must be a string!")
 
@@ -69,23 +67,35 @@ class Molecule:
             except ValueError:
                 raise ValueError(f"unknwon atomic number {atom}")
 
+        if not isinstance(charge, int):
+            raise TypeError("charge must be integer")
+
+        if (not isinstance(multiplicity, int)) or (multiplicity < 1):
+            raise TypeError("multiplicity must be positive integer")
+
+        if bonds:
+            for bond in bonds:
+                if len(bond) != 2:
+                    raise ValueError("while 3-center bonding is possible, it's a no-go in cctk")
+                self._check_atom_number(bond[0])
+                self._check_atom_number(bond[1])
+
         self.name = name
         self.atoms = atoms
-        self.theory = theory
         self.geometry = geometry
+        self.multiplicity = multiplicity
+        self.charge = charge
 
         self.bonds = nx.Graph()
         self.bonds.add_nodes_from(range(1, len(atoms) + 1))
         if bonds:
             for bond in bonds:
-                self._check_atom_number(bond[0])
-                self._check_atom_number(bond[1])
                 self.add_bond(bond[0], bond[1])
 
     def assign_connectivity(self, cutoff=0.5):
         """
-        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded. 
-        
+        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded.
+
         Args:
             cutoff (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered bonded
         """

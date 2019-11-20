@@ -4,9 +4,9 @@ import re
 import numpy as np
 from abc import ABC, abstractmethod
 
-class InputFile(ABC):
+class File(ABC):
     """
-    Represents a text file for use as input to another program like Gaussian.
+    Represents a text file for use as input or output to another program like Gaussian.
     This class is abstract.
     """
     @abstractmethod
@@ -39,3 +39,18 @@ class InputFile(ABC):
             except OSError as e:
                 print(e)
                 return False
+
+    @staticmethod
+    def read_file(filename):
+        '''
+        Reads a file and parses into lines.
+
+        Args:
+            filename (str): The path to the file.
+
+        Returns:
+            A list containing all the lines in the file.
+        '''
+        with open(filename, 'r') as filehandle:
+            lines = filehandle.read().splitlines()
+            return lines

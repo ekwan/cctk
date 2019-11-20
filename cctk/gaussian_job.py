@@ -2,7 +2,6 @@ import numpy as np
 
 from cctk import GaussianInputFile
 
-
 class GaussianJob:
     """
     Creates input files of the specific type through factory methods.

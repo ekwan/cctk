@@ -9,19 +9,41 @@ from cctk.helper_functions import align_matrices, compute_RMSD
 class Ensemble():
     """
     Class that represents a group of molecules.
-    
-    Attributes: 
+
+    Attributes:
         name (str): name, for identification
         molecules (list): list of `Molecule` objects
     """
 
-    def __init__(self, name=None): 
+    def __init__(self, name=None, atoms=None, geometries=None, charge=0, multiplicity=1):
         self.name = name
         self.molecules = []
 
+        if atoms:
+            self.batch_add(atoms, geometries, charge, multiplicity)
+
+    def batch_add(atoms, geometries, charge=0, multiplicity=1):
+        """
+        Automatically generates ``Molecule`` objects and adds them.
+
+        Args:
+            atoms (list): list of atomic symbols
+            geometry (list): Numpy array of 3-tuples of xyz coordinates
+            charge (int): the charge of the molecule
+            multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
+        """
+        if len(atoms) != len(geometries):
+            raise TypeError("atoms and geometries must be the same length!")
+
+        for atom_list, geometry in zip(atoms, geometries):
+            mol = Molecule(atom_list, geometry, charge=charge, multiplicity=multiplicity)
+			self.add_molecule(mol)
+
     def add_molecule(self, molecule):
         """
-        Adds a molecule to the ensemble. `copy.deepcopy` is used so that an independent copy of the molecule is saved. 
+        Adds a molecule to the ensemble. `copy.deepcopy` is used so that an independent copy of the molecule is saved.
+
+        Checks that the molecule contains the same atom types in the same order as existing molecules.
 
         Args:
             molecule (Molecule): the molecule to be added
@@ -29,22 +51,28 @@ class Ensemble():
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
+        if len(molecule.atoms) != len(self.molecules[0].atoms):
+            raise ValueError("wrong number of atoms for this ensemble")
+
+        if not np.array_equal(molecule.atoms, self.molecules[0].atoms):
+            raise ValueError("wrong atom types for this ensemble")
+
         self.molecules.append(copy.deepcopy(molecule))
 
     def align (self, align_to=1, atoms=None):
-        """ 
-        Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed. 
-        
-        Args: 
+        """
+        Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
+
+        Args:
             align_to (int): which geometry to align to (1-indexed)
             atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
-        """ 
+        """
         self._check_molecule_number(align_to)
-        
+
         if atoms and (len(atoms) < 3):
             raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
 
-        try: 
+        try:
             atoms = np.array(atoms)
             atoms += -1
         except:
@@ -55,34 +83,34 @@ class Ensemble():
         for molecule in self.molecules:
             centroid = molecule.geometry[atoms].mean(axis=0)
             molecule.translate_molecule(-centroid)
-        
+
         template = self.molecules[align_to-1].geometry[atoms]
-        
+
         #### perform alignment
-        for molecule in self.molecules: 
+        for molecule in self.molecules:
             new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
             self.geometry = new_geometry
 
             assert len(molecule.geometry) == len(molecule.atoms), "wrong number of geometry elements!"
-        
+
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """
         Returns non-redundant conformations. When redundancies are found, only the first geometry is kept.
         This will change the numbering of all the ensembles!
-        
+
         Args:
-            cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated. 
+            cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated.
             heavy_only (Bool): if `True`, then only heavy atoms are considered for the RMSD calculation
             atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides `heavy_only`
         """
         if atom_numbers:
             atom_numbers = [n-1 for n in atom_numbers]
         else:
-            if heavy_only: 
-                atom_numbers = self.molecules[0].get_heavy_atoms()        
+            if heavy_only:
+                atom_numbers = self.molecules[0].get_heavy_atoms()
             else:
                 atom_numbers = list(range(len(self.molecules[0])))
-        
+
         for m in self.molecules:
             for n in atom_numbers:
                 try:
@@ -90,7 +118,7 @@ class Ensemble():
                     m._check_atom_number(n+1)
                 except:
                     raise ValueError(f"molecule in ensemble does not have atom {n}!")
-       
+
         #### align all molecules 
         self.align(atoms=atom_numbers)
 
@@ -102,13 +130,13 @@ class Ensemble():
             for j in range(i+1, len(self.molecules)):
                 if to_delete[j]:
                     continue
-                
+
                 geometry1 = self.molecules[i].geometry[atom_numbers]
                 geometry2 = self.molecules[j].geometry[atom_numbers]
-              
-                rmsd = compute_RMSD(geometry1, geometry2) 
+
+                rmsd = compute_RMSD(geometry1, geometry2)
                 if rmsd < cutoff:
-                    to_delete[j] = True       
+                    to_delete[j] = True
 
         #### you have to delete in reverse order or you'll throw off the subsequent indices 
         for i in sorted(range(len(self.molecules)), reverse=True):
