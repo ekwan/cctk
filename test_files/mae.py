@@ -154,9 +154,69 @@ def read_mae(
                 this_bonds.add_edge(atom2, atom1, weight=bond_order)
         # print(f"{i+1:6d} : {current_block_type} : {line}")
 
+    # convert to numpy array
+    geometries = np.array(geometries)
+    symbols = np.array(symbols)
+    property_names = np.array(property_names)
+    property_values = np.array(property_values)
+
+    # determine if these are conformers
+    if contains_conformers == "check":
+        contains_conformers = True
+        for this_symbols, this_bonds in zip(symbols[1:], bonds[1:]):
+            # must have the same symbols and bonds
+            if not (symbols[0] == this_symbols).all() or not nx.is_isomorphic(
+                bonds[0], this_bonds
+            ):
+                contains_conformers = False
+                break
+    elif isinstance(contains_conformers, bool):
+        pass
+    else:
+        raise ValueError("contains_conformers must be 'check' or boolean")
+
+    # if requested, just store one copy of symbols and bonds
+    if save_memory_for_conformers and contains_conformers:
+        symbols = symbols[0]
+        bonds = bonds[0]
+
     # return result
+    n_geometries = len(geometries)
     if print_status_messages:
-        print("done.")
+        if n_geometries > 1:
+            if contains_conformers:
+                n_atoms = len(geometries[0])
+                n_bonds = bonds.number_of_edges()
+                if print_status_messages:
+                    print(
+                        f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
+                    )
+            else:
+                min_n_atoms = len(geometries[0])
+                max_n_atoms = len(geometries[0])
+                for geometry in geometries[1:]:
+                    if len(geometry) > max_n_atoms:
+                        max_n_atoms = len(geometry)
+                    elif len(geometry) < min_n_atoms:
+                        min_n_atoms = len(geometry)
+                min_n_bonds = bonds[0].number_of_edges()
+                max_n_bonds = bonds[0].number_of_edges()
+                for this_bonds in bonds[1:]:
+                    if this_bonds.number_of_edges() > max_n_bonds:
+                        max_n_bonds = this_bonds.number_of_edges()
+                    elif this_bonds.number_of_edges() < min_n_bonds:
+                        min_n_bonds = bonds.number_of_edges
+                if print_status_messages:
+                    print(
+                        f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
+                    )
+        else:
+            n_atoms = len(geometries)
+            n_bonds = bonds.number_of_edges()
+            if print_status_messages:
+                print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
+
+    # return result
     return (
         geometries,
         symbols,

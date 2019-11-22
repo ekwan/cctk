@@ -35,7 +35,7 @@ def read_mol2(
 
         all_geometries: np.array(geometry number, atom number, xyz) -> position (float)
         all_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
-        all_bonds: np.array(geometry_number) -> bond connectivity (:obj:`nx.Graph`)
+        all_bonds: list(geometry_number) -> bond connectivity (:obj:`nx.Graph`)
         contains_conformers: bool (True if the geometries correspond to conformers.)
     """
     # read file
@@ -177,9 +177,10 @@ def read_mol2(
             if contains_conformers:
                 n_atoms = len(all_geometries[0])
                 n_bonds = all_bonds.number_of_edges()
-                print(
-                    f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
-                )
+                if print_status_messages:
+                    print(
+                        f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
+                    )
             else:
                 min_n_atoms = len(all_geometries[0])
                 max_n_atoms = len(all_geometries[0])
@@ -195,11 +196,13 @@ def read_mol2(
                         max_n_bonds = bonds.number_of_edges()
                     elif bonds.number_of_edges() < min_n_bonds:
                         min_n_bonds = bonds.number_of_edges
-                print(
-                    f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
-                )
+                if print_status_messages:
+                    print(
+                        f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
+                    )
         else:
             n_atoms = len(all_geometries)
             n_bonds = all_bonds.number_of_edges()
-            print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
+            if print_status_messages:
+                print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
     return (all_geometries, all_symbols, all_bonds, contains_conformers)
