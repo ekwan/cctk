@@ -4,23 +4,23 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianData, Molecule, GaussianJob
+from cctk import GaussianFile, Molecule
 
-output_file = GaussianData.read_opt_freq('cctk/scripts/acetaldehyde.out')
+output_file = GaussianFile.read_opt_freq('cctk/scripts/acetaldehyde.out')
 
 energies = output_file.energies
 scf_iter = output_file.scf_iterations
 rms_displacements = output_file.rms_displacements
 rms_forces = output_file.rms_forces
 
-if output_file.success: 
+if output_file.success:
     print("Optimization converged!")
     print(f"{output_file.num_imaginary()} imaginary frequencies")
 
 print(output_file.frequencies)
 print("{0:5} {1:20} {2:20} {3:15} {4:15} {5:20} {6:15}".format("#", "Energy (Hartree)", "Rel Energy (kcal)", "SCF Cycles", "RMS Force", "RMS Displacement", "Distance(2,5)"))
 
-distances = output_file.print_geometric_parameters('distance',2,5)
+distances = output_file.molecules.print_geometric_parameters('distance',2,5)
 
 min_energy = np.min(energies)
 for i, energy in enumerate(energies):
@@ -29,13 +29,12 @@ for i, energy in enumerate(energies):
 
 
 if output_file.success > 0:
-    molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
+    molecule = output_file.get_molecule()
     print(molecule.formula(return_dict=False))
     molecule.assign_connectivity()
-    print(molecule.geometry )  
+    print(molecule.geometry)
     molecule.set_angle(1, 2, 6, 120)
     molecule.set_dihedral(7, 1, 2, 6, 100)
-    print(molecule.geometry )  
+    print(molecule.geometry)
 
-    input_file = GaussianJob.create_opt(molecule.atoms, molecule.geometry)
-    input_file.write_file(filename='cctk/scripts/acetaldehyde.gjf')
+    output_file.write_file(filename='cctk/scripts/acetaldehyde.gjf')

@@ -29,7 +29,6 @@ class Molecule:
         atoms (list): list of atomic symbols
         geometry (list): Numpy array of 3-tuples of xyz coordinates
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
-        energy (float): holds the calculated energy of the molecule, optional
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
     """
@@ -73,6 +72,9 @@ class Molecule:
         if (not isinstance(multiplicity, int)) or (multiplicity < 1):
             raise TypeError("multiplicity must be positive integer")
 
+        self.atoms = atoms
+        self.geometry = geometry
+
         if bonds:
             for bond in bonds:
                 if len(bond) != 2:
@@ -81,8 +83,6 @@ class Molecule:
                 self._check_atom_number(bond[1])
 
         self.name = name
-        self.atoms = atoms
-        self.geometry = geometry
         self.multiplicity = multiplicity
         self.charge = charge
 

@@ -15,29 +15,32 @@ class Ensemble():
         molecules (list): list of `Molecule` objects
     """
 
-    def __init__(self, name=None, atoms=None, geometries=None, charge=0, multiplicity=1):
+    def __init__(self, name=None, atoms=None, geometries=None, bonds=None, charge=0, multiplicity=1):
         self.name = name
         self.molecules = []
 
         if atoms:
-            self.batch_add(atoms, geometries, charge, multiplicity)
+            self.batch_add(atoms, geometries, bonds, charge, multiplicity)
 
-    def batch_add(atoms, geometries, charge=0, multiplicity=1):
+    def batch_add(self, atoms, geometries, bonds, charge=0, multiplicity=1):
         """
         Automatically generates ``Molecule`` objects and adds them.
 
         Args:
-            atoms (list): list of atomic symbols
+            atoms (list): list of atomic symbols  (same for each ensemble member)
             geometry (list): Numpy array of 3-tuples of xyz coordinates
+            bonds (list): list of edges (i.e. an n x 2 `numpy` array). Same for each ensemble member.
             charge (int): the charge of the molecule
             multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
         """
-        if len(atoms) != len(geometries):
-            raise TypeError("atoms and geometries must be the same length!")
+        for geometry in geometries:
+            print(atoms)
+            print(geometry)
+            if len(atoms) != len(geometry):
+                raise TypeError("atoms and geometries must be the same length!")
 
-        for atom_list, geometry in zip(atoms, geometries):
-            mol = Molecule(atom_list, geometry, charge=charge, multiplicity=multiplicity)
-			self.add_molecule(mol)
+            mol = Molecule(atoms, geometry, bonds=bonds, charge=charge, multiplicity=multiplicity)
+            self.add_molecule(mol)
 
     def add_molecule(self, molecule):
         """
@@ -51,11 +54,12 @@ class Ensemble():
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
-        if len(molecule.atoms) != len(self.molecules[0].atoms):
-            raise ValueError("wrong number of atoms for this ensemble")
+        if len(self.molecules) > 0:
+            if len(molecule.atoms) != len(self.molecules[0].atoms):
+                raise ValueError("wrong number of atoms for this ensemble")
 
-        if not np.array_equal(molecule.atoms, self.molecules[0].atoms):
-            raise ValueError("wrong atom types for this ensemble")
+            if not np.array_equal(molecule.atoms, self.molecules[0].atoms):
+                raise ValueError("wrong atom types for this ensemble")
 
         self.molecules.append(copy.deepcopy(molecule))
 
@@ -158,4 +162,33 @@ class Ensemble():
         if number <= 0:
             raise ValueError(f"atom number {number} invalid: must be a positive integer!")
 
+    def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
+        """
+        Computes and outputs geometric parameters (bond distances, angles, or dihedral angles) for every member of ``self.molecules.``
 
+        Args:
+            parameter (str): one of ``angle``, ``distance``, or ``dihedral``
+            atom1 (int): number of the atom in question
+            atom2 (int): same, but for the second atom
+            atom3 (int): same, but for the third atom (only required for parameter ``angle`` or ``dihedral``)
+            atom4 (int): same, but for the fourth atom (only required for parameter ``dihedral``)
+
+        Returns:
+            a list of the specified parameter's values for each geometry
+        """
+        output = [None] * len(self.molecules)
+        for index, molecule in enumerate(self.molecules):
+            if parameter == "distance":
+                output[index] = molecule.get_distance(atom1, atom2)
+            elif parameter == "angle":
+                if atom3 == None:
+                    raise ValueError("need atom3 to calculate angle!")
+                output[index] = molecule.get_angle(atom1, atom2, atom3)
+            elif parameter == "dihedral":
+                if (atom3 == None) or (atom4 == None):
+                    raise ValueError("need atom3 and atom4 to calculate dihedral!")
+                output[index] = molecule.get_dihedral(atom1, atom2, atom3, atom4)
+            else:
+                ValueError("Invalid parameter {}!".format(parameter))
+
+        return output
