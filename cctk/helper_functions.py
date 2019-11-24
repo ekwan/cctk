@@ -14,7 +14,6 @@ from . import data  # relative-import the *package* containing the templates
 This code populates ELEMENT_DICTIONARY from a static datafile.
 """
 ELEMENT_DICTIONARY = {}
-# with open('data/isotopes.csv', mode='r') as isotope_file:
 isotope_file = pkg_resources.open_text(data, "isotopes.csv")
 for line in isotope_file:
     symbol, number, mass, abundance = line.split(",")
@@ -26,13 +25,13 @@ INV_ELEMENT_DICTIONARY = {v: k for k, v in ELEMENT_DICTIONARY.items()}
 
 
 def get_symbol(atomic_number):
-    """ 
+    """
     Gets element symbol from a given atomic number.
-    
+
     Args:
         atomic_number (int): the number of the given element
 
-    Returns: 
+    Returns:
         the two-character atomic symbol string
     """
     if isinstance(atomic_number, int):
@@ -45,14 +44,13 @@ def get_symbol(atomic_number):
 
 def get_number(atomic_symbol):
     """
-    Gets atomic number from a given element symbol. 
+    Gets atomic number from a given element symbol.
 
-    Args: 
+    Args:
         atomic_symbol (str): the two-character symbol
 
     Returns:
         the atomic number
-
     """
     if atomic_symbol in INV_ELEMENT_DICTIONARY:
         return int(INV_ELEMENT_DICTIONARY[atomic_symbol])
@@ -73,18 +71,16 @@ for line in covalent_radii:
         continue
     COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
 
-
 def get_covalent_radius(atomic_number):
     """
     Gets the covalent radius for a given element.
-    
-    Args: 
+
+    Args:
         atomic_number (int): the number of the given element
-        
-    Returns: 
+
+    Returns:
         the covalent radius in Angstroms (float)
     """
-
     if isinstance(atomic_number, int):
         atomic_number = str(atomic_number)
     if atomic_number in COVALENT_RADII_DICTIONARY:
@@ -92,27 +88,22 @@ def get_covalent_radius(atomic_number):
     else:
         raise ValueError("no covalent radius defined for atomic number ", atomic_number)
 
-
 def compute_distance_between(v1, v2):
-    """ 
+    """
     Computes the L2 distance between two vectors.
     """
-    return np.linalg.norm(v1 - v2) 
+    return np.linalg.norm(v1 - v2)
 
-
-# normalizes the given vector so that it has unit length
 def compute_unit_vector(vector):
     """
     Normalizes a vector, returning a unit vector pointing in the same direction.
-    Returns the zero vector if the zero vector is given. 
+    Returns the zero vector if the zero vector is given.
     """
     if np.linalg.norm(vector) == 0:
         return vector
     else:
         return vector / np.linalg.norm(vector)
 
-
-# compute the angle between two vectors in degrees
 def compute_angle_between(v1, v2, unit="degree"):
     """
     Computes the angle between two vectors.
@@ -135,8 +126,6 @@ def compute_angle_between(v1, v2, unit="degree"):
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
-
-# compute the dihedral angle
 def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     """
     Computes the dihedral angle between four points.
@@ -146,7 +135,6 @@ def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     b2 = p3 - p2
 
     # normalize b1 so that it does not influence magnitude of vector
-    # rejections that come next
     b1 = compute_unit_vector(b1)
 
     # v = projection of b0 onto plane perpendicular to b1
@@ -170,20 +158,18 @@ def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     else:
         raise ValueError(f"invalid unit {unit}: must be 'degree' or 'radian'!")
 
-
 def compute_rotation_matrix(axis, theta):
     """
-    Return the rotation matrix for rotation around `axis` by `theta` degrees..
-    Adapted from user "unutbu" on StackExchange. 
-    
+    Return the rotation matrix for rotation around ``axis`` by ``theta`` degrees..
+    Adapted from user "unutbu" on StackExchange.
+
     Args:
         axis (vector): the vector to rotate about
         theta (float): how much to rotate
-    
-    Returns: 
+
+    Returns:
         the 3x3 rotation matrix
     """
-
     if (not isinstance(axis, np.ndarray)) or (len(axis) != 3):
         raise TypeError("axis must be np array with 3 elements")
 
@@ -192,7 +178,6 @@ def compute_rotation_matrix(axis, theta):
     except:
         raise TypeError("theta must be float!")
 
-    # convert to radians
     theta = to_radians(theta)
     axis = compute_unit_vector(axis)
 
@@ -209,50 +194,47 @@ def compute_rotation_matrix(axis, theta):
         ]
     )
 
-
 def to_radians(theta):
     return (theta * math.pi) / 180
-
 
 def to_degrees(theta):
     return (theta * 180) / math.pi
 
 def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     """
-    Rotates one set of points onto another using the Kabsch algorithm. 
-    The rotation that best aligns P_partial into Q_partial will be found and then applied to P_full. 
+    Rotates one set of points onto another using the Kabsch algorithm.
+    The rotation that best aligns P_partial into Q_partial will be found and then applied to P_full.
 
-    Args: 
+    Args:
         P_partial (matrix): atoms of P that correspond to Q
         P_full (matrix): full matrix to rotate
         Q (matrix): matrix to align to
-    
+
     Returns:
         rotated P matrix
-    """        
-    
+    """
     assert(np.shape(P_partial) == np.shape(Q_partial))
 
     C = P_partial.T @ Q_partial
     U,S,Vt = np.linalg.svd(C)
-    
+
     V = Vt.T
     d = np.linalg.det(V @ U.T)
     middle = np.identity(3)
-    
+
     if d < 0.0:
         middle[2][2]=-1.0
-    
+
     rotation = U @ middle @ Vt
     return P_full @ rotation
- 
+
 def compute_RMSD(geometry1, geometry2):
     """
     Computes the root mean squared difference between two geometries.
-    
+
     Args:
-        geometry1 (list, or equivalent): first geometry 
-        geometry2 (list, or equivalent): second geometry 
+        geometry1 (list, or equivalent): first geometry
+        geometry2 (list, or equivalent): second geometry
     """
     if (len(geometry1) != len(geometry2)):
         raise ValueError("can't compare two geometries with different lengths!")
@@ -266,5 +248,4 @@ def compute_RMSD(geometry1, geometry2):
     squared_difference = np.square(geometry1 - geometry2)
     temp = np.sum(squared_difference) / (3*len(geometry1))
     return np.sqrt(temp)
-
 

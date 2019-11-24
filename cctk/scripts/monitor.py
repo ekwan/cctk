@@ -6,7 +6,7 @@ sys.path.append(os.path.relpath('../cctk'))
 
 from cctk import GaussianFile, Molecule
 
-output_file = GaussianFile.read_opt_freq('cctk/scripts/acetaldehyde.out')
+output_file = GaussianFile.read_file('cctk/scripts/acetaldehyde.out')
 
 energies = output_file.energies
 scf_iter = output_file.scf_iterations

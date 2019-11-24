@@ -72,9 +72,8 @@ class GaussianFile(File):
         if title and not isinstance(title, str):
             raise TypeError("title needs to be a string")
 
-        for job in job_types:
-            if not isinstance(job, JobType):
-                raise TypeError(f"invalid job type {job}")
+        if not all(isinstance(job, JobType) for job in job_types):
+            raise TypeError(f"invalid job type {job}")
 
         self.molecules = Ensemble(atoms=atoms, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
@@ -131,7 +130,7 @@ class GaussianFile(File):
             raise TypeError("not a frequency job! can't get # imaginary frequencies!")
 
     @classmethod
-    def read_file(cls, filename, job_types=None, return_lines=False):
+    def read_file(cls, filename, job_types=[], return_lines=False):
         """
         Reads a Gaussian optimization out file and populates the attributes accordingly.
 
@@ -143,17 +142,16 @@ class GaussianFile(File):
             GaussianOutputFile object
             (optional) the lines of the file
         """
-        for job in job_types:
-            if not isinstance(job, JobType):
-                raise TypeError(f"invalid job type {job}")
+        if not all(isinstance(job, JobType) for job in job_types):
+            raise TypeError(f"invalid job type {job}")
 
         lines = super().read_file(filename)
         header = parse.search_for_block(lines, "#p", "----")
 
         #### automatically assign job types based on header
-        if job_types is None:
-            for name, member in JobTypes.__members__.items():
-                if re.search(f" {name}", header):
+        if len(job_types) == 0:
+            for name, member in JobType.__members__.items():
+                if re.search(f" {member.value}", header):
                     job_types.append(member)
 
         #### extract parameters
@@ -205,13 +203,6 @@ class GaussianFile(File):
             return f, lines
         else:
             return f
-
-    @classmethod
-    def read_opt_freq(cls, filename):
-        """
-        Shorthand for reading a standard opt-freq job.
-        """
-        return cls.read_file(filename, [JobType.OPT, JobType.FREQ])
 
     def get_molecule(self, num=None):
         """
