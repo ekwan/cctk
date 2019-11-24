@@ -1,4 +1,4 @@
-import sys
+#import sys
 import re
 import numpy as np
 import copy
@@ -8,43 +8,61 @@ from cctk.helper_functions import align_matrices, compute_RMSD
 
 class Ensemble():
     """
-    Class that represents a group of molecules.
+    Class that represents a group of molecules. They do not all need to have the same atoms or bonds.
 
     Attributes:
         name (str): name, for identification
         molecules (list): list of `Molecule` objects
     """
 
-    def __init__(self, name=None, atomic_numbers=None, geometries=None, bonds=None, charge=0, multiplicity=1):
+    def __init__(self, name=None, **kwargs):
+        """
+        Create new instance, and optionally create a bunch of molecules too.
+
+        Args:
+            name (str): name of Ensemble
+            **kwargs: to pass to ``self.batch_add()``
+        """
         self.name = name
         self.molecules = []
 
-        if atomic_numbers:
-            self.batch_add(atomic_numbers, geometries, bonds, charge, multiplicity)
+        self.batch_add(**kwargs)
 
-    def batch_add(self, atomic_numbers, geometries, bonds, charge=0, multiplicity=1):
+    def batch_add(self, atomic_numbers, geometries, bonds, charges, multiplicities):
         """
         Automatically generates ``Molecule`` objects and adds them.
 
         Args:
-            atomic_numbers (list): list of atomic numbers  (same for each ensemble member)
+            atomic_numbers (list): list of lists of atomic numbers.
             geometry (list): list of 3-tuples of xyz coordinates
-            bonds (list): list of edges (i.e. an n x 2 `numpy` array). Same for each ensemble member.
-            charge (int): the charge of the molecule
-            multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
+            bonds (list): list of edges (i.e. an n x 2 `numpy` array).
+            charges (int): list of molecular charges - will default to 0 for all molecules.
+            multiplicities (int): list of multiplicities - will default to 1 (singlet) for all molecules.
         """
-        for geometry in geometries:
-            if len(atomic_numbers) != len(geometry):
+        if (atomic_numbers is None) or (geometries is None):
+            return
+
+        if charges is None:
+            charges = list(np.zeros_like(atomic_numbers))
+
+        if multiplicities is None:
+            multiplicities = list(np.ones_like(atomic_numbers))
+
+        if bonds is None:
+            bonds = [None] * len(atomic_numbers)
+
+        assert all(len(x) == len(atomic_numbers) for x in [geometries, bonds, charges, multiplicities]), "uneven list lengths -- cannot batch create molecules!"
+
+        for numbers, geometry, bond_edges, charge, multiplicity in zip(atomic_numbers, geometries, bonds, charges, multiplicities):
+            if len(numbers) != len(geometry):
                 raise TypeError("atoms and geometries must be the same length!")
 
-            mol = Molecule(atomic_numbers, geometry, bonds=bonds, charge=charge, multiplicity=multiplicity)
+            mol = Molecule(numbers, geometry, bonds=bond_edges, charge=charge, multiplicity=multiplicity)
             self.add_molecule(mol)
 
     def add_molecule(self, molecule):
         """
         Adds a molecule to the ensemble. `copy.deepcopy` is used so that an independent copy of the molecule is saved.
-
-        Checks that the molecule contains the same atom types in the same order as existing molecules.
 
         Args:
             molecule (Molecule): the molecule to be added
@@ -52,14 +70,74 @@ class Ensemble():
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
+        self.molecules.append(copy.deepcopy(molecule))
+
+    def _check_molecule_number(self, number):
+        """
+        Helper method which performs quick checks on the validity of a given molecule number.
+        """
+        try:
+            number = int(number)
+        except:
+            raise TypeError(f"atom number {number} must be integer")
+
+        if number > len(self.molecules):
+            raise ValueError(f"atom number {number} too large!")
+
+        if number <= 0:
+            raise ValueError(f"atom number {number} invalid: must be a positive integer!")
+
+
+class ConformationalEnsemble(Ensemble):
+    """
+    Class that represents a group of conformers. All members must have the same atom types in the same order.
+
+    Allows you to align and remove redundant molecules, unlike ``Ensemble``.
+
+    Attributes:
+        name (str): name, for identification
+        molecules (list): list of `Molecule` objects
+    """
+
+    def __init__(self, name=None, atomic_numbers=None, geometries=None, charge=0, multiplicity=1, bonds=None):
+        """
+        Takes only a single molecule's value for ``charge``/``multiplicity``/``atomic_numbers``/``bonds``, not a list of lists like ``Ensemble.__init__()``.
+
+        Args:
+            name (str): name of instance
+            atomic_numbers (list): list of atomic numbers.
+            geometry (list): list of 3-tuples of xyz coordinates
+            bonds (list): list of edges (i.e. an n x 2 `numpy` array).
+            charges (int): molecular charge
+            multiplicities (int): spin multiplicity
+        """
+        if (atomic_numbers is not None) and (geometries is not None):
+            atomic_numbers = [atomic_numbers] * len(geometries)
+            charge = [charge] * len(geometries)
+            multiplicity = [multiplicity] * len(geometries)
+            bonds = [bonds] * len(geometries)
+            super().__init__(name=name, atomic_numbers=atomic_numbers, geometries=geometries, charges=charge, multiplicities=multiplicity, bonds=bonds)
+        else:
+            super().__init__(name=name)
+
+    def add_molecule(self, molecule):
+        """
+        Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
+        """
         if len(self.molecules) > 0:
             if molecule.num_atoms() != self.molecules[0].num_atoms():
                 raise ValueError("wrong number of atoms for this ensemble")
 
+            if molecule.charge != self.molecules[0].charge:
+                raise ValueError("wrong charge for this ensemble")
+
+            if molecule.multiplicity != self.molecules[0].multiplicity:
+                raise ValueError("wrong spin multiplicity for this ensemble")
+
             if not np.array_equal(molecule.atomic_numbers, self.molecules[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
-        self.molecules.append(copy.deepcopy(molecule))
+        super().add_molecule(molecule)
 
     def align (self, align_to=1, atoms=None):
         """
@@ -144,21 +222,6 @@ class Ensemble():
         for i in sorted(range(len(self.molecules)), reverse=True):
             if to_delete[i]:
                 del self.molecules[i]
-
-    def _check_molecule_number(self, number):
-        """
-        Helper method which performs quick checks on the validity of a given molecule number.
-        """
-        try:
-            number = int(number)
-        except:
-            raise TypeError(f"atom number {number} must be integer")
-
-        if number > len(self.molecules):
-            raise ValueError(f"atom number {number} too large!")
-
-        if number <= 0:
-            raise ValueError(f"atom number {number} invalid: must be a positive integer!")
 
     def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """

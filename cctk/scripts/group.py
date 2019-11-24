@@ -5,15 +5,14 @@ import copy
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianData, Molecule, Group
+from cctk import GaussianFile, Molecule, Group
 
-output_file = GaussianData.read_opt('cctk/scripts/acetaldehyde.out')
+output_file = GaussianFile.read_file('cctk/scripts/acetaldehyde.out')
 
-molecule = Molecule(output_file.atoms, output_file.get_final_geometry())
-molecule.assign_connectivity()
+#molecule.assign_connectivity()
 
-print(molecule.geometry)
+print(output_file.get_molecule().geometry)
 
-group = Group.new_from_molecule(attach_to=6, molecule=molecule)
+group = Group.new_from_molecule(attach_to=6, molecule=output_file.get_molecule())
 print(group.geometry)
 

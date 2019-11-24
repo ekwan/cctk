@@ -4,7 +4,7 @@ import numpy as np
 
 from enum import Enum
 
-from cctk import File, Ensemble
+from cctk import File, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 import cctk.parse_gaussian as parse
@@ -24,10 +24,10 @@ class JobType(Enum):
 
 class GaussianFile(File):
     """
-    Class for Gaussian files. Composes ``Ensemble``.
+    Class for Gaussian files. Composes ``ConformationalEnsemble``.
 
     Attributes:
-        molecules (Ensemble): ``Ensemble`` instance
+        molecules (ConformationalEnsemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
         header (str): optional, header of .gjf file
         footer (str): optional, footer of .gjf file
@@ -75,7 +75,7 @@ class GaussianFile(File):
         if not all(isinstance(job, JobType) for job in job_types):
             raise TypeError(f"invalid job type {job}")
 
-        self.molecules = Ensemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
+        self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
         self.footer = footer
         self.title = title
