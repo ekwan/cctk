@@ -15,29 +15,29 @@ class Ensemble():
         molecules (list): list of `Molecule` objects
     """
 
-    def __init__(self, name=None, atoms=None, geometries=None, bonds=None, charge=0, multiplicity=1):
+    def __init__(self, name=None, atomic_numbers=None, geometries=None, bonds=None, charge=0, multiplicity=1):
         self.name = name
         self.molecules = []
 
-        if atoms:
-            self.batch_add(atoms, geometries, bonds, charge, multiplicity)
+        if atomic_numbers:
+            self.batch_add(atomic_numbers, geometries, bonds, charge, multiplicity)
 
-    def batch_add(self, atoms, geometries, bonds, charge=0, multiplicity=1):
+    def batch_add(self, atomic_numbers, geometries, bonds, charge=0, multiplicity=1):
         """
         Automatically generates ``Molecule`` objects and adds them.
 
         Args:
-            atoms (list): list of atomic symbols  (same for each ensemble member)
-            geometry (list): Numpy array of 3-tuples of xyz coordinates
+            atomic_numbers (list): list of atomic numbers  (same for each ensemble member)
+            geometry (list): list of 3-tuples of xyz coordinates
             bonds (list): list of edges (i.e. an n x 2 `numpy` array). Same for each ensemble member.
             charge (int): the charge of the molecule
             multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
         """
         for geometry in geometries:
-            if len(atoms) != len(geometry):
+            if len(atomic_numbers) != len(geometry):
                 raise TypeError("atoms and geometries must be the same length!")
 
-            mol = Molecule(atoms, geometry, bonds=bonds, charge=charge, multiplicity=multiplicity)
+            mol = Molecule(atomic_numbers, geometry, bonds=bonds, charge=charge, multiplicity=multiplicity)
             self.add_molecule(mol)
 
     def add_molecule(self, molecule):
@@ -53,10 +53,10 @@ class Ensemble():
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
         if len(self.molecules) > 0:
-            if len(molecule.atoms) != len(self.molecules[0].atoms):
+            if molecule.num_atoms() != self.molecules[0].num_atoms():
                 raise ValueError("wrong number of atoms for this ensemble")
 
-            if not np.array_equal(molecule.atoms, self.molecules[0].atoms):
+            if not np.array_equal(molecule.atomic_numbers, self.molecules[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
         self.molecules.append(copy.deepcopy(molecule))
@@ -93,7 +93,7 @@ class Ensemble():
             new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
             self.geometry = new_geometry
 
-            assert len(molecule.geometry) == len(molecule.atoms), "wrong number of geometry elements!"
+            assert len(molecule.geometry) == len(molecule.atomic_numbers), "wrong number of geometry elements!"
 
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """

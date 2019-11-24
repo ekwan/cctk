@@ -17,8 +17,8 @@ class XYZFile(File):
         molecule (Molecule): `Molecule` instance
     """
 
-    def __init__(self, atoms, geometry, title=None):
-        self.molecule = Molecule(atoms, geometry)
+    def __init__(self, atomic_numbers, geometry, title=None):
+        self.molecule = Molecule(atomic_numbers, geometry)
 
         if title and (isinstance(title, str)):
             self.title = title
@@ -60,13 +60,13 @@ class XYZFile(File):
         Args:
             filename (str): path to the new file
         """
-        text = f"{len(self.molecule.atoms)}\n"
+        text = f"{self.molecule.num_atoms()}\n"
         if self.title:
             text += f"{self.title}\n"
         else:
             text += "title\n"
         for index, line in enumerate(self.molecule.geometry):
-            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(self.molecule.atoms[index]), line[0], line[1], line[2])
+            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(self.molecule.atomic_numbers[index]), line[0], line[1], line[2])
 
         super().write_file(filename, text)
 

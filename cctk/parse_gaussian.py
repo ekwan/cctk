@@ -141,8 +141,8 @@ def search_for_block(lines, start, end, count=1):
 
 def read_bonds(lines):
     """
-    Reads bonding information from the output file. 
-    
+    Reads bonding information from the output file.
+
     Args:
         lines (list): the list of lines in the file
 

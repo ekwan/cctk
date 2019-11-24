@@ -20,29 +20,29 @@ class Molecule:
     """
     Class that represents a single molecule, abstractly.
 
-    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of self.geometry).
-    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atoms``) are zero-indexed inherently.
-    Whenever possible, one-indexed accessor functions have been added to prevent confusion: self.bonds[i][j] may cause unintended behavior, but self.add_bond(i,j) should work as expected.
+    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of ``self.geometry``).
+    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atomic_numbers``) are zero-indexed inherently.
+    Whenever possible, one-indexed accessor functions have been added to prevent confusion: ``self.bonds[i][j]`` may cause unintended behavior, but ``self.add_bond(i,j)`` should work as expected.
 
     Attributes:
         name (str): for identification, optional
-        atoms (list): list of atomic symbols
-        geometry (list): Numpy array of 3-tuples of xyz coordinates
+        atomic_numbers (list): list of atomic numbers
+        geometry (list): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
     """
 
-    def __init__(self, atoms, geometry, name=None, bonds=None, charge=0, multiplicity=1):
+    def __init__(self, atomic_numbers, geometry, name=None, bonds=None, charge=0, multiplicity=1):
         """
         Create new Molecule object, and assign connectivity if needed.
 
-        ``bonds`` must be a list of edges (i.e. an n x 2 `numpy` array).
+        ``bonds`` must be a list of edges (i.e. an n x 2 ``numpy`` array).
         """
-        if len(atoms) != len(geometry):
-            raise ValueError("length of geometry and atoms does not match!")
+        if len(atomic_numbers) != len(geometry):
+            raise ValueError("length of geometry and atomic_numbers does not match!")
 
-        if not all(isinstance(z, int) for z in atoms) or len(atoms) == 0:
+        if not all(isinstance(z, int) for z in atomic_numbers) or len(atomic_numbers) == 0:
             raise ValueError("invalid atom list")
 
         if len(geometry) == 0:
@@ -60,7 +60,7 @@ class Molecule:
         if name and not isinstance(name, str):
             raise TypeError("name must be a string!")
 
-        for atom in atoms:
+        for atom in atomic_numbers:
             try:
                 get_symbol(atom)
             except ValueError:
@@ -72,7 +72,7 @@ class Molecule:
         if (not isinstance(multiplicity, int)) or (multiplicity < 1):
             raise TypeError("multiplicity must be positive integer")
 
-        self.atoms = atoms
+        self.atomic_numbers = atomic_numbers
         self.geometry = geometry
 
         if bonds:
@@ -87,7 +87,7 @@ class Molecule:
         self.charge = charge
 
         self.bonds = nx.Graph()
-        self.bonds.add_nodes_from(range(1, len(atoms) + 1))
+        self.bonds.add_nodes_from(range(1, len(atomic_numbers) + 1))
         if bonds:
             for bond in bonds:
                 self.add_bond(bond[0], bond[1])
@@ -100,8 +100,8 @@ class Molecule:
             cutoff (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered bonded
         """
 
-        for i in range(1, len(self.atoms) + 1):
-            for j in range(i + 1, len(self.atoms) + 1):
+        for i in range(1, self.num_atoms() + 1):
+            for j in range(i + 1, self.num_atoms() + 1):
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i))
                 r_j = get_covalent_radius(self.get_atomic_number(j))
@@ -109,32 +109,32 @@ class Molecule:
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
-    
+
     def check_for_conflicts(self, min_buffer=-1, group1=None, group2=None):
         """
-        Automatically checks for conflicts based on covalent radii. If two atoms are closer than the sum of their covalent radii + buffer, then they are considered clashing. 
-        If `group1` and `group2` are selected, then conflicts will only be evaluated between these two groups of atoms. 
+        Automatically checks for conflicts based on covalent radii. If two atoms are closer than the sum of their covalent radii + buffer, then they are considered clashing.
+        If `group1` and `group2` are selected, then conflicts will only be evaluated between these two groups of atoms.
 
         Args:
-            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing. -1.0 A is default, for no particular reason. 
-            group1 (list): atoms to evaluate against `group2` (if `None`, defaults to all atoms) 
-            group2 (list): atoms to evaluate against `group1` (if `None`, defaults to all atoms) 
+            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing. -1.0 A is default, for no particular reason.
+            group1 (list): atoms to evaluate against `group2` (if `None`, defaults to all atoms)
+            group2 (list): atoms to evaluate against `group1` (if `None`, defaults to all atoms)
 
         Returns:
             True if there are no conflicts, False (+ error) if there are
         """
 
         if group1 is None:
-            group1 = list(range(1, len(self.atoms) + 1))
+            group1 = list(range(1, self.num_atoms() + 1))
 
         if group2 is None:
-            group2 = list(range(1, len(self.atoms) + 1))
-        
+            group2 = list(range(1, self.num_atoms() + 1))
+
         for atom in group1 + group2:
             self._check_atom_number(atom)
 
-        for i in group1: 
-            for j in group2: 
+        for i in group1:
+            for j in group2:
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i))
                 r_j = get_covalent_radius(self.get_atomic_number(j))
@@ -145,7 +145,6 @@ class Molecule:
                     return False
 
         return True
-
 
     def add_bond(self, atom1, atom2, bond_order=1):
         """
@@ -172,7 +171,7 @@ class Molecule:
         if not isinstance(number, int):
             raise TypeError("atom number must be integer")
 
-        if number > len(self.atoms):
+        if number > self.num_atoms():
             raise ValueError(f"atom number {number} too large!")
 
         if number <= 0:
@@ -180,16 +179,16 @@ class Molecule:
 
     def formula(self, return_dict=False):
         """
-        Returns the atomic formula. 
-        
-        If ``return_dict`` is ``True``, then returns a ``dictionary`` with keys elemental symbols and values the number of occurrences. 
-        
-        For instance, ``water.formula()`` would return ``{'O': 1, 'H': 2}``. 
-        
-        If ``return_dict`` is ``False``, then returns a stringified version of the formula according to standard rules. 
+        Returns the atomic formula.
 
-        For instance, ``water.formula()`` would return ``H2O``. 
-        
+        If ``return_dict`` is ``True``, then returns a ``dictionary`` with keys elemental symbols and values the number of occurrences.
+
+        For instance, ``water.formula()`` would return ``{'O': 1, 'H': 2}``.
+
+        If ``return_dict`` is ``False``, then returns a stringified version of the formula according to standard rules.
+
+        For instance, ``water.formula()`` would return ``H2O``.
+
         Args:
             return_dict (Bool): if the method should return a string or a dictionary
 
@@ -198,7 +197,7 @@ class Molecule:
         """
 
         formula_dict = {}
-        for atom in self.atoms:
+        for atom in self.atomic_numbers:
             symbol = get_symbol(atom)
             if symbol in formula_dict:
                 formula_dict[symbol] += 1
@@ -226,10 +225,10 @@ class Molecule:
 
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         """
-        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring. 
-        Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.   
-        
-        Args: 
+        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
+        Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.
+
+        Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             bond_order (int): bond order of bond between atom1 and atom2
@@ -237,7 +236,7 @@ class Molecule:
         Returns:
             fragment1: the list of atoms in fragment 1 (containing atom1)
             fragment2: the list of atoms in fragment 2 (containing atom2)
-        
+
         """
 
         self._check_atom_number(atom1)
@@ -268,14 +267,14 @@ class Molecule:
             raise ValueError(f"No bond between atom {atom1} and atom {atom2}!")
 
     def _get_fragment_containing(self, atom):
-        """ 
+        """
         Get the fragment containing the atom with number ``atom``.
-        
+
         Args:
             atom (int): the number of the atom (indexed from one)
-        
+
         Returns:
-            a (zero-indexed) list of all the atoms in the fragment 
+            a (zero-indexed) list of all the atoms in the fragment
         """
 
         self._check_atom_number(atom)
@@ -289,17 +288,17 @@ class Molecule:
 
     def set_distance(self, atom1, atom2, distance, move="group"):
         """
-        Adjusts the ``atom1`` -- ``atom2`` bond length to be a fixed distance by moving atom2. 
+        Adjusts the ``atom1`` -- ``atom2`` bond length to be a fixed distance by moving atom2.
 
-        If ``move`` is set to "group", then all atoms bonded to ``atom2`` will also be moved. 
-        
-        If ``move`` is set to "atom", then only atom2 will be moved. 
-        
+        If ``move`` is set to "group", then all atoms bonded to ``atom2`` will also be moved.
+
+        If ``move`` is set to "atom", then only atom2 will be moved.
+
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             distance (float): distance in Angstroms of the final bond
-            move (str): determines how fragment moving is handled 
+            move (str): determines how fragment moving is handled
         """
 
         self._check_atom_number(atom1)
@@ -344,18 +343,18 @@ class Molecule:
 
     def set_angle(self, atom1, atom2, atom3, angle, move="group"):
         """
-        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``. 
+        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``.
 
-        If `move` is set to "group", then all atoms bonded to ``atom3`` will also be moved. 
-        
-        If `move` is set to "atom", then only ``atom3`` will be moved. 
-        
+        If `move` is set to "group", then all atoms bonded to ``atom3`` will also be moved.
+
+        If `move` is set to "atom", then only ``atom3`` will be moved.
+
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             atom3 (int): the number of the third atom
             angle (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` angle
-            move (str): determines how fragment moving is handled 
+            move (str): determines how fragment moving is handled
         """
 
         self._check_atom_number(atom1)
@@ -432,21 +431,21 @@ class Molecule:
 
     def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move="group34"):
         """
-        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4.. 
+        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4..
 
-        If ``move`` is set to "atom", then only ``atom4`` will be moved. 
-        
-        If ``move`` is set to "group4", then all atoms bonded to ``atom4`` will also be moved. 
-       
-        If ``move`` is set to "group34", then all atoms bonded to ``atom3`` and ``atom4`` will also be moved. 
-        
+        If ``move`` is set to "atom", then only ``atom4`` will be moved.
+
+        If ``move`` is set to "group4", then all atoms bonded to ``atom4`` will also be moved.
+
+        If ``move`` is set to "group34", then all atoms bonded to ``atom3`` and ``atom4`` will also be moved.
+
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
             atom3 (int): the number of the third atom
             atom4 (int): the number of the fourth atom
             dihedral (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` angle
-            move (str): determines how fragment moving is handled 
+            move (str): determines how fragment moving is handled
         """
 
         self._check_atom_number(atom1)
@@ -541,7 +540,7 @@ class Molecule:
         self.translate_molecule(v3)
 
         final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
-        
+
         #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
         if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
@@ -550,16 +549,16 @@ class Molecule:
         """
         Translates the whole molecule by the given vector.
         """
-        for atom in range(0, len(self.atoms)):
+        for atom in range(0, self.num_atoms()):
             self.geometry[atom] = list(self.geometry[atom] + vector)
 
     def rotate_molecule(self, axis, degrees):
         """
-        Rotates the whole molecule around the given axis. 
+        Rotates the whole molecule around the given axis.
         """
         rot_matrix = compute_rotation_matrix(axis, degrees)
 
-        for atom in range(0, len(self.atoms)):
+        for atom in range(0, self.num_atoms()):
             self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
 
     def calculate_mass_spectrum():
@@ -569,15 +568,15 @@ class Molecule:
         """
         Adds atom with symbol ``symbol`` at the centroid of the atoms in ``atom_numbers``.
 
-        If ``weighted`` is ``True``, then the centroid calculation will take into account the atomic numbers of the atoms in question (placing the atom closer to more massive atoms). 
+        If ``weighted`` is ``True``, then the centroid calculation will take into account the atomic numbers of the atoms in question (placing the atom closer to more massive atoms).
 
         Otherwise, the average is unweighted.
-        
-        Args: 
+
+        Args:
             symbol (str): the atomic symbol of the atom to be added
             atom_numbers (list): which atoms to put the new atom between
             weighted (Bool): if the centroid calculation should be weighted (see above)
-        
+
         Returns:
             the number of the new atom
         """
@@ -594,14 +593,16 @@ class Molecule:
             self._check_atom_number(atom)
             coords[index] = self.get_vector(atom)
             if weighted == True:
-                weights[index] = self.atoms[atom - 1]
+                weights[index] = self.atomic_numbers[atom - 1]
 
         new_coord = list(np.average(coords, weights=weights, axis=0))
         return self.add_atom(coordinates=new_coord, symbol=symbol)
 
     def add_atom(self, symbol, coordinates):
         """
-        Add an atom with symbol ``symbol`` at position ``coordinates``. 
+        Add an atom with symbol ``symbol`` at position ``coordinates``.
+
+        Returns ``self.num_atoms()``.
         """
 
         if (not isinstance(coordinates, list)) or (len(coordinates) != 3):
@@ -611,11 +612,11 @@ class Molecule:
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atoms.append(number)
+        self.atomic_numbers.append(number)
         self.geometry = np.append(self.geometry, [coordinates], axis=0)
-        self.bonds.add_node(len(self.atoms))
+        self.bonds.add_node(self.num_atoms())
 
-        return len(self.atoms)
+        return self.num_atoms()
 
     def remove_atom(self, number):
         """
@@ -627,17 +628,17 @@ class Molecule:
         try:
             self.bonds.remove_node(number)
             self.geometry = np.delete(self.geometry, number - 1, axis=0)
-            self.atoms.pop(number - 1)
+            self.atomic_numbers.pop(number - 1)
             return True
         except:
             raise ValueError("removing atom {number} failed!")
 
     def get_atomic_number(self, atom):
-        """ 
+        """
         Get the atomic number for a given atom.
         """
         self._check_atom_number(atom)
-        return self.atoms[atom - 1]
+        return self.atomic_numbers[atom - 1]
 
     def get_vector(self, atom, atom2=None):
         """
@@ -653,7 +654,7 @@ class Molecule:
 
     def get_distance(self, atom1, atom2):
         """
-        Wrapper to compute distance between two atoms. 
+        Wrapper to compute distance between two atoms.
         """
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -662,7 +663,7 @@ class Molecule:
 
     def get_angle(self, atom1, atom2, atom3):
         """
-        Wrapper to compute angle between three atoms. 
+        Wrapper to compute angle between three atoms.
         """
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -676,7 +677,7 @@ class Molecule:
 
     def get_dihedral(self, atom1, atom2, atom3, atom4):
         """
-        Wrapper to compute angle between three atoms. 
+        Wrapper to compute angle between three atoms.
         """
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -704,7 +705,7 @@ class Molecule:
 
     def are_connected(self, atom1, atom2):
         """
-        Wrapper to tell if two atoms are connected. 
+        Wrapper to tell if two atoms are connected.
         """
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -715,8 +716,8 @@ class Molecule:
             return False
 
     def get_atoms_by_symbol(self, symbol):
-        """ 
-        Returns all the numbers of atoms of type ``symbol`` in the molecule. 
+        """
+        Returns all the numbers of atoms of type ``symbol`` in the molecule.
         """
         if not isinstance(symbol, str):
             raise TypeError("symbol {symbol} must be a string")
@@ -724,7 +725,7 @@ class Molecule:
         number = get_number(symbol)
         atoms = []
 
-        for index, atom in enumerate(self.atoms):
+        for index, atom in enumerate(self.atomic_numbers):
             if atom == number:
                 atoms.append(index + 1)
 
@@ -732,11 +733,11 @@ class Molecule:
 
     def get_heavy_atoms(self):
         """
-        Returns a zero-indexed list of all the heavy atoms in the molecule (i.e., not hydrogen), for array indexing. 
+        Returns a zero-indexed list of all the heavy atoms in the molecule (i.e., not hydrogen), for array indexing.
         """
         atoms = []
 
-        for index, atom in enumerate(self.atoms):
+        for index, atom in enumerate(self.atomic_numbers):
             if atom != 1:
                 atoms.append(index)
 
@@ -744,7 +745,10 @@ class Molecule:
 
     def get_adjacent_atoms(self, atom):
         """
-        Returns a list of the neighbors of `atom`. If `atom` has no neighbors, an empty list will be returned. 
+        Returns a list of the neighbors of `atom`. If `atom` has no neighbors, an empty list will be returned.
         """
         self._check_atom_number(atom)
         return list(self.bonds.neighbors(atom))
+
+    def num_atoms(self):
+        return len(self.atomic_numbers)

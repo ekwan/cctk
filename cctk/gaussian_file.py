@@ -46,12 +46,12 @@ class GaussianFile(File):
         title (str): optional, title of .gjf file
     """
 
-    def __init__(self, atoms, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1):
+    def __init__(self, atomic_numbers, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1):
         """
         Create new GaussianInputFile object.
 
 		Args:
-            atoms (list): list of atomic symbols
+            atomic_numbers (list): list of atomic numbers
             geometries (list): list of lists of 3-tuples of xyz coordinates
             bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
             charge (int): the charge of the molecule
@@ -75,7 +75,7 @@ class GaussianFile(File):
         if not all(isinstance(job, JobType) for job in job_types):
             raise TypeError(f"invalid job type {job}")
 
-        self.molecules = Ensemble(atoms=atoms, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
+        self.molecules = Ensemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
         self.footer = footer
         self.title = title
@@ -111,7 +111,7 @@ class GaussianFile(File):
 
         text += f"{int(mol.charge)} {int(mol.multiplicity)}\n"
         for index, line in enumerate(mol.geometry):
-            text += f"{mol.atoms[index]:2d} {line[0]:.8f} {line[1]:.8f} {line[2]:.8f}\n"
+            text += f"{mol.atomic_numbers[index]:2d} {line[0]:.8f} {line[1]:.8f} {line[2]:.8f}\n"
 
         text += "\n"
         if footer is not None:
@@ -161,12 +161,12 @@ class GaussianFile(File):
                 success += 1
 
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
-        atoms = list(map(get_number, atom_list))
+        atomic_numbers = list(map(get_number, atom_list))
         bonds = parse.read_bonds(lines)
         charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
         multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])
 
-        f = GaussianFile(atoms, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
+        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
