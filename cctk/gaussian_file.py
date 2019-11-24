@@ -156,6 +156,7 @@ class GaussianFile(File):
                 if re.search(f" {name}", header):
                     job_types.append(member)
 
+        #### extract parameters
         success = 0
         for line in lines:
             if line.strip().startswith("Normal termination"):
@@ -164,16 +165,16 @@ class GaussianFile(File):
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
         atoms = list(map(get_number, atom_list))
         bonds = parse.read_bonds(lines)
+        charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
+        multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])
 
-        # charge, multiplicity
-
-        f = GaussianFile(atoms, geometries, bonds, job_types=job_types)
-
+        f = GaussianFile(atoms, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
         f.success = success
 
+        #### now for some job-type specific attributes
         if JobType.OPT in job_types:
             f.rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
             f.rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
@@ -216,7 +217,7 @@ class GaussianFile(File):
         """
         Returns the last molecule (from an optimization job) or the only molecule (from other jobs).
 
-        If ``num`` is specified, returns that job (1-indexed for positive numbers).
+        If ``num`` is specified, returns that job (1-indexed for positive numbers). So ``job.get_molecule(3)`` will return the 3rd element of ``job.molecules``, not the 4th.
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -227,6 +228,6 @@ class GaussianFile(File):
 
         #### enforce 1-indexing for positive numbers
         if num > 0:
-            num += 1
+            num += -1
 
         return self.molecules.molecules[num]

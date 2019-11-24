@@ -11,7 +11,7 @@ Functions to help with parsing Gaussian files
 def read_geometries_and_energies(lines):
     """
     A large and unwieldy method - reads geometries, symbol lists, and energies from the file.
-    
+
     Args:
         lines (list): the list of lines in the file
 
@@ -19,7 +19,7 @@ def read_geometries_and_energies(lines):
         array of geometries (each of which itself is an array of arrays)
         list of atomic symbols
         array of energies
-        array containing the number of SCF iterations per step 
+        array containing the number of SCF iterations per step
     """
 
     file_geometries = []
@@ -191,13 +191,13 @@ def read_bonds(lines):
 
 def find_parameter(lines, parameter, expected_length, which_field):
     """
-    Helper method to search through the output file and find key forces and displacements. 
+    Helper method to search through the output file and find key forces and displacements.
 
     Args:
         lines (list): list of lines in file
         parameter (string): test to search for
         expected_length (int): how many fields there should be
-        which_field (int): which field the parameter is (zero-indexed) 
+        which_field (int): which field the parameter is (zero-indexed)
     Returns:
         a list of all the extracted values
     """
