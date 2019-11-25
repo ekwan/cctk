@@ -109,6 +109,8 @@ class Molecule:
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
+                elif self.get_bond_order(i,j):
+                    self.remove_bond(i,j)
 
     def check_for_conflicts(self, min_buffer=-1, group1=None, group2=None):
         """
@@ -148,7 +150,7 @@ class Molecule:
 
     def add_bond(self, atom1, atom2, bond_order=1):
         """
-        Adds a new bond to the bond graph, or updates the existing bond order. Will not throw an error if the bond already exists..
+        Adds a new bond to the bond graph, or updates the existing bond order. Will not throw an error if the bond already exists.
 
         Args:
             atom1 (int): the number of the first atom
@@ -158,11 +160,20 @@ class Molecule:
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
+        assert isinstance(bond_order, int), f"bond order {bond_order} must be an integer"
+        assert bond_order >= 0, f"bond order {bond_order} must be positive"
+
         if self.bonds.has_edge(atom1, atom2):
             if self.bonds[atom1][atom2]["weight"] != bond_order:
                 self.bonds[atom1][atom2]["weight"] = bond_order
-        else:
+        elif bond_order > 0:
             self.bonds.add_edge(atom1, atom2, weight=bond_order)
+
+    def remove_bond(self, atom1, atom2):
+        """
+        Alias for ``self.add_bond(self, atom1, atom2, bond_order=0)`` -- more intuitive nomenclature.
+        """
+        self.add_bond(self, atom1, atom2, bond_order=0)
 
     def _check_atom_number(self, number):
         """

@@ -10,6 +10,8 @@ class Ensemble():
     """
     Class that represents a group of molecules. They do not all need to have the same atoms or bonds.
 
+    Calling ``ensemble[x]`` is shorthand for calling ``ensemble.molecules[x]``.
+
     Attributes:
         name (str): name, for identification
         molecules (list): list of `Molecule` objects
@@ -28,14 +30,17 @@ class Ensemble():
 
         self.batch_add(**kwargs)
 
+    def __getitem__(self, item):
+         return self.molecules[item]
+
     def batch_add(self, atomic_numbers, geometries, bonds, charges, multiplicities):
         """
-        Automatically generates ``Molecule`` objects and adds them.
+        Automatically generates ``Molecule`` objects and adds them using ``self.add_molecule()``.
 
         Args:
             atomic_numbers (list): list of lists of atomic numbers.
             geometry (list): list of 3-tuples of xyz coordinates
-            bonds (list): list of edges (i.e. an n x 2 `numpy` array).
+            bonds (list): list of edges (i.e. an n x 2 ``numpy`` array).
             charges (int): list of molecular charges - will default to 0 for all molecules.
             multiplicities (int): list of multiplicities - will default to 1 (singlet) for all molecules.
         """
