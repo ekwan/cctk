@@ -99,26 +99,28 @@ class ConformationalEnsemble(Ensemble):
         molecules (list): list of `Molecule` objects
     """
 
-    def __init__(self, name=None, atomic_numbers=None, geometries=None, charge=0, multiplicity=1, bonds=None):
+    def batch_add(self, atomic_numbers=None, geometries=None, **kwargs):
         """
+        Automatically generates ``Molecule`` objects and adds them.
+
         Takes only a single molecule's value for ``charge``/``multiplicity``/``atomic_numbers``/``bonds``, not a list of lists like ``Ensemble.__init__()``.
 
         Args:
-            name (str): name of instance
             atomic_numbers (list): list of atomic numbers.
             geometry (list): list of 3-tuples of xyz coordinates
             bonds (list): list of edges (i.e. an n x 2 `numpy` array).
-            charges (int): molecular charge
-            multiplicities (int): spin multiplicity
+            charges (int): molecular charge - will default to 0 for all molecules.
+            multiplicities (int): spin multiplicity - will default to 1 (singlet) for all molecules.
         """
-        if (atomic_numbers is not None) and (geometries is not None):
-            atomic_numbers = [atomic_numbers] * len(geometries)
-            charge = [charge] * len(geometries)
-            multiplicity = [multiplicity] * len(geometries)
-            bonds = [bonds] * len(geometries)
-            super().__init__(name=name, atomic_numbers=atomic_numbers, geometries=geometries, charges=charge, multiplicities=multiplicity, bonds=bonds)
-        else:
-            super().__init__(name=name)
+        if (atomic_numbers is None) or (geometries is None):
+            return
+
+        for geometry in geometries:
+            if len(atomic_numbers) != len(geometry):
+                raise TypeError("atoms and geometries must be the same length!")
+
+            mol = Molecule(atomic_numbers, geometry, **kwargs)
+            self.add_molecule(mol)
 
     def add_molecule(self, molecule):
         """

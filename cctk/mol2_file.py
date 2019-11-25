@@ -4,19 +4,52 @@ import networkx as nx
 
 from abc import abstractmethod
 
+from cctk import File, Ensemble, ConformationalEnsemble
+from cctk.helper_functions import get_symbol, get_number
+
 class MOL2File(File):
     """
-    Generic class for all mol2 files.
+    Generic class for all ``.mol2`` files.
 
     Attributes:
+        name (str): name of file
+        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
     """
 
+    def __init__(self, name=None):
+        if isinstance(name, str):
+            self.name = name
+
     @classmethod
-    def read_mol2( filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=True, ):
-        """Reads .mol2 files into cctk.
+    def read_file(cls, filename, name=None, **kwargs):
+        """
+        Reads ``.mol2`` file and generates a ``MOL2File`` instance.
 
         Args:
-            filename (:obj:`str`): the name of the .mol2 file
+            filename (str): path to file
+            name (str): name of the file
+
+        Returns:
+            MOL2File object
+        """
+
+        file = MOL2File(name=name)
+
+        (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
+        if conformers == True:
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=bonds.edges())
+        else:
+            file.molecules = Ensemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=[b.edges() for b in bonds])
+
+        return file
+
+    @classmethod
+    def _read_mol2(cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False, ):
+        """
+        Reads .mol2 files into cctk.
+
+        Args:
+            filename str): the name of the .mol2 file
 
             contains_conformers('check' or bool): if set to 'check', multiple geometries
                                                 in the same file will be compared to see
@@ -35,9 +68,10 @@ class MOL2File(File):
             print_status_messages (bool): if True, update the progerss of the parsing operation to stdout.
 
         Returns:
-            all_geometries, all_symbols, all_bonds, contains_conformers
+            all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers
 
             all_geometries: np.array(geometry number, atom number, xyz) -> position (float)
+            all_clean_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
             all_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
             all_bonds: list(geometry_number) -> bond connectivity (:obj:`nx.Graph`)
             contains_conformers: bool (True if the geometries correspond to conformers.)
@@ -45,17 +79,18 @@ class MOL2File(File):
         # read file
         if print_status_messages:
             print(f"Reading {filename}...", end="", flush=True)
-        with open(filename, "r") as filehandle:
-            lines = filehandle.read().splitlines()
+        lines = super().read_file(filename)
         if print_status_messages:
             print(f"read {len(lines)} lines...", end="", flush=True)
 
         # initialize arrays
         all_geometries = []
         all_symbols = []
+        all_clean_symbols = []
         all_bonds = []
         this_geometry = []
         this_symbols = []
+        this_clean_symbols = []
         this_bonds = None
 
         # parse file
@@ -101,7 +136,9 @@ class MOL2File(File):
                 x, y, z = float(fields[2]), float(fields[3]), float(fields[4])
                 this_geometry.append([x, y, z])
                 symbol = fields[5]
+                clean_symbol = fields[1]
                 this_symbols.append(symbol)
+                this_clean_symbols.append(clean_symbol)
             elif in_bond_block:
                 fields = re.split(" +", line.strip())
                 if len(fields) == 4:
@@ -144,15 +181,18 @@ class MOL2File(File):
             end_of_blocks = not in_geometry_block and not in_bond_block
             if (end_of_file or end_of_blocks) and len(this_geometry) > 0:
                 all_geometries.append(this_geometry)
+                all_clean_symbols.append(this_clean_symbols)
                 all_symbols.append(this_symbols)
                 all_bonds.append(this_bonds)
                 this_geometry = []
                 this_symbols = []
+                this_clean_symbols = []
                 this_bonds = None
 
         # convert to numpy array
         all_geometries = np.array(all_geometries)
         all_symbols = np.array(all_symbols)
+        all_clean_symbols = np.array(all_clean_symbols)
 
         # determine if these are conformers
         if contains_conformers == "check":
@@ -172,6 +212,7 @@ class MOL2File(File):
         # if requested, just store one copy of all_symbols and all_bonds
         if save_memory_for_conformers and contains_conformers:
             all_symbols = all_symbols[0]
+            all_clean_symbols = all_clean_symbols[0]
             all_bonds = all_bonds[0]
 
         # return result
@@ -209,4 +250,4 @@ class MOL2File(File):
                 n_bonds = all_bonds.number_of_edges()
                 if print_status_messages:
                     print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
-        return (all_geometries, all_symbols, all_bonds, contains_conformers)
+        return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)

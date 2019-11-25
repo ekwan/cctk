@@ -4,7 +4,8 @@ import numpy as np
 
 sys.path.append(os.path.relpath('../cctk'))
 
-from cctk import GaussianData, Molecule, GaussianJob
+from cctk import MOL2File
 
-output_file = GaussianData.read_opt('cctk/scripts/acetaldehyde.out')
+file = MOL2File.read_file("cctk/scripts/dodecane.mol2")
 
+print(file.molecules.molecules[0].atomic_numbers)

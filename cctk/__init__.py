@@ -5,3 +5,4 @@ from .group import Group
 
 from .gaussian_file import GaussianFile, JobType
 from .xyz_file import XYZFile
+from .mol2_file import MOL2File
