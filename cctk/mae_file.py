@@ -4,27 +4,49 @@ import networkx as nx
 
 from abc import abstractmethod
 
+from cctk import File, Ensemble, ConformationalEnsemble
+from cctk.helper_functions import get_symbol, get_number
+
 class MAEFile(File):
     """
-    Generic class for all xyz files.
+    Generic class for all ``.mae`` files.
 
     Attributes:
-        title (str): the title from the file
-        ensemble (Ensemble): `Ensemble` instance
+        name (str): name of file
+        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
     """
 
-### Mae File Format Reader ###
-# reads uncompressed macromodel files
-#
-# returns:
-# geometries: np.array(geometry number, atom number, xyz) -> position (float)
-# symbols:    np.array(geometry number, atom number) -> symbol (str)
-# bonds:      np.array(geometry number) -> connectivity (nx.Graph)
-# property_names: np.array(geometry number) -> str
-# property_values: np.array(conformer, property) -> property_value (str)
-# contains_conformers: whether this file contains conformers (bool)
+    def __init__(self, name=None):
+        if isinstance(name, str):
+            self.name = name
+
     @classmethod
-    def read_mae(cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False, ):
+    def read_file(cls, filename, name=None, **kwargs):
+        """
+        Reads ``.mae`` file and generates a ``MAEFile`` instance.
+
+        Args:
+            filename (str): path to file
+            name (str): name of the file
+
+        Returns:
+            MAEFile object
+            property names (list)
+            property_values (list)
+        """
+
+        file = MAEFile(name=name)
+
+        (geometries, symbols, bonds, p_names, p_vals, conformers) = cls._read_mae(filename, **kwargs)
+        if conformers == True:
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=bonds.edges())
+        else:
+            file.molecules = Ensemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=[b.edges() for b in bonds])
+
+        return file, p_names, p_vals
+
+    @classmethod
+    def _read_mae(cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False, ):
         """
         Reads uncompressed Macromodel files.
 
@@ -175,7 +197,6 @@ class MAEFile(File):
                             raise ValueError(f"inconsistent bond order definition: {line}")
                     this_bonds.add_edge(atom1, atom2, weight=bond_order)
                     this_bonds.add_edge(atom2, atom1, weight=bond_order)
-            # print(f"{i+1:6d} : {current_block_type} : {line}")
 
         # convert to numpy array
         geometries = np.array(geometries)

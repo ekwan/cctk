@@ -230,7 +230,7 @@ class ConformationalEnsemble(Ensemble):
             if to_delete[i]:
                 del self.molecules[i]
 
-    def print_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
+    def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """
         Computes and outputs geometric parameters (bond distances, angles, or dihedral angles) for every member of ``self.molecules.``
 
