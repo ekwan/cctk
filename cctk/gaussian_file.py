@@ -4,7 +4,7 @@ import numpy as np
 
 from enum import Enum
 
-from cctk import File, ConformationalEnsemble
+from cctk import File, ConformationalEnsemble, Molecule
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 import cctk.parse_gaussian as parse
@@ -91,10 +91,12 @@ class GaussianFile(File):
             cores (int): how many CPU cores to request
             chk_path (str): path to checkpoint file, if desired
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``. Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file. 
             header (str): header for new file
             footer (str): footer for new file
         """
-        mol = self.get_molecule(molecule)
+        if not isinstance(molecule, Molecule):
+            molecule = self.get_molecule(molecule)
 
         if header is None:
             header = self.header
@@ -109,9 +111,9 @@ class GaussianFile(File):
 
         text += f"{header.strip()}\n\n{self.title}\n\n"
 
-        text += f"{int(mol.charge)} {int(mol.multiplicity)}\n"
-        for index, line in enumerate(mol.geometry):
-            text += f"{mol.atomic_numbers[index]:2d} {line[0]:.8f} {line[1]:.8f} {line[2]:.8f}\n"
+        text += f"{int(molecule.charge)} {int(molecule.multiplicity)}\n"
+        for index, line in enumerate(molecule.geometry):
+            text += f"{molecule.atomic_numbers[index]:2d} {line[0]:.8f} {line[1]:.8f} {line[2]:.8f}\n"
 
         text += "\n"
         if footer is not None:

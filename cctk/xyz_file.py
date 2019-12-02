@@ -17,14 +17,14 @@ class XYZFile(File):
         molecule (Molecule): `Molecule` instance
     """
 
-    def __init__(self, atomic_numbers, geometry, title=None):
-        self.molecule = Molecule(atomic_numbers, geometry)
-
+    def __init__(self, molecule, title=None):
+        if molecule and isinstance(molecule, Molecule):
+            self.molecule = molecule
         if title and (isinstance(title, str)):
             self.title = title
 
     @classmethod
-    def read_xyz(cls, filename):
+    def read_file(cls, filename):
         """
         Factory method to create new XYZFile instances.
         """
@@ -51,7 +51,8 @@ class XYZFile(File):
             except:
                 raise ValueError(f"can't parse line {index+2}!")
 
-        return XYZFile(atoms, geometry, title)
+        molecule = Molecule(atomic_numbers, geometry)
+        return XYZFile(molecule, title)
 
     def write_file(self, filename):
         """
@@ -61,9 +62,9 @@ class XYZFile(File):
             filename (str): path to the new file
         """
         text = f"{self.molecule.num_atoms()}\n"
-        if self.title:
+        try:
             text += f"{self.title}\n"
-        else:
+        except:
             text += "title\n"
         for index, line in enumerate(self.molecule.geometry):
             text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(self.molecule.atomic_numbers[index]), line[0], line[1], line[2])

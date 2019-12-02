@@ -30,32 +30,39 @@ def add_group_to_molecule(molecule, group, add_to):
     adjacent_atom = adjacent_atom[0]
 
     attach_to = group.attach_to
-    other_indices = np.ones_like(group.atoms)
-    other_indices[attach_to-1] = 0
+    other_indices = np.ones_like(group.atomic_numbers).astype(bool)
+    other_indices[attach_to-1] = False
+    other_indices[group.adjacent-1] = False
 
     #### we need to change the bond length somewhat to prevent strange behavior
     old_radius = get_covalent_radius(molecule.atomic_numbers[add_to-1])
-    new_radius = get_covalent_radius(group.atomic_numbers[attach_to-1])
+    new_radius = get_covalent_radius(group.atomic_numbers[group.adjacent-1])
     delta_rad = new_radius - old_radius
 
     #### make the swap! (this only adds the atoms, still have to get the geometry right)
-    molecule.atoms[add_to-1] = group.atomic_numbers[attach_to-1]
+    print(molecule.atomic_numbers)
+    molecule.atomic_numbers[add_to-1] = group.atomic_numbers[group.adjacent-1]
     new_indices = [i + molecule.num_atoms() for i in range(len(other_indices))]
-    molecule.atoms.append(group.atoms[other_indices])
+    print(molecule.atomic_numbers)
+    molecule.atomic_numbers.extend(np.array(group.atomic_numbers)[other_indices])
+    print(molecule.atomic_numbers)
 
     #### adjust the bond length by moving add_to
-    molecule.set_distance(adjacent_atom, add_to) = molecule.get_distance(adjacent_atom, add_to) + delta_rad
+    molecule.set_distance(adjacent_atom, add_to, molecule.get_distance(adjacent_atom, add_to) + delta_rad)
 
     #### rotate group to match the new positioning
     v_g = group.get_vector(group.attach_to, group.adjacent)
-    v_m = molecule.get_vector(molecule.add_to, adjacent_atom)
+    v_m = molecule.get_vector(add_to, adjacent_atom)
     theta = compute_angle_between(v_g, v_m)
+    print(theta)
 
-    new_center = molecule.get_vector(molecule.add_to)
-    rot = group.compute_rotation_matrix(np.cross(v_g,v_m), -theta)
+    new_center = molecule.get_vector(add_to)
+    rot = compute_rotation_matrix(np.cross(v_g,v_m), -(180-theta))
     for vector in group.geometry[other_indices]:
         new_v = np.dot(rot, vector) + new_center
-        molecule.geometry.append(new_v)
+        print(vector)
+        print(new_v)
+        molecule.geometry = np.vstack((molecule.geometry, new_v))
 
     assert (len(molecule.atomic_numbers) == len(molecule.geometry)), f"molecule has {len(molecule.atomic_numbers)} atoms but {len(molecule.geometry)} geometry elements!"
 

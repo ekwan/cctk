@@ -34,12 +34,12 @@ def get_symbol(atomic_number):
     Returns:
         the two-character atomic symbol string
     """
-    if isinstance(atomic_number, int):
-        atomic_number = str(atomic_number)
+#    if isinstance(atomic_number, int):
+    atomic_number = str(atomic_number)
     if atomic_number in ELEMENT_DICTIONARY:
         return ELEMENT_DICTIONARY[atomic_number]
     else:
-        raise ValueError("unknown atomic number: ", atomic_number)
+        raise ValueError(f"unknown atomic number: '{atomic_number}'")
 
 
 def get_number(atomic_symbol):
@@ -165,7 +165,7 @@ def compute_rotation_matrix(axis, theta):
 
     Args:
         axis (vector): the vector to rotate about
-        theta (float): how much to rotate
+        theta (float): how much to rotate (in degrees)
 
     Returns:
         the 3x3 rotation matrix
