@@ -81,8 +81,8 @@ def get_covalent_radius(atomic_number):
     Returns:
         the covalent radius in Angstroms (float)
     """
-    if isinstance(atomic_number, int):
-        atomic_number = str(atomic_number)
+#    if isinstance(atomic_number, int):
+    atomic_number = str(atomic_number)
     if atomic_number in COVALENT_RADII_DICTIONARY:
         return float(COVALENT_RADII_DICTIONARY[atomic_number])
     else:

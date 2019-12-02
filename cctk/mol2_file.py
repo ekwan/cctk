@@ -250,4 +250,9 @@ class MOL2File(File):
                 n_bonds = all_bonds.number_of_edges()
                 if print_status_messages:
                     print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
-        return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
+
+        #### sometimes these labels switch? so gotta check
+        if len(all_clean_symbols[0]) < len(all_symbols[0]):
+            return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
+        else:
+            return (all_geometries, all_symbols, all_clean_symbols, all_bonds, contains_conformers)

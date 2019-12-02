@@ -137,6 +137,8 @@ class Molecule:
 
         for i in group1:
             for j in group2:
+                if i == j:
+                    continue
                 distance = self.get_distance(i, j)
                 r_i = get_covalent_radius(self.get_atomic_number(i))
                 r_j = get_covalent_radius(self.get_atomic_number(j))
