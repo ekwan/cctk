@@ -765,3 +765,46 @@ class Molecule:
 
     def num_atoms(self):
         return len(self.atomic_numbers)
+
+    def rms_distance_between_atoms(self):
+        """
+        Returns the RMS distance (in Angstroms) between every pair of atoms - a quick, easy-to-calculate proxy for minimizing steric clashes.
+        """
+        distance = 0
+        for i in range(1, self.num_atoms() + 1):
+            for j in range(1, self.num_atoms() + 1):
+                if i == j:
+                    continue
+                distance += self.get_distance(i, j) ** 2
+
+        return math.sqrt(distance)/self.num_atoms()
+
+    def optimize_dihedral(self, atom1, atom2, atom3, atom4):
+        """
+        Minimizes the value of ``self.rms_distance_between_atoms`` for the given dihedral, in one-degree increments.
+
+        Args:
+            atom1 (int): atom number of the first atom in the dihedral
+            atom2 (int): atom number of the second atom in the dihedral
+            atom3 (int): atom number of the third atom in the dihedral
+            atom4 (int): atom number of the fourth atom in the dihedral
+
+        Returns:
+            the final value of the angle
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        self._check_atom_number(atom3)
+        self._check_atom_number(atom4)
+
+        best_angle = 0
+        best_dist = 0
+
+        for angle in range(0,360):
+            self.set_dihedral(atom1, atom2, atom3, atom4, angle)
+            if self.rms_distance_between_atoms() > best_dist:
+                best_dist = self.rms_distance_between_atoms()
+                best_angle = angle
+
+        self.set_dihedral(atom1, atom2, atom3, atom4, best_angle)
+        return best_angle

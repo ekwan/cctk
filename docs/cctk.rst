@@ -1,8 +1,23 @@
 cctk package
 ============
 
+Subpackages
+-----------
+
+.. toctree::
+
+   cctk.data
+
 Submodules
 ----------
+
+cctk.DEPRECATED\_cctk module
+----------------------------
+
+.. automodule:: cctk.DEPRECATED_cctk
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 cctk.ensemble module
 --------------------
@@ -12,50 +27,34 @@ cctk.ensemble module
    :undoc-members:
    :show-inheritance:
 
-cctk.gaussian\_freq\_output\_file module
-----------------------------------------
+cctk.file module
+----------------
 
-.. automodule:: cctk.gaussian_freq_output_file
+.. automodule:: cctk.file
    :members:
    :undoc-members:
    :show-inheritance:
 
-cctk.gaussian\_input\_file module
----------------------------------
+cctk.gaussian\_file module
+--------------------------
 
-.. automodule:: cctk.gaussian_input_file
+.. automodule:: cctk.gaussian_file
    :members:
    :undoc-members:
    :show-inheritance:
 
-cctk.gaussian\_irc\_output\_file module
----------------------------------------
+cctk.group module
+-----------------
 
-.. automodule:: cctk.gaussian_irc_output_file
+.. automodule:: cctk.group
    :members:
    :undoc-members:
    :show-inheritance:
 
-cctk.gaussian\_opt\_output\_file module
----------------------------------------
+cctk.group\_substitution module
+-------------------------------
 
-.. automodule:: cctk.gaussian_opt_output_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.gaussian\_output\_file module
-----------------------------------
-
-.. automodule:: cctk.gaussian_output_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.gaussian\_scan\_output\_file module
-----------------------------------------
-
-.. automodule:: cctk.gaussian_scan_output_file
+.. automodule:: cctk.group_substitution
    :members:
    :undoc-members:
    :show-inheritance:
@@ -68,10 +67,18 @@ cctk.helper\_functions module
    :undoc-members:
    :show-inheritance:
 
-cctk.input\_file module
------------------------
+cctk.mae\_file module
+---------------------
 
-.. automodule:: cctk.input_file
+.. automodule:: cctk.mae_file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cctk.mol2\_file module
+----------------------
+
+.. automodule:: cctk.mol2_file
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,10 +91,18 @@ cctk.molecule module
    :undoc-members:
    :show-inheritance:
 
-cctk.output\_file module
-------------------------
+cctk.parse\_gaussian module
+---------------------------
 
-.. automodule:: cctk.output_file
+.. automodule:: cctk.parse_gaussian
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cctk.xyz\_file module
+---------------------
+
+.. automodule:: cctk.xyz_file
    :members:
    :undoc-members:
    :show-inheritance:

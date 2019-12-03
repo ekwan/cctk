@@ -46,8 +46,12 @@ def add_group_to_molecule(molecule, group, add_to):
 
     #### make the swap! (this only adds the atoms, still have to get the geometry right)
     molecule.atomic_numbers[add_to-1] = group.atomic_numbers[group.adjacent-1]
-    new_indices = [i + molecule.num_atoms() for i in range(len(other_indices))]
+    new_indices = [i + molecule.num_atoms() for i in range(1,np.sum(other_indices)+1)]
     molecule.atomic_numbers.extend(np.array(group.atomic_numbers)[other_indices])
+
+    #### have to keep track of what all the new indices are, to carry over connectivity
+    new_indices.insert(group.adjacent-1, add_to)
+    new_indices.insert(attach_to-1, adjacent_atom)
 
     #### adjust the bond length by moving add_to
     molecule.set_distance(adjacent_atom, add_to, molecule.get_distance(adjacent_atom, add_to) + delta_rad)
@@ -64,7 +68,16 @@ def add_group_to_molecule(molecule, group, add_to):
         new_v = np.dot(rot, vector) + new_center
         molecule.geometry = np.vstack((molecule.geometry, new_v))
 
+    #### now we have to merge the new bonds
+    for (atom1, atom2) in group.bonds.edges():
+        molecule.add_bond(new_indices[atom1-1], new_indices[atom2-1])
+
     assert (len(molecule.atomic_numbers) == len(molecule.geometry)), f"molecule has {len(molecule.atomic_numbers)} atoms but {len(molecule.geometry)} geometry elements!"
+
+    #### now we want to find the "lowest" energy conformation, defined as the rotamer which minimizes the RMS distance between all atoms
+    adjacent_on_old_molecule = molecule.get_adjacent_atoms(adjacent_atom)[0]
+    adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
+    molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
 
     try:
         molecule.check_for_conflicts()
