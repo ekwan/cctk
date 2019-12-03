@@ -14,7 +14,8 @@ class File(ABC):
     def __init__(self):
         pass
 
-    def write_file(self, filename, text, overwrite_existing=True):
+    @staticmethod
+    def write_file(filename, text, overwrite_existing=True):
         """
         Writes output text to a file.
 

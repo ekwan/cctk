@@ -127,7 +127,7 @@ class GaussianFile(File):
             raise ValueError("can't write a file without a header")
 
         #### generate the text
-        text = f"%nprocshared={int(cores)}GB\n"
+        text = f"%nprocshared={int(cores)}\n"
         text += f"%mem={int(memory)}GB\n"
         if chk_path:
             text += f"%chk={chk_path}\n"
@@ -154,10 +154,21 @@ class GaussianFile(File):
         else:
             raise TypeError("not a frequency job! can't get # imaginary frequencies!")
 
+    def imaginaries(self):
+        """ 
+        Returns the imaginary frequencies, rounded to the nearest integer.
+        """
+        if JobType.FREQ in self.job_types:
+            return list(map(int, self.frequencies[self.frequencies < 0]))
+        else:
+            raise TypeError("not a frequency job! can't get # imaginary frequencies!")
+
     @classmethod
     def read_file(cls, filename, job_types=[], return_lines=False):
         """
-        Reads a Gaussian optimization out file and populates the attributes accordingly.
+        Reads a Gaussian optimization ``.out`` file and populates the attributes accordingly.
+
+        Will throw ``ValueError`` if there have been no successful iterations. 
 
         Args:
             filename (str): path to the out file
@@ -176,7 +187,7 @@ class GaussianFile(File):
         #### automatically assign job types based on header
         if len(job_types) == 0:
             for name, member in JobType.__members__.items():
-                if re.search(f" {member.value}", header):
+                if re.search(f" {member.value}", str(header)):
                     job_types.append(member)
 
         #### extract parameters

@@ -95,8 +95,10 @@ def read_geometries_and_energies(lines):
         i += 1
 
     # return result
-    return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
-
+    if len(file_symbol_lists) > 0:
+        return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
+    else: 
+        raise ValueError("no successful iterations so far!")
 
 def search_for_block(lines, start, end, count=1):
     """

@@ -669,6 +669,12 @@ class Molecule:
         """
         Wrapper to compute distance between two atoms.
         """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+        except:
+            raise TypeError("atom numbers cannot be cast to int!")
+
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
@@ -678,6 +684,13 @@ class Molecule:
         """
         Wrapper to compute angle between three atoms.
         """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+            atom3 = int(atom3)
+        except:
+            raise TypeError("atom numbers cannot be cast to int!")
+        
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
         self._check_atom_number(atom3)
@@ -692,6 +705,14 @@ class Molecule:
         """
         Wrapper to compute angle between three atoms.
         """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+            atom3 = int(atom3)
+            atom4 = int(atom4)
+        except:
+            raise TypeError("atom numbers cannot be cast to int!")
+
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
         self._check_atom_number(atom3)
@@ -758,9 +779,15 @@ class Molecule:
 
     def get_adjacent_atoms(self, atom):
         """
-        Returns a list of the neighbors of `atom`. If `atom` has no neighbors, an empty list will be returned.
+        Returns a list of the neighbors of ``atom``. If ``atom`` has no neighbors, an empty list will be returned.
         """
+        try: 
+            atom = int(atom)
+        except: 
+            raise TypeError(f"atom number {atom} cannot be cast to int!")
+
         self._check_atom_number(atom)
+        
         return list(self.bonds.neighbors(atom))
 
     def num_atoms(self):
@@ -808,3 +835,16 @@ class Molecule:
 
         self.set_dihedral(atom1, atom2, atom3, atom4, best_angle)
         return best_angle
+
+    def atom_string(self, atom):
+        """
+        Returns the elemental symbol and the atom number for a given atom.
+        """
+        try:
+            atom = int(atom)
+        except:
+            raise ValueError("atom cannot be cast to int")
+
+        self._check_atom_number(atom)
+
+        return f"{get_symbol(self.atomic_numbers[atom-1])}{atom}"
