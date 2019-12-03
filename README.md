@@ -58,6 +58,7 @@ To build the documentation, run:
 
 ```
 cd docs/
+sphinx-apidoc -o . ../cctk/
 make html
 ```
 
