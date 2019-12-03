@@ -25,7 +25,8 @@ Potential uses for *cctk* include:
 ### Compatible File Types:
  - Gaussian 16 `.out` (read) and `.gjf` (write).
  - `.xyz` (read/write)
- - `.mol2` (read/write)
+ - `.mol2` (read)
+ - `.mae` (read)
 
 ## Installation:
 
@@ -33,14 +34,11 @@ For now, just use `git clone <git url>` - a more advanced way is coming.
 
 ## Structure: 
 
-Most *cctk* programs follow a rough 4-part outline: 
+Most *cctk* programs follow a rough 3-part outline: 
 
 1. Read in data from an output file (or files). 
-1. Convert the data to a `Molecule` object. 
 1. Perform some transformation (adding an atom, changing bond lengths, etc.). 
 1. Output an input file. 
-
-The `Molecule` object therefore occupies a central place in *cctk* -- `Molecule` instances have no memory of what program they cam from, and can easily be converted to many different file formats. 
 
 ## Requirements:
 * Python 3.7 or later
