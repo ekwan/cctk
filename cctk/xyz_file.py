@@ -40,13 +40,13 @@ class XYZFile(File):
 
         title = lines[1]
 
-        atoms = [None] * num_atoms
+        atomic_numbers = [None] * num_atoms
         geometry = [None] * num_atoms
 
         for index, line in enumerate(lines[2:]):
             pieces = list(filter(None, line.split(" ")))
             try:
-                atoms[index] = get_number(pieces[0])
+                atomic_numbers[index] = get_number(pieces[0])
                 geometry[index] = [float(pieces[1]), float(pieces[2]), float(pieces[3])]
             except:
                 raise ValueError(f"can't parse line {index+2}!")

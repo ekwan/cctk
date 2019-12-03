@@ -75,13 +75,14 @@ class GaussianFile(File):
         if not all(isinstance(job, JobType) for job in job_types):
             raise TypeError(f"invalid job type {job}")
 
-        self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
+        if atomic_numbers and geometries:
+            self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
         self.footer = footer
         self.title = title
         self.job_types = job_types
 
-    def write_file(self, filename, memory=32, cores=16, chk_path=None, molecule=None, header=None, footer=None):
+    def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
         """
         Write a .gjf file, using object attributes. If no header is specified, the object's header/footer will be used.
 
@@ -91,7 +92,7 @@ class GaussianFile(File):
             cores (int): how many CPU cores to request
             chk_path (str): path to checkpoint file, if desired
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``. Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
-                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file. 
+                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
             header (str): header for new file
             footer (str): footer for new file
         """
@@ -102,6 +103,29 @@ class GaussianFile(File):
             header = self.header
             footer = self.footer
 
+        write_molecule_to_file(filename, molecule, header, footer, **kwargs)
+
+    @staticmethod
+    def write_molecule_to_file(filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title"):
+        """
+        Write a .gjf file using the given molecule.
+
+        Args:
+            filename (str): path to the new file
+            molecule (Molecule): which molecule to use -- a``Molecule`` object.
+            memory (int): how many GB of memory to request
+            header (str): header for new file
+            footer (str): footer for new file
+            cores (int): how many CPU cores to request
+            chk_path (str): path to checkpoint file, if desired
+            title (str): title of the file, defaults to "title"
+        """
+        if not isinstance(molecule, Molecule):
+            raise TypeError("need a valid molecule to write a file!")
+
+        if (header is None) or (not isinstance(header, str):
+            raise ValueError("can't write a file without a header")
+
         #### generate the text
         text = f"%nprocshared={int(cores)}GB\n"
         text += f"%mem={int(memory)}GB\n"
@@ -109,7 +133,7 @@ class GaussianFile(File):
         if chk_path:
             text += f"%chk={chk_path}\n"
 
-        text += f"{header.strip()}\n\n{self.title}\n\n"
+        text += f"{header.strip()}\n\n{title}\n\n"
 
         text += f"{int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, line in enumerate(molecule.geometry):
@@ -120,7 +144,7 @@ class GaussianFile(File):
             text += f"{footer.strip()}\n\n"
 
         #### write the file
-        super().write_file(filename, text)
+        File.write_file(filename, text)
 
     def num_imaginary(self):
         """
