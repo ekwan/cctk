@@ -123,13 +123,12 @@ class GaussianFile(File):
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
 
-        if (header is None) or (not isinstance(header, str):
+        if (header is None) or (not isinstance(header, str)):
             raise ValueError("can't write a file without a header")
 
         #### generate the text
         text = f"%nprocshared={int(cores)}GB\n"
         text += f"%mem={int(memory)}GB\n"
-
         if chk_path:
             text += f"%chk={chk_path}\n"
 
