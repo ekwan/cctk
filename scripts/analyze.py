@@ -37,15 +37,19 @@ for filename in glob.iglob(filenames, recursive=True):
         
         imaginaries = "--"
         try: 
-            imaginaries = output_file.imaginaries()
+            if output_file.num_imaginaries() > 0:
+                if output_file.num_imaginaries() > 1:
+                    imaginaries = ", ".join(output_file.imaginaries())
+                else:
+                    imaginaries = output_file.imaginaries()[0]
         except:
             #### Will raise ValueError if job is not of type "FREQ"
             pass
 
-        info.append([filename, energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])   
+        info.append([filename[-40:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])   
     
     except:
-        info.append([filename, 0, 0, 0, '', '', "NO", ''])   
+        info.append([filename[-40:], 0, 0, 0, '', '', "NO", ''])   
 
 if len(info) > 0:
     min_energy = np.min([x[2] for x in info])
@@ -61,7 +65,7 @@ if len(info) > 0:
     ))
 
     for row in info:
-        print("{0:40}    {1:16.2f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row))
+        print("{0:40}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row))
 
 else: 
     print("no jobs to analyze!")

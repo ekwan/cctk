@@ -145,21 +145,18 @@ class GaussianFile(File):
         #### write the file
         File.write_file(filename, text)
 
-    def num_imaginary(self):
+    def num_imaginaries(self):
         """
         Returns the number of imaginary frequencies.
         """
-        if JobType.FREQ in self.job_types:
-            return int(np.sum(np.array(self.frequencies) <= 0, axis=0))
-        else:
-            raise TypeError("not a frequency job! can't get # imaginary frequencies!")
+        return len(self.imaginaries()) 
 
     def imaginaries(self):
         """ 
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
         if JobType.FREQ in self.job_types:
-            return list(map(int, self.frequencies[self.frequencies < 0]))
+            return list(map(int, np.array(self.frequencies)[np.array(self.frequencies) < 0]))
         else:
             raise TypeError("not a frequency job! can't get # imaginary frequencies!")
 
