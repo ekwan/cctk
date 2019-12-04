@@ -166,7 +166,7 @@ class GaussianFile(File):
         """
         Reads a Gaussian optimization ``.out`` file and populates the attributes accordingly.
 
-        Will throw ``ValueError`` if there have been no successful iterations. 
+        Will throw ``ValueError`` if there have been no successful iterations.
 
         Args:
             filename (str): path to the out file

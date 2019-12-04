@@ -28,12 +28,13 @@ class Ensemble():
         self.name = name
         self.molecules = []
 
-        self.batch_add(**kwargs)
+        if all(arg in kwargs for arg in ["atomic_numbers", "geometries"]):
+            self.batch_add(**kwargs)
 
     def __getitem__(self, item):
          return self.molecules[item]
 
-    def batch_add(self, atomic_numbers, geometries, bonds, charges, multiplicities):
+    def batch_add(self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None):
         """
         Automatically generates ``Molecule`` objects and adds them using ``self.add_molecule()``.
 

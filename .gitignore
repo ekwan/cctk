@@ -4,6 +4,6 @@ corin_notes
 docs/_build/*
 test/*
 cctk/scripts/scan_angle/*
-cctk/scripts/CpG_conformers/*
+tutorial/dinucleotide_conformations/conformers/*
 pyproject.toml
 *.swp
