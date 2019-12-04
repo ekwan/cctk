@@ -18,8 +18,9 @@ from cctk import GaussianFile, Molecule
 
 filenames = sys.argv[1]
 info = []
+text_width = 70
 
-for filename in glob.iglob(filenames, recursive=True):
+for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
         continue
     
@@ -46,10 +47,10 @@ for filename in glob.iglob(filenames, recursive=True):
             #### Will raise ValueError if job is not of type "FREQ"
             pass
 
-        info.append([filename[-40:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])   
+        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])   
     
     except:
-        info.append([filename[-40:], 0, 0, 0, '', '', "NO", ''])   
+        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])   
 
 if len(info) > 0:
     min_energy = np.min([x[2] for x in info])
@@ -60,12 +61,12 @@ if len(info) > 0:
 
     info = list(map(adjust_energy, info))
 
-    print("{0:40}    {1:16}    {2:17}    {3:10}    {4:9}    {5:16}    {6:10}     {7:>15}".format(
-        "File", "Energy (Hartree)", "Rel Energy (kcal)", "Iterations", "RMS Force", "RMS Displacement", "Success?", "Imaginaries?"
+    print("{0:{text_width}}    {1:16}    {2:17}    {3:10}    {4:9}    {5:16}    {6:10}     {7:>15}".format(
+        "File", "Energy (Hartree)", "Rel Energy (kcal)", "Iterations", "RMS Force", "RMS Displacement", "Success?", "Imaginaries?", text_width=text_width
     ))
 
     for row in info:
-        print("{0:40}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row))
+        print("{0:{text_width}}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row, text_width=text_width))
 
 else: 
     print("no jobs to analyze!")

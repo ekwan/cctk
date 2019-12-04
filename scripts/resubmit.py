@@ -28,15 +28,15 @@ for filename in glob.iglob(args["filename"], recursive=True):
     if re.search("slurm", filename):
         continue
     
-#    try:
-    output_file = GaussianFile.read_file(filename)
-    success = output_file.success
+    try:
+        output_file = GaussianFile.read_file(filename)
+        success = output_file.success
 
-    if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
-        newfile = filename.rsplit('/',1)[1]
-        newfile = re.sub(r"out$", "gjf", newfile)
-        output_file.write_file(newfile)
-        print(f"{filename} > {newfile}")
+        if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
+            newfile = filename.rsplit('/',1)[1]
+            newfile = re.sub(r"out$", "gjf", newfile)
+            output_file.write_file(newfile)
+            print(f"{filename} > {newfile}")
 
-#    except:
-#        raise ValueError(f"can't read file {filename}!")
+    except:
+        print(f"can't read file {filename}!")
