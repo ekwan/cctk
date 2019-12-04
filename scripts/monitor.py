@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from cctk import GaussianFile, Molecule
 
+
 #### This is a script to monitor the output of Gaussian files. 
 #### In contrast to ``analyze.py``, this script analyzes only a *single* file in depth. 
 #### If the file has not successfully achieved SCF convergence at least once, this file will not display any information. 

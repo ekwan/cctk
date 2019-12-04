@@ -82,31 +82,8 @@ class GaussianFile(File):
         self.title = title
         self.job_types = job_types
 
-    def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
-        """
-        Write a .gjf file, using object attributes. If no header is specified, the object's header/footer will be used.
-
-        Args:
-            filename (str): path to the new file
-            memory (int): how many GB of memory to request
-            cores (int): how many CPU cores to request
-            chk_path (str): path to checkpoint file, if desired
-            molecule (int): which molecule to use -- passed to ``self.get_molecule()``. Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
-                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
-            header (str): header for new file
-            footer (str): footer for new file
-        """
-        if not isinstance(molecule, Molecule):
-            molecule = self.get_molecule(molecule)
-
-        if header is None:
-            header = self.header
-            footer = self.footer
-
-        write_molecule_to_file(filename, molecule, header, footer, **kwargs)
-
-    @staticmethod
-    def write_molecule_to_file(filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title"):
+    @classmethod
+    def write_molecule_to_file(cls, filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title"):
         """
         Write a .gjf file using the given molecule.
 
@@ -143,7 +120,31 @@ class GaussianFile(File):
             text += f"{footer.strip()}\n\n"
 
         #### write the file
-        File.write_file(filename, text)
+        super().write_file(filename, text)
+
+    def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
+        """
+        Write a .gjf file, using object attributes. If no header is specified, the object's header/footer will be used.
+
+        Args:
+            filename (str): path to the new file
+            memory (int): how many GB of memory to request
+            cores (int): how many CPU cores to request
+            chk_path (str): path to checkpoint file, if desired
+            molecule (int): which molecule to use -- passed to ``self.get_molecule()``. 
+                Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
+            header (str): header for new file
+            footer (str): footer for new file
+        """
+        if not isinstance(molecule, Molecule):
+            molecule = self.get_molecule(molecule)
+
+        if header is None:
+            header = self.header
+            footer = self.footer
+
+        self.write_molecule_to_file(filename, molecule, header, footer, **kwargs)
 
     def num_imaginary(self):
         """
