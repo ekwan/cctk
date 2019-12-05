@@ -848,3 +848,21 @@ class Molecule:
         self._check_atom_number(atom)
 
         return f"{get_symbol(self.atomic_numbers[atom-1])}{atom}"
+
+    def perturb(self, size=0.005):
+        """
+        This function can be used to generate a slightly different molecule in cases where numerical (or geometric) converge is problematic. 
+
+        It adds a random variable (sampled from a normal distribution, centered at 0 with stddev ``size`) to every number in ``self.geometry``. 
+
+        Args: 
+            size (float): stddev of the normal distribution
+
+        Returns:
+            ``self``
+        """
+        geometry = np.array(self.geometry)
+        random = np.random.normal(scale=size, size=geometry.shape)
+
+        self.geometry = list(geometry + random)
+        return self 

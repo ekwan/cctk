@@ -97,10 +97,11 @@ def read_geometries_and_energies(lines):
     # return result
     if len(file_symbol_lists) > 0:
         return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
-    else: 
-        raise ValueError("no successful iterations so far!")
+    else:
+        (geometry, symbol_list) = extract_initial_geometry(lines)
+        return [geometry], symbol_list, [], []         
 
-def search_for_block(lines, start, end, count=1):
+def search_for_block(lines, start, end, count=1, join=''):
     """
     Search through a file (lines) and locate a block starting with "start" and ending with "end".
 
@@ -109,10 +110,14 @@ def search_for_block(lines, start, end, count=1):
         start (str): a pattern that matches the start of the block (can contain special characters)
         end (str): a pattern that matches the end of the block (can contain special characters)
         count (int): how many matches to search for
+        join (str): spacer between lines
 
     Returns: 
         a single match (str) if count == 1 or a list of matches (str) if count > 1.
     """
+    assert isinstance(count, int), "count needs to be an integer"
+    assert isinstance(join, str), "join needs to be a string"
+    
     current_match = ""
     match = [None] * count
 
@@ -130,7 +135,7 @@ def search_for_block(lines, start, end, count=1):
                 if index == count:
                     break
             else:
-                current_match = current_match + line.lstrip()
+                current_match = current_match + join + line.lstrip()
         else:
             if start_pattern.search(line):
                 current_match = line.lstrip()
@@ -227,3 +232,26 @@ def find_parameter(lines, parameter, expected_length, which_field):
                 if len(fields) == expected_length:
                     matches.append(float(fields[which_field]))
         return matches
+
+def extract_initial_geometry(lines):
+    """
+    Helper method to search through the output file and find the initial geometry/symbol list, in cases where no SCF iterations finished. 
+
+    Args:
+        lines (list): list of lines in file
+    
+    Returns:
+        initial geometry (list)
+        symbol list (list)
+    """
+    initial_geom_block = search_for_block(lines, "Symbolic Z-matrix:", "^ $", join="\n")
+    atom_lines = initial_geom_block.split("\n")[2:]
+    geometry = [None] * len(atom_lines)
+    symbols = [None] * len(atom_lines)
+
+    for idx, line in enumerate(atom_lines):
+        frags = line.split()
+        assert len(frags) == 4, f"too many fragments (more than 4) on line {line}"
+        geometry[idx] = frags[1:]
+        symbols[idx] = frags[0]
+    return geometry, symbols
