@@ -130,10 +130,10 @@ def search_for_block(lines, start, end, count=1):
                 if index == count:
                     break
             else:
-                current_match = current_match + line
+                current_match = current_match + line.lstrip()
         else:
             if start_pattern.search(line):
-                current_match = line
+                current_match = line.lstrip()
 
     if count == 1:
         return match[0]
