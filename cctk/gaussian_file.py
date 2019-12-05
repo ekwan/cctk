@@ -193,7 +193,7 @@ class GaussianFile(File):
         for line in lines:
             if line.strip().startswith("Normal termination"):
                 success += 1
-
+        
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
         atomic_numbers = list(map(get_number, atom_list))
         bonds = parse.read_bonds(lines)

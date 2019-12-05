@@ -6,11 +6,13 @@ import numpy as np
 from cctk import GaussianFile, Molecule
 
 #### This is a script to resubmit failed Gaussian files.
-#### It takes a parameter ``type`` which can be one of "failed" or "all"
-#### "failed": will resubmit jobs with no successes
-#### "all": will resubmit all jobs
+#### Parameters:
+#### ``--type, -t``: which jobs to resubmit 
+####     "failed": will resubmit jobs with no successes
+####     "all": will resubmit all jobs
+#### ``--perturb, -p``: whether or not to apply a random geometric perturbation to each job
 
-#### Usage: ``python resubmit.py --type all "path/to/output/*.out"``
+#### Usage: ``python resubmit.py --type all --perturb "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
 
 #### NOTE: This file will reject any file that contains the string "slurm."
@@ -19,6 +21,7 @@ from cctk import GaussianFile, Molecule
 
 parser = argparse.ArgumentParser(prog="resubmit.py")
 parser.add_argument("--type", "-t", type=str)
+parser.add_argument("--perturb", "-p", action="store_true")
 parser.add_argument("filename")
 args = vars(parser.parse_args(sys.argv[1:]))
 
@@ -30,6 +33,8 @@ for filename in glob.iglob(args["filename"], recursive=True):
     
     try:
         output_file = GaussianFile.read_file(filename)
+        if args["perturb"]:
+            output_file.get_molecule().perturb()
         success = output_file.success
 
         if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
