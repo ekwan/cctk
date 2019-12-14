@@ -2,8 +2,15 @@ import os
 import sys
 import pickle
 
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    import importlib_resources as pkg_resources
+
 from cctk import MOL2File, Group
 from cctk.group_substitution import add_group_to_molecule
+
+from ..groups import mol2  # relative-import the *package* containing the templates
 
 filenames = [
     "MeH.mol2",
@@ -37,15 +44,28 @@ names = [
     "carboxylmethyl",
 ]
 
-groups_to_save = {}
-for filename, name in zip(filenames, names):
+def load_group(name):
+    assert name in names, f"can't find group {name}!"
+    filename = "groups/" + filnames[names.index(name)]
+
+    isotope_file = pkg_resources.open_text(data, "isotopes.csv")
     mol = MOL2File.read_file(f"groups/mol2/{filename}").molecules[0]
     mol.assign_connectivity()
 
     #### every molecule is set so you need to attach to atom 2
     new_group = Group.new_from_molecule(attach_to=2, molecule=mol)
-    groups_to_save[name] = new_group
+    return new_group
 
-file = open('saved_groups.obj', 'wb')
-pickle.dump(groups_to_save, file)
-file.close()
+def pickle_groups():
+    groups_to_save = {}
+    for filename, name in zip(filenames, names):
+        mol = MOL2File.read_file(f"groups/mol2/{filename}").molecules[0]
+        mol.assign_connectivity()
+
+        #### every molecule is set so you need to attach to atom 2
+        new_group = Group.new_from_molecule(attach_to=2, molecule=mol)
+        groups_to_save[name] = new_group
+
+    file = open('saved_groups.obj', 'wb')
+    pickle.dump(groups_to_save, file)
+    file.close()
