@@ -31,8 +31,11 @@ class Ensemble():
         if all(arg in kwargs for arg in ["atomic_numbers", "geometries"]):
             self.batch_add(**kwargs)
 
-    def __getitem__(self, item):
-         return self.molecules[item]
+    def __getitem__(self, key):
+         return self.molecules[key]
+
+    def __setitem__(self, key, item):
+        self.molecules[key] = item
 
     def batch_add(self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None):
         """

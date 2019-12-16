@@ -27,10 +27,17 @@ def add_group_to_molecule(molecule, group, add_to):
     ####     group.adjacent would be the methane C
 
     #### prevent in-place modification of molecule - could lead to pernicious errors!
+
+    try:
+        add_to = int(add_to)
+    except:
+        raise TypeError("add_to not castable to int")
+
     molecule = copy.deepcopy(molecule)
     molecule._check_atom_number(add_to)
 
     adjacent_atom = molecule.get_adjacent_atoms(add_to)
+    print(adjacent_atom)
     assert (len(adjacent_atom) == 1), "can't substitute an atom with more than one adjacent atom!"
     adjacent_atom = adjacent_atom[0]
 
