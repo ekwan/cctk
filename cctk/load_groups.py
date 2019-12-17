@@ -54,17 +54,3 @@ def load_group(name):
         #### every molecule is set so you need to attach to atom 2
         new_group = Group.new_from_molecule(attach_to=2, molecule=mol)
         return new_group
-
-def pickle_groups():
-    groups_to_save = {}
-    for filename, name in zip(filenames, names):
-        mol = MOL2File.read_file(f"groups/mol2/{filename}").molecules[0]
-        mol.assign_connectivity()
-
-        #### every molecule is set so you need to attach to atom 2
-        new_group = Group.new_from_molecule(attach_to=2, molecule=mol)
-        groups_to_save[name] = new_group
-
-    file = open('saved_groups.obj', 'wb')
-    pickle.dump(groups_to_save, file)
-    file.close()
