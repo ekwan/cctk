@@ -37,6 +37,7 @@ def add_group_to_molecule(molecule, group, add_to):
     molecule._check_atom_number(add_to)
 
     adjacent_atom = molecule.get_adjacent_atoms(add_to)
+    assert (len(adjacent_atom) > 0), "can't substitute an atom without an adjacent atom! (are there bonds defined for this molecule? consider calling molecule.assign_connectivity()!)"
     assert (len(adjacent_atom) == 1), "can't substitute an atom with more than one adjacent atom!"
     adjacent_atom = adjacent_atom[0]
 

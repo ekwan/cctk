@@ -98,6 +98,9 @@ class Molecule:
 
         Args:
             cutoff (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered bonded
+
+        Returns:
+            self
         """
 
         for i in range(1, self.num_atoms() + 1):
@@ -111,6 +114,8 @@ class Molecule:
                     self.add_bond(i, j)
                 elif self.get_bond_order(i,j):
                     self.remove_bond(i,j)
+
+        return self
 
     def check_for_conflicts(self, min_buffer=-1, group1=None, group2=None):
         """
