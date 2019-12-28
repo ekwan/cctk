@@ -88,21 +88,24 @@ def get_covalent_radius(atomic_number):
     else:
         raise ValueError("no covalent radius defined for atomic number ", atomic_number)
 
-def compute_distance_between(v1, v2):
+def compute_distance_between(v1, v2, _norm=np.linalg.norm):
     """
     Computes the L2 distance between two vectors.
+
+    (preloading ``_norm`` speeds repeated calls, since Python doesn't have to look up the function every time)
     """
-    return np.linalg.norm(v1 - v2)
+    return _norm(v1 - v2)
 
 def compute_unit_vector(vector):
     """
     Normalizes a vector, returning a unit vector pointing in the same direction.
     Returns the zero vector if the zero vector is given.
     """
-    if np.linalg.norm(vector) == 0:
+    norm = np.linalg.norm(vector)
+    if norm == 0:
         return vector
     else:
-        return vector / np.linalg.norm(vector)
+        return vector / norm
 
 def compute_angle_between(v1, v2, unit="degree"):
     """
@@ -120,7 +123,7 @@ def compute_angle_between(v1, v2, unit="degree"):
     v2_u = compute_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
     if unit == "degree":
-        return to_degrees(angle) % 360
+        return (angle) % 360
     elif unit == "radian":
         return angle % (2 * math.pi)
     else:
@@ -152,7 +155,7 @@ def compute_dihedral_between(p0, p1, p2, p3, unit="degree"):
     angle = np.arctan2(y, x)
 
     if unit == "degree":
-        return to_degrees(angle) % 360
+        return np.degrees(angle) % 360
     elif unit == "radian":
         return angle % (2 * math.pi)
     else:
@@ -178,7 +181,7 @@ def compute_rotation_matrix(axis, theta):
     except:
         raise TypeError("theta must be float!")
 
-    theta = to_radians(theta)
+    theta = np.radians(theta)
     axis = compute_unit_vector(axis)
 
     a = math.cos(theta / 2.0)

@@ -40,14 +40,16 @@ class XYZFile(File):
 
         title = lines[1]
 
-        atomic_numbers = [None] * num_atoms
-        geometry = [None] * num_atoms
+        atomic_numbers = np.zeros(shape=num_atoms, dtype=np.int8)
+        geometry = np.zeros(shape=(num_atoms,3))
 
         for index, line in enumerate(lines[2:]):
             pieces = list(filter(None, line.split(" ")))
             try:
-                atomic_numbers[index] = get_number(pieces[0])
-                geometry[index] = [float(pieces[1]), float(pieces[2]), float(pieces[3])]
+                atomic_numbers[index] = int(get_number(pieces[0]))
+                geometry[index][0]= float(pieces[1])
+                geometry[index][1]= float(pieces[2])
+                geometry[index][2]= float(pieces[3])
             except:
                 raise ValueError(f"can't parse line {index+2}!")
 

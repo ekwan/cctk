@@ -7,3 +7,4 @@ cctk/scripts/scan_angle/*
 tutorial/dinucleotide_conformations/conformers/*
 pyproject.toml
 *.swp
+tutorial/dipeptide_conf_search/conf*

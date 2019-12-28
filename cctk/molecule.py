@@ -4,6 +4,8 @@ import numpy as np
 import networkx as nx
 import math
 
+from functools import lru_cache
+
 from cctk.helper_functions import (
     get_symbol,
     get_number,
@@ -26,8 +28,8 @@ class Molecule:
 
     Attributes:
         name (str): for identification, optional
-        atomic_numbers (list): list of atomic numbers
-        geometry (list): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
+        atomic_numbers (np.array, dtype=np.int8): list of atomic numbers
+        geometry (np.array): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
@@ -42,7 +44,8 @@ class Molecule:
         if len(atomic_numbers) != len(geometry):
             raise ValueError("length of geometry and atomic_numbers does not match!")
 
-        if not all(isinstance(z, int) for z in atomic_numbers) or len(atomic_numbers) == 0:
+        print(atomic_numbers)
+        if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
             raise ValueError("invalid atom list")
 
         if len(geometry) == 0:
@@ -144,7 +147,7 @@ class Molecule:
             for j in group2:
                 if i == j:
                     continue
-                distance = self.get_distance(i, j)
+                distance = self.get_distance(i, j, check=False)
                 r_i = get_covalent_radius(self.get_atomic_number(i))
                 r_j = get_covalent_radius(self.get_atomic_number(j))
 
@@ -241,6 +244,7 @@ class Molecule:
 
             return formula
 
+    @lru_cache(maxsize=32)
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         """
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
@@ -359,6 +363,8 @@ class Molecule:
         if np.linalg.norm(vbf) - distance > 0.001:
             raise ValueError(f"Error moving bonds -- operation failed!")
 
+        return self
+
     def set_angle(self, atom1, atom2, atom3, angle, move="group"):
         """
         Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``.
@@ -447,9 +453,11 @@ class Molecule:
         if np.abs(math.cos(math.radians(final_angle)) - math.cos(math.radians(angle))) > 0.001:
             raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
 
-    def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move="group34"):
+        return self
+
+    def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move="group34", check_result=True):
         """
-        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4..
+        Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4.
 
         If ``move`` is set to "atom", then only ``atom4`` will be moved.
 
@@ -464,6 +472,10 @@ class Molecule:
             atom4 (int): the number of the fourth atom
             dihedral (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` angle
             move (str): determines how fragment moving is handled
+            check_result (Bool): whether the final answer should be checked for correctness
+
+        Returns:
+            self
         """
 
         self._check_atom_number(atom1)
@@ -473,10 +485,10 @@ class Molecule:
 
         for x in [atom1, atom2, atom3, atom4]:
             for y in [atom1, atom2, atom3, atom4]:
-                if x == y:
+                if x <= y:
                     continue
                 else:
-                    if self.get_distance(x, y) < 0.01:
+                    if self.get_sq_distance(x, y, check=False) < 0.001:
                         raise ValueError(f"atom {x} and atom {y} are too close!")
 
         try:
@@ -529,7 +541,7 @@ class Molecule:
         if atom4 not in atoms_to_move:
             raise ValueError(f"atom {atom4} is not going to be moved... this operation is doomed to fail!")
 
-        current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
+        current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4, check=False)
         delta = (dihedral - current_dihedral) % 360
 
         if np.abs(delta) < 0.001:
@@ -538,17 +550,11 @@ class Molecule:
         #### now the real work begins...
 
         #### move everything to place atom2 at the origin
-        v3 = self.get_vector(atom3)
+        v3 = self.get_vector(atom3, check=False)
         self.translate_molecule(-v3)
 
-        v1 = self.get_vector(atom1)
-        v2 = self.get_vector(atom2)
-        v4 = self.get_vector(atom4)
-
         #### perform the actual rotation
-        #### rot_axis is formally v3 - v2, but v3 is the zero vector after the translation...
-        rot_axis = -v2
-        rot_matrix = compute_rotation_matrix(rot_axis, delta)
+        rot_matrix = compute_rotation_matrix(-self.get_vector(atom2, check=False), delta)
 
         for atom in atoms_to_move:
             #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
@@ -557,18 +563,21 @@ class Molecule:
         #### and move it back!
         self.translate_molecule(v3)
 
-        final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4)
+        if check_result:
+            final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4, check=False)
 
-        #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
-        if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
-            raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
+            #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
+            if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
+                raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
+
+        return self
 
     def translate_molecule(self, vector):
         """
         Translates the whole molecule by the given vector.
         """
-        for atom in range(0, self.num_atoms()):
-            self.geometry[atom] = list(self.geometry[atom] + vector)
+        self.geometry = np.array(self.geometry) + np.repeat([vector], len(self.geometry), axis=0)
+        return self
 
     def rotate_molecule(self, axis, degrees):
         """
@@ -578,6 +587,8 @@ class Molecule:
 
         for atom in range(0, self.num_atoms()):
             self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
+
+        return self
 
     def calculate_mass_spectrum():
         pass
@@ -658,77 +669,105 @@ class Molecule:
         self._check_atom_number(atom)
         return self.atomic_numbers[atom - 1]
 
-    def get_vector(self, atom, atom2=None):
+    def get_vector(self, atom, atom2=None, check=True):
         """
         Get the geometry vector for a given atom. If two atoms are specified, gives the vector connecting them (from ``atom2`` to ``atom``).
         ``mol.get_vector(atom)`` is thus equivalent to ``mol.get_vector(atom, origin)``.
-        """
-        self._check_atom_number(atom)
-        if atom2:
-            self._check_atom_number(atom2)
-            return np.array(self.geometry[atom - 1]) - np.array(self.geometry[atom2-1])
-        else:
-            return np.array(self.geometry[atom - 1])
 
-    def get_distance(self, atom1, atom2):
+        Returns:
+            a Numpy array
+        """
+        if check:
+            self._check_atom_number(atom)
+
+        if atom2:
+            if check:
+                self._check_atom_number(atom2)
+            return self.geometry[atom - 1] - self.geometry[atom2 - 1]
+        else:
+            return self.geometry[atom - 1]
+
+    def get_distance(self, atom1, atom2, check=True, _dist=compute_distance_between):
         """
         Wrapper to compute distance between two atoms.
         """
-        try:
-            atom1 = int(atom1)
-            atom2 = int(atom2)
-        except:
-            raise TypeError("atom numbers cannot be cast to int!")
+        if check:
+            try:
+                atom1 = int(atom1)
+                atom2 = int(atom2)
+            except:
+                raise TypeError("atom numbers cannot be cast to int!")
 
-        self._check_atom_number(atom1)
-        self._check_atom_number(atom2)
+            self._check_atom_number(atom1)
+            self._check_atom_number(atom2)
 
-        return compute_distance_between(self.get_vector(atom1), self.get_vector(atom2))
+        return _dist(
+            self.get_vector(atom1, check=False),
+            self.get_vector(atom2, check=False)
+        )
 
-    def get_angle(self, atom1, atom2, atom3):
+    def get_sq_distance(self, atom1, atom2, check=True):
+        """
+        Wrapper to compute squared distance between two atoms -- optimized for speed!
+        """
+        if check:
+            try:
+                atom1 = int(atom1)
+                atom2 = int(atom2)
+            except:
+                raise TypeError("atom numbers cannot be cast to int!")
+
+            self._check_atom_number(atom1)
+            self._check_atom_number(atom2)
+
+        return np.sum(np.square(self.get_vector(atom1, atom2, check=False)))
+
+    def get_angle(self, atom1, atom2, atom3, check=True, _angle=compute_angle_between):
         """
         Wrapper to compute angle between three atoms.
         """
-        try:
-            atom1 = int(atom1)
-            atom2 = int(atom2)
-            atom3 = int(atom3)
-        except:
-            raise TypeError("atom numbers cannot be cast to int!")
-        
-        self._check_atom_number(atom1)
-        self._check_atom_number(atom2)
-        self._check_atom_number(atom3)
+        if check:
+            try:
+                atom1 = int(atom1)
+                atom2 = int(atom2)
+                atom3 = int(atom3)
+            except:
+                raise TypeError("atom numbers cannot be cast to int!")
 
-        v1 = self.get_vector(atom1)
-        v2 = self.get_vector(atom2)
-        v3 = self.get_vector(atom3)
+            self._check_atom_number(atom1)
+            self._check_atom_number(atom2)
+            self._check_atom_number(atom3)
 
-        return compute_angle_between(v1 - v2, v3 - v2)
+        v1 = self.get_vector(atom1, check=False)
+        v2 = self.get_vector(atom2, check=False)
+        v3 = self.get_vector(atom3, check=False)
 
-    def get_dihedral(self, atom1, atom2, atom3, atom4):
+        return _angle(v1 - v2, v3 - v2)
+
+    def get_dihedral(self, atom1, atom2, atom3, atom4, check=True, _dihedral=compute_dihedral_between):
         """
         Wrapper to compute angle between three atoms.
         """
-        try:
-            atom1 = int(atom1)
-            atom2 = int(atom2)
-            atom3 = int(atom3)
-            atom4 = int(atom4)
-        except:
-            raise TypeError("atom numbers cannot be cast to int!")
+        if check:
+            try:
+                atom1 = int(atom1)
+                atom2 = int(atom2)
+                atom3 = int(atom3)
+                atom4 = int(atom4)
+            except:
+                raise TypeError("atom numbers cannot be cast to int!")
 
-        self._check_atom_number(atom1)
-        self._check_atom_number(atom2)
-        self._check_atom_number(atom3)
-        self._check_atom_number(atom4)
+            self._check_atom_number(atom1)
+            self._check_atom_number(atom2)
+            self._check_atom_number(atom3)
+            self._check_atom_number(atom4)
 
-        v1 = self.get_vector(atom1)
-        v2 = self.get_vector(atom2)
-        v3 = self.get_vector(atom3)
-        v4 = self.get_vector(atom4)
-
-        return compute_dihedral_between(v1, v2, v3, v4)
+        return _dihedral(
+            self.get_vector(atom1, check=False),
+            self.get_vector(atom2, check=False),
+            self.get_vector(atom3, check=False),
+            self.get_vector(atom4, check=False)
+        )
 
     def get_bond_order(self, atom1, atom2):
         """
