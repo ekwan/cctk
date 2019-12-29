@@ -1,5 +1,7 @@
-from cctk import XYZFile, ConformationalEnsemble, GaussianFile
 import numpy as np
+import copy
+
+from cctk import XYZFile, ConformationalEnsemble, GaussianFile
 
 #### Usage: ``python generate_conformers.py``
 
@@ -9,7 +11,7 @@ output_file.molecule.assign_connectivity()
 angles = range(0, 360, 120)
 bin_angles = range(0, 360, 180)
 
-to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
+#to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
 to_bin_rotate = [[27, 26, 1, 2], [8, 6, 9, 10], [16, 14, 17, 18]]
 
 #### now to employ some recursion...
@@ -22,14 +24,15 @@ def rotate_angles_one_by_one (idx, angles, thetas, structures):
         current_idx = 0
         for structure in structures:
             for theta in thetas:
-                new_structures[current_idx] = structure.set_dihedral(*angles[idx], theta, check_result=False)
+                new_structures[current_idx] = copy.deepcopy(structure.set_dihedral(*angles[idx], theta, check_result=False))
                 current_idx += 1
 
     print(len(structures))
     return rotate_angles_one_by_one(idx+1, angles, thetas, new_structures)
 
-mols = rotate_angles_one_by_one(0, to_rotate, angles, [output_file.molecule])
-mols = rotate_angles_one_by_one(0, to_bin_rotate, bin_angles, mols)
+#mols = rotate_angles_one_by_one(0, to_rotate, angles, [output_file.molecule])
+#mols = rotate_angles_one_by_one(0, to_bin_rotate, bin_angles, mols)
+mols = rotate_angles_one_by_one(0, to_bin_rotate, bin_angles, [output_file.molecule])
 
 for idx, molecule in enumerate(mols):
     try:
