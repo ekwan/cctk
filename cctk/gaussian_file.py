@@ -75,7 +75,7 @@ class GaussianFile(File):
         if not all(isinstance(job, JobType) for job in job_types):
             raise TypeError(f"invalid job type {job}")
 
-        if atomic_numbers and geometries:
+        if (atomic_numbers.size > 0) and geometries:
             self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
         self.footer = footer
@@ -195,7 +195,13 @@ class GaussianFile(File):
                 success += 1
         
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
-        atomic_numbers = list(map(get_number, atom_list))
+        atomic_numbers = ''
+        
+        try:
+            atomic_numbers = np.array(atom_list, dtype=np.int8)
+        except: 
+            atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
+        
         bonds = parse.read_bonds(lines)
         charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
         multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])

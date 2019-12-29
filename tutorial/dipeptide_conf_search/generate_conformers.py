@@ -6,7 +6,7 @@ import numpy as np
 output_file = XYZFile.read_file('Ac-F2Ala-F2Ala-OMe.xyz')
 output_file.molecule.assign_connectivity()
 
-angles = range(0, 360, 30)
+angles = range(0, 360, 120)
 bin_angles = range(0, 360, 180)
 
 to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
@@ -34,6 +34,6 @@ mols = rotate_angles_one_by_one(0, to_bin_rotate, bin_angles, mols)
 for idx, molecule in enumerate(mols):
     try:
         molecule.check_for_conflicts()
-        GaussianFile.write_molecule_to_file(f"conformer_{idx:05d}.gjf", molecule, "#p opt pm7", None)
+        GaussianFile.write_molecule_to_file(f"conformer_dft_{idx:05d}.gjf", molecule, "#p opt b3lyp/6-31g(d) empiricaldispersion=gd3bj scrf=(smd,solvent=diethylether)", None)
     except:
         pass

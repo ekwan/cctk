@@ -44,7 +44,6 @@ class Molecule:
         if len(atomic_numbers) != len(geometry):
             raise ValueError("length of geometry and atomic_numbers does not match!")
 
-        print(atomic_numbers)
         if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
             raise ValueError("invalid atom list")
 
@@ -75,8 +74,8 @@ class Molecule:
         if (not isinstance(multiplicity, int)) or (multiplicity < 1):
             raise TypeError("multiplicity must be positive integer")
 
-        self.atomic_numbers = atomic_numbers
-        self.geometry = geometry
+        self.atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
+        self.geometry = np.array(geometry)
 
         if bonds:
             for bond in bonds:
