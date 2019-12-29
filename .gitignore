@@ -9,3 +9,4 @@ pyproject.toml
 *.swp
 tutorial/dipeptide_conf_search/conf*
 tutorial/dipeptide_conf_search/*.sh
+tutorial/dipeptide_conf_search/output
