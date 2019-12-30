@@ -14,7 +14,8 @@ class Ensemble():
 
     Attributes:
         name (str): name, for identification
-        molecules (list): list of `Molecule` objects
+        molecules (np.array): list of `Molecule` objects
+        energies (np.array): list of energies
     """
 
     def __init__(self, name=None, **kwargs):
@@ -69,9 +70,9 @@ class Ensemble():
             mol = Molecule(numbers, geometry, bonds=bond_edges, charge=charge, multiplicity=multiplicity)
             self.add_molecule(mol)
 
-    def add_molecule(self, molecule):
+    def add_molecule(self, molecule, energy=None):
         """
-        Adds a molecule to the ensemble. `copy.deepcopy` is used so that an independent copy of the molecule is saved.
+        Adds a molecule to the ensemble. ``copy.deepcopy`` is used so that an independent copy of the molecule is saved.
 
         Args:
             molecule (Molecule): the molecule to be added
@@ -79,7 +80,8 @@ class Ensemble():
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
-        self.molecules.append(copy.deepcopy(molecule))
+        self.molecules = np.append(self.molecules, [copy.deepcopy(molecule)])
+        self.energies = np.append(self.energies, [energy])
 
     def _check_molecule_number(self, number):
         """
@@ -131,7 +133,7 @@ class ConformationalEnsemble(Ensemble):
             mol = Molecule(atomic_numbers, geometry, **kwargs)
             self.add_molecule(mol)
 
-    def add_molecule(self, molecule):
+    def add_molecule(self, molecule, energy=None):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
@@ -148,7 +150,7 @@ class ConformationalEnsemble(Ensemble):
             if not np.array_equal(molecule.atomic_numbers, self.molecules[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
-        super().add_molecule(molecule)
+        super().add_molecule(molecule, energy)
 
     def align (self, align_to=1, atoms=None):
         """
@@ -264,3 +266,9 @@ class ConformationalEnsemble(Ensemble):
                 ValueError("Invalid parameter {}!".format(parameter))
 
         return output
+
+    def get_lowest_energy(self, num=10):
+        return self.molecules[np.argsort(self.energies)][0:10]
+
+    def get_within_cutoff(self, cutoff=5):
+        return self.molecules[self.energies <= 5]
