@@ -2,7 +2,6 @@
 *.pyc
 corin_notes
 docs/_build/*
-test/*
 cctk/scripts/scan_angle/*
 tutorial/dinucleotide_conformations/conformers/*
 pyproject.toml
