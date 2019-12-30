@@ -123,7 +123,7 @@ def compute_angle_between(v1, v2, unit="degree"):
     v2_u = compute_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
     if unit == "degree":
-        return (angle) % 360
+        return np.degrees(angle) % 360
     elif unit == "radian":
         return angle % (2 * math.pi)
     else:

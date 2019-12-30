@@ -283,7 +283,7 @@ class Molecule:
                     fragment2 = fragment
 
             self.bonds.add_edge(atom1, atom2, weight=bond_order)
-            return fragment1, fragment2
+            return list(fragment1), list(fragment2)
         else:
             raise ValueError(f"No bond between atom {atom1} and atom {atom2}!")
 
@@ -304,7 +304,7 @@ class Molecule:
         #### fragment is zero-indexed
         for fragment in fragments:
             if atom in fragment:
-                return fragment
+                return list(fragment)
                 break
 
     def set_distance(self, atom1, atom2, distance, move="group"):
