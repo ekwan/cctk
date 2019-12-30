@@ -27,7 +27,8 @@ class Ensemble():
             **kwargs: to pass to ``self.batch_add()``
         """
         self.name = name
-        self.molecules = []
+        self.molecules = np.array([])
+        self.energies = np.array([])
 
         if all(arg in kwargs for arg in ["atomic_numbers", "geometries"]):
             self.batch_add(**kwargs)
@@ -150,7 +151,7 @@ class ConformationalEnsemble(Ensemble):
             if not np.array_equal(molecule.atomic_numbers, self.molecules[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
-        super().add_molecule(molecule, energy)
+        super().add_molecule(molecule, energy=energy)
 
     def align (self, align_to=1, atoms=None):
         """
@@ -234,7 +235,8 @@ class ConformationalEnsemble(Ensemble):
         #### you have to delete in reverse order or you'll throw off the subsequent indices 
         for i in sorted(range(len(self.molecules)), reverse=True):
             if to_delete[i]:
-                del self.molecules[i]
+                self.molecules = np.delete(self.molecules, i)
+                self.energies = np.delete(self.energies, i)
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """
@@ -271,4 +273,4 @@ class ConformationalEnsemble(Ensemble):
         return self.molecules[np.argsort(self.energies)][0:10]
 
     def get_within_cutoff(self, cutoff=5):
-        return self.molecules[self.energies <= 5]
+        return self.molecules[self.energies <= (np.min(self.energies) + 5)]
