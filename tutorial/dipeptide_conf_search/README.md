@@ -94,7 +94,7 @@ The script also outputs the energy and key dihedral angles for all 166 distinct 
 
 The high-level results can be subjected to the same elimination of redundant conformers, which yields 7 final structures. 
 
-Although we chose input structures with a 10 kcal/mol difference in energies, the output files are all within roughly 3 kcal/mol -- this may be due to increased shielding of dipole/dipole interactions due to implicit solvation. 
+Although we chose input structures with a 10 kcal/mol difference in energies, the output files are all within roughly 5 kcal/mol (∆G) -- this may be due to increased shielding of dipole/dipole interactions due to implicit solvation. 
 
 ```
 (cctk) [dipeptide_conf_search]$ python analyze_final.py "output/*v2*.out"
@@ -102,13 +102,13 @@ Although we chose input structures with a 10 kcal/mol difference in energies, th
 7 conformers after elimination of redundant
 writing final conformers to disk as ``conformer_final_xx.gjf``...
 Molecule    Energy      D[1, 3, 5, 7]  D[9, 11, 13, 15]  D[5, 3, 6, 8]  D[12, 11, 14, 16]
-0            00.000            064.58            186.38            019.56            241.59
-1            00.510            294.45            183.31            019.67            074.00
-2            00.691            310.90            308.97            121.98            048.58
-3            00.775            066.23            313.11            113.17            235.38
-4            01.047            172.56            309.14            359.35            047.92
-5            02.450            174.92            302.01            000.30            041.05
-6            03.156            060.83            309.23            039.52            240.81
+0            00.000            066.23            313.11            113.17            235.38
+1            00.140            310.90            308.97            121.98            048.58
+2            00.616            172.56            309.14            359.35            047.92
+3            00.717            064.58            186.38            019.56            241.59
+4            01.803            294.45            183.31            019.67            074.00
+5            04.466            174.92            302.01            000.30            041.05
+6            05.245            060.83            309.23            039.52            240.81
 ```
 
 The lowest energy structure (`conformer_final_00.gjf`) is pictured here—but three other conformations are nearly isoenergetic, so clearly there are many structures which could be relevant to reactivity through a Curtin–Hammett-type scenario. 
