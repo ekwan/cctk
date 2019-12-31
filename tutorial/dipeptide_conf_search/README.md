@@ -113,6 +113,6 @@ Molecule    Energy      D[1, 3, 5, 7]  D[9, 11, 13, 15]  D[5, 3, 6, 8]  D[12, 11
 
 The lowest energy structure (`conformer_final_00.gjf`) is pictured here—but three other conformations are nearly isoenergetic, so clearly there are many structures which could be relevant to reactivity through a Curtin–Hammett-type scenario. 
 
-<img src='dipeptide_conf_search/lowest_energy_conformer.png' width=600>
+<img src='lowest_energy_conformer.png' width=600>
 
 *Corin Wagen and Eugene Kwan*
