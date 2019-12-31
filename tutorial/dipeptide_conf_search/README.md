@@ -7,8 +7,7 @@ In particular, the inclusion of unnatural amino acids in peptides could allow fo
 obtained using canonical amino acids.
 
 One such unnatural amino acid is difluoroalanine, which possesses a difluoromethyl group. 
-The difluoromethyl group has [recently been implicated as a hydrogen bond donor](https://pubs.acs.org/doi/abs/10.1021/jacs.7b04457)
-,albeit with distinct properties from classic hydrogen bond donors like hydroxyl or amino groups. 
+The difluoromethyl group has [recently been implicated as a hydrogen bond donor](https://pubs.acs.org/doi/abs/10.1021/jacs.7b04457), albeit with distinct properties from classic hydrogen bond donors like hydroxyl or amino groups. 
 
 To examine potential C–H and N–H hydrogen bonding interactions involving difluoroalanine, 
 we chose to study the 31-atom dipeptide Ac–F2Ala–F2Ala–OMe. 
