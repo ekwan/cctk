@@ -1,6 +1,16 @@
 #### Tutorial 2: Performing a Conformational Search on a Dipeptide
 
 Predicting the conformation of short peptides in solution is a challenging and unsolved problem. 
+This "conformational heterogeneity" is both theoretically interesting and of practical import for the design and study of 
+catalytically active oligopeptides (e.g., [Scott Miller's catalysts](https://pubs.acs.org/doi/10.1021/acscatal.8b03563)). 
+In particular, the inclusion of unnatural amino acids in peptides could allow for stable conformations completely unlike those
+obtained using canonical amino acids.
+
+One such unnatural amino acid is difluoroalanine, which possesses a difluoromethyl group. 
+The difluoromethyl group has [recently been implicated as a hydrogen bond donor](https://pubs.acs.org/doi/abs/10.1021/jacs.7b04457), albeit with distinct properties from classic hydrogen bond donors like hydroxyl or amino groups. 
+
+To examine potential C–H and N–H hydrogen bonding interactions involving difluoroalanine, 
+we chose to study the 31-atom dipeptide Ac–F2Ala–F2Ala–OMe. 
 
 ##### Step 1: Generate Conformations to Search (`generate_conformers.py`)
 
@@ -93,8 +103,12 @@ The script also outputs the energy and key dihedral angles for all 166 distinct 
 ##### Step 3: Analyze High-Level Results (`analyze_final.py`)
 
 The high-level results can be subjected to the same elimination of redundant conformers, which yields 7 final structures. 
+The lowest-energy structure is the linear form, but several other structures contain close N–H to C=O contacts. 
+None of the structures studied appears to contain a close C–H to C=O contact, indicating that difluoromethyl hydrogen bonding
+is not significant in this structure. 
+Instead, the difluoromethyl groups appear to be oriented so as to minimize the overall molecular dipole.
 
-Although we chose input structures with a 10 kcal/mol difference in energies, the output files are all within roughly 5 kcal/mol (∆G) -- this may be due to increased shielding of dipole/dipole interactions due to implicit solvation. 
+Although we chose input structures with a 10 kcal/mol difference in energies, the output files are all within roughly 5 kcal/mol (∆G). This may be due to increased shielding of dipole/dipole interactions due to implicit solvation. 
 
 ```
 (cctk) [dipeptide_conf_search]$ python analyze_final.py "output/*v2*.out"
