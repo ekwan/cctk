@@ -30,8 +30,22 @@ class TestXYZ(unittest.TestCase):
         os.remove(new_path)
 
 class TestGaussian(unittest.TestCase):
-    pass
+    def test_read_gjf_file(self):
+        path = "static/gaussian_file.gjf"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
 
+        mol = file.get_molecule()
+        self.assertTrue(isinstance(mol, cctk.Molecule))
+        self.assertEqual(mol.num_atoms(), 31)
+        self.assertEqual(mol.charge, 0)
+        self.assertEqual(mol.multiplicity, 1)
+
+    def test_read_out_file(self):
+        path = "static/gaussian_file.out"
+        file = cctk.GaussianFile.read_file(path)
+
+        mol = file.get_molecule()
 
 class TestMolecule(unittest.TestCase):
 
