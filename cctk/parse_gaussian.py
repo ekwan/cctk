@@ -103,7 +103,7 @@ def read_geometries_and_energies(lines):
 
 def search_for_block(lines, start, end, count=1, join=''):
     """
-    Search through a file (lines) and locate a block starting with "start" and ending with "end".
+    Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 
     Args: 
         lines (list): a list of the lines in the file

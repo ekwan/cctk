@@ -166,6 +166,7 @@ class GaussianFile(File):
     def read_file(cls, filename, return_lines=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
+        Only footers from ``opt=modredundant`` can be read automatically --  `genecep` custom basis sets, etc must be specified manuall. 
 
         Will throw ``ValueError`` if there have been no successful iterations.
 
@@ -202,6 +203,12 @@ class GaussianFile(File):
         except:
             atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
 
+        footer = ''
+        if re.search("modredundant", str(header)):
+            footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
+            footer = "\n".join(list(footer.split("\n"))[1:]) # get rid of the first line
+            footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
+
         bonds = parse.read_bonds(lines)
         charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
         multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])
@@ -210,6 +217,7 @@ class GaussianFile(File):
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
+        f.footer = footer
         f.success = success
 
         #### now for some job-type specific attributes
