@@ -162,7 +162,7 @@ class GaussianFile(File):
             raise TypeError("not a frequency job! can't get # imaginary frequencies!")
 
     @classmethod
-    def read_file(cls, filename, job_types=[], return_lines=False):
+    def read_file(cls, filename, return_lines=False):
         """
         Reads a Gaussian optimization ``.out`` file and populates the attributes accordingly.
 
@@ -171,22 +171,18 @@ class GaussianFile(File):
         Args:
             filename (str): path to the out file
             return_lines (Bool): whether the lines of the file should be returned
-            job_types (list): list of JobTypes - if None, will be automatically detected from the header.
         Returns:
             GaussianOutputFile object
             (optional) the lines of the file
         """
-        if not all(isinstance(job, JobType) for job in job_types):
-            raise TypeError(f"invalid job type {job}")
-
         lines = super().read_file(filename)
         header = parse.search_for_block(lines, "#p", "----")
 
         #### automatically assign job types based on header
-        if len(job_types) == 0:
-            for name, member in JobType.__members__.items():
-                if re.search(f" {member.value}", str(header)):
-                    job_types.append(member)
+        job_types = []
+        for name, member in JobType.__members__.items():
+            if re.search(f" {member.value}", str(header)):
+                job_types.append(member)
 
         #### extract parameters
         success = 0

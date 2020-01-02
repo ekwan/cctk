@@ -31,7 +31,7 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
         
         if len(output_file.energies) > 0:
             mol = output_file.get_molecule() 
-            ensemble.add_molecule(mol, energy=output_file.energies[-1]*627.509)
+            ensemble.add_molecule(mol, energy=output_file.gibbs_free_energy*627.509)
     except:
         print(f"skipping f{filename} due to error...")
 
