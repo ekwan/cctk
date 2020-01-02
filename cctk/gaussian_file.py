@@ -72,10 +72,11 @@ class GaussianFile(File):
         if title and not isinstance(title, str):
             raise TypeError("title needs to be a string")
 
-        if not all(isinstance(job, JobType) for job in job_types):
-            raise TypeError(f"invalid job type {job}")
+        if job_types is not None:
+            if not all(isinstance(job, JobType) for job in job_types):
+                raise TypeError(f"invalid job type {job}")
 
-        if (atomic_numbers.size > 0) and geometries:
+        if (len(atomic_numbers) > 0) and (len(geometries) > 0):
             self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
         self.header = header
         self.footer = footer
@@ -150,10 +151,10 @@ class GaussianFile(File):
         """
         Returns the number of imaginary frequencies.
         """
-        return len(self.imaginaries()) 
+        return len(self.imaginaries())
 
     def imaginaries(self):
-        """ 
+        """
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
         if JobType.FREQ in self.job_types:
@@ -164,7 +165,7 @@ class GaussianFile(File):
     @classmethod
     def read_file(cls, filename, job_types=[], return_lines=False):
         """
-        Reads a Gaussian optimization ``.out`` file and populates the attributes accordingly.
+        Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
 
         Will throw ``ValueError`` if there have been no successful iterations.
 
@@ -173,11 +174,14 @@ class GaussianFile(File):
             return_lines (Bool): whether the lines of the file should be returned
             job_types (list): list of JobTypes - if None, will be automatically detected from the header.
         Returns:
-            GaussianOutputFile object
+            GaussianFile object
             (optional) the lines of the file
         """
         if not all(isinstance(job, JobType) for job in job_types):
             raise TypeError(f"invalid job type {job}")
+
+        if re.search("gjf$", filename):
+            return cls._read_gjf_file(filename, return_lines)
 
         lines = super().read_file(filename)
         header = parse.search_for_block(lines, "#p", "----")
@@ -193,15 +197,15 @@ class GaussianFile(File):
         for line in lines:
             if line.strip().startswith("Normal termination"):
                 success += 1
-        
+
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
         atomic_numbers = ''
-        
+
         try:
             atomic_numbers = np.array(atom_list, dtype=np.int8)
-        except: 
+        except:
             atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
-        
+
         bonds = parse.read_bonds(lines)
         charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
         multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])
@@ -238,6 +242,86 @@ class GaussianFile(File):
                 f.frequencies = sorted(frequencies)
             except:
                 raise ValueError("error finding frequencies")
+
+        if return_lines:
+            return f, lines
+        else:
+            return f
+
+    @classmethod
+    def _read_gjf_file(cls, filename, return_lines=False):
+        """
+        Reads a Gaussian ``.gjf`` file and populates the attributes accordingly.
+
+        Args:
+            filename (str): path to the out file
+            return_lines (Bool): whether the lines of the file should be returned
+        Returns:
+            GaussianFile object
+            (optional) the lines of the file
+        """
+        lines = super().read_file(filename)
+        header = None
+        footer = None
+        header_done = False
+        title = None
+        charge = None
+        multip = None
+        in_geom = False
+        atomic_numbers = []
+        geometries = []
+
+        for idx, line in enumerate(lines):
+            if header is None:
+                if re.match("#", line):
+                    header = line
+                    continue
+
+            if (title is None) and (header is not None):
+                if header_done:
+                    if len(line.strip()) > 0:
+                        title = line
+                else:
+                    if len(line.strip()) > 0:
+                        header = header + line
+                    else:
+                        header_done = True
+                continue
+
+            if (title is not None) and (charge is None):
+                if len(line.strip()) > 0:
+                    pieces = list(filter(None, line.split(" ")))
+                    assert len(pieces) == 2, f"can't parse line {line}"
+
+                    charge = int(pieces[0])
+                    multip = int(pieces[1])
+                    in_geom = True
+                    continue
+
+            if in_geom == True:
+                if len(line.strip()) == 0:
+                    in_geom = False
+                else:
+                    pieces = list(filter(None, line.split(" ")))
+                    assert len(pieces) == 4, f"can't parse line {line}"
+
+                    atomic_numbers.append(pieces[0])
+                    geometries.append([pieces[1], pieces[2], pieces[3]])
+
+            if (in_geom == False) and (len(geometries) > 0):
+                if footer:
+                    footer = footer + "\n" + line
+                else:
+                    if len(line.strip()) > 0:
+                        footer = line
+
+        atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
+        geometries = np.array([geometries])
+
+        f = GaussianFile(atomic_numbers, geometries, charge=charge, multiplicity=multip)
+        f.header = header
+        f.footer = footer
+        f.title = title
 
         if return_lines:
             return f, lines

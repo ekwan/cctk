@@ -2,7 +2,6 @@ import unittest, sys, os, io
 import cctk
 
 class TestXYZ(unittest.TestCase):
-
     def test_readfile(self):
         path = "static/test_peptide.xyz"
         file = cctk.XYZFile.read_file(path)
@@ -34,6 +33,8 @@ class TestGaussian(unittest.TestCase):
         path = "static/gaussian_file.gjf"
         file = cctk.GaussianFile.read_file(path)
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertEqual(file.title, "title")
+        self.assertEqual(file.footer, None)
 
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
@@ -44,11 +45,31 @@ class TestGaussian(unittest.TestCase):
     def test_read_out_file(self):
         path = "static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
+        self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertEqual(file.title, "title")
+        self.assertEqual(file.footer, None)
 
         mol = file.get_molecule()
+        self.assertTrue(isinstance(mol, cctk.Molecule))
+        self.assertEqual(mol.num_atoms(), 31)
+        self.assertEqual(mol.charge, 0)
+        self.assertEqual(mol.multiplicity, 1)
+
+        old_path = "static/gaussian_file.gjf"
+        new_path = "static/new_gjf.gjf"
+
+        file.write_file(new_path, molecule=2)
+
+        with open(old_path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
 
 class TestMolecule(unittest.TestCase):
-
     def load_molecule(self, path="static/test_peptide.xyz"):
         return cctk.XYZFile.read_file(path).molecule
 
