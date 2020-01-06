@@ -173,16 +173,20 @@ class Molecule:
         assert bond_order >= 0, f"bond order {bond_order} must be positive"
 
         if self.bonds.has_edge(atom1, atom2):
-            if self.bonds[atom1][atom2]["weight"] != bond_order:
-                self.bonds[atom1][atom2]["weight"] = bond_order
+            if bond_order == 0:
+                self.bonds.remove_edge(atom1, atom2)
+            else:
+                if self.bonds[atom1][atom2]["weight"] != bond_order:
+                    self.bonds[atom1][atom2]["weight"] = bond_order
         elif bond_order > 0:
             self.bonds.add_edge(atom1, atom2, weight=bond_order)
 
+
     def remove_bond(self, atom1, atom2):
         """
-        Alias for ``self.add_bond(self, atom1, atom2, bond_order=0)`` -- more intuitive nomenclature.
+        Alias for ``self.add_bond(atom1, atom2, bond_order=0)`` -- more intuitive nomenclature.
         """
-        self.add_bond(self, atom1, atom2, bond_order=0)
+        self.add_bond(atom1, atom2, bond_order=0)
 
     def _check_atom_number(self, number):
         """
@@ -303,6 +307,8 @@ class Molecule:
 
         #### fragment is zero-indexed
         for fragment in fragments:
+            print(fragment)
+            print("fragment")
             if atom in fragment:
                 return list(fragment)
                 break
@@ -360,7 +366,8 @@ class Molecule:
         vbf = v2f - v1f
 
         if np.linalg.norm(vbf) - distance > 0.001:
-            raise ValueError(f"Error moving bonds -- operation failed!")
+            new_dist = np.linalg.norm(vbf)
+            raise ValueError(f"Error moving bonds -- new distance is {new_dist:.3f}. Operation failed!")
 
         return self
 
