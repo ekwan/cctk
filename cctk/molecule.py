@@ -307,8 +307,6 @@ class Molecule:
 
         #### fragment is zero-indexed
         for fragment in fragments:
-            print(fragment)
-            print("fragment")
             if atom in fragment:
                 return list(fragment)
                 break
@@ -647,7 +645,7 @@ class Molecule:
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atomic_numbers.append(number)
+        self.atomic_numbers = np.append(self.atomic_numbers, [number])
         self.geometry = np.append(self.geometry, [coordinates], axis=0)
         self.bonds.add_node(self.num_atoms())
 

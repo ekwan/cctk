@@ -203,7 +203,7 @@ class GaussianFile(File):
         except:
             atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
 
-        footer = ''
+        footer = None
         if re.search("modredundant", str(header)):
             footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
             footer = "\n".join(list(footer.split("\n"))[1:]) # get rid of the first line

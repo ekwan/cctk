@@ -36,10 +36,11 @@ class MOL2File(File):
         file = MOL2File(name=name)
 
         (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
+        atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
         if conformers == True:
-            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=bonds.edges())
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=bonds.edges())
         else:
-            file.molecules = Ensemble(geometries=geometries, atomic_numbers=[get_number(z) for z in symbols], bonds=[b.edges() for b in bonds])
+            file.molecules = Ensemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[b.edges() for b in bonds])
 
         return file
 

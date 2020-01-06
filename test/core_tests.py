@@ -1,4 +1,5 @@
 import unittest, sys, os, io
+import numpy as np
 import cctk
 
 class TestXYZ(unittest.TestCase):
@@ -69,6 +70,51 @@ class TestGaussian(unittest.TestCase):
 
         os.remove(new_path)
 
+class TestMOL2(unittest.TestCase):
+    def test_read(self):
+        path = "static/dodecane.mol2"
+        file = cctk.MOL2File.read_file(path)
+        self.assertTrue(isinstance(file, cctk.MOL2File))
+
+        ensemble = file.molecules
+        self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
+        self.assertEqual(len(ensemble.molecules), 1)
+
+        mol = ensemble.molecules[0]
+        self.assertTrue(isinstance(mol, cctk.Molecule))
+        self.assertEqual(len(mol.atomic_numbers), 38)
+        self.assertEqual(len(mol.geometry), 38)
+        self.assertEqual(mol.get_bond_order(1,2), 1)
+
+    def test_bulk_read(self):
+        path = "static/dodecane-csearch.mol2"
+        file = cctk.MOL2File.read_file(path)
+        self.assertTrue(isinstance(file, cctk.MOL2File))
+
+        ensemble = file.molecules
+        self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
+        self.assertEqual(len(ensemble.molecules), 597)
+        for mol in ensemble.molecules:
+            self.assertEqual(len(mol.atomic_numbers), 38)
+            self.assertEqual(len(mol.geometry), 38)
+            self.assertEqual(mol.get_bond_order(1,2), 1)
+
+class TestMAE(unittest.TestCase):
+    def test_read(self):
+        path = "static/dodecane_csearch-out.mae"
+        (file, pnames, pvals) = cctk.MAEFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.MAEFile))
+        self.assertEqual(len(pnames), 597)
+        self.assertEqual(len(pvals), 597)
+
+        ensemble = file.molecules
+        self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
+        self.assertEqual(len(ensemble.molecules), 597)
+        for mol in ensemble.molecules:
+            self.assertEqual(len(mol.atomic_numbers), 38)
+            self.assertEqual(len(mol.geometry), 38)
+            self.assertEqual(mol.get_bond_order(1,2), 1)
+
 class TestMolecule(unittest.TestCase):
     def load_molecule(self, path="static/test_peptide.xyz"):
         return cctk.XYZFile.read_file(path).molecule
@@ -114,6 +160,36 @@ class TestMolecule(unittest.TestCase):
         mol.set_dihedral(1, 3, 5, 7, 120)
 
         self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 120)
+
+    def test_fragment(self):
+        mol = self.load_molecule()
+        mol.assign_connectivity()
+        (frag1, frag2) = mol._get_bond_fragments(3, 5)
+        self.assertEqual(len(frag1), 27)
+        self.assertEqual(len(frag2), 4)
+
+        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
+        mol.remove_bond(3,5)
+        self.assertEqual(len(mol._get_fragment_containing(5)), 4)
+        self.assertFalse(mol.are_connected(3,5))
+        mol.add_bond(3,5)
+        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
+        self.assertTrue(mol.are_connected(3,5))
+
+    def test_add_atoms(self):
+        mol = cctk.Molecule(np.array([2], dtype=np.int8), [[0, 0, 0]])
+        self.assertEqual(mol.num_atoms(), 1)
+
+        mol.add_atom("He", [1, 0, 0])
+        self.assertListEqual(list(mol.atomic_numbers), [2, 2])
+        self.assertEqual(mol.num_atoms(), 2)
+
+        mol.add_atom("Ar", [3, 0, 0])
+        self.assertEqual(mol.num_atoms(), 3)
+
+        mol.add_atom_at_centroid("He", [2, 3])
+        self.assertEqual(mol.num_atoms(), 4)
+        self.assertListEqual(list(mol.get_vector(4)), [2, 0, 0])
 
 if __name__ == '__main__':
     unittest.main()
