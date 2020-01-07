@@ -9,3 +9,6 @@ pyproject.toml
 tutorial/dipeptide_conf_search/conf*
 tutorial/dipeptide_conf_search/*.sh
 tutorial/dipeptide_conf_search/output
+tutorial/moj_plot/scan*
+tutorial/moj_plot/output
+tutorial/moj_plot/*.sh

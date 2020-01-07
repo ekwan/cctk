@@ -319,7 +319,11 @@ class GaussianFile(File):
                     if len(line.strip()) > 0:
                         footer = line
 
-        atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
+        try:
+            atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
+        except:
+            atomic_numbers = np.array(list(map(get_number, atomic_numbers)), dtype=np.int8)
+
         geometries = np.array([geometries])
 
         f = GaussianFile(atomic_numbers, geometries, charge=charge, multiplicity=multip)
