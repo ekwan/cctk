@@ -23,7 +23,7 @@ Potential uses for *cctk* include:
  - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
  
 ### Compatible File Types:
- - Gaussian 16 `.out` (read) and `.gjf` (write).
+ - Gaussian 16 `.out` (read) and `.gjf` (read/write).
  - `.xyz` (read/write)
  - `.mol2` (read)
  - `.mae` (read)

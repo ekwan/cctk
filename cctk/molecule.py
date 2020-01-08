@@ -579,6 +579,12 @@ class Molecule:
     def translate_molecule(self, vector):
         """
         Translates the whole molecule by the given vector.
+
+        Args:
+            vector (vector): the vector to translate by
+
+        Returns:
+            the Molecule object
         """
         self.geometry = np.array(self.geometry) + np.repeat([vector], len(self.geometry), axis=0)
         return self
@@ -586,6 +592,13 @@ class Molecule:
     def rotate_molecule(self, axis, degrees):
         """
         Rotates the whole molecule around the given axis.
+
+        Args:
+            axis (vector): the vector to rotate about
+            theta (float): how much to rotate (in degrees)
+
+        Returns:
+            the Molecule object
         """
         rot_matrix = compute_rotation_matrix(axis, degrees)
 
@@ -611,7 +624,7 @@ class Molecule:
             weighted (Bool): if the centroid calculation should be weighted (see above)
 
         Returns:
-            the number of the new atom
+            the Molecule object
         """
 
         if (not isinstance(atom_numbers, list)) or (len(atom_numbers) < 2):
@@ -635,7 +648,12 @@ class Molecule:
         """
         Add an atom with symbol ``symbol`` at position ``coordinates``.
 
-        Returns ``self.num_atoms()``.
+        Args:
+            symbol (str): symbol of the atom (e.g. "Cl", "Ar", "C")
+            coordinates (list): the coordinates to add
+
+        Returns:
+            the Molecule object
         """
 
         if (not isinstance(coordinates, list)) or (len(coordinates) != 3):
@@ -649,11 +667,17 @@ class Molecule:
         self.geometry = np.append(self.geometry, [coordinates], axis=0)
         self.bonds.add_node(self.num_atoms())
 
-        return self.num_atoms()
+        return self
 
     def remove_atom(self, number):
         """
         Remove the atom with number ``number``.
+
+        Args:
+            number (int): number of the atom
+
+        Returns:
+            the Molecule object
         """
 
         self._check_atom_number(number)
@@ -662,13 +686,19 @@ class Molecule:
             self.bonds.remove_node(number)
             self.geometry = np.delete(self.geometry, number - 1, axis=0)
             self.atomic_numbers.pop(number - 1)
-            return True
+            return self 
         except:
             raise ValueError("removing atom {number} failed!")
 
     def get_atomic_number(self, atom):
         """
         Get the atomic number for a given atom.
+
+        Args:
+            atom1 (int): number of the first atom
+
+        Returns:
+            the atomic number of that atom
         """
         self._check_atom_number(atom)
         return self.atomic_numbers[atom - 1]
@@ -677,6 +707,11 @@ class Molecule:
         """
         Get the geometry vector for a given atom. If two atoms are specified, gives the vector connecting them (from ``atom2`` to ``atom``).
         ``mol.get_vector(atom)`` is thus equivalent to ``mol.get_vector(atom, origin)``.
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom (optional)
+            check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
 
         Returns:
             a Numpy array
@@ -694,6 +729,17 @@ class Molecule:
     def get_distance(self, atom1, atom2, check=True, _dist=compute_distance_between):
         """
         Wrapper to compute distance between two atoms.
+
+        This function is relatively slow (rate-limiting for certain applications), so performance boosts have been implemented (e.g. preloading ``_dist``).
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom
+            check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
+            _dist (function): function usd to compute distance
+
+        Returns:
+            the distance, in Angstroms
         """
         if check:
             try:
@@ -713,6 +759,14 @@ class Molecule:
     def get_sq_distance(self, atom1, atom2, check=True):
         """
         Wrapper to compute squared distance between two atoms -- optimized for speed!
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom
+            check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
+
+        Returns:
+            the squared distance
         """
         if check:
             try:
@@ -729,6 +783,18 @@ class Molecule:
     def get_angle(self, atom1, atom2, atom3, check=True, _angle=compute_angle_between):
         """
         Wrapper to compute angle between three atoms.
+
+        This function is relatively slow (rate-limiting for certain applications), so performance boosts have been implemented (e.g. preloading ``_angle``).
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom
+            atom3 (int): number of the third atom
+            check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
+            _angle (function): function usd to compute angle
+
+        Returns:
+            the angle, in degrees
         """
         if check:
             try:
@@ -750,7 +816,20 @@ class Molecule:
 
     def get_dihedral(self, atom1, atom2, atom3, atom4, check=True, _dihedral=compute_dihedral_between):
         """
-        Wrapper to compute angle between three atoms.
+        Wrapper to compute dihedral angle between four atoms.
+
+        This function is relatively slow (rate-limiting for certain applications), so performance boosts have been implemented (e.g. preloading ``_dihedral``).
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom
+            atom3 (int): number of the third atom
+            atom4 (int): number of the fourth atom
+            check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
+            _dihedral (function): function usd to compute dihedral
+
+        Returns:
+            the dihedral angle, in degrees
         """
         if check:
             try:
@@ -776,6 +855,13 @@ class Molecule:
     def get_bond_order(self, atom1, atom2):
         """
         Wrapper to get bond order between two atoms.
+
+        Args:
+            atom1 (int): number of the first atom
+            atom2 (int): number of the second atom
+
+        Returns:
+            the bond order
         """
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -829,13 +915,13 @@ class Molecule:
         """
         Returns a list of the neighbors of ``atom``. If ``atom`` has no neighbors, an empty list will be returned.
         """
-        try: 
+        try:
             atom = int(atom)
-        except: 
+        except:
             raise TypeError(f"atom number {atom} cannot be cast to int!")
 
         self._check_atom_number(atom)
-        
+
         return list(self.bonds.neighbors(atom))
 
     def num_atoms(self):
@@ -857,6 +943,7 @@ class Molecule:
     def optimize_dihedral(self, atom1, atom2, atom3, atom4):
         """
         Minimizes the value of ``self.rms_distance_between_atoms`` for the given dihedral, in one-degree increments.
+        A cheap alternative to geometry optimization using *ab initio* methods or density functional theory.
 
         Args:
             atom1 (int): atom number of the first atom in the dihedral
@@ -887,6 +974,8 @@ class Molecule:
     def atom_string(self, atom):
         """
         Returns the elemental symbol and the atom number for a given atom.
+
+        For example, ``methane.atom_string(1)`` might return "C1".
         """
         try:
             atom = int(atom)
@@ -899,11 +988,11 @@ class Molecule:
 
     def perturb(self, size=0.005):
         """
-        This function can be used to generate a slightly different molecule in cases where numerical (or geometric) converge is problematic. 
+        This function can be used to generate a slightly different molecule in cases where numerical (or geometric) converge is problematic.
 
-        It adds a random variable (sampled from a normal distribution, centered at 0 with stddev ``size`) to every number in ``self.geometry``. 
+        It adds a random variable (sampled from a normal distribution, centered at 0 with stddev ``size`) to every number in ``self.geometry``.
 
-        Args: 
+        Args:
             size (float): stddev of the normal distribution
 
         Returns:
@@ -913,4 +1002,4 @@ class Molecule:
         random = np.random.normal(scale=size, size=geometry.shape)
 
         self.geometry = list(geometry + random)
-        return self 
+        return self

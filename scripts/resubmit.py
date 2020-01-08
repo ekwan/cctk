@@ -1,6 +1,4 @@
-import sys, argparse
-import re
-import glob
+import sys, argparse, re, glob
 import numpy as np
 
 from cctk import GaussianFile, Molecule
@@ -32,7 +30,7 @@ assert args["filename"], "Can't resubmit files without a filename!"
 for filename in glob.iglob(args["filename"], recursive=True):
     if re.search("slurm", filename):
         continue
-    
+
     try:
         output_file = GaussianFile.read_file(filename)
         if args["perturb"]:
@@ -42,10 +40,10 @@ for filename in glob.iglob(args["filename"], recursive=True):
         if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
             newfile = filename.rsplit('/',1)[-1]
             newfile = re.sub(r"out$", "gjf", newfile)
-            
+
             if args["output"]:
                 newfile = args["output"]
-            
+
             output_file.write_file(newfile)
             print(f"{filename} > {newfile}")
 
