@@ -112,10 +112,20 @@ This is the output generated:
 
 Based on this diagram, it appears that the reaction proceeds through an associative substitution mechanism, 
 where bond forming precedes bond breaking but no long-lived tetrahedral intermediate is formed. 
+Unlike a true S<sub>N</sub>2 reaction, the reaction does not proceed perfectly down the middle of the diagram,
+but the absence of a distinct minimum in the top left indicates that any tetrahedral intermediate will be transient. 
 
-Calculation of the transition state for this reaction supports this hypothesis: 
+Calculation of the transition state for this reaction at the same level of theory supports this hypothesis: 
 
 <img src='ts.png' width=350>
+
+(*v*<sub>i</sub> = 250.88 cm<sup>-1</sup>)
+
+The lowest-energy path through the potential energy surface (i.e. the intrinsic reaction coordinate) might therefore
+look something like this, where the transition state is represented as a dot:
+
+<img src='annotated_plot.png' width=650>
+
 
 A more careful analysis of this reaction, e.g. for publication, might examine: 
 - Basis and functional dependence (especially the effect of augmented basis sets). 
