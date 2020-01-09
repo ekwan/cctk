@@ -99,6 +99,33 @@ class Ensemble():
         if number <= 0:
             raise ValueError(f"atom number {number} invalid: must be a positive integer!")
 
+    @classmethod
+    def join_ensembles(cls, ensembles, name=None):
+        """
+        Creates a new Ensemble object from existing ensembles.
+
+        If every ensemble has energies defined, then the new ensemble will have energies defined too.
+
+        Args:
+            name (str): name of Ensemble created
+            ensembles (list of Ensembles): Ensemble objects to join
+        """
+        new_ensemble = Ensemble(name=name)
+        use_energies = True
+        for ensemble in ensembles:
+            assert isinstance(ensemble, Ensemble), "can't join an object that isn't an Ensemble!"
+            if len(ensemble.energies) != len(ensemble.molecules):
+                use_energies = False
+
+        for ensemble in ensembles:
+            for idx, mol in np.enumerate(ensemble.molecules):
+                if use_energies:
+                    new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
+                else:
+                    new_ensemble.add_molecule(mol)
+
+        return new_ensemble()
+
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -152,6 +179,34 @@ class ConformationalEnsemble(Ensemble):
                 raise ValueError("wrong atom types for this ensemble")
 
         super().add_molecule(molecule, energy=energy)
+
+    @classmethod
+    def join_ensembles(cls, ensembles, name=None):
+        """
+        Creates a new ConformationalEnsemble object from existing ensembles.
+
+        If every ensemble has energies defined, then the new ensemble will have energies defined too.
+
+        Args:
+            name (str): name of ConformationalEnsemble created
+            ensembles (list of ConformationalEnsembles): ConformationalEnsemble objects to join
+        """
+        new_ensemble = ConformationalEnsemble(name=name)
+        use_energies = True
+        for ensemble in ensembles:
+            assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't an ConformationalEnsemble!"
+            if len(ensemble.energies) != len(ensemble.molecules):
+                use_energies = False
+
+        for ensemble in ensembles:
+            for idx, mol in np.enumerate(ensemble.molecules):
+                if use_energies:
+                    new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
+                else:
+                    new_ensemble.add_molecule(mol)
+
+        return new_ensemble()
+
 
     def align (self, align_to=1, atoms=None):
         """
@@ -274,3 +329,4 @@ class ConformationalEnsemble(Ensemble):
 
     def get_within_cutoff(self, cutoff=5):
         return self.molecules[self.energies <= (np.min(self.energies) + 5)]
+

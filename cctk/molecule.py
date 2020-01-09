@@ -324,6 +324,9 @@ class Molecule:
             atom2 (int): the number of the second atom
             distance (float): distance in Angstroms of the final bond
             move (str): determines how fragment moving is handled
+
+        Returns:
+            the Molecule object
         """
 
         self._check_atom_number(atom1)
@@ -383,6 +386,9 @@ class Molecule:
             atom3 (int): the number of the third atom
             angle (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` angle
             move (str): determines how fragment moving is handled
+
+        Returns:
+            the Molecule object
         """
 
         self._check_atom_number(atom1)
@@ -479,7 +485,7 @@ class Molecule:
             check_result (Bool): whether the final answer should be checked for correctness
 
         Returns:
-            self
+            the Molecule object
         """
 
         self._check_atom_number(atom1)
