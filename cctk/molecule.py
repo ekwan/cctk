@@ -1,8 +1,6 @@
-import sys
-import re
+import sys, re, math
 import numpy as np
 import networkx as nx
-import math
 
 from functools import lru_cache
 
@@ -247,7 +245,8 @@ class Molecule:
 
             return formula
 
-    @lru_cache(maxsize=32)
+#### very fast but causes errors sometimes... so i'm commenting this out until further consultation.
+#    @lru_cache(maxsize=32)
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         """
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
