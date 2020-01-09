@@ -1,4 +1,4 @@
-%nprocshared=16GB
+%nprocshared=16
 %mem=32GB
 #p opt freq=noraman b3lyp/genecp empiricaldispersion=gd3bj
 

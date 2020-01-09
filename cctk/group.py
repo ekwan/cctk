@@ -1,9 +1,6 @@
-import sys
-import copy
-import re
+import sys, copy, re, math
 import numpy as np
 import networkx as nx
-import math
 
 from abc import abstractmethod
 
@@ -97,7 +94,7 @@ class Group(Molecule):
         #### make the swap! (this only adds the atoms, still have to get the geometry right)
         molecule.atomic_numbers[add_to-1] = group.atomic_numbers[group.adjacent-1]
         new_indices = [i + molecule.num_atoms() for i in range(1,np.sum(other_indices)+1)]
-        molecule.atomic_numbers.extend(np.array(group.atomic_numbers)[other_indices])
+        molecule.atomic_numbers = np.hstack([molecule.atomic_numbers, group.atomic_numbers[other_indices]])
 
         #### have to keep track of what all the new indices are, to carry over connectivity
         new_indices.insert(group.adjacent-1, add_to)
