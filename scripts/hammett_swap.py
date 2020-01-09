@@ -2,8 +2,8 @@ import sys, os, argparse, glob, re, copy
 import numpy as np
 
 from cctk import GaussianFile, Molecule, Group, XYZFile
-from cctk.group_substitution import add_group_to_molecule
 from cctk.load_groups import load_group
+from cctk.Group import add_group_to_molecule
 
 #### This is a script to automatically replace groups in molecules with predefined "Hammett"-type groups. 
 #### Usage: ``python hammett_swap.py -a 9 13 -g trifluoromethyl -o bis_CF3_TS.gjf TS.out``

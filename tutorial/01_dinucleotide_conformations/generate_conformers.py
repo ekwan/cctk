@@ -4,6 +4,7 @@ from cctk import XYZFile, ConformationalEnsemble, GaussianFile
 #### Usage: ``python generate_conformers.py``
 
 #### The input file is in the ".xyz" format, which means we have to infer the bonds ourselves (unlike other file formats).
+#### This can be done through ``Molecule.assign_connectivity()``.
 output_file = XYZFile.read_file('CpG.xyz')
 output_file.molecule.assign_connectivity()
 

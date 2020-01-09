@@ -1,5 +1,4 @@
-import sys
-import re
+import sys, re
 import numpy as np
 
 from enum import Enum
@@ -48,7 +47,7 @@ class GaussianFile(File):
 
     def __init__(self, atomic_numbers, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1):
         """
-        Create new GaussianInputFile object.
+        Create new GaussianFile object.
 
 		Args:
             atomic_numbers (list): list of atomic numbers
@@ -56,11 +55,11 @@ class GaussianFile(File):
             bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
             charge (int): the charge of the molecule
             multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
-            job_types (list): list of `job_type` instances
-            header (str): optional, header of .gjf file
-            footer (str): optional, footer of .gjf file
+            job_types (list): list of ``job_type`` instances
+            header (str): optional, header of ``.gjf`` file
+            footer (str): optional, footer of ``.gjf`` file
             theory (dict): optional, contains information from header
-            title (str): optional, title of .gjf file
+            title (str): optional, title of ``.gjf`` file
 		"""
 
         if header and not isinstance(header, str):
@@ -86,7 +85,7 @@ class GaussianFile(File):
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title"):
         """
-        Write a .gjf file using the given molecule.
+        Write a ``.gjf`` file using the given molecule.
 
         Args:
             filename (str): path to the new file
@@ -125,7 +124,7 @@ class GaussianFile(File):
 
     def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
         """
-        Write a .gjf file, using object attributes. If no header is specified, the object's header/footer will be used.
+        Write a ``.gjf`` file, using object attributes. If no header is specified, the object's header/footer will be used.
 
         Args:
             filename (str): path to the new file
@@ -166,7 +165,7 @@ class GaussianFile(File):
     def read_file(cls, filename, return_lines=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
-        Only footers from ``opt=modredundant`` can be read automatically --  `genecep` custom basis sets, etc must be specified manuall. 
+        Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
 
         Will throw ``ValueError`` if there have been no successful iterations.
 
