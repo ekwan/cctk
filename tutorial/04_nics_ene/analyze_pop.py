@@ -18,12 +18,11 @@ info = []
 text_width = 70
 
 energies = {}
-nics = {}
 C1_charge = {}
-C5_charge = {}
 O7_charge = {}
 C8_charge = {}
 C9_charge = {}
+C12_charge = {}
 
 for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
@@ -33,11 +32,6 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
     dist = int(round(output_file.get_molecule().get_distance(1, 8) * 1000))
 
     energies[dist] = output_file.energies[-1]
-
-    try:
-        nics[dist] = parse.find_parameter(lines, "17  Bq   Isotropic", 8, 4)[0]
-    except:
-        pass
 
     try:
         C1_charge[dist] = parse.find_parameter(lines, "     1  C", 8, 2)[-1]
@@ -59,8 +53,14 @@ ax1.set_xlabel("C1-C5 Distance (mÅ)")
 ax1.set_ylabel("Energy (kcal/mol; M06-2X)")
 
 ax2 = ax1.twinx()
-ax2.scatter(list(nics.keys()), list(nics.values()), c='blue', alpha=0.8, label="NICS(0)")
-ax2.set_ylabel("NICS(0) (M06-2X)")
+ax2.scatter(list(C1_charge.keys()), list(C1_charge.values()), c='blue', alpha=0.8, label="C1")
+ax2.scatter(list(O7_charge.keys()), list(O7_charge.values()), c='red', alpha=0.8, label="O7")
+ax2.scatter(list(C8_charge.keys()), list(C8_charge.values()), c='orange', alpha=0.8, label="C8")
+ax2.scatter(list(C9_charge.keys()), list(C9_charge.values()), c='green', alpha=0.8, label="C9")
+ax2.scatter(list(C12_charge.keys()), list(C12_charge.values()), c='purple', alpha=0.8, label="C12")
+ax2.set_ylabel("Hirshfeld Charge (M06-2X)")
+
+plt.legend(loc="best")
 plt.title("Change in NICS(0) over IRC")
 
 plt.show()
