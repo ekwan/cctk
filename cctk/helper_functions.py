@@ -20,8 +20,9 @@ for line in isotope_file:
     if symbol == "Symbol":
         continue
     ELEMENT_DICTIONARY[number] = symbol
+ELEMENT_DICTIONARY["0"] = "Bq"
 
-INV_ELEMENT_DICTIONARY = {v: k for k, v in ELEMENT_DICTIONARY.items()}
+INV_ELEMENT_DICTIONARY = {v: int(k) for k, v in ELEMENT_DICTIONARY.items()}
 
 
 def get_symbol(atomic_number):
@@ -34,7 +35,6 @@ def get_symbol(atomic_number):
     Returns:
         the two-character atomic symbol string
     """
-#    if isinstance(atomic_number, int):
     atomic_number = str(atomic_number)
     if atomic_number in ELEMENT_DICTIONARY:
         return ELEMENT_DICTIONARY[atomic_number]

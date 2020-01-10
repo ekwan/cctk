@@ -118,13 +118,13 @@ class Ensemble():
                 use_energies = False
 
         for ensemble in ensembles:
-            for idx, mol in np.enumerate(ensemble.molecules):
+            for idx, mol in np.ndenumerate(ensemble.molecules):
                 if use_energies:
                     new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
                 else:
                     new_ensemble.add_molecule(mol)
 
-        return new_ensemble()
+        return new_ensemble
 
 
 class ConformationalEnsemble(Ensemble):
@@ -199,13 +199,13 @@ class ConformationalEnsemble(Ensemble):
                 use_energies = False
 
         for ensemble in ensembles:
-            for idx, mol in np.enumerate(ensemble.molecules):
+            for idx, mol in np.ndenumerate(ensemble.molecules):
                 if use_energies:
                     new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
                 else:
                     new_ensemble.add_molecule(mol)
 
-        return new_ensemble()
+        return new_ensemble
 
 
     def align (self, align_to=1, atoms=None):

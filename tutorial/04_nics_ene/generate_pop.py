@@ -28,11 +28,8 @@ for filename in glob.iglob(args["filename"], recursive=True):
 new_ensemble = ConformationalEnsemble.join_ensembles(ensembles)
 
 for mol in new_ensemble.molecules:
-    mol.add_atom_at_centroid("Bq", [1, 7, 15, 12, 9, 8])
     cc_dist = mol.get_distance(1, 8)
-
-    newfile = f"nics_{int(round(cc_dist*1000))}.gjf"
-    GaussianFile.write_molecule_to_file(newfile, mol, "#p nmr m062x/6-31g(d)", None)
-#    GaussianFile.write_molecule_to_file(newfile, mol, "#p nmr pop=hirshfeld m062x/6-31g(d)", None)
+    newfile = f"pop_{int(round(cc_dist*1000))}.gjf"
+    GaussianFile.write_molecule_to_file(newfile, mol, "#p pop=hirshfeld m062x/6-31g(d)", None)
     print(f"generating {newfile}...")
 

@@ -27,8 +27,14 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
 
         energy = output_file.energies[-1]
         iters = len(output_file.energies)
-        rms_disp = output_file.rms_displacements[-1]
-        rms_force = output_file.rms_forces[-1]
+        rms_disp  = 0
+        rms_force = 0
+
+        try:
+            rms_disp = output_file.rms_displacements[-1]
+            rms_force = output_file.rms_forces[-1]
+        except:
+            pass
 
         success = "NO"
         if output_file.success:
@@ -49,6 +55,7 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
 
     except:
         info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])
+
 
 if len(info) > 0:
     min_energy = np.min([x[2] for x in info])

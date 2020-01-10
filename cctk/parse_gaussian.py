@@ -38,7 +38,7 @@ def read_geometries_and_energies(lines):
         line = lines[i].strip()
 
         # detect geometry block
-        if line == "Standard orientation:":
+        if (line == "Standard orientation:") or (re.search("Cartesian Coordinates", line) or re.search("Input orientation:", line)):
             i += 5
             in_geometry_block = True
             continue
@@ -50,24 +50,41 @@ def read_geometries_and_energies(lines):
         # read geometry if applicable
         if in_geometry_block:
             fields = re.split(" +", line)
-            if len(fields) != 6:
+            if len(fields) == 6:
+                if len(this_geometry) > 0 and fields[0] == "1":
+                    # reset fields
+                    this_geometry = []
+                    this_symbol_list = []
+                    this_energy = None
+                try:
+                    x, y, z = float(fields[3]), float(fields[4]), float(fields[5])
+                    this_geometry.append([x, y, z])
+                    symbol = get_symbol(fields[1])
+                    this_symbol_list.append(symbol)
+                except:
+                    print("error parsing >>> %s" % line)
+                    print(fields)
+                    raise ValueError("error parsing geometry")
+
+            elif len(fields) == 5:
+                if len(this_geometry) > 0 and fields[0] == "1":
+                    # reset fields
+                    this_geometry = []
+                    this_symbol_list = []
+                    this_energy = None
+                try:
+                    x, y, z = float(fields[2]), float(fields[3]), float(fields[4])
+                    this_geometry.append([x, y, z])
+                    symbol = get_symbol(fields[1])
+                    this_symbol_list.append(symbol)
+                except:
+                    print("error parsing >>> %s" % line)
+                    print(fields)
+                    raise ValueError("error parsing geometry")
+
+            else:
                 print("error parsing >>> " + line)
                 raise ValueError("unexpected number of fields on geometry line")
-            if len(this_geometry) > 0 and fields[0] == "1":
-                # reset fields
-                this_geometry = []
-                this_symbol_list = []
-                this_energy = None
-            try:
-                x, y, z = float(fields[3]), float(fields[4]), float(fields[5])
-                this_geometry.append([x, y, z])
-                symbol = get_symbol(fields[1])
-                this_symbol_list.append(symbol)
-            except:
-                print("error parsing >>> %s" % line)
-                print(fields)
-                raise ValueError("error parsing geometry")
-
         # read energy if applicable
         if not in_geometry_block and line.startswith("SCF Done"):
             fields = re.split(" +", line)

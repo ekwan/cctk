@@ -12,3 +12,9 @@ tutorial/*dipeptide_conf_search/output
 tutorial/*moj_plot/scan*
 tutorial/*moj_plot/output
 tutorial/*moj_plot/*.sh
+tutorial/*nics_ene/*.sh
+tutorial/*nics_ene/output
+tutorial/*nics_ene/IRC*
+tutorial/*nics_ene/starting*
+tutorial/*nics_ene/nics*
+tutorial/*nics_ene/pop*
