@@ -3,7 +3,7 @@ import numpy as np
 
 from cctk import GaussianFile, ConformationalEnsemble
 
-#### Usage: ``python resubmit.py --type all --perturb "path/to/output/*.out"``
+#### Usage: ``python generate_pop.py "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
 
 #### NOTE: This file will reject any file that contains the string "slurm."

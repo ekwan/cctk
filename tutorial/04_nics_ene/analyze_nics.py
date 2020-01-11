@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 from cctk import GaussianFile, Molecule
 import cctk.parse_gaussian as parse
 
-
-#### Usage: ``python analyze.py "path/to/output/*.out"``
+#### Usage: ``python analyze_nics.py "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
 
 #### NOTE: This file will reject any file that contains the string "slurm."
@@ -14,16 +13,9 @@ import cctk.parse_gaussian as parse
 #### Corin Wagen and Eugene Kwan, 2019
 
 filenames = sys.argv[1]
-info = []
-text_width = 70
 
 energies = {}
 nics = {}
-C1_charge = {}
-C5_charge = {}
-O7_charge = {}
-C8_charge = {}
-C9_charge = {}
 
 for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
@@ -34,20 +26,14 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
 
     energies[dist] = output_file.energies[-1]
 
+    #### find nics[0]
     try:
         nics[dist] = parse.find_parameter(lines, "17  Bq   Isotropic", 8, 4)[0]
+
     except:
         pass
 
-    try:
-        C1_charge[dist] = parse.find_parameter(lines, "     1  C", 8, 2)[-1]
-        O7_charge[dist] = parse.find_parameter(lines, "     7  O", 8, 2)[-1]
-        C8_charge[dist] = parse.find_parameter(lines, "     8  C", 8, 2)[-1]
-        C9_charge[dist] = parse.find_parameter(lines, "     9  C", 8, 2)[-1]
-        C12_charge[dist] = parse.find_parameter(lines, "    12  C", 8, 2)[-1]
-    except:
-        pass
-
+#### generate graphs
 min_energy = np.min(list(energies.values()))
 energies = {k: (e - min_energy) * 627.509 for k, e in energies.items()}
 
@@ -61,6 +47,9 @@ ax1.set_ylabel("Energy (kcal/mol; M06-2X)")
 ax2 = ax1.twinx()
 ax2.scatter(list(nics.keys()), list(nics.values()), c='blue', alpha=0.8, label="NICS(0)")
 ax2.set_ylabel("NICS(0) (M06-2X)")
+
 plt.title("Change in NICS(0) over IRC")
+plt.legend(loc="best")
 
 plt.show()
+plt.savefig('nics_graph.png')
