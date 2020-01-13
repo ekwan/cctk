@@ -1,6 +1,6 @@
 #### Tutorial 4: Analyzing Charges and NICS Along the Reaction Coordinate
 
-Analysis of higher-order properties along a potential energy surface, althoguh powerful, is frequently complicated by the multitude of jobs required. 
+Analysis of higher-order properties along a potential energy surface, although powerful, is frequently complicated by the multitude of jobs required. 
 For instance, analyzing the change in atomic charges or aromaticity (as measured by nucleus-independent chemical shift, or NICS)
 requires a separate job for each desired point, making manual setup and analysis challenging. 
 In contrast, *cctk*'s ability to automatically extract structures and properties from output files
@@ -9,7 +9,7 @@ allows for detailed mechanistic investigations to be carried out with minimal br
 For this example, we chose to analyze the carbonyl-ene reaction of acetaldehyde and propylene. 
 This reaction results in a net allylation of a carbonyl compound using inexpensive propylene gas as a surrogate
 for more costly and promiscuous allylating reagents (like allyl-MgBr), 
-but its utility is hampered by the slow rate of reaction: 26.4 kcal/mol for formaldehyde ([ref](https://pubs.acs.org/doi/abs/10.1021/ja00257a008)) and 39.0 kcal/mol for aliphatic aldehydes (independent results). 
+but its utility is hampered by the slow rate of reaction: 26.4 kcal/mol for formaldehyde ([ref](https://pubs.acs.org/doi/abs/10.1021/ja00257a008)) and ~39 kcal/mol for aliphatic aldehydes (independent results). 
 Effective catalysis of the carbonyl-ene reaction, guided by improved understanding of the transition state properties, could therefore lead to an effective and powerful synthetic method.
 
 To study this reaction, we chose to investigate:
@@ -50,8 +50,8 @@ new_ensemble = ConformationalEnsemble.join_ensembles(ensembles)
 
 The files are then generated (and named after the C1–C8 distance, which decreases monotonically along the IRC). 
 For NICS calculation, a "ghost atom" must be added at the centroid of the ring 
-(symbol "Bq", after the ghost of Hamlet's father Banquo).
-
+(symbol "Bq", after the ghost Banquo from *Macbeth*). 
+The Hirshfeld population jobs die if ghost atoms are used, so separate files are required. 
 
 ```
 for mol in new_ensemble.molecules:
@@ -63,7 +63,7 @@ for mol in new_ensemble.molecules:
     print(f"generating {newfile}...")
  ```
  
- The files should then be submitted -- they should each take no more than a few minutes to run. 
+ The jobs should then be submitted -- they should each take no more than a few minutes to run. 
 
 ##### Step 3: Analysis (`graph.py`)
 
