@@ -5,10 +5,9 @@
 
 ## Contents: 
  - [Overview](#overview) 
- - [Requirements](#requirements)
  - [Installation](#installation)
- - [Structure](#structure)
- - [Documentation](#requirements)
+ - [Contents](#contents)
+ - [Documentation](#documentation)
  - [Technical Details](#technical-details)
 
 ## Overview:
@@ -22,7 +21,7 @@ Potential uses for *cctk* include:
  - Screening different functionals and basis sets. 
  - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
  
- For hands-on examples of how *cctk* can be used, 
+ For examples of how *cctk* can be used, 
  refer to the [tutorials](https://github.com/ekwan/cctk/tree/master/tutorial). 
  
 ### Compatible File Types:
@@ -30,6 +29,7 @@ Potential uses for *cctk* include:
  - `.xyz` (read/write)
  - `.mol2` (read)
  - `.mae` (read)
+ - Orca `.inp` (write)
 
 ## Installation:
 
@@ -38,28 +38,43 @@ A full list of requirements can be found in `requirements.txt`.
 
 The preferred setup method is as follows: 
 
-1. Install Python 3.7+ or `conda`/`miniconda`
-
-
-## Structure: 
-
-Most *cctk* programs follow a rough 3-part outline: 
-
-1. Read in data from an output file (or files). 
-1. Perform some transformation (adding an atom, changing bond lengths, etc.). 
-1. Output an input file. 
-
-## Requirements:
-* Python 3.7 or later
-* Numpy
-* NetworkX
-* Sphinx
-
-Use of a package management system like `conda` or `miniconda` is recommended. To install all requirements, run:
+1. Install Python 3.7+ and 
+[`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html)
+2. Create a new environment called `cctk` (the name is arbitrary): 
 
 ```
-pip install -r requirements.txt
+$ conda create --name cctk python=3.8
+$ source activate cctk
 ```
+
+3. `git clone` this repository, or download the `.zip` file, 
+and use `pip` to install the required packages into the `cctk` environment:
+
+```
+$ git clone git@github.com:ekwan/cctk.git
+$ cd cctk
+$ pip install -r requirements.txt
+```
+
+4. Add *cctk* to the `PYTHONPATH` in your bash configuration file (`~/.bashrc`) by adding the following line:
+
+```
+export PYTHONPATH="$PYTHONPATH:/path/to/cctk/"
+```
+(be sure to replace `/path/to/cctk/` with whatever's correct for your system!)
+
+5. Restart bash (or type `$ source ~/.bashrc)` to allow these changes to take effect. 
+
+You should now be able to import *cctk* as a Python library anywhere on your system. 
+
+
+## Contents: 
+
+- `cctk/` contains the Python modules for *cctk* and the accompanying static data files.  
+- `docs/` contains the code needed to generate the documentation.  
+- `scripts/` contains pre-defined scripts that use *cctk* to quickly analyze and manipulate one or many output files.  
+- `test/` contains code to test *cctk* and accompanying files.  
+- `tutorial/` contains detailed tutorials on how to use *cctk* on complex, real-world problems.  
 
 ## Documentation:
 
