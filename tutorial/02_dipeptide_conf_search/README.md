@@ -44,11 +44,12 @@ The actual heavy lifting is done by the following code, which creates copies of 
 dihedral angles set to new values. 
 
 ```
+new_structures = [None] * (len(structures) * len(thetas))
 current_idx = 0
-        for structure in structures:
-            for theta in thetas:
-                new_structures[current_idx] = copy.deepcopy(structure.set_dihedral(*angles[idx], theta, check_result=False))
-                current_idx += 1
+for structure in structures:
+    for theta in thetas:
+        new_structures[current_idx] = copy.deepcopy(structure.set_dihedral(*angles[idx], theta, check_result=False))
+        current_idx += 1
 ```
 
 Finally, the script writes the resultant structures to `.gjf` files.
