@@ -1,8 +1,21 @@
 #### Tutorial 4: Analyzing Charges and NICS Along the Reaction Coordinate
 
-Analysis of higher-order properties along a potential energy surface is frequently complicated by the multitude of jobs required. 
+Analysis of higher-order properties along a potential energy surface, althoguh powerful, is frequently complicated by the multitude of jobs required. 
 For instance, analyzing the change in atomic charges or aromaticity (as measured by nucleus-independent chemical shift, or NICS)
-requires a separate job for each desired point, making manual analysis challenging. 
+requires a separate job for each desired point, making manual setup and analysis challenging. 
+In contrast, *cctk*'s ability to automatically extract structures and properties from output files
+allows for detailed mechanistic investigations to be carried out with minimal brute-force labor. 
+
+For this example, we chose to analyze the carbonyl-ene reaction of acetaldehyde and propylene. 
+This reaction results in a net allylation of a carbonyl compound using inexpensive propylene gas as a surrogate
+for more costly and promiscuous allylating reagents (like allyl-MgBr), 
+but its utility is hampered by the slow rate of reaction: 26.4 kcal/mol for formaldehyde ([ref](https://pubs.acs.org/doi/abs/10.1021/ja00257a008)) and 39.0 kcal/mol for aliphatic aldehydes (independent results). 
+Effective catalysis of the carbonyl-ene reaction, guided by improved understanding of the transition state properties, could therefore lead to an effective and powerful synthetic method.
+
+To study this reaction, we chose to investigate:
+1. The dipole moment
+1. Hirshfeld charges of key heavy atoms
+1. NICS(0) of the ring formed by the two reactants
 
 ##### Step 1: Finding Points Along the Intrinsic Reaction Coordinate
 
@@ -50,7 +63,7 @@ for mol in new_ensemble.molecules:
     print(f"generating {newfile}...")
  ```
  
- The files should then be submitted and run -- they should each take no more than a few minutes to run. 
+ The files should then be submitted -- they should each take no more than a few minutes to run. 
 
 ##### Step 3: Analysis (`graph.py`)
 
@@ -106,5 +119,9 @@ consistent with [Schleyer's findings](https://pubs.acs.org/doi/10.1021/cr030088%
 Accordingly, pi–pi stacking or other aromatic-stabilizing interactions might be a fruitful avenue for catalyst design 
 to accelerate this reaction. 
 
-*Corin Wagen and Eugene Kwan, 2020*
+A more in-depth study might analyze the role of open-shell or multiconfigurational species 
+([like in this paper](https://pubs.acs.org/doi/10.1021/jo502041f)),
+as well as investigating how Lewis acid catalysts like Et<sub>2</sub>AlCl change the above properties. 
+
+*Corin Wagen and Eugene Kwan*
 
