@@ -1,10 +1,11 @@
 #### Tutorial 1: Generating New Conformations
 
 Generating new conformations for complex molecules can frequently be time-consuming, particularly when one desires to look at multiple rotatable bonds. 
-For butane, there are only three local minima about the C2–C3 bond, but looking at the equivalent minima for octane results in 3<sup>5</sup>=243 conformations -- 
+For butane, there are only three minima about the C2–C3 bond, but looking at the equivalent minima for octane results in 3<sup>5</sup>=243 conformations— 
 far too many to generate manually!
+Scripting the creation of new conformers with *cctk* can thus be a powerful time-saving tool. 
 
-For this example, we chose to study the N5-methylated CpG dinucleotide (N5-methylation of cytosine is a common repressive epigenetic marker). 
+For this example, we chose to study the *N*5-methylated CpG dinucleotide ((*N*5-methylation of cytosine is a common repressive epigenetic marker). 
 New rotamers about the P–O bonds can easily be generated through the use of `molecule.set_dihedral()`:
 
 ```
@@ -25,3 +26,5 @@ for molecule in ensemble.molecules:
     y = molecule.get_dihedral(23, 24, 25, 1)
     GaussianFile.write_molecule_to_file(f"conformers/CpG_{int(round(x))}_{int(round(y))}.gjf", molecule, "#p opt b3lyp/6-31g(d)", None)
 ```
+
+The resultant files can then be submitted, and the resultant energies compared to determine the ground-state conformational distribution. 
