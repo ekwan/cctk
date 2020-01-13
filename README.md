@@ -9,11 +9,11 @@
  - [Installation](#installation)
  - [Structure](#structure)
  - [Documentation](#requirements)
- - [External Data](#external-data)
+ - [Technical Details](#technical-details)
 
 ## Overview:
 
-*cctk* is an open-source Python package designed to automate routine computational chemistry tasks. 
+*cctk* is an open-source Python package designed to automate generation and analysis of computational chemistry files. 
 
 Potential uses for *cctk* include: 
  - Monitoring one or many geometry optimizations. 
@@ -21,6 +21,9 @@ Potential uses for *cctk* include:
  - Calculating molecular properties (e.g. NICS) along a reaction coordinate. 
  - Screening different functionals and basis sets. 
  - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
+ 
+ For hands-on examples of how *cctk* can be used, 
+ refer to the [tutorials](https://github.com/ekwan/cctk/tree/master/tutorial). 
  
 ### Compatible File Types:
  - Gaussian 16 `.out` (read) and `.gjf` (read/write).
@@ -30,7 +33,13 @@ Potential uses for *cctk* include:
 
 ## Installation:
 
-For now, just use `git clone <git url>` - a more advanced way is coming.
+*cctk* requires Python 3.7, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
+A full list of requirements can be found in `requirements.txt`.
+
+The preferred setup method is as follows: 
+
+1. Install Python 3.7+ or `conda`/`miniconda`
+
 
 ## Structure: 
 
@@ -64,10 +73,17 @@ make html
 
 The documentation files can then be found in `docs/_build/html`.
 
-## External Data:
+## Technical Details: 
 
-Atomic weights taken from the [NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some). 
+### External Data:
 
-Covalent radii taken from [**Dalton Trans.** *2008*, 2832&ndash;2838](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract). (when multiple atomic types were specified, the one with longer bond distances was adopted).
+*cctk* depends on some external data, stored in `cctk/data/`:
+- Atomic weights are taken from the 
+[NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some) 
+and stored in `cctk/data/isotopes.csv`.
+- Covalent radii are taken from 
+[**Dalton Trans.** *2008*, 2832&ndash;2838](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract) 
+and stored in `cctk/data/covalent_radii.csv`.
+(When multiple atomic types were specified, the one with longer bond distances was adopted for simplicity).
 
 *Written by Eugene Kwan and Corin Wagen.*
