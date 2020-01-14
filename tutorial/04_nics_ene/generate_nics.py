@@ -3,7 +3,7 @@ import numpy as np
 
 from cctk import GaussianFile, ConformationalEnsemble
 
-#### Usage: ``python resubmit.py --type all --perturb "path/to/output/*.out"``
+#### Usage: ``python generate_nics.py "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
 
 #### NOTE: This file will reject any file that contains the string "slurm."
@@ -33,6 +33,5 @@ for mol in new_ensemble.molecules:
 
     newfile = f"nics_{int(round(cc_dist*1000))}.gjf"
     GaussianFile.write_molecule_to_file(newfile, mol, "#p nmr m062x/6-31g(d)", None)
-#    GaussianFile.write_molecule_to_file(newfile, mol, "#p nmr pop=hirshfeld m062x/6-31g(d)", None)
     print(f"generating {newfile}...")
 

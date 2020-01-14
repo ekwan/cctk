@@ -116,25 +116,25 @@ def read_geometries_and_energies(lines):
         return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
     else:
         (geometry, symbol_list) = extract_initial_geometry(lines)
-        return [geometry], symbol_list, [], []         
+        return [geometry], symbol_list, [], []
 
 def search_for_block(lines, start, end, count=1, join=''):
     """
     Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 
-    Args: 
+    Args:
         lines (list): a list of the lines in the file
         start (str): a pattern that matches the start of the block (can contain special characters)
         end (str): a pattern that matches the end of the block (can contain special characters)
         count (int): how many matches to search for
         join (str): spacer between lines
 
-    Returns: 
+    Returns:
         a single match (str) if count == 1 or a list of matches (str) if count > 1.
     """
     assert isinstance(count, int), "count needs to be an integer"
     assert isinstance(join, str), "join needs to be a string"
-    
+
     current_match = ""
     match = [None] * count
 
@@ -255,11 +255,11 @@ def find_parameter(lines, parameter, expected_length, which_field):
 
 def extract_initial_geometry(lines):
     """
-    Helper method to search through the output file and find the initial geometry/symbol list, in cases where no SCF iterations finished. 
+    Helper method to search through the output file and find the initial geometry/symbol list, in cases where no SCF iterations finished.
 
     Args:
         lines (list): list of lines in file
-    
+
     Returns:
         initial geometry (list)
         symbol list (list)

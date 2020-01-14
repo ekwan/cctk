@@ -5,15 +5,14 @@
 
 ## Contents: 
  - [Overview](#overview) 
- - [Requirements](#requirements)
  - [Installation](#installation)
- - [Structure](#structure)
- - [Documentation](#requirements)
- - [External Data](#external-data)
+ - [Contents](#contents)
+ - [Documentation](#documentation)
+ - [Technical Details](#technical-details)
 
 ## Overview:
 
-*cctk* is an open-source Python package designed to automate routine computational chemistry tasks. 
+*cctk* is an open-source Python package designed to automate generation and analysis of computational chemistry files. 
 
 Potential uses for *cctk* include: 
  - Monitoring one or many geometry optimizations. 
@@ -22,39 +21,62 @@ Potential uses for *cctk* include:
  - Screening different functionals and basis sets. 
  - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
  
+ For examples of how *cctk* can be used, 
+ refer to the [tutorials](https://github.com/ekwan/cctk/tree/master/tutorial). 
+ 
 ### Compatible File Types:
  - Gaussian 16 `.out` (read) and `.gjf` (read/write).
  - `.xyz` (read/write)
  - `.mol2` (read)
  - `.mae` (read)
+ - Orca `.inp` (write)
 
 ## Installation:
 
-For now, just use `git clone <git url>` - a more advanced way is coming.
+*cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
+A full list of requirements can be found in `environment.yml`.
 
-## Structure: 
+The preferred installation method is as follows (if you already have a working Python 3.7+ environment, you can skip steps 1 and 3): 
 
-Most *cctk* programs follow a rough 3-part outline: 
-
-1. Read in data from an output file (or files). 
-1. Perform some transformation (adding an atom, changing bond lengths, etc.). 
-1. Output an input file. 
-
-## Requirements:
-* Python 3.7 or later
-* Numpy
-* NetworkX
-* Sphinx
-
-Use of a package management system like `conda` or `miniconda` is recommended. To install all requirements, run:
+1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html). 
+2. `git clone` this repository, or download the `.zip` file and unzip it.
 
 ```
-pip install -r requirements.txt
+$ git clone git@github.com:ekwan/cctk.git
 ```
+
+3. Use `env.yml` to create a Conda environment called `cctk`:
+
+```
+$ cd cctk
+$ conda env create -f env.yml
+$ conda activate cctk
+```
+
+4. Add *cctk* to the `PYTHONPATH` in your bash configuration file (`~/.bashrc`) by adding the following line:
+
+```
+export PYTHONPATH="$PYTHONPATH:/path/to/cctk/"
+```
+
+(be sure to replace `/path/to/cctk/` with whatever's correct for your system!)
+
+5. Restart bash (or type `$ source ~/.bashrc)` to allow these changes to take effect. 
+
+You should now be able to import *cctk* as a Python library anywhere on your system. 
+
+
+## Contents: 
+
+- `cctk/` contains the Python modules for *cctk* and the accompanying static data files.  
+- `docs/` contains the code needed to generate the documentation.  
+- `scripts/` contains pre-defined scripts that use *cctk* to quickly analyze and manipulate one or many output files.  
+- `test/` contains code to test *cctk* and accompanying files.  
+- `tutorial/` contains detailed tutorials on how to use *cctk* on complex, real-world problems.  
 
 ## Documentation:
 
-To build the documentation, run: 
+To build the documentation (which requires a few extra dependencies), run: 
 
 ```
 cd docs/
@@ -64,10 +86,17 @@ make html
 
 The documentation files can then be found in `docs/_build/html`.
 
-## External Data:
+## Technical Details: 
 
-Atomic weights taken from the [NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some). 
+### External Data:
 
-Covalent radii taken from [**Dalton Trans.** *2008*, 2832&ndash;2838](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract). (when multiple atomic types were specified, the one with longer bond distances was adopted).
+*cctk* depends on some external data, stored in `cctk/data/`:
+- Atomic weights are taken from the 
+[NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some) 
+and stored in `cctk/data/isotopes.csv`.
+- Covalent radii are taken from 
+[**Dalton Trans.** *2008*, 2832&ndash;2838](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract) 
+and stored in `cctk/data/covalent_radii.csv`.
+(When multiple atomic types were specified, the one with longer bond distances was adopted for simplicity).
 
 *Written by Eugene Kwan and Corin Wagen.*

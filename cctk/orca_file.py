@@ -13,6 +13,7 @@ class OrcaFile(File):
     Attributes:
         title (str): the title from the file
         molecules (ConformationalEnsemble): `ConformationalEnsemble` instance
+        header (str): file header
     """
 
     def __init__(self, molecule, title=None):
@@ -23,8 +24,6 @@ class OrcaFile(File):
 
     @classmethod
     def read_file(cls, filename):
-        """
-        """
         pass
 
     def write_file(self, filename, molecule=None, header=None):
@@ -95,4 +94,4 @@ class OrcaFile(File):
         if num > 0:
             num += -1
 
-        return self.molecules.molecules[num]
+        return self.molecules[num]

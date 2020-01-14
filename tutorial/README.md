@@ -18,5 +18,5 @@ Demonstrates how to use *cctk* to create structures spanning a 2D potential-ener
 
 #### Tutorial 4: `nics_ene`:
 
-Teaches how to extract structures from IRC calculations and visualize how molecular parameter (e.g. NICS, Hirschfeld charges) change along the reaction coordinate. 
+Teaches how to extract structures from IRC calculations and visualize how molecular parameter (e.g. NICS, Hirshfeld charges) change along the reaction coordinate. 
 (Requires access to Gaussian.)
