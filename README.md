@@ -33,27 +33,24 @@ Potential uses for *cctk* include:
 
 ## Installation:
 
-*cctk* requires Python 3.7, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
-A full list of requirements can be found in `requirements.txt`.
+*cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
+A full list of requirements can be found in `environment.yml`.
 
-The preferred setup method is as follows: 
+The preferred installation method is as follows (if you already have a working Python 3.7+ environment, you can skip steps 1 and 3): 
 
-1. Install Python 3.7+ and 
-[`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html)
-2. Create a new environment called `cctk` (the name is arbitrary): 
-
-```
-$ conda create --name cctk python=3.8
-$ source activate cctk
-```
-
-3. `git clone` this repository, or download the `.zip` file, 
-and use `pip` to install the required packages into the `cctk` environment:
+1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html). 
+2. `git clone` this repository, or download the `.zip` file and unzip it.
 
 ```
 $ git clone git@github.com:ekwan/cctk.git
+```
+
+3. Use `env.yml` to create a Conda environment called `cctk`:
+
+```
 $ cd cctk
-$ pip install -r requirements.txt
+$ conda env create -f env.yml
+$ conda activate cctk
 ```
 
 4. Add *cctk* to the `PYTHONPATH` in your bash configuration file (`~/.bashrc`) by adding the following line:
@@ -61,6 +58,7 @@ $ pip install -r requirements.txt
 ```
 export PYTHONPATH="$PYTHONPATH:/path/to/cctk/"
 ```
+
 (be sure to replace `/path/to/cctk/` with whatever's correct for your system!)
 
 5. Restart bash (or type `$ source ~/.bashrc)` to allow these changes to take effect. 
@@ -78,7 +76,7 @@ You should now be able to import *cctk* as a Python library anywhere on your sys
 
 ## Documentation:
 
-To build the documentation, run: 
+To build the documentation (which requires a few extra dependencies), run: 
 
 ```
 cd docs/
