@@ -202,7 +202,7 @@ def read_bonds(lines):
                     raise ValueError(f"error parsing line {i} - can't extract atoms!")
                 i += 1
                 continue
-            elif re.search(r"! A", line):
+            elif (re.search(r"! A", line)) or (re.search("----", line)):
                 in_bonding_section = False
                 bond_array = current_array
                 current_array = []
@@ -248,7 +248,10 @@ def find_parameter(lines, parameter, expected_length, which_field):
                 fields = list(filter(None, fields))
 
                 if len(fields) == expected_length:
-                    matches.append(float(fields[which_field]))
+                    try:
+                        matches.append(float(fields[which_field]))
+                    except:
+                        pass
         return matches
 
 
