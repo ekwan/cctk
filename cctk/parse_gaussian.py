@@ -118,7 +118,8 @@ def read_geometries_and_energies(lines):
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
 
-def search_for_block(lines, start, end, count=1, join=''):
+
+def search_for_block(lines, start, end, count=1, join=""):
     """
     Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 
@@ -249,6 +250,7 @@ def find_parameter(lines, parameter, expected_length, which_field):
                 if len(fields) == expected_length:
                     matches.append(float(fields[which_field]))
         return matches
+
 
 def extract_initial_geometry(lines):
     """

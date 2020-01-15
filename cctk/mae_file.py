@@ -7,6 +7,7 @@ from abc import abstractmethod
 from cctk import File, Ensemble, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, get_number
 
+
 class MAEFile(File):
     """
     Generic class for all ``.mae`` files.
@@ -47,7 +48,9 @@ class MAEFile(File):
         return file, p_names, p_vals
 
     @classmethod
-    def _read_mae(cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False, ):
+    def _read_mae(
+        cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False,
+    ):
         """
         Reads uncompressed Macromodel files.
 
@@ -118,21 +121,15 @@ class MAEFile(File):
                 if line.startswith("i_m_ct_format"):
                     next_line = lines[i].strip()
                     if next_line != ":::":
-                        raise ValueError(
-                            f"expected ':::' here but line {i+1} is:\n{next_line}\n"
-                        )
+                        raise ValueError(f"expected ':::' here but line {i+1} is:\n{next_line}\n")
                     current_block_type = "property_values"
                     i += 1
                 elif line.startswith(":::"):
-                    raise ValueError(
-                        f"expected to see i_m_ct_format as the last property (line {i+1})"
-                    )
+                    raise ValueError(f"expected to see i_m_ct_format as the last property (line {i+1})")
                 else:
                     fields = re.split(" +", line)
                     if len(fields) != 1:
-                        raise ValueError(
-                            f"unexpected number of fields in property name line: {line}"
-                        )
+                        raise ValueError(f"unexpected number of fields in property name line: {line}")
                     this_property_names.append(line)
 
             # read property values
@@ -189,9 +186,7 @@ class MAEFile(File):
                     if bond_order <= 0:
                         raise ValueError(f"zero or negative bond order: {line}")
                     if this_bonds.number_of_edges() != bond_number - 1:
-                        raise ValueError(
-                            f"non-sequential bond number (expected {this_bonds.number_of_edges()+1} but got {bond_number})"
-                        )
+                        raise ValueError(f"non-sequential bond number (expected {this_bonds.number_of_edges()+1} but got {bond_number})")
                     if this_bonds.has_edge(atom1, atom2):
                         current_bond_order = this_bonds[atom1][atom2]["weight"]
                         if current_bond_order != bond_order:
@@ -210,9 +205,7 @@ class MAEFile(File):
             contains_conformers = True
             for this_symbols, this_bonds in zip(symbols[1:], bonds[1:]):
                 # must have the same symbols and bonds
-                if not (symbols[0] == this_symbols).all() or not nx.is_isomorphic(
-                    bonds[0], this_bonds
-                ):
+                if not (symbols[0] == this_symbols).all() or not nx.is_isomorphic(bonds[0], this_bonds):
                     contains_conformers = False
                     break
         elif isinstance(contains_conformers, bool):
@@ -233,9 +226,7 @@ class MAEFile(File):
                     n_atoms = len(geometries[0])
                     n_bonds = bonds.number_of_edges()
                     if print_status_messages:
-                        print(
-                            f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
-                        )
+                        print(f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds).")
                 else:
                     min_n_atoms = len(geometries[0])
                     max_n_atoms = len(geometries[0])
@@ -252,9 +243,7 @@ class MAEFile(File):
                         elif this_bonds.number_of_edges() < min_n_bonds:
                             min_n_bonds = bonds.number_of_edges
                     if print_status_messages:
-                        print(
-                            f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
-                        )
+                        print(f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds).")
             else:
                 n_atoms = len(geometries)
                 n_bonds = bonds.number_of_edges()

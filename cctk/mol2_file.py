@@ -7,6 +7,7 @@ from abc import abstractmethod
 from cctk import File, Ensemble, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, get_number
 
+
 class MOL2File(File):
     """
     Generic class for all ``.mol2`` files.
@@ -45,7 +46,9 @@ class MOL2File(File):
         return file
 
     @classmethod
-    def _read_mol2(cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False, ):
+    def _read_mol2(
+        cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False,
+    ):
         """
         Reads .mol2 files into cctk.
 
@@ -160,9 +163,7 @@ class MOL2File(File):
                         if this_bonds.has_edge(atom1, atom2):
                             current_bond_order = this_bonds[atom1][atom2]["weight"]
                             if current_bond_order != bond_order:
-                                raise ValueError(
-                                    f"inconsistent bond order definition: {line}"
-                                )
+                                raise ValueError(f"inconsistent bond order definition: {line}")
                         this_bonds.add_edge(atom1, atom2, weight=bond_order)
                         this_bonds.add_edge(atom2, atom1, weight=bond_order)
                     except:
@@ -200,9 +201,7 @@ class MOL2File(File):
             contains_conformers = True
             for symbols, bonds in zip(all_symbols[1:], all_bonds[1:]):
                 # must have the same symbols and bonds
-                if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(
-                    all_bonds[0], bonds
-                ):
+                if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(all_bonds[0], bonds):
                     contains_conformers = False
                     break
         elif isinstance(contains_conformers, bool):
@@ -224,9 +223,7 @@ class MOL2File(File):
                     n_atoms = len(all_geometries[0])
                     n_bonds = all_bonds.number_of_edges()
                     if print_status_messages:
-                        print(
-                            f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
-                        )
+                        print(f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds).")
                 else:
                     min_n_atoms = len(all_geometries[0])
                     max_n_atoms = len(all_geometries[0])
@@ -243,9 +240,7 @@ class MOL2File(File):
                         elif bonds.number_of_edges() < min_n_bonds:
                             min_n_bonds = bonds.number_of_edges
                     if print_status_messages:
-                        print(
-                            f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
-                        )
+                        print(f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds).")
             else:
                 n_atoms = len(all_geometries)
                 n_bonds = all_bonds.number_of_edges()

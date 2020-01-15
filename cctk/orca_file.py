@@ -6,6 +6,7 @@ from abc import abstractmethod
 from cctk import File, Molecule, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
+
 class OrcaFile(File):
     """
     Generic class for all Orca `.inp` and `.out` files.
@@ -16,11 +17,13 @@ class OrcaFile(File):
         header (str): file header
     """
 
-    def __init__(self, molecule, title=None):
-        if molecule and isinstance(molecule, Molecule):
-            self.molecule = molecule
+    def __init__(self, molecules, title=None, header=None):
+        if molecules and isinstance(molecules, ConformationalEnsemble):
+            self.molecules = molecules
         if title and (isinstance(title, str)):
             self.title = title
+        if header and (isinstance(header, str)):
+            self.header = header
 
     @classmethod
     def read_file(cls, filename):
@@ -45,7 +48,6 @@ class OrcaFile(File):
 
         self.write_molecule_to_file(filename, molecule, header)
 
-
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, header):
         """
@@ -55,9 +57,6 @@ class OrcaFile(File):
             filename (str): path to the new file
             molecule (Molecule): which molecule to use -- a``Molecule`` object.
             header (str): header for new file
-            memory (int): how many GB of memory to request
-            cores (int): how many CPU cores to request
-            title (str): title of the file, defaults to "title"
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
@@ -65,7 +64,7 @@ class OrcaFile(File):
         if (header is None) or (not isinstance(header, str)):
             raise ValueError("can't write a file without a header")
 
-        text += f"{header.strip()}\n\n"
+        text = f"{header.strip()}\n\n"
 
         text += f"* xyz {int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, line in enumerate(molecule.geometry):

@@ -1,4 +1,4 @@
-#import sys
+# import sys
 import re
 import numpy as np
 import copy
@@ -6,7 +6,8 @@ import copy
 from cctk import Molecule
 from cctk.helper_functions import align_matrices, compute_RMSD
 
-class Ensemble():
+
+class Ensemble:
     """
     Class that represents a group of molecules. They do not all need to have the same atoms or bonds.
 
@@ -34,7 +35,7 @@ class Ensemble():
             self.batch_add(**kwargs)
 
     def __getitem__(self, key):
-         return self.molecules[key]
+        return self.molecules[key]
 
     def __setitem__(self, key, item):
         self.molecules[key] = item
@@ -62,7 +63,9 @@ class Ensemble():
         if bonds is None:
             bonds = [None] * len(atomic_numbers)
 
-        assert all(len(x) == len(atomic_numbers) for x in [geometries, bonds, charges, multiplicities]), "uneven list lengths -- cannot batch create molecules!"
+        assert all(
+            len(x) == len(atomic_numbers) for x in [geometries, bonds, charges, multiplicities]
+        ), "uneven list lengths -- cannot batch create molecules!"
 
         for numbers, geometry, bond_edges, charge, multiplicity in zip(atomic_numbers, geometries, bonds, charges, multiplicities):
             if len(numbers) != len(geometry):
@@ -207,8 +210,7 @@ class ConformationalEnsemble(Ensemble):
 
         return new_ensemble
 
-
-    def align (self, align_to=1, atoms=None):
+    def align(self, align_to=1, atoms=None):
         """
         Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
 
@@ -233,7 +235,7 @@ class ConformationalEnsemble(Ensemble):
             centroid = molecule.geometry[atoms].mean(axis=0)
             molecule.translate_molecule(-centroid)
 
-        template = self.molecules[align_to-1].geometry[atoms]
+        template = self.molecules[align_to - 1].geometry[atoms]
 
         #### perform alignment
         for molecule in self.molecules:
@@ -253,7 +255,7 @@ class ConformationalEnsemble(Ensemble):
             atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides `heavy_only`
         """
         if atom_numbers:
-            atom_numbers = [n-1 for n in atom_numbers]
+            atom_numbers = [n - 1 for n in atom_numbers]
         else:
             if heavy_only:
                 atom_numbers = self.molecules[0].get_heavy_atoms()
@@ -264,11 +266,11 @@ class ConformationalEnsemble(Ensemble):
             for n in atom_numbers:
                 try:
                     #### atom_numbers is 0-indexed
-                    m._check_atom_number(n+1)
+                    m._check_atom_number(n + 1)
                 except:
                     raise ValueError(f"molecule in ensemble does not have atom {n}!")
 
-        #### align all molecules 
+        #### align all molecules
         self.align(atoms=atom_numbers)
 
         to_delete = [False] * len(self.molecules)
@@ -276,7 +278,7 @@ class ConformationalEnsemble(Ensemble):
         for i in range(len(self.molecules)):
             if to_delete[i]:
                 continue
-            for j in range(i+1, len(self.molecules)):
+            for j in range(i + 1, len(self.molecules)):
                 if to_delete[j]:
                     continue
 
@@ -287,7 +289,7 @@ class ConformationalEnsemble(Ensemble):
                 if rmsd < cutoff:
                     to_delete[j] = True
 
-        #### you have to delete in reverse order or you'll throw off the subsequent indices 
+        #### you have to delete in reverse order or you'll throw off the subsequent indices
         for i in sorted(range(len(self.molecules)), reverse=True):
             if to_delete[i]:
                 self.molecules = np.delete(self.molecules, i)
@@ -329,4 +331,3 @@ class ConformationalEnsemble(Ensemble):
 
     def get_within_cutoff(self, cutoff=5):
         return self.molecules[self.energies <= (np.min(self.energies) + 5)]
-

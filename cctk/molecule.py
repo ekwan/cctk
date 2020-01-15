@@ -112,8 +112,8 @@ class Molecule:
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
-                elif self.get_bond_order(i,j):
-                    self.remove_bond(i,j)
+                elif self.get_bond_order(i, j):
+                    self.remove_bond(i, j)
 
         return self
 
@@ -178,7 +178,6 @@ class Molecule:
                     self.bonds[atom1][atom2]["weight"] = bond_order
         elif bond_order > 0:
             self.bonds.add_edge(atom1, atom2, weight=bond_order)
-
 
     def remove_bond(self, atom1, atom2):
         """
@@ -245,8 +244,8 @@ class Molecule:
 
             return formula
 
-#### very fast but causes errors sometimes... so i'm commenting this out until further consultation.
-#    @lru_cache(maxsize=32)
+    #### very fast but causes errors sometimes... so i'm commenting this out until further consultation.
+    #    @lru_cache(maxsize=32)
     def _get_bond_fragments(self, atom1, atom2, bond_order=1):
         """
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
@@ -691,7 +690,7 @@ class Molecule:
             self.bonds.remove_node(number)
             self.geometry = np.delete(self.geometry, number - 1, axis=0)
             self.atomic_numbers.pop(number - 1)
-            return self 
+            return self
         except:
             raise ValueError("removing atom {number} failed!")
 
@@ -756,10 +755,7 @@ class Molecule:
             self._check_atom_number(atom1)
             self._check_atom_number(atom2)
 
-        return _dist(
-            self.get_vector(atom1, check=False),
-            self.get_vector(atom2, check=False)
-        )
+        return _dist(self.get_vector(atom1, check=False), self.get_vector(atom2, check=False))
 
     def get_sq_distance(self, atom1, atom2, check=True):
         """
@@ -854,7 +850,7 @@ class Molecule:
             self.get_vector(atom1, check=False),
             self.get_vector(atom2, check=False),
             self.get_vector(atom3, check=False),
-            self.get_vector(atom4, check=False)
+            self.get_vector(atom4, check=False),
         )
 
     def get_bond_order(self, atom1, atom2):
@@ -943,7 +939,7 @@ class Molecule:
                     continue
                 distance += self.get_distance(i, j) ** 2
 
-        return math.sqrt(distance)/self.num_atoms()
+        return math.sqrt(distance) / self.num_atoms()
 
     def optimize_dihedral(self, atom1, atom2, atom3, atom4):
         """
@@ -967,7 +963,7 @@ class Molecule:
         best_angle = 0
         best_dist = 0
 
-        for angle in range(0,360):
+        for angle in range(0, 360):
             self.set_dihedral(atom1, atom2, atom3, atom4, angle)
             if self.rms_distance_between_atoms() > best_dist:
                 best_dist = self.rms_distance_between_atoms()

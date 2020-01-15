@@ -211,5 +211,39 @@ class TestGroup(unittest.TestCase):
 
         os.remove(new_path)
 
+class TestXYZ(unittest.TestCase):
+    def test_writefile(self):
+        read_path = "static/test_peptide.xyz"
+        path = "static/test_peptide.inp"
+        new_path = "static/test_peptide_copy.inp"
+
+        file = cctk.XYZFile.read_file(read_path)
+        header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint\n%pal nproc 4 end\n%maxcore 4000\n%mdci\n    density none\nend"
+        cctk.OrcaFile.write_molecule_to_file(new_path, file.molecule, header)
+
+        with open(path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
+
+        ensemble = cctk.ConformationalEnsemble()
+        ensemble.add_molecule(file.molecule)
+
+        orca_file = cctk.OrcaFile(molecules=ensemble, header=header)
+        orca_file.write_file(new_path)
+
+        with open(path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
+
 if __name__ == '__main__':
     unittest.main()

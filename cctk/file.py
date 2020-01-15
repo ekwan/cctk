@@ -5,11 +5,13 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 
+
 class File(ABC):
     """
     Represents a text file for use as input or output to another program like Gaussian.
     This class is abstract.
     """
+
     @abstractmethod
     def __init__(self):
         pass
@@ -35,7 +37,7 @@ class File(ABC):
             raise ValueError(f"{filename} already exists but not allowed to overwrite")
         else:
             try:
-                with open(filename, 'w+') as output_file:
+                with open(filename, "w+") as output_file:
                     output_file.write(text)
                 return True
             except OSError as e:
@@ -44,7 +46,7 @@ class File(ABC):
 
     @staticmethod
     def read_file(filename):
-        '''
+        """
         Reads a file and parses into lines.
 
         Args:
@@ -52,7 +54,7 @@ class File(ABC):
 
         Returns:
             A list containing all the lines in the file.
-        '''
-        with open(filename, 'r') as filehandle:
+        """
+        with open(filename, "r") as filehandle:
             lines = filehandle.read().splitlines()
             return lines

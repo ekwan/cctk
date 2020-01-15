@@ -7,9 +7,9 @@ from cctk import GaussianFile, Molecule
 #### Parameters:
 #### ``--type, -t``: which jobs to resubmit 
 ####     "failed": will resubmit jobs with no successes
-####     "all": will resubmit all jobs
+####     "all": will resubmit all jobs (default)
 #### ``--perturb, -p``: whether or not to apply a random geometric perturbation to each job
-#### ``--output, -o``: output file (only one)
+#### ``--output, -o``: name of output file (don't use with multiple output files!)
 
 #### Usage: ``python resubmit.py --type all --perturb "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!

@@ -8,18 +8,21 @@ from cctk.helper_functions import get_symbol, compute_distance_between, compute_
 
 import cctk.parse_gaussian as parse
 
+
 class JobType(Enum):
     """
     Class to contain allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
 
     The value should be the Gaussian keyword, to permit automatic assignment.
     """
+
     SP = "sp"
     OPT = "opt"
     FREQ = "freq"
-    IRC= "irc"
+    IRC = "irc"
     NMR = "nmr"
     POP = "pop"
+
 
 class GaussianFile(File):
     """
@@ -45,7 +48,9 @@ class GaussianFile(File):
         title (str): optional, title of .gjf file
     """
 
-    def __init__(self, atomic_numbers, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1):
+    def __init__(
+        self, atomic_numbers, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1
+    ):
         """
         Create new GaussianFile object.
 
@@ -76,7 +81,9 @@ class GaussianFile(File):
                 raise TypeError(f"invalid job type {job}")
 
         if (len(atomic_numbers) > 0) and (len(geometries) > 0):
-            self.molecules = ConformationalEnsemble(atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity)
+            self.molecules = ConformationalEnsemble(
+                atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity
+            )
         self.header = header
         self.footer = footer
         self.title = title
@@ -195,7 +202,7 @@ class GaussianFile(File):
                 success += 1
 
         (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
-        atomic_numbers = ''
+        atomic_numbers = ""
 
         try:
             atomic_numbers = np.array(atom_list, dtype=np.int8)
@@ -205,7 +212,7 @@ class GaussianFile(File):
         footer = None
         if re.search("modredundant", str(header)):
             footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
-            footer = "\n".join(list(footer.split("\n"))[1:]) # get rid of the first line
+            footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
             footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
         bonds = parse.read_bonds(lines)
