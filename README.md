@@ -109,7 +109,7 @@ Please email `cwagen@g.harvard.edu` with any questions or bug reports; we will d
 
 ## How to Cite:
 
-Wagen, C.C.; Kwan, E.E. *cctk* **2016**, [www.github.com/ekwan/cctk](www.github.com/ekwan/cctk).
+Wagen, C.C.; Kwan, E.E. *cctk* **2020**, [www.github.com/ekwan/cctk](www.github.com/ekwan/cctk).
 
 ## License:
 
