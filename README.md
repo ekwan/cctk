@@ -9,6 +9,9 @@
  - [Contents](#contents)
  - [Documentation](#documentation)
  - [Technical Details](#technical-details)
+ - [Authors](#authors)
+ - [How to Cite](#how-to-cite)
+ - [License](#license)
 
 ## Overview:
 
@@ -99,4 +102,17 @@ and stored in `cctk/data/isotopes.csv`.
 and stored in `cctk/data/covalent_radii.csv`.
 (When multiple atomic types were specified, the one with longer bond distances was adopted for simplicity).
 
-*Written by Eugene Kwan and Corin Wagen.*
+## Authors:
+
+*cctk* was written by Corin Wagen and Eugene Kwan at the Department of Chemistry and Chemical Biology at Harvard University. 
+Please email `cwagen@g.harvard.edu` with any questions or bug reports; we will do our best!
+
+## How to Cite:
+
+Wagen, C.C.; Kwan, E.E. *cctk* **2016**, [www.github.com/ekwan/cctk].
+
+## License:
+
+This project is licensed under the Apache License, Version 2.0: see `LICENSE` for full terms and conditions. 
+
+*Copyright 2020 by Corin Wagen and Eugene Kwan*
