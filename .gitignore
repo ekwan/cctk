@@ -18,3 +18,5 @@ tutorial/*nics_ene/IRC*
 tutorial/*nics_ene/starting*
 tutorial/*nics_ene/nics*
 tutorial/*nics_ene/pop*
+dist/*
+MANIFEST
