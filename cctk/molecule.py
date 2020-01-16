@@ -977,6 +977,12 @@ class Molecule:
         Returns the elemental symbol and the atom number for a given atom.
 
         For example, ``methane.atom_string(1)`` might return "C1".
+
+        Args:
+            atom (int): number of the atom
+
+        Returns:
+            the aforementioned atom string
         """
         try:
             atom = int(atom)
@@ -997,10 +1003,10 @@ class Molecule:
             size (float): stddev of the normal distribution
 
         Returns:
-            ``self``
+            the Molecule object
         """
-        geometry = np.array(self.geometry)
+        geometry = self.geometry
         random = np.random.normal(scale=size, size=geometry.shape)
 
-        self.geometry = list(geometry + random)
+        self.geometry = geometry + random
         return self
