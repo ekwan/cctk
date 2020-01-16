@@ -39,19 +39,29 @@ Potential uses for *cctk* include:
 *cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
 A full list of requirements can be found in `env.yml`.
 
-The recommended installation method is as follows 
-(users with a working Python 3.7+ environment can simply `pip install cctk`): 
+#### Installing with a working Python 3.7+ environment:
+
+Simply run: 
+```
+$ pip install cctk
+```
+
+#### Installing without a working Python 3.7+ environment:
+
+If you have a different version of Python (e.g. Python 2.7), 
+you can use a `conda` environment to run *cctk* without breaking existing packages.
 
 1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html).
 
-2. Use `env.yml` to create a Conda environment called `cctk`:
+2. Use `env.yml` to create a Conda environment called `cctk` and install *cctk*:
 
 ```
 $ cd cctk
 $ conda env create -f env.yml
 ```
 
-Now, simply run `conda activate cctk` to enter the *cctk*-compatible Python environment.
+Now, run `conda activate cctk` to enter the *cctk* Python environment (and `conda deactivate` to leave).
+(More complete guides to `conda` usage can be found elsewhere.)
 
 ## Contents: 
 
