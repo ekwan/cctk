@@ -37,37 +37,21 @@ Potential uses for *cctk* include:
 ## Installation:
 
 *cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
-A full list of requirements can be found in `environment.yml`.
+A full list of requirements can be found in `env.yml`.
 
-The preferred installation method is as follows (if you already have a working Python 3.7+ environment, you can skip steps 1 and 3): 
+The recommended installation method is as follows 
+(users with a working Python 3.7+ environment can simply `pip install cctk`): 
 
-1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html). 
-2. `git clone` this repository, or download the `.zip` file and unzip it.
+1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html).
 
-```
-$ git clone git@github.com:ekwan/cctk.git
-```
-
-3. Use `env.yml` to create a Conda environment called `cctk`:
+2. Use `env.yml` to create a Conda environment called `cctk`:
 
 ```
 $ cd cctk
 $ conda env create -f env.yml
-$ conda activate cctk
 ```
 
-4. Add *cctk* to the `PYTHONPATH` in your bash configuration file (`~/.bashrc`) by adding the following line:
-
-```
-export PYTHONPATH="$PYTHONPATH:/path/to/cctk/"
-```
-
-(be sure to replace `/path/to/cctk/` with whatever's correct for your system!)
-
-5. Restart bash (or type `$ source ~/.bashrc)` to allow these changes to take effect. 
-
-You should now be able to import *cctk* as a Python library anywhere on your system. 
-
+Now, simply run `conda activate cctk` to enter the *cctk*-compatible Python environment.
 
 ## Contents: 
 
