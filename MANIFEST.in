@@ -1,0 +1,2 @@
+recursive-include cctk/groups *
+recursive-include cctk/data *

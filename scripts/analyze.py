@@ -16,7 +16,7 @@ from cctk import GaussianFile, Molecule
 
 filenames = sys.argv[1]
 info = []
-text_width = 70
+text_width = 60
 
 for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
@@ -26,6 +26,11 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
         output_file = GaussianFile.read_file(filename)
 
         energy = output_file.energies[-1]
+        gibbs = "          --  "
+        try:
+            gibbs = f"{output_file.gibbs_free_energy:16.4f}"
+        except:
+            pass
         iters = len(output_file.energies)
         rms_disp  = 0
         rms_force = 0
@@ -51,10 +56,10 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
             #### Will raise ValueError if job is not of type "FREQ"
             pass
 
-        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])
+        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries, gibbs])
 
     except:
-        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])
+        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", '', ''])
 
 
 if len(info) > 0:
@@ -66,12 +71,12 @@ if len(info) > 0:
 
     info = list(map(adjust_energy, info))
 
-    print("{0:{text_width}}    {1:16}    {2:17}    {3:10}    {4:9}    {5:16}    {6:10}     {7:>15}".format(
-        "File", "Energy (Hartree)", "Rel Energy (kcal)", "Iterations", "RMS Force", "RMS Displacement", "Success?", "Imaginaries?", text_width=text_width
+    print("{0:{text_width}}    {1:14}    {8:14}    {2:15}    {3:10}    {4:9}    {5:16}    {6:10}     {7:>12}".format(
+        "File", "Energy (Hartree)", "Rel Energy (kcal)", "Iterations", "RMS Force", "RMS Displacement", "Success?", "Imaginaries?", "Gibbs (Hartree)", text_width=text_width
     ))
 
     for row in info:
-        print("{0:{text_width}}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row, text_width=text_width))
+        print("{0:{text_width}}    {1:14.4f}    {8:14s}    {2:15.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>12}".format(*row, text_width=text_width))
 
 else:
     print("no jobs to analyze!")
