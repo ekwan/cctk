@@ -607,7 +607,7 @@ class Molecule:
         rot_matrix = compute_rotation_matrix(axis, degrees)
 
         for atom in range(0, self.num_atoms()):
-            self.geometry[atom] = list(np.dot(rot_matrix, self.get_vector(atom)))
+            self.geometry[atom] = list(np.dot(rot_matrix, self.geometry[atom]))
 
         return self
 

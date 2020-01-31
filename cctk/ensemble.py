@@ -217,17 +217,27 @@ class ConformationalEnsemble(Ensemble):
         Args:
             align_to (int): which geometry to align to (1-indexed)
             atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
+                alternatively, specify "None" for all atoms or "heavy" for all heavy atoms
+
+        Returns:
+            a new Ensemble() object with the objects aligned
         """
         self._check_molecule_number(align_to)
 
-        if atoms and (len(atoms) < 3):
-            raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
+        if atoms is None:
+            atoms = np.arange(0, self.molecules[0].num_atoms())
+        elif isinstance(atoms, str) and (atoms == "heavy"):
+            atoms = self.molecules[0].get_heavy_atoms()
+        else:
+            try:
+                atoms = np.array(atoms)
+                atoms += -1
 
-        try:
-            atoms = np.array(atoms)
-            atoms += -1
-        except:
-            raise ValueError("atom_numbers cannot be cast to numpy array... disappointing!")
+                if len(atoms) < 3:
+                    raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
+
+            except:
+                raise ValueError("atom numbers is not a recognized keyword and cannot be cast to numpy array... try again!")
 
         #### atom numbers is 0-indexed now
         #### move everything to the center!
@@ -237,10 +247,10 @@ class ConformationalEnsemble(Ensemble):
 
         template = self.molecules[align_to - 1].geometry[atoms]
 
-        #### perform alignment
+        #### perform alignment using Kabsch algorithm
         for molecule in self.molecules:
             new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
-            self.geometry = new_geometry
+            molecule.geometry = new_geometry
 
             assert len(molecule.geometry) == len(molecule.atomic_numbers), "wrong number of geometry elements!"
 

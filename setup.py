@@ -7,17 +7,17 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="cctk",
-    packages=["cctk"],
+    packages=["cctk", "cctk.data", "cctk.groups"],
 #    include_package_data=True,
-    package_data={"cctk": ["cctk/data/*", "cctk/groups/*"]},
-    version="v0.1.0",
+    package_data={"cctk.data": ["*"], "cctk.groups": ["*"],},
+    version="v0.1.2",
     license="Apache 2.O",
     description="computational chemistry toolkit",
     author="Corin Wagen and Eugene Kwan",
     author_email="corin.wagen@gmail.com",
     url="https://github.com/ekwan/cctk",
-    download_url="https://github.com/ekwan/cctk/archive/v0.1.0.tar.gz",
-    install_requires=["numpy", "networkx",],
+    download_url="https://github.com/ekwan/cctk/archive/v0.1.2.tar.gz",
+    install_requires=["numpy", "networkx", "importlib_resources"],
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[

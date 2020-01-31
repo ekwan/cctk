@@ -1,4 +1,4 @@
-import unittest, sys, os, io
+import unittest, sys, os, io, copy
 import numpy as np
 import cctk
 
@@ -244,6 +244,46 @@ class TestXYZ(unittest.TestCase):
                 )
 
         os.remove(new_path)
+
+class TestEnsemble(unittest.TestCase):
+    def generate_test_ensemble(self):
+        path = "static/test_peptide.xyz"
+        file = cctk.XYZFile.read_file(path)
+        mol = file.molecule
+
+        e1 = np.array([1, 0, 0])
+        e2 = np.array([0, 1, 0])
+        e3 = np.array([0, 0, 1])
+
+        ensemble = cctk.ConformationalEnsemble()
+        ensemble.add_molecule(mol)
+        self.assertEqual(len(ensemble.molecules), 1)
+
+        mol_rot = copy.deepcopy(ensemble.molecules[0]).rotate_molecule(e1, 90)
+        ensemble.add_molecule(mol_rot)
+        self.assertEqual(len(ensemble.molecules), 2)
+
+        mol_trans = copy.deepcopy(ensemble.molecules[0]).translate_molecule(e2)
+        ensemble.add_molecule(mol_trans)
+        self.assertEqual(len(ensemble.molecules), 3)
+
+        mol_trans_rot = ensemble.molecules[1].translate_molecule(e2)
+        ensemble.add_molecule(mol_trans_rot)
+        self.assertEqual(len(ensemble.molecules), 4)
+
+        mol_rot_trans = ensemble.molecules[2].rotate_molecule(e1, 90)
+        ensemble.add_molecule(mol_rot_trans)
+        self.assertEqual(len(ensemble.molecules), 5)
+
+        return ensemble
+
+    def test_align(self):
+        ensemble = self.generate_test_ensemble()
+        ensemble.align()
+        template = ensemble.molecules[0].geometry
+        for molecule in ensemble.molecules:
+            for i in range(0,len(template)):
+                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
 if __name__ == '__main__':
     unittest.main()
