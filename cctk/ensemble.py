@@ -217,7 +217,7 @@ class ConformationalEnsemble(Ensemble):
         Args:
             align_to (int): which geometry to align to (1-indexed)
             atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
-                alternatively, specify "None" for all atoms or "heavy" for all heavy atoms
+                alternatively, specify ``None`` for all atoms or "heavy" for all heavy atoms
 
         Returns:
             a new Ensemble() object with the objects aligned

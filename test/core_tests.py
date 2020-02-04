@@ -267,23 +267,47 @@ class TestEnsemble(unittest.TestCase):
         ensemble.add_molecule(mol_trans)
         self.assertEqual(len(ensemble.molecules), 3)
 
-        mol_trans_rot = ensemble.molecules[1].translate_molecule(e2)
+        mol_trans_rot = copy.deepcopy(ensemble.molecules[1].translate_molecule(e2))
         ensemble.add_molecule(mol_trans_rot)
         self.assertEqual(len(ensemble.molecules), 4)
 
-        mol_rot_trans = ensemble.molecules[2].rotate_molecule(e1, 90)
+        mol_rot_trans = copy.deepcopy(ensemble.molecules[2].rotate_molecule(e1, 90))
         ensemble.add_molecule(mol_rot_trans)
         self.assertEqual(len(ensemble.molecules), 5)
 
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[4].rotate_molecule(e3, 20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[5].rotate_molecule(e3, 20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[6].rotate_molecule(e3, 20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[7].rotate_molecule(e3, 20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[4].rotate_molecule(e3, -20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[5].rotate_molecule(e3, -20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[6].rotate_molecule(e3, -20)))
+        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[7].rotate_molecule(e3, -20)))
         return ensemble
 
     def test_align(self):
+        #### since all the molecules are identical, every way we do this should be totally fine
         ensemble = self.generate_test_ensemble()
         ensemble.align()
         template = ensemble.molecules[0].geometry
         for molecule in ensemble.molecules:
             for i in range(0,len(template)):
                 self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
+
+        ensemble2 = self.generate_test_ensemble()
+        ensemble2.align(atoms="heavy")
+        template = ensemble2.molecules[0].geometry
+        for molecule in ensemble2.molecules:
+            for i in range(0,len(template)):
+                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
+
+        ensemble3 = self.generate_test_ensemble()
+        ensemble3.align(atoms=[13, 4, 27, 6, 9, 14])
+        template = ensemble3.molecules[0].geometry
+        for molecule in ensemble3.molecules:
+            for i in range(0,len(template)):
+                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
+
 
 if __name__ == '__main__':
     unittest.main()
