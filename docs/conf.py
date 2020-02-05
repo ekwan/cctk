@@ -18,7 +18,7 @@ master_doc = 'index'
 # -- Project information -----------------------------------------------------
 
 project = 'cctk'
-copyright = '2019, Eugene Kwan and Corin Wagen'
+copyright = '2020, Eugene Kwan and Corin Wagen'
 author = 'Eugene Kwan and Corin Wagen'
 
 

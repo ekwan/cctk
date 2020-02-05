@@ -13,8 +13,7 @@ sphinx:
 formats: all
 
 # Optionally set the version of Python and requirements required to build your docs
-python:
-  setup_py_install: true
+#python:
 
 submodules:
   include: all
