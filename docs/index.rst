@@ -3,8 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cctk's documentation!
-================================
+====
+cctk
+====
+
+computational chemistry toolkit
+====
+
+*cctk* is an open-source Python 3 package designed to automate generation and analysis of computational chemistry files. 
+For more information, please see the :ref:`intro<introduction>`.
+
 
 .. toctree::
    :maxdepth: 4

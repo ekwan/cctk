@@ -1,3 +1,5 @@
+.. _intro:
+
 ====
 cctk
 ====
@@ -49,8 +51,8 @@ If you have a different version of Python (e.g. Python 2.7), you can use a ``con
 1. Install ``conda``/``miniconda``.
 2. Use ``env.yml`` to create a Conda environment called ``cctk`` and install *cctk*:
 
-``$ cd cctk
-$ conda env create -f env.yml``
+``$ cd cctk``
+``$ conda env create -f env.yml``
 
 Now, run ``conda activate cctk`` to enter the ``cctk`` Python environment (and ``conda deactivate`` to leave). (More complete guides to ``conda`` usage can be found elsewhere.)
 
