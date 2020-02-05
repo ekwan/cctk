@@ -11,14 +11,6 @@ Subpackages
 Submodules
 ----------
 
-cctk.DEPRECATED\_cctk module
-----------------------------
-
-.. automodule:: cctk.DEPRECATED_cctk
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 cctk.ensemble module
 --------------------
 
