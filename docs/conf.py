@@ -11,7 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os, sys
-sys.path.insert(0, os.path.abspath('../cctk'))
+sys.path.append(os.path.abspath('..'))
 
 master_doc = 'index'
 
