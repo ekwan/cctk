@@ -73,7 +73,7 @@ Now, run `conda activate cctk` to enter the *cctk* Python environment (and `cond
 
 ## Documentation:
 
-The documentation for *cctk* can be found on [Read the Docs](cctk.readthedocs.io). 
+The documentation for *cctk* can be found on [Read the Docs](https://cctk.readthedocs.io). 
 
 ## Technical Details: 
 
@@ -95,7 +95,7 @@ Please email `cwagen@g.harvard.edu` with any questions or bug reports; we will d
 
 ## How to Cite:
 
-Wagen, C.C.; Kwan, E.E. *cctk* **2020**, [www.github.com/ekwan/cctk](www.github.com/ekwan/cctk).
+Wagen, C.C.; Kwan, E.E. *cctk* **2020**, [www.github.com/ekwan/cctk](https://www.github.com/ekwan/cctk).
 
 ## License:
 
