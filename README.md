@@ -73,15 +73,7 @@ Now, run `conda activate cctk` to enter the *cctk* Python environment (and `cond
 
 ## Documentation:
 
-To build the documentation (which requires a few extra dependencies), run: 
-
-```
-cd docs/
-sphinx-apidoc -o . ../cctk/
-make html
-```
-
-The documentation files can then be found in `docs/_build/html`.
+The documentation for *cctk* can be found on [Read the Docs](cctk.readthedocs.io). 
 
 ## Technical Details: 
 
