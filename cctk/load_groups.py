@@ -7,7 +7,7 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 from cctk import MOL2File, Group
-from cctk.group_substitution import add_group_to_molecule
+#from cctk.group_substitution import add_group_to_molecule
 
 from . import data, groups
 
