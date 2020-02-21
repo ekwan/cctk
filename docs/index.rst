@@ -23,6 +23,7 @@ For more information, please see the :ref:`intro`.
    ensemble
    file_io
    groups
+   tutorials
 
 
 Indices and tables

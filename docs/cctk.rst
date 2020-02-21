@@ -43,14 +43,6 @@ cctk.group module
    :undoc-members:
    :show-inheritance:
 
-cctk.group\_substitution module
--------------------------------
-
-.. automodule:: cctk.group_substitution
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 cctk.helper\_functions module
 -----------------------------
 

@@ -47,7 +47,7 @@ Currently *cctk* supports:
 We hope to add more filetypes in future releases. 
 
 Getting Started
-==============
+===============
 
 Installation
 ____________
