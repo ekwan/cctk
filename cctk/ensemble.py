@@ -220,7 +220,7 @@ class ConformationalEnsemble(Ensemble):
                 alternatively, specify ``None`` for all atoms or "heavy" for all heavy atoms
 
         Returns:
-            a new Ensemble() object with the objects aligned
+            a new ``Ensemble()`` object with the objects aligned
         """
         self._check_molecule_number(align_to)
 
@@ -248,11 +248,14 @@ class ConformationalEnsemble(Ensemble):
         template = self.molecules[align_to - 1].geometry[atoms]
 
         #### perform alignment using Kabsch algorithm
-        for molecule in self.molecules:
+        new_ensemble = copy.deepcopy(self)
+        for molecule in new_ensemble.molecules:
             new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
             molecule.geometry = new_geometry
 
             assert len(molecule.geometry) == len(molecule.atomic_numbers), "wrong number of geometry elements!"
+
+        return new_ensemble
 
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """
@@ -261,8 +264,11 @@ class ConformationalEnsemble(Ensemble):
 
         Args:
             cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated.
-            heavy_only (Bool): if `True`, then only heavy atoms are considered for the RMSD calculation
-            atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides `heavy_only`
+            heavy_only (Bool): if ``True``, then only heavy atoms are considered for the RMSD calculation
+            atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides ``heavy_only``
+
+        Returns:
+            a new ``ConformationalEnsemble`` object where redundant conformers have been deleted and all molecules have been aligned
         """
         if atom_numbers:
             atom_numbers = [n - 1 for n in atom_numbers]
@@ -281,29 +287,30 @@ class ConformationalEnsemble(Ensemble):
                     raise ValueError(f"molecule in ensemble does not have atom {n}!")
 
         #### align all molecules
-        self.align(atoms=atom_numbers)
+        new_ensemble = self.align(atoms=atom_numbers)
+        to_delete = [False] * len(new_ensemble.molecules)
 
-        to_delete = [False] * len(self.molecules)
-
-        for i in range(len(self.molecules)):
+        for i in range(len(new_ensemble.molecules)):
             if to_delete[i]:
                 continue
-            for j in range(i + 1, len(self.molecules)):
+            for j in range(i + 1, len(new_ensemble.molecules)):
                 if to_delete[j]:
                     continue
 
-                geometry1 = self.molecules[i].geometry[atom_numbers]
-                geometry2 = self.molecules[j].geometry[atom_numbers]
+                geometry1 = new_ensemble.molecules[i].geometry[atom_numbers]
+                geometry2 = new_ensemble.molecules[j].geometry[atom_numbers]
 
                 rmsd = compute_RMSD(geometry1, geometry2)
                 if rmsd < cutoff:
                     to_delete[j] = True
 
         #### you have to delete in reverse order or you'll throw off the subsequent indices
-        for i in sorted(range(len(self.molecules)), reverse=True):
+        for i in sorted(range(len(new_ensemble.molecules)), reverse=True):
             if to_delete[i]:
-                self.molecules = np.delete(self.molecules, i)
-                self.energies = np.delete(self.energies, i)
+                new_ensemble.molecules = np.delete(new_ensemble.molecules, i)
+                new_ensemble.energies = np.delete(new_ensemble.energies, i)
+
+        return new_ensemble
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """

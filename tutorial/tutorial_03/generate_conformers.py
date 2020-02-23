@@ -4,9 +4,7 @@ import copy
 from cctk import XYZFile, ConformationalEnsemble, GaussianFile
 
 #### Usage: ``python generate_conformers.py``
-
 #### This script takes an input ``.xyz`` file and outputs ~600 different conformations. 
-
 #### Corin Wagen and Eugene Kwan, 2019
 
 output_file = XYZFile.read_file('Ac-F2Ala-F2Ala-OMe.xyz')

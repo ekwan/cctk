@@ -60,7 +60,7 @@ Running this script on ``test.xyz`` generates the desired ``test.gjf`` input fil
 
     $ python read_from_xyz.py
 
-Contents of ``test.gjf``::
+Here are the contents of ``test.gjf``::
 
     %nprocshared=16
     %mem=32GB

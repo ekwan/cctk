@@ -1,6 +1,4 @@
-import sys
-import re
-import glob
+import sys, re, glob
 import numpy as np
 
 from cctk import GaussianFile, Molecule, ConformationalEnsemble

@@ -11,3 +11,5 @@ The following tutorials have been provided to demonstrate how *cctk* can be used
    :caption: Tutorials:
 
    tutorial_01
+   tutorial_02
+   tutorial_03
