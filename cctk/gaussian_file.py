@@ -149,6 +149,8 @@ class GaussianFile(File):
 
         if header is None:
             header = self.header
+
+        if footer is None:
             footer = self.footer
 
         self.write_molecule_to_file(filename, molecule, header, footer, **kwargs)

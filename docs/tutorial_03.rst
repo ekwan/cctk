@@ -36,15 +36,15 @@ in practice most of low-energy conformational space can be sampled
 by selecting a few key rotatable bonds and letting Gaussian's ``opt`` keyword do the rest.
 
 For the purposes of this study, we chose to study four key dihedral angles:
-1. Rotating around F2Ala #1's alpha carbon with respect to the amide (C3–C5–C8–O6)
-1. Rotating around F2Ala #2's alpha carbon with respect to the amide (H12–C11–C14–O16)
-1. Rotating the difluoromethyl group in F2Ala #1 (N1–C3–C5–H7)
-1. Rotating the difluoromethyl group in F2Ala #2 (N9–C11–C13–H15)
+ - Rotating around F2Ala #1's alpha carbon with respect to the amide (C3–C5–C8–O6)
+ - Rotating around F2Ala #2's alpha carbon with respect to the amide (H12–C11–C14–O16)
+ - Rotating the difluoromethyl group in F2Ala #1 (N1–C3–C5–H7)
+ - Rotating the difluoromethyl group in F2Ala #2 (N9–C11–C13–H15)
 
 We also chose to sample:
-1. *cis*/*trans* isomerism in F2Ala #1 (O27–C26–N1–H2)
-1. *cis*/*trans* isomerism in F2Ala #2 (O8–C6–N9–H10)
-1. Methyl ester conformation (O16–C14–O17–C18)
+ - *cis*/*trans* isomerism in F2Ala #1 (O27–C26–N1–H2)
+ - *cis*/*trans* isomerism in F2Ala #2 (O8–C6–N9–H10)
+ - Methyl ester conformation (O16–C14–O17–C18)
 
 Each of the dihedral angles in the first list was set to 0, 120, and 240 degrees, while
 each of the dihedral angles in the second list was set to 0 and 180 degrees (648 conformations in total).

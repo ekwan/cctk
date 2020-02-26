@@ -210,7 +210,7 @@ class ConformationalEnsemble(Ensemble):
 
         return new_ensemble
 
-    def align(self, align_to=1, atoms=None):
+    def align(self, align_to=1, atoms=None, return_rmsd=False):
         """
         Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
 
@@ -218,9 +218,11 @@ class ConformationalEnsemble(Ensemble):
             align_to (int): which geometry to align to (1-indexed)
             atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
                 alternatively, specify ``None`` for all atoms or "heavy" for all heavy atoms
+            return_rmsd (Bool): whether to return RMSD before and after rotation
 
         Returns:
             a new ``Ensemble()`` object with the objects aligned
+            (optional) before rmsd and after rmsd
         """
         self._check_molecule_number(align_to)
 
@@ -246,16 +248,23 @@ class ConformationalEnsemble(Ensemble):
             molecule.translate_molecule(-centroid)
 
         template = self.molecules[align_to - 1].geometry[atoms]
+        before_rmsd = 0
+        after_rmsd = 0
 
         #### perform alignment using Kabsch algorithm
         new_ensemble = copy.deepcopy(self)
         for molecule in new_ensemble.molecules:
+            before_rmsd += compute_RMSD(template, molecule.geometry[atoms])
             new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
             molecule.geometry = new_geometry
+            after_rmsd += compute_RMSD(template, molecule.geometry[atoms])
 
             assert len(molecule.geometry) == len(molecule.atomic_numbers), "wrong number of geometry elements!"
 
-        return new_ensemble
+        if return_rmsd:
+            return new_ensemble, before_rmsd, after_rmsd
+        else:
+            return new_ensemble
 
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """

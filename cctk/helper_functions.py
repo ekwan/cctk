@@ -11,15 +11,30 @@ except ImportError:
 from . import data  # relative-import the *package* containing the templates
 
 """
-This code populates ELEMENT_DICTIONARY from a static datafile.
+This code populates ELEMENT_DICTIONARY and ISOTOPE_DICTIONARY from a static datafile.
 """
 ELEMENT_DICTIONARY = {}
+ISOTOPE_DICTIONARY = {}
 isotope_file = pkg_resources.open_text(data, "isotopes.csv")
+prev_number = 1
+current_dict = {}
 for line in isotope_file:
     symbol, number, mass, abundance = line.split(",")
     if symbol == "Symbol":
         continue
+
     ELEMENT_DICTIONARY[number] = symbol
+
+    if number == prev_number:
+        current_dict[float(mass)] = float(abundance.rstrip())
+    else:
+        ISOTOPE_DICTIONARY[prev_number] = current_dict
+        current_dict = {}
+        current_dict[float(mass)] = float(abundance.rstrip())
+
+    prev_number = number
+
+ISOTOPE_DICTIONARY[prev_number] = current_dict
 ELEMENT_DICTIONARY["0"] = "Bq"
 
 INV_ELEMENT_DICTIONARY = {v: int(k) for k, v in ELEMENT_DICTIONARY.items()}
@@ -261,3 +276,12 @@ def compute_RMSD(geometry1, geometry2):
     squared_difference = np.square(geometry1 - geometry2)
     temp = np.sum(squared_difference) / (3 * len(geometry1))
     return np.sqrt(temp)
+
+def get_isotopic_distribution(z):
+    """
+    For an element with number ``z``, returns two ``np.array`` objects containing that element's weights and relative abundances.
+    """
+    z = str(z)
+    masses = list(ISOTOPE_DICTIONARY[z].keys())
+    weights = list(ISOTOPE_DICTIONARY[z].values())
+    return np.array(masses), np.array(weights)

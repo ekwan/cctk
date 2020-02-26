@@ -13,6 +13,7 @@ from cctk.helper_functions import (
     compute_dihedral_between,
     compute_unit_vector,
     get_covalent_radius,
+    get_isotopic_distribution,
 )
 
 
@@ -611,8 +612,68 @@ class Molecule:
 
         return self
 
-    def calculate_mass_spectrum():
-        pass
+    def _recurse_through_formula(self, formula, masses, weights, cutoff=0.0000001, mass_precision=4, weight_precision=8):
+        """
+        Recurses through a formula and generates m/z isotopic pattern using tail recursion.
+
+        To prevent blowup of memory, fragments with very low abundance are ignored. Masses and weights are also rounded after every step.
+        To prevent error accumulation, internal precisions several orders of magnitude lower than the precision of interest should be employed.
+        The default values should work nicely for low-res MS applications.
+
+        Args:
+            formula (np.array, dtype=np.int8): vector containing atoms left to incorporate
+            masses (np.array): list of mass fragments at current iteration
+            weights (np.array): relative weights at current iteration
+            cutoff (float): cutoff for similarity (masses within ``cutoff`` will be combined)
+            mass_precision (int): number of decimal places to store for mass
+            weight_precision (int): number of decimal places to store for weight
+
+        Returns:
+            masses
+            weights
+        """
+        if np.array_equal(formula, np.zeros(shape=92, dtype=np.int8)):
+            return masses[np.argsort(masses)], weights[np.argsort(masses)]
+
+        current_e = np.nonzero(formula)[0][0]
+        e_masses, e_weights = get_isotopic_distribution(current_e)
+
+        new_masses = np.zeros(shape=(len(masses)*len(e_masses)))
+        new_weights = np.zeros(shape=(len(masses)*len(e_masses)))
+        for i in range(len(masses)):
+            for j in range(len(e_masses)):
+                new_masses[i*len(e_masses)+j] = masses[i] + e_masses[j]
+                new_weights[i*len(e_masses)+j] = weights[i] * e_weights[j]
+
+        newer_masses, indices = np.unique(np.round(new_masses, decimals=mass_precision), return_inverse=True)
+        newer_weights = np.zeros_like(newer_masses)
+        for k in range(len(newer_weights)):
+            newer_weights[k] = np.sum(new_weights[np.nonzero(indices == k)])
+        newer_weights = np.round(newer_weights, decimals=weight_precision)
+
+        formula[current_e] += -1
+        above_cutoff = np.nonzero(newer_weights > cutoff)
+        return self._recurse_through_formula(formula, newer_masses[above_cutoff], newer_weights[above_cutoff], cutoff, mass_precision, weight_precision)
+
+    def calculate_mass_spectrum(self, **kwargs):
+        """
+        Generates list of m/z values based on formula string (e.g. "C10H12")
+
+        Final weights rounded to one decimal point (because of low-res MS).
+        """
+        form_vec = np.zeros(shape=92, dtype=np.int8)
+        for z in self.atomic_numbers:
+            form_vec[z - 1] += 1
+
+        masses, weights = self._recurse_through_formula(form_vec, [0], [1], **kwargs)
+
+        new_masses, indices = np.unique(np.round(masses, decimals=1), return_inverse=True)
+        new_weights = np.zeros_like(new_masses)
+        for k in range(len(new_weights)):
+            new_weights[k] = np.sum(weights[np.nonzero(indices == k)])
+        new_weights = new_weights / np.max(new_weights)
+
+        return new_masses, new_weights
 
     def add_atom_at_centroid(self, symbol, atom_numbers, weighted=False):
         """
