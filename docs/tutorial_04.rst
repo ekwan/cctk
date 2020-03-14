@@ -1,8 +1,8 @@
 .. _tutorial_04:
 
-================================
-Tutorial 04: Changing File Types
-================================
+=========================================
+Tutorial 04: Combining Multiple Molecules 
+=========================================
 
 Objectives
 ==========
@@ -18,10 +18,12 @@ Overview
 Metal triflates are frequently employed as "M+" precursors in Lewis-acid-catalyzed transformations, since the weakly-binding triflate can easily be displaced by Lewis-basic ligands. 
 However, reported anion effects imply that "weakly-coordinating anions" like triflate may indeed have a non-negligible effect on catalysis. 
 In `one such study <http://evans.rc.fas.harvard.edu/pdf/evans245.pdf>`_ by Evans and coworkers, 
-the counterion for a Cu(II)-tBuBox complex was found to have a dramatic effect on rate and small effects on enantioselectivity and diastereoselectivity,
+the counterion for a Cu(II)-tBuBox complex was found to have a dramatic effect on rate and lesser effects on enantioselectivity and diastereoselectivity,
 indicating that one or more equivalents of the counterion are present in the transition state:
 
 .. image:: /img/t04_counterion_effects.png
+    :width: 350
+    :align: center
 
 Understanding how anions are bound to cationic catalysts could improve mechanistic understanding and lead to the design of improved catalytic systems. 
 Computational modelling of weakly-bound ion pairs is difficult, however, because of the potential for numerous nearly degenerate binding modes.  
@@ -133,3 +135,65 @@ The complete script (``generate_ion_pairs.py``) looks like this::
 
             mx = Molecule(atomic_numbers=atoms, geometry=geoms, charge=1, multiplicity=2)
             GaussianFile.write_molecule_to_file(f"CuII-tBuBox-{anion_names[j]}_c{i}.gjf", mx, "#p opt b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)", footer)
+
+Analyzing Structures
+====================
+
+The above script was used to create 25 unique conformations of both the OTf and SbF6 complexes, which were optimized in Gaussian 16.
+Successfully converged jobs were then resubmitted (using ``scripts/resubmit.py``) with the following input line::
+
+    #p opt pop=hirshfeld b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)
+
+After several days, 37 out of the 50 starting structures had converged and were selected for further analysis.
+The analysis script (``scripts/analyze.py``) was modified by addition of the following lines::
+
+    cation_anion_dist = 0
+    mul_q = 0
+    hir_q = 0
+    if 29 in mol.atomic_numbers:
+        mul_q = float(parse.find_parameter(lines, "    52  Cu", 4, 2)[-1])
+        hir_q = float(parse.find_parameter(lines, "    52  Cu", 8, 2)[-1])
+
+        if 16 in mol.atomic_numbers:
+            cation_anion_dist = mol.get_distance(52, 54)
+        elif 51 in mol.atomic_numbers:
+            cation_anion_dist = mol.get_distance(52, 53)
+
+The output data were written to a ``.csv`` file, read into Python and analyzed using Pandas. 
+
+As expected, closer anion–cation complexes were found to be substantially more stable (all energies relative to infinitely separated cation and anion):
+
+.. image:: /img/t04_distance_energy.png
+    :width: 450
+    :align: center
+
+Copper charges calculated by the Mulliken and Hirshfeld schemes correlated very well, which was encouraging: 
+
+.. image:: /img/t04_mulliken_hirshfeld.png
+    :width: 450
+    :align: center
+
+An analysis of charge versus cation–anion distance showed a clear discrepancy between tightly-bound OTf and SbF6 complexes: 
+OTf complexes generally bound more tightly and resulted in a less cationic Cu center. 
+(A small proportion of anions ended up "trapped" behind the ligand, resulting in very large cation–anion distances and high-energy complexes). 
+
+.. image:: /img/t04_charge_distance.png
+    :width: 450
+    :align: center
+
+Visualization of the lowest-energy OTf- and SbF6-bound structures reveals that both are coordinated to the Cu center in an inner-sphere fashion, 
+despite SbF6 generally being considered a "non-coordinating" anion:
+
+.. image:: /img/t04_otf_structure.png
+    :width: 400
+    :align: center
+
+.. image:: /img/t04_sbf6_structure.png
+    :width: 400
+    :align: center
+
+In this case it seems that the more diffusely anionic SbF6 anion results in a more weakly-bound complex with a more cationic copper. 
+This complex could either react directly with substrate, or exist in equilibrium with a solvent-separated ion pair which could itself react with substrate. 
+Either scenario is consistent with the observed rate increases using SbF6. 
+
+A more in-depth study might examine free energy and potential of mean force in explicit solvent, as well as investigating substrate approach with a variety of anion geometries. 
