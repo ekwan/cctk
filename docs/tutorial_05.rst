@@ -61,7 +61,7 @@ This was accomplished through the following code (found in ``generate.py``)::
     footer = f"B {cent} {lg} F\nB {cent} {nu} F\n"
 
     for lg_dist in np.arange(1.5, 3.3, 0.1):
-        for nu_dist in np.arange(1.2, 3.0, 0.1):
+            for nu_dist in np.arange(1.2, 3.0, 0.1):
             mol.set_distance(cent, lg, lg_dist)
             mol.set_distance(cent, nu, nu_dist)
 
