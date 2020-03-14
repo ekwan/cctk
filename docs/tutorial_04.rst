@@ -139,7 +139,7 @@ The complete script (``generate_ion_pairs.py``) looks like this::
 Analyzing Structures
 ====================
 
-The above script was used to create 25 unique conformations of both the OTf and SbF6 complexes, which were optimized in Gaussian 16.
+The above script was used to create 25 unique conformations of both the OTf and SbF\ :sub:`6` complexes, which were optimized in Gaussian 16.
 Successfully converged jobs were then resubmitted (using ``scripts/resubmit.py``) with the following input line::
 
     #p opt pop=hirshfeld b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)
@@ -173,7 +173,7 @@ Copper charges calculated by the Mulliken and Hirshfeld schemes correlated very 
     :width: 450
     :align: center
 
-An analysis of charge versus cation–anion distance showed a clear discrepancy between tightly-bound OTf and SbF6 complexes: 
+An analysis of charge versus cation–anion distance showed a clear discrepancy between OTf and SbF\ :sub:`6` complexes: 
 OTf complexes generally bound more tightly and resulted in a less cationic Cu center. 
 (A small proportion of anions ended up "trapped" behind the ligand, resulting in very large cation–anion distances and high-energy complexes). 
 
@@ -181,8 +181,8 @@ OTf complexes generally bound more tightly and resulted in a less cationic Cu ce
     :width: 450
     :align: center
 
-Visualization of the lowest-energy OTf- and SbF6-bound structures reveals that both are coordinated to the Cu center in an inner-sphere fashion, 
-despite SbF6 generally being considered a "non-coordinating" anion:
+Visualization of the lowest-energy OTf- and SbF\ :sub:`6`-bound structures reveals that both are coordinated to the Cu center in an inner-sphere fashion, 
+despite SbF\ :sub:`6` generally being considered a "non-coordinating" anion:
 
 .. image:: /img/t04_otf_structure.png
     :width: 400
@@ -192,8 +192,8 @@ despite SbF6 generally being considered a "non-coordinating" anion:
     :width: 400
     :align: center
 
-In this case it seems that the more diffusely anionic SbF6 anion results in a more weakly-bound complex with a more cationic copper. 
+In this case it seems that the more diffusely anionic SbF\ :sub:`6` anion results in a more weakly-bound complex with a more cationic copper. 
 This complex could either react directly with substrate, or exist in equilibrium with a solvent-separated ion pair which could itself react with substrate. 
-Either scenario is consistent with the observed rate increases using SbF6. 
+Either scenario is consistent with the observed rate increases using SbF\ :sub:`6`. 
 
 A more in-depth study might examine free energy and potential of mean force in explicit solvent, as well as investigating substrate approach with a variety of anion geometries. 
