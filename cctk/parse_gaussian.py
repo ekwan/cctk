@@ -113,7 +113,7 @@ def read_geometries_and_energies(lines):
 
     # return result
     if len(file_symbol_lists) > 0:
-        return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
+        return file_geometries, file_symbol_lists, file_energies, file_scf_iterations
     else:
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
@@ -204,7 +204,7 @@ def read_bonds(lines):
                 continue
             elif (re.search(r"! A", line)) or (re.search("----", line)):
                 in_bonding_section = False
-                bond_array = current_array
+                bond_array.append(current_array)
                 current_array = []
                 i += 1
                 continue

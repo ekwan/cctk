@@ -68,10 +68,17 @@ class Molecule:
                 raise ValueError(f"unknwon atomic number {atom}")
 
         if not isinstance(charge, int):
-            raise TypeError("charge must be integer")
+            try:
+                charge = int(charge)
+            except:
+                raise TypeError("charge must be integer or castable to integer!")
 
-        if (not isinstance(multiplicity, int)) or (multiplicity < 1):
-            raise TypeError("multiplicity must be positive integer")
+        if not isinstance(multiplicity, int):
+            try:
+                multiplicity = int(multiplicity)
+            except:
+                raise TypeError("multiplicity must be positive integer or castable to positive integer")
+        assert multiplicity > 0, "multiplicity must be positive"
 
         self.atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
         self.geometry = np.array(geometry)

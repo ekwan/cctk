@@ -3,7 +3,7 @@ import numpy as np
 
 from enum import Enum
 
-from cctk import File, ConformationalEnsemble, Molecule
+from cctk import File, Ensemble, Molecule
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 import cctk.parse_gaussian as parse
@@ -26,10 +26,10 @@ class JobType(Enum):
 
 class GaussianFile(File):
     """
-    Class for Gaussian files. Composes ``ConformationalEnsemble``.
+    Class for Gaussian files. Composes ``Ensemble``.
 
     Attributes:
-        molecules (ConformationalEnsemble): ``ConformationalEnsemble`` instance
+        molecules (Ensemble): ``Ensemble`` instance
         job_types (list): list of `job_type` instances
         header (str): optional, header of .gjf file
         footer (str): optional, footer of .gjf file
@@ -49,7 +49,7 @@ class GaussianFile(File):
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, job_types=None, theory=None, header=None, footer=None, title="title", charge=0, multiplicity=1
+        self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None, job_types=None, theory=None, header=None, footer=None, title="title",
     ):
         """
         Create new GaussianFile object.
@@ -58,8 +58,8 @@ class GaussianFile(File):
             atomic_numbers (list): list of atomic numbers
             geometries (list): list of lists of 3-tuples of xyz coordinates
             bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
-            charge (int): the charge of the molecule
-            multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
+            charges (int): the charge of the molecules
+            multiplicities (int): the spin states of the molecules (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
             job_types (list): list of ``job_type`` instances
             header (str): optional, header of ``.gjf`` file
             footer (str): optional, footer of ``.gjf`` file
@@ -80,9 +80,15 @@ class GaussianFile(File):
             if not all(isinstance(job, JobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
 
+        if charges is None:
+            charges = list(np.zeros(shape=len(geometries)))
+
+        if multiplicities is None:
+            multiplicities = list(np.ones(shape=len(geometries)))
+
         if (len(atomic_numbers) > 0) and (len(geometries) > 0):
-            self.molecules = ConformationalEnsemble(
-                atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charge=charge, multiplicity=multiplicity
+            self.molecules = Ensemble(
+                atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charges=charges, multiplicities=multiplicities
             )
         self.header = header
         self.footer = footer
@@ -90,7 +96,7 @@ class GaussianFile(File):
         self.job_types = job_types
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title"):
+    def write_molecule_to_file(cls, filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title", append=False):
         """
         Write a ``.gjf`` file using the given molecule.
 
@@ -103,6 +109,7 @@ class GaussianFile(File):
             cores (int): how many CPU cores to request
             chk_path (str): path to checkpoint file, if desired
             title (str): title of the file, defaults to "title"
+            append (Bool): whether or not to append to file using Link1 specifications
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
@@ -111,7 +118,10 @@ class GaussianFile(File):
             raise ValueError("can't write a file without a header")
 
         #### generate the text
-        text = f"%nprocshared={int(cores)}\n"
+        text = ""
+        if append:
+            text += "--Link1--\n"
+        text += f"%nprocshared={int(cores)}\n"
         text += f"%mem={int(memory)}GB\n"
         if chk_path:
             text += f"%chk={chk_path}\n"
@@ -127,7 +137,10 @@ class GaussianFile(File):
             text += f"{footer.strip()}\n\n"
 
         #### write the file
-        super().write_file(filename, text)
+        if append:
+            super().append_to_file(filename, text)
+        else:
+            super().write_file(filename, text)
 
     def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
         """
@@ -138,7 +151,7 @@ class GaussianFile(File):
             memory (int): how many GB of memory to request
             cores (int): how many CPU cores to request
             chk_path (str): path to checkpoint file, if desired
-            molecule (int): which molecule to use -- passed to ``self.get_molecule()``. 
+            molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
                 Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
             header (str): header for new file
@@ -203,13 +216,15 @@ class GaussianFile(File):
             if line.strip().startswith("Normal termination"):
                 success += 1
 
-        (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
-        atomic_numbers = ""
+        (geometries, atom_lists, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
+        atomic_numbers = []
 
-        try:
-            atomic_numbers = np.array(atom_list, dtype=np.int8)
-        except:
-            atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
+        #### convert to right datatype
+        for atom_list in atom_lists:
+            try:
+                atomic_numbers.append(np.array(atom_list, dtype=np.int8))
+            except:
+                atomic_numbers.append(np.array(list(map(get_number, atom_list)), dtype=np.int8))
 
         footer = None
         if re.search("modredundant", str(header)):
@@ -218,10 +233,18 @@ class GaussianFile(File):
             footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
         bonds = parse.read_bonds(lines)
-        charge = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0])
-        multip = int(parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0])
+        charge = [int(x) for x in parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)]
+        multip = [int(x) for x in parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)]
 
-        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
+        #### parameters don't get printed every time for opt jobs
+        if JobType.OPT in job_types:
+            print(bonds)
+            print(bonds[0])
+            bonds = np.repeat(np.array([bonds[0]]), len(atomic_numbers)-1, axis=0).tolist() + [bonds[-1]]
+            charge = list(np.tile(np.array(charge[0]), len(atomic_numbers)-1)) + [charge[-1]]
+            multip = list(np.tile(np.array(multip[0]), len(atomic_numbers)-1)) + [multip[-1]]
+
+        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charges=charge, multiplicities=multip)
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
@@ -334,7 +357,7 @@ class GaussianFile(File):
 
         geometries = np.array([geometries])
 
-        f = GaussianFile(atomic_numbers, geometries, charge=charge, multiplicity=multip)
+        f = GaussianFile([atomic_numbers], geometries, charges=[charge], multiplicities=[multip])
         f.header = header
         f.footer = footer
         f.title = title
@@ -362,3 +385,15 @@ class GaussianFile(File):
             num += -1
 
         return self.molecules.molecules[num]
+
+    @classmethod
+    def write_ensemble_to_file(cls, filename, ensemble, header, **kwargs):
+        """
+        Writes an Ensemble to a file using Link1 specification.
+        """
+        for idx, molecule in enumerate(ensemble.molecules):
+            if idx == 0:
+                self.write_molecule_to_file(filename, molecule, header, append=False, **kwargs)
+            else:
+                self.write_molecule_to_file(filename, molecule, header, append=True, **kwargs)
+

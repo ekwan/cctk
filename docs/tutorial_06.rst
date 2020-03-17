@@ -88,7 +88,7 @@ Since the information in the ``.out`` files is not automatically extracted by ``
 more sophisticated methods for automated parameter extraction must be employed.
 ``parse_gaussian.py`` (imported as ``parse``) contains several ``awk``-like methods for locating blocks of text in ``.out`` files:
 ``find_parameter()`` is useful for locating key values on a given line, while ``search_for_block()`` extracts larger blocks of text.
-(Note that ``return_lines=True`` must be set on ``GaussianFile.read_file()`` to generate the requisite ``lines`` variable)
+(Note that ``return_lines=True`` must be set on ``GaussianFile.read_file()`` to generate the requisite ``lines`` variable).
 A part of ``graph.py`` is shown below::
 
     for filename in sorted(glob.glob(filenames, recursive=True)):
@@ -111,16 +111,16 @@ A part of ``graph.py`` is shown below::
             fields = list(filter(None, fields))
             dipole[dist] = float(fields[-1])
         except:
-        pass
+            pass
 
-    try:
-        C1_charge[dist] = parse.find_parameter(lines, "     1  C", 8, 2)[-1]
-        O7_charge[dist] = parse.find_parameter(lines, "     7  O", 8, 2)[-1]
-        C8_charge[dist] = parse.find_parameter(lines, "     8  C", 8, 2)[-1]
-        C9_charge[dist] = parse.find_parameter(lines, "     9  C", 8, 2)[-1]
-        C12_charge[dist] = parse.find_parameter(lines, "    12  C", 8, 2)[-1]
-    except:
-        pass
+        try:
+            C1_charge[dist] = parse.find_parameter(lines, "     1  C", 8, 2)[-1]
+            O7_charge[dist] = parse.find_parameter(lines, "     7  O", 8, 2)[-1]
+            C8_charge[dist] = parse.find_parameter(lines, "     8  C", 8, 2)[-1]
+            C9_charge[dist] = parse.find_parameter(lines, "     9  C", 8, 2)[-1]
+            C12_charge[dist] = parse.find_parameter(lines, "    12  C", 8, 2)[-1]
+        except:
+            pass
 
 With these values in hand, we can generate graphs showing change along the IRC:
 

@@ -55,14 +55,21 @@ class Ensemble:
             return
 
         if charges is None:
-            charges = list(np.zeros_like(atomic_numbers))
+            charges = list(np.zeros(shape=len(atomic_numbers)))
 
         if multiplicities is None:
-            multiplicities = list(np.ones_like(atomic_numbers))
+            multiplicities = list(np.ones(shape=len(atomic_numbers)))
 
         if bonds is None:
             bonds = [None] * len(atomic_numbers)
 
+        print(len(geometries))
+        print(len(atomic_numbers))
+        print(len(bonds))
+        print(bonds)
+        print(len(charges))
+        print(charges)
+        print(len(multiplicities))
         assert all(
             len(x) == len(atomic_numbers) for x in [geometries, bonds, charges, multiplicities]
         ), "uneven list lengths -- cannot batch create molecules!"
@@ -71,6 +78,7 @@ class Ensemble:
             if len(numbers) != len(geometry):
                 raise TypeError("atoms and geometries must be the same length!")
 
+            print(charge)
             mol = Molecule(numbers, geometry, bonds=bond_edges, charge=charge, multiplicity=multiplicity)
             self.add_molecule(mol)
 

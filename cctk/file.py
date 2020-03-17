@@ -45,6 +45,33 @@ class File(ABC):
                 return False
 
     @staticmethod
+    def append_to_file(filename, text):
+        """
+        Appends output text to a file.
+
+        Args:
+            filename (str): path to file, including name (e.g. ``path/to/input.gjf``)
+            text (str): desired contents of file
+
+        Returns:
+            ``True`` if write succeeded, ``False`` otherwise
+        """
+        if not isinstance(text, str):
+            raise TypeError("cannot write non-string to file!")
+            return False
+
+        if os.path.exists(filename):
+            try:
+                with open(filename, "a+") as output_file:
+                    output_file.write(text)
+                return True
+            except OSError as e:
+                print(e)
+                return False
+        else:
+            raise ValueError(f"{filename} does not exist")
+
+    @staticmethod
     def read_file(filename):
         """
         Reads a file and parses into lines.
