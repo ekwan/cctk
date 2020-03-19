@@ -1,9 +1,10 @@
--C -H -N -O -F -S 0
+-C -H -N -O -F -S -P -Cl 0
 6-31G(d)
 ****
--Cu -Sb
+-Ni
 SDD
 ****
 
--Cu -Sb
+-Ni
 SDD
+

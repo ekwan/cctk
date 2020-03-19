@@ -24,28 +24,50 @@ filenames = [
     "HCN.mol2",
     "HNO2.mol2",
     "HCO2Me.mol2",
+    "FH.mol2",
+    "ClH.mol2",
+    "BrH.mol2",
+    "IH.mol2",
+    "SF5H.mol2",
+    "SO3HH.mol2",
+    "AcH.mol2",
+    "CHOH.mol2",
 ]
 
 names = [
-    "methyl",
-    "ethyl",
-    "isopropyl",
-    "tert-butyl",
-    "hydroxy",
-    "methoxy",
-    "acetamido",
-    "amino",
-    "dimethylamino",
-    "trifluoromethyl",
-    "cyano",
-    "nitro",
-    "carboxylmethyl",
+    ["methyl", "Me", "CH3",],
+    ["ethyl", "Et", "C2H5",],
+    ["isopropyl", "iPr", "iC3H7",],
+    ["tert-butyl", "tBu", "tC4H9",],
+    ["hydroxy", "OH",],
+    ["methoxy", "MeO", "OMe", "CH3O",],
+    ["acetamido", "NHAc",],
+    ["amino", "NH2",],
+    ["dimethylamino", "Me2N", "NMe2",],
+    ["trifluoromethyl", "CF3",],
+    ["cyano", "CN",],
+    ["nitro", "NO2",],
+    ["carboxylmethyl", "MeO2C", "CO2Me",],
+    ["fluoro", "F",],
+    ["chloro", "Cl",],
+    ["bromo", "Br",],
+    ["iodo", "I",],
+    ["pentafluorosulfanyl", "SF5",],
+    ["sulfonyl", "SO3H",],
+    ["acetyl", "Ac", "COMe",],
+    ["formyl", "CHO",],
 ]
 
 
 def load_group(name):
-    assert name in names, f"can't find group {name}!"
-    filename = filenames[names.index(name)]
+    filename = None
+
+    for row in names:
+        if name in row:
+            filename = filenames[names.index(row)]
+            break
+
+    assert filename is not None, f"can't find name {name}!"
 
     with pkg_resources.path(groups, filename) as file:
         mol = MOL2File.read_file(file).molecules[0]

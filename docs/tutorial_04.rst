@@ -1,199 +1,182 @@
 .. _tutorial_04:
 
-=========================================
-Tutorial 04: Combining Multiple Molecules 
-=========================================
+=========================
+Tutorial 04: Using Groups   
+=========================
 
 Objectives
 ==========
 
 This tutorial will teach:
 
-- Rotation/translation of ``Molecule`` objects.
-- Direct creation and editing of ``Molecule`` objects.
+- Creating and manipulating ``Group`` objects.
+- Combining multiple jobs via the Link1 command.
 
 Overview
 ========
 
-Metal triflates are frequently employed as "M+" precursors in Lewis-acid-catalyzed transformations, since the weakly-binding triflate can easily be displaced by Lewis-basic ligands. 
-However, reported anion effects imply that "weakly-coordinating anions" like triflate may indeed have a non-negligible effect on catalysis. 
-In `one such study <http://evans.rc.fas.harvard.edu/pdf/evans245.pdf>`_ by Evans and coworkers, 
-the counterion for a Cu(II)-tBuBox complex was found to have a dramatic effect on rate and lesser effects on enantioselectivity and diastereoselectivity,
-indicating that one or more equivalents of the counterion are present in the transition state:
+Substituent effects and linear free-energy relationships are an invaluable tool in physical organic chemistry. 
+More recently, linear free-energy relationships have become important in the design of new ligands for organometallic chemistry. 
+This approach, wherein key ligand properties are parameterized and used to model reaction outcomes through multilinear regression, has been popularized by Matt Sigman
+and others for reaction optimization. 
 
-.. image:: /img/t04_counterion_effects.png
-    :width: 350
+Key to this process is the choice of appropriate and informative ligand parameters. One such parameter, termed the Tolman electronic parameter (or ν), is the 
+A\ :sub:`1` carbonyl stretching frequency of L–Ni(CO)\ :sub:`3` complexes. This stretching vibration is proportional to the degree of Ni(d) to CO(π\ :sup:`*`) backbonding:
+more π-acidic ligands compete with CO and reduce the backbonding, thereby shifting the vibration to higher frequencies. 
+(For an excellent review by Tolman, see *Chem Rev*, **1977**, *77*, `313–348 <https://pubs.acs.org/doi/10.1021/cr60307a002>`_).
+
+In this tutorial, we will investigate the computed effect of *para*-substituted triaryl phosphines on this stretching frequency, 
+using *cctk*'s ``Group`` object to rapidly generate new ligands. 
+
+Generating Hammett Series
+=========================
+
+As a starting point, Ph\ :sub:`3`\ P–Ni(CO)\ :sub:`3` was optimized at the B3LYP-D3BJ/6-31G(d)-SDD(Ni) level of theory. The CO stretching frequency was found to be 2082.1 cm\ :sup:`-1`\ . 
+
+.. image:: /img/t04_h.png
+    :width: 450
     :align: center
 
-Understanding how anions are bound to cationic catalysts could improve mechanistic understanding and lead to the design of improved catalytic systems. 
-Computational modelling of weakly-bound ion pairs is difficult, however, because of the potential for numerous nearly degenerate binding modes.  
-Accordingly, many distinct arrangements must be sampled and evaluated: although such an approach would be tedious by hand, automation with *cctk* renders it facile. 
 
-This tutorial will focus on evaluating the ground-state conformation of Evans's system for the hexafluoroantimonate and triflate anions. 
-We will make the simplifying assumption that only one anion will coordinate to the catalyst at a time, consistent with observation of singly-cationic metal–ligand complexes in solution. 
+The *para* hydrogen atoms on the phenyl rings are numbered 19, 30, and 41 (determined using GaussView). 
 
-Creating Structures
-===================
+We can now start to construct our file::
 
-The structures of Cu(II)-tBuBox (S=1/2 dication), SbF\ :sub:`6` (S=0 anion), and OTf (S=0 anion) were first optimized separately at the 
-UB3LYP-D3BJ/6-31G(d)-SDD(Sb,Cu)/SMD(dichloromethane) level of theory. 
-
-In order to efficiently manipulate the ion pair, all molecules were loaded into *cctk* and then centered:: 
-
-    def center_molecule(molecule):
-        """
-        Moves a ``Molecule`` object's centroid to the origin
-        """
-        atoms = np.arange(0, molecule.num_atoms())
-        molecule.translate_molecule(-molecule.geometry[atoms].mean(axis=0))
-        return molecule
-
-    cation = center_molecule(GaussianFile.read_file("CuII-tBuBox-dication.out").get_molecule())
-    anion1 = center_molecule(GaussianFile.read_file("SbF6_anion.out").get_molecule())
-    anion2 = center_molecule(GaussianFile.read_file("OTf_anion.out").get_molecule())
-
-    anions = [anion1, anion2]
-    anion_names = ["SbF6", "OTf"]
-
-To determine the relative position of the two molecules, a random vector was sampled from a spherical distribution::
-
-    def spherical_random(radius=1):
-        """
-        Generates a random point on a sphere of radius ``radius``.
-        """
-        v = np.random.normal(size=3)
-        v = v/np.linalg.norm(v)
-        return v * radius
-
-The anion was then rotated randomly about all 3 Cartesian axes, and the atomic numbers and coordinates were concatenated to produce a new ``Molecule`` object. 
-The output structures were written to ``.gjf`` files::
-
-    for i in range(num_structures):
-        trans_v = spherical_random(radius=8)
-        for j in range(len(anions)):
-
-            x = copy.deepcopy(anions[j])
-            x.translate_molecule(trans_v)
-            x.rotate_molecule(np.array([1,0,0]), np.random.random()*360)
-            x.rotate_molecule(np.array([0,1,0]), np.random.random()*360)
-            x.rotate_molecule(np.array([0,0,1]), np.random.random()*360)
-
-            atoms = np.hstack((cation.atomic_numbers.T, x.atomic_numbers.T))
-            geoms = np.vstack((cation.geometry, x.geometry))
-
-            mx = Molecule(atomic_numbers=atoms, geometry=geoms, charge=1, multiplicity=2)
-            GaussianFile.write_molecule_to_file(f"CuII-tBuBox-{anion_names[j]}_c{i}.gjf", mx, "#p opt b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)", footer)
-
-
-The complete script (``generate_ion_pairs.py``) looks like this::
-    
-    import copy
+    import sys, os, argparse, glob, re, copy
     import numpy as np
-    from cctk import Molecule, GaussianFile
 
-    num_structures = 25
+    from cctk import GaussianFile, Molecule, Group, Ensemble
+    from cctk.load_groups import load_group
 
+    parser = argparse.ArgumentParser(prog="hammett_swap.py")
+    parser.add_argument("filename")
+    args = vars(parser.parse_args(sys.argv[1:]))
+    assert args["filename"], "Can't resubmit files without a filename!"
+
+    #### read in output file
+    output_file = GaussianFile.read_file(args["filename"])
+
+    #### read in genecp footer
     footer = ""
     with open('footer', 'r') as file:
         footer = file.read()
 
-    def spherical_random(radius=1):
-        """
-        Generates a random point on a sphere of radius ``radius``.
-        """
-        v = np.random.normal(size=3)
-        v = v/np.linalg.norm(v)
-        return v * radius
+``footer`` simply contains the ``genecp`` basis set definition::
 
-    def center_molecule(molecule):
-        """
-        Moves a ``Molecule`` object's centroid to the origin
-        """
-        atoms = np.arange(0, molecule.num_atoms())
-        molecule.translate_molecule(-molecule.geometry[atoms].mean(axis=0))
-        return molecule
+    -C -H -N -O -F -S -P -Cl 0
+    6-31G(d)
+    ****
+    -Ni
+    SDD
+    ****
 
-    cation = center_molecule(GaussianFile.read_file("CuII-tBuBox-dication.out").get_molecule())
-    anion1 = center_molecule(GaussianFile.read_file("SbF6_anion.out").get_molecule())
-    anion2 = center_molecule(GaussianFile.read_file("OTf_anion.out").get_molecule())
+    -Ni
+    SDD
+    
+Next, we can define the groups we're interested in studying::
 
-    anions = [anion1, anion2]
-    anion_names = ["SbF6", "OTf"]
+    #### define groups and atoms
+    groups = ["NMe2", "OMe", "Me", "CF3", "CO2Me", "CN", "NO2", "F", "Cl", "SF5"]
+    p_atoms = [19, 30, 41]
 
-    for i in range(num_structures):
-        trans_v = spherical_random(radius=8)
-        for j in range(len(anions)):
+    ensemble = Ensemble()
+    headers = []
+    args = []
 
-            x = copy.deepcopy(anions[j])
-            x.translate_molecule(trans_v)
-            x.rotate_molecule(np.array([1,0,0]), np.random.random()*360)
-            x.rotate_molecule(np.array([0,1,0]), np.random.random()*360)
-            x.rotate_molecule(np.array([0,0,1]), np.random.random()*360)
+These groups are all preloaded in *cctk*, so we don't need to use any additional input files to define them (for a full list of all available groups, see the `Groups documentation <groups>`_). 
 
-            atoms = np.hstack((cation.atomic_numbers.T, x.atomic_numbers.T))
-            geoms = np.vstack((cation.geometry, x.geometry))
+Finally, we do the actual work of adding the groups:: 
 
-            mx = Molecule(atomic_numbers=atoms, geometry=geoms, charge=1, multiplicity=2)
-            GaussianFile.write_molecule_to_file(f"CuII-tBuBox-{anion_names[j]}_c{i}.gjf", mx, "#p opt b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)", footer)
+    for group_name in groups:
+        print(f"adding {group_name}")
+        mol = copy.deepcopy(output_file.get_molecule().assign_connectivity())
+        group = load_group(group_name)
 
-Analyzing Structures
-====================
+        for atom in p_atoms:
+            print(f"    adding to atom {atom}")
+            mol = Group.add_group_to_molecule(mol, group, atom)
 
-The above script was used to create 25 unique conformations of both the OTf and SbF\ :sub:`6` complexes, which were optimized in Gaussian 16.
-Successfully converged jobs were then resubmitted (using ``scripts/resubmit.py``) with the following input line::
+        ensemble.add_molecule(mol)
+        headers.append(output_file.header)
+        args.append({"footer": footer})
 
-    #p opt pop=hirshfeld b3lyp/genecp empiricaldispersion=gd3bj scrf=(smd, solvent=dichloromethane)
+We first make a copy of the ``Molecule`` object (so we can edit it many times), and load the desired group. 
+Then, we add the group to every phenyl ring using ``add_group_to_molecule`` (this step is relatively slow due to dihedral angle optimization).
+Finally, we add the molecule to our ``Ensemble``, and add the header and footer to lists. 
 
-After several days, 37 out of the 50 starting structures had converged and were selected for further analysis.
-The analysis script (``scripts/analyze.py``) was modified by addition of the following lines::
+We could easily submit each of these as a separate optimization, but to save space it's sometimes desireable to use Gaussian's ``Link1`` command to merge multiple disparate jobs into one file. 
+This can be done here through the ``write_ensemble_to_file()`` command::
 
-    cation_anion_dist = 0
-    mul_q = 0
-    hir_q = 0
-    if 29 in mol.atomic_numbers:
-        mul_q = float(parse.find_parameter(lines, "    52  Cu", 4, 2)[-1])
-        hir_q = float(parse.find_parameter(lines, "    52  Cu", 8, 2)[-1])
+    #### write everything to the same file with Link1
+    output_file.write_ensemble_to_file("hammett_NiCO3L.gjf", ensemble, headers, args)
 
-        if 16 in mol.atomic_numbers:
-            cation_anion_dist = mol.get_distance(52, 54)
-        elif 51 in mol.atomic_numbers:
-            cation_anion_dist = mol.get_distance(52, 53)
+The entire script (``generate_series.py``) is shown below:: 
 
-The output data were written to a ``.csv`` file, read into Python and analyzed using Pandas. 
+    import sys, os, argparse, glob, re, copy
+    import numpy as np
 
-As expected, closer anion–cation complexes were found to be substantially more stable (all energies relative to infinitely separated cation and anion):
+    from cctk import GaussianFile, Molecule, Group, Ensemble
+    from cctk.load_groups import load_group
 
-.. image:: /img/t04_distance_energy.png
+    parser = argparse.ArgumentParser(prog="hammett_swap.py")
+    parser.add_argument("filename")
+    args = vars(parser.parse_args(sys.argv[1:]))
+    assert args["filename"], "Can't resubmit files without a filename!"
+
+    #### read in output file
+    output_file = GaussianFile.read_file(args["filename"])
+
+    #### read in genecp footer
+    footer = ""
+    with open('footer', 'r') as file:
+        footer = file.read()
+
+    #### define groups and atoms
+    groups = ["NMe2", "OMe", "Me", "CF3", "CO2Me", "CN", "NO2", "F", "Cl", "SF5"]
+    p_atoms = [19, 30, 41]
+
+    ensemble = Ensemble()
+    headers = []
+    args = []
+
+    for group_name in groups:
+        print(f"adding {group_name}")
+        mol = copy.deepcopy(output_file.get_molecule().assign_connectivity())
+        group = load_group(group_name)
+
+        for atom in p_atoms:
+            print(f"    adding to atom {atom}")
+            mol = Group.add_group_to_molecule(mol, group, atom)
+
+        ensemble.add_molecule(mol)
+        headers.append(output_file.header)
+        args.append({"footer": footer})
+
+    #### write everything to the same file with Link1
+    output_file.write_ensemble_to_file("hammett_NiCO3L.gjf", ensemble, headers, args)
+
+Analysis
+========
+
+The above job takes about 12 hours to run. Visual analysis of the final structures confirms that group substitution did in fact produce the desired structures
+(shown here for SF\ :sub:`5`\ ):
+
+.. image:: /img/t04_sf5.png
     :width: 450
     :align: center
 
-Copper charges calculated by the Mulliken and Hirshfeld schemes correlated very well, which was encouraging: 
+The IR vibrations of each structure can be analyzed in GaussView and the pertinent frequencies extracted.
+Plotting ν against σ\ :sub:`p` (*Chem Rev*, **1991**, *91*, `165–196 <https://pubs.acs.org/doi/pdf/10.1021/cr00002a004>`_)
+gives a clear linear relationship, indicating that this metric does detect changes in ligand electronic structure: 
 
-.. image:: /img/t04_mulliken_hirshfeld.png
+.. image:: /img/t04_plot.png
     :width: 450
     :align: center
 
-An analysis of charge versus cation–anion distance showed a clear discrepancy between OTf and SbF\ :sub:`6` complexes: 
-OTf complexes generally bound more tightly and resulted in a less cationic Cu center. 
-(A small proportion of anions ended up "trapped" behind the ligand, resulting in very large cation–anion distances and high-energy complexes). 
+The calculated "Hammett slope" is about 30% steeper than the slope derived from Tolman's experimental values, implying that this combination of functional and basis set might not be optimal:
 
-.. image:: /img/t04_charge_distance.png
-    :width: 450
+.. image:: /img/t04_comparison.png
+    :width: 337.5
     :align: center
 
-Visualization of the lowest-energy OTf- and SbF\ :sub:`6`-bound structures reveals that both are coordinated to the Cu center in an inner-sphere fashion, 
-despite SbF\ :sub:`6` generally being considered a "non-coordinating" anion:
-
-.. image:: /img/t04_otf_structure.png
-    :width: 400
-    :align: center
-
-.. image:: /img/t04_sbf6_structure.png
-    :width: 400
-    :align: center
-
-In this case it seems that the more diffusely anionic SbF\ :sub:`6` anion results in a more weakly-bound complex with a more cationic copper. 
-This complex could either react directly with substrate, or exist in equilibrium with a solvent-separated ion pair which could itself react with substrate. 
-Either scenario is consistent with the observed rate increases using SbF\ :sub:`6`. 
-
-A more in-depth study might examine free energy and potential of mean force in explicit solvent, as well as investigating substrate approach with a variety of anion geometries. 
+Further studies might examine the effect of different computational methods on these computed frequencies, as well as studying the effect of geometric perturbations to the ligand framework. 

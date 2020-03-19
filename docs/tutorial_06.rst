@@ -1,139 +1,302 @@
 .. _tutorial_06:
 
-=========================================================================
-Tutorial 06: Analysis Along the Reaction Coordinate
-=========================================================================
+===============================================
+Tutorial 06: Performing a Conformational Search 
+===============================================
 
 Objectives
 ==========
 
 This tutorial will teach:
 
-- Extraction of molecular properties from ``.out`` files
-- Analysis of reaction coordinates
+- Automated analysis and resubmission of completed jobs.
+- Creation of multi-step *cctk* projects.
 
 Overview
 ========
 
-Analysis of higher-order properties along a potential energy surface, although powerful, is frequently complicated by the multitude of jobs required.
-For instance, analyzing the change in atomic charges or aromaticity (as measured by nucleus-independent chemical shift, or NICS)
-requires a separate job for each desired point, making manual setup and analysis challenging.
-In contrast, *cctk*'s ability to automatically extract structures and properties from output files
-allows for detailed investigations to be carried out with minimal brute-force labor.
+Predicting the conformation of short peptides in solution is a challenging and unsolved problem.
+This "conformational heterogeneity" is both theoretically interesting and of practical import for the design and study of
+catalytically active oligopeptides (e.g., `Scott Miller's catalysts <https://pubs.acs.org/doi/10.1021/acscatal.8b03563>`_).
+In particular, the inclusion of unnatural amino acids in peptides could allow for stable conformations completely unlike those
+obtained using canonical amino acids.
 
-For this example, we chose to analyze the carbonyl-ene reaction of acetaldehyde and propylene.
-This reaction results in a net allylation of a carbonyl compound using inexpensive propylene gas as a surrogate for more costly and promiscuous allylating reagents (like allyl–MgBr),
-but its utility is hampered by the slow rate of reaction: 26.4 kcal/mol for formaldehyde (`ref <https://pubs.acs.org/doi/abs/10.1021/ja00257a008>`_)) 
-and ~39 kcal/mol for aliphatic aldehydes (independent results).
-Effective catalysis of the carbonyl–ene reaction, guided by improved understanding of transition state properties, could therefore lead to an effective and powerful synthetic method.
+One such unnatural amino acid is difluoroalanine, which possesses a difluoromethyl group.
+The difluoromethyl group has `recently been implicated as a hydrogen bond donor
+<https://pubs.acs.org/doi/abs/10.1021/jacs.7b04457>`_, albeit with distinct properties from classic hydrogen bond donors like hydroxyl or amino groups.
 
-To study this reaction, we chose to investigate:
+To examine potential C–H and N–H hydrogen bonding interactions involving difluoroalanine,
+we chose to study the 31-atom dipeptide Ac–F2Ala–F2Ala–OMe.
 
-1. The dipole moment
-2. Hirshfeld charges of key heavy atoms
-3. NICS(0) of the ring formed by the two reactants
+Generating Conformations to Search
+==================================
 
-Finding Points Along the Reaction Coordinate
-============================================
+Although in principle there are a practically infinite number of distinct structures that can be generated from 31 atoms,
+in practice most of low-energy conformational space can be sampled
+by selecting a few key rotatable bonds and letting Gaussian's ``opt`` keyword do the rest.
 
-The transition state for the reaction was found using conventional techniques (scanning the ``C1``–``C5`` bond distance)
-and confirmed with a frequency calculation (*v*\ :sub:`i` = –1336 cm\ :sup:`-1`\ )
+For the purposes of this study, we chose to study four key dihedral angles:
+ - Rotating around F2Ala #1's alpha carbon with respect to the amide (C3–C5–C8–O6)
+ - Rotating around F2Ala #2's alpha carbon with respect to the amide (H12–C11–C14–O16)
+ - Rotating the difluoromethyl group in F2Ala #1 (N1–C3–C5–H7)
+ - Rotating the difluoromethyl group in F2Ala #2 (N9–C11–C13–H15)
 
-.. image:: /img/t06_ts.png
-    :width: 350
-    :align: center
+We also chose to sample:
+ - *cis*/*trans* isomerism in F2Ala #1 (O27–C26–N1–H2)
+ - *cis*/*trans* isomerism in F2Ala #2 (O8–C6–N9–H10)
+ - Methyl ester conformation (O16–C14–O17–C18)
 
+Each of the dihedral angles in the first list was set to 0, 120, and 240 degrees, while
+each of the dihedral angles in the second list was set to 0 and 180 degrees (648 conformations in total).
 
-The intrinsic reaction coordinate was followed backwards and forwards for 50 steps using the following input line::
+To get our starting ``Molecule`` object, we read from an ``.xyz`` file. Since ``.xyz`` files don't contain connectivity information,
+we have to generate the bonds automatically::
 
-    #p irc=(calcfc, forward, maxpoints=50, stepsize=2) m062x/6-31g(d)
+    output_file = XYZFile.read_file('Ac-F2Ala-F2Ala-OMe.xyz')
+    output_file.molecule.assign_connectivity()
 
-This resulted in the generation of two IRC ``.out`` files, each containing 51 distinct structures.
-IRC calculations are notoriously error-prone; direct scans can be used as a surrogate as needed. 
+The actual heavy lifting is done by the following code, which creates copies of the reference structure with the selected
+dihedral angles set to new values. To avoid nesting ``for`` loops, we'll use recursion to run this block once per angle::
 
-Generating Jobs to Calculate NICS(0)/Hirschfeld Charges
-=======================================================
+    new_structures = [None] * (len(structures) * len(thetas))
+    current_idx = 0
+    for structure in structures:
+        for theta in thetas:
+            new_structures[current_idx] = copy.deepcopy(structure.set_dihedral(*angles[idx], theta, check_result=False))
+            current_idx += 1
 
-The structures from the IRC ``.out`` files must first be extracted before new jobs can be written.
-To populate a ``ConformationalEnsemble`` object with the structures from the IRC, we used the ``join_ensembles()`` method::
+Finally, the script writes the resultant structures to ``.gjf`` files. The complete script (``generate_conformers.py``) is shown below::
 
-    for filename in glob.iglob(args["filename"], recursive=True):
-        if re.search("slurm", filename):
-            continue
+    import numpy as np
+    import copy
 
-        output_file = GaussianFile.read_file(filename)
-        ensembles.append(output_file.molecules)
+    from cctk import XYZFile, ConformationalEnsemble, GaussianFile
 
-    new_ensemble = ConformationalEnsemble.join_ensembles(ensembles)
+    #### Usage: ``python generate_conformers.py``
 
-The files are then generated (and named after the ``C1``–``C8`` distance, which decreases monotonically along the IRC).
-For NICS calculation, a "ghost atom" must be added at the centroid of the ring
-(symbol "Bq", after the ghost Banquo from *Macbeth*).
-The Hirshfeld population jobs die if ghost atoms are used, so separate files are required (``generate_nics.py`` and ``generate_pop.py``)::
+    #### This script takes an input ``.xyz`` file and outputs ~600 different conformations.
 
-    for mol in new_ensemble.molecules:
-        mol.add_atom_at_centroid("Bq", [1, 7, 15, 12, 9, 8])
-        cc_dist = mol.get_distance(1, 8)
+    #### Corin Wagen and Eugene Kwan, 2019
 
-        newfile = f"nics_{int(round(cc_dist*1000))}.gjf"
-        GaussianFile.write_molecule_to_file(newfile, mol, "#p nmr m062x/6-31g(d)", None)
-        print(f"generating {newfile}...")
+    output_file = XYZFile.read_file('Ac-F2Ala-F2Ala-OMe.xyz')
+    output_file.molecule.assign_connectivity()
 
-The jobs should then be submitted -- they should each take no more than a few minutes to run.
+    #### here we define the different choices for each angle.
+    angles = range(0, 360, 120)
+    bin_angles = range(0, 360, 180)
 
-Analysis
-========
+    #### here we define all the rotatable bonds, and the bonds with two conformers (like amides)
+    to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
+    to_bin_rotate = [[27, 26, 1, 2], [8, 6, 9, 10], [16, 14, 17, 18]]
 
-Since the information in the ``.out`` files is not automatically extracted by ``GaussianFile.read_file()``,
-more sophisticated methods for automated parameter extraction must be employed.
-``parse_gaussian.py`` (imported as ``parse``) contains several ``awk``-like methods for locating blocks of text in ``.out`` files:
-``find_parameter()`` is useful for locating key values on a given line, while ``search_for_block()`` extracts larger blocks of text.
-(Note that ``return_lines=True`` must be set on ``GaussianFile.read_file()`` to generate the requisite ``lines`` variable).
-A part of ``graph.py`` is shown below::
+    #### now to employ some recursion...
+    def rotate_angles_one_by_one (idx, angles, thetas, structures):
+        """
+        This script takes a set of structures, and outputs a (longer) set of structures where the given bond has been rotated.
+
+        Args:
+            idx (int): the current position in ``angles``
+            angles (list of 4-element lists): the list of angles to recurse through and adjust
+            thetas (list of float): the list of dihedral angles to set each bond to
+            structures (list of cctk.Molecule): the current list of structures
+
+        Returns:
+            list of cctk.Molecule objects (with len(thetas) * len(structures) elements)
+        """
+        if idx >= len(angles):
+            return structures
+
+        else:
+            new_structures = [None] * (len(structures) * len(thetas))
+            current_idx = 0
+            for structure in structures:
+                for theta in thetas:
+                    new_structures[current_idx] = copy.deepcopy(structure.set_dihedral(*angles[idx], theta, check_result=False))
+                    current_idx += 1
+
+    mols = rotate_angles_one_by_one(0, to_rotate, angles, [output_file.molecule])
+    mols = rotate_angles_one_by_one(0, to_bin_rotate, bin_angles, mols)
+
+    for idx, molecule in enumerate(mols):
+        try:
+            molecule.check_for_conflicts()
+            GaussianFile.write_molecule_to_file(f"conformer_{idx:05d}.gjf", molecule, "#p opt pm7", None)
+        except:
+            pass
+
+The resultant Gaussian jobs (optimizations using the quick semiempirical ``pm7`` method) should converge quickly.
+
+Analyzing and Resubmitting
+==========================
+
+After running all the jobs (which should take a few hours), we need to analyze the results.
+We do this by reading in all the files and adding the molecules to a ``ConformationalEnsemble`` object (along with their energies)::
 
     for filename in sorted(glob.glob(filenames, recursive=True)):
         if re.search("slurm", filename):
             continue
 
-        (output_file, lines) = GaussianFile.read_file(filename, return_lines=True)
-        dist = int(round(output_file.get_molecule().get_distance(1, 8) * 1000))
+        try:
+            output_file = GaussianFile.read_file(filename)
 
-        energies[dist] = output_file.energies[-1]
+            if len(output_file.energies) > 0:
+                mol = output_file.get_molecule()
+                ensemble.add_molecule(mol, energy=output_file.energies[-1]*627.509)
+        except:
+            print(f"skipping f{filename} due to error...")
+
+The next step is to eliminate redundant conformers (since there aren't 648 distinct low-energy conformations of this peptide,
+many of the jobs will have converged to the same structure).
+
+By using a similarity threshold of 0.6, 166 distinct structures can be obtained::
+
+    print(f"{len(ensemble.molecules)} conformers before elimination of redundant")
+    ensemble.eliminate_redundant(cutoff=0.6)
+    print(f"{len(ensemble.molecules)} conformers after elimination of redundant")
+
+Finally, all the conformers within 10 kcal/mol of the ``pm7`` global minimum are resubmitted using DFT and implicit solvation::
+
+    best_confs = ensemble.get_within_cutoff(cutoff=10)
+    for idx, molecule in enumerate(best_confs):
+        GaussianFile.write_molecule_to_file(f"conformer_v2_{idx:03d}.gjf", molecule, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)", None)
+
+The script also outputs the energy and key dihedral angles for all 166 distinct conformers. The full script (``extract_unique.py``) is shown below::
+
+    import sys, re, glob
+    import numpy as np
+
+    from cctk import GaussianFile, Molecule, ConformationalEnsemble
+
+    #### This is a script to extract the lowest-energy unique conformers and resubmit them at a higher level of theory.
+    #### By default, this file will create new ``.gjf`` files for any conformer within 10 kcal/mol of the lowest-energy conformer.
+
+    #### Usage: ``python extract_unique.py "path/to/output/*.out"``
+    #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
+
+    #### Corin Wagen and Eugene Kwan, 2019
+
+    filenames = sys.argv[1]
+    info = []
+    text_width = 70
+
+    to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
+
+    ensemble = ConformationalEnsemble()
+
+    for filename in sorted(glob.glob(filenames, recursive=True)):
+        if re.search("slurm", filename):
+            continue
 
         try:
-            nics[dist] = -1 * parse.find_parameter(lines, "17  Bq   Isotropic", 8, 4)[0]
+            output_file = GaussianFile.read_file(filename)
+
+            if len(output_file.energies) > 0:
+                mol = output_file.get_molecule()
+                ensemble.add_molecule(mol, energy=output_file.energies[-1]*627.509)
         except:
-            pass
+            print(f"skipping f{filename} due to error...")
+
+    print(f"{len(ensemble.molecules)} conformers before elimination of redundant")
+    ensemble.eliminate_redundant(cutoff=0.6)
+    print(f"{len(ensemble.molecules)} conformers after elimination of redundant")
+
+    best_confs = ensemble.get_within_cutoff(cutoff=10)
+    for idx, molecule in enumerate(best_confs):
+        GaussianFile.write_molecule_to_file(f"conformer_v2_{idx:03d}.gjf", molecule, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)", None)
+
+    for idx, molecule in enumerate(list(ensemble.molecules[np.argsort(ensemble.energies)])):
+        items = [idx+1, np.sort(ensemble.energies)[idx]]
+
+        for atoms in to_rotate:
+            items.append(molecule.get_dihedral(*atoms))
+
+        if idx==0:
+            print("Molecule    Energy    D" + str(" D".join(str(a) for a in to_rotate)))
+
+        print(str("        ".join(str(x)[0:8] for x in items)))
+
+Final Analysis and Visualization
+================================
+
+The high-level results can be subjected to the same elimination of redundant conformers, which yields 7 final structures.
+The lowest-energy structure is the linear form, but several other structures contain close N–H to C=O contacts.
+None of the structures studied appears to contain a close C–H to C=O contact, indicating that difluoromethyl hydrogen bonding
+is not significant in this structure.
+Instead, the difluoromethyl groups appear to be oriented so as to minimize the overall molecular dipole.
+
+Although we chose input structures with a 10 kcal/mol difference in energies, the output files are all within roughly 5 kcal/mol (∆G). 
+This may be due to increased shielding of dipole/dipole interactions due to implicit solvation.
+
+When run, the analysis script yields the following output::
+
+    $ python analyze_final.py "output/*v2*.out"
+    12 conformers before elimination of redundant
+    7 conformers after elimination of redundant
+    writing final conformers to disk as ``conformer_final_xx.gjf``...
+    Molecule    Energy      D[1, 3, 5, 7]  D[9, 11, 13, 15]  D[5, 3, 6, 8]  D[12, 11, 14, 16]
+    0            00.000            066.23            313.11            113.17            235.38
+    1            00.140            310.90            308.97            121.98            048.58
+    2            00.616            172.56            309.14            359.35            047.92
+    3            00.717            064.58            186.38            019.56            241.59
+    4            01.803            294.45            183.31            019.67            074.00
+    5            04.466            174.92            302.01            000.30            041.05
+    6            05.245            060.83            309.23            039.52            240.81
+
+The lowest energy structure (``conformer_final_00.gjf``) is pictured here—but three other conformations are nearly isoenergetic, so clearly there are many structures which could be relevant to reactivity through a Curtin–Hammett-type scenario.
+
+.. image:: /img/t06_lowest_energy.png
+
+The full analysis script (``analyze_final.py``) is as follows::
+
+    import sys, re, glob
+    import numpy as np
+
+    from cctk import GaussianFile, Molecule, ConformationalEnsemble
+
+    #### This is a script to monitor the final output of the conformational search.
+
+    #### This script will print the dihedral angles of the final structures, and output gjf files for each of the final scripts.
+
+    #### Usage: ``python analyze_final.py "path/to/output/*.out"``
+    #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
+
+    #### Corin Wagen and Eugene Kwan, 2019
+
+    filenames = sys.argv[1]
+    info = []
+    text_width = 70
+
+    to_rotate = [[1, 3, 5, 7], [9, 11, 13, 15], [5, 3, 6, 8], [12, 11, 14, 16]]
+
+    ensemble = ConformationalEnsemble()
+
+    for filename in sorted(glob.glob(filenames, recursive=True)):
+        if re.search("slurm", filename):
+            continue
 
         try:
-            dipole_line = parse.search_for_block(lines, "Dipole", "Quadrupole")
-            fields = re.split(" +", dipole_line)
-            fields = list(filter(None, fields))
-            dipole[dist] = float(fields[-1])
+            output_file = GaussianFile.read_file(filename)
+
+            if len(output_file.energies) > 0:
+                mol = output_file.get_molecule()
+                ensemble.add_molecule(mol, energy=output_file.gibbs_free_energy*627.509)
         except:
-            pass
+            print(f"skipping f{filename} due to error...")
 
-        try:
-            C1_charge[dist] = parse.find_parameter(lines, "     1  C", 8, 2)[-1]
-            O7_charge[dist] = parse.find_parameter(lines, "     7  O", 8, 2)[-1]
-            C8_charge[dist] = parse.find_parameter(lines, "     8  C", 8, 2)[-1]
-            C9_charge[dist] = parse.find_parameter(lines, "     9  C", 8, 2)[-1]
-            C12_charge[dist] = parse.find_parameter(lines, "    12  C", 8, 2)[-1]
-        except:
-            pass
+    print(f"{len(ensemble.molecules)} conformers before elimination of redundant")
+    ensemble.eliminate_redundant(cutoff=0.6)
+    print(f"{len(ensemble.molecules)} conformers after elimination of redundant")
+    print("writing final conformers to disk as ``conformer_final_xx.gjf``...")
 
-With these values in hand, we can generate graphs showing change along the IRC:
+    for idx, molecule in enumerate(list(ensemble.molecules[np.argsort(ensemble.energies)])):
+        items = [idx, f"{np.sort(ensemble.energies)[idx] - np.min(ensemble.energies):06.3f}"]
+        GaussianFile.write_molecule_to_file(f"conformer_final_{idx:02d}.gjf", molecule, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)", None)
 
-.. image:: /img/t06_graph.png
-    :width: 650
-    :align: center
+        for atoms in to_rotate:
+            items.append(f"{molecule.get_dihedral(*atoms):0>6.2f}")
+        
+        if idx==0:
+            print("Molecule    Energy      D" + str("  D".join(str(a) for a in to_rotate)))
 
-As shown by these images, the reaction proceeds without significant buildup of positive or negative charge and with minimal change in the overall dipole moment,
-indicating solvent polarity is unlikely to drastically raise/lower the rate of reaction.
-However, the drastic drop in NICS(0) around the transition state indicates that a true aromatic transition state is present,
-consistent with `Schleyer's findings <https://pubs.acs.org/doi/10.1021/cr030088%2B>`_ (see Section 3.8.5).
-Accordingly, pi–pi stacking or other aromatic-stabilizing interactions might be a fruitful avenue for catalyst design to accelerate this reaction.
+        print(str("            ".join(str(x)[0:10] for x in items)))
 
-A more in-depth study might analyze the role of open-shell or multiconfigurational species
-(`like in this paper <https://pubs.acs.org/doi/10.1021/jo502041f>`_),
-as well as investigating how Lewis acid catalysts like Et\ :sub:`2`\ AlCl change the above properties.

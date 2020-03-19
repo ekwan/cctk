@@ -128,9 +128,10 @@ class Group(Molecule):
         ), f"molecule has {len(molecule.atomic_numbers)} atoms but {len(molecule.geometry)} geometry elements!"
 
         #### now we want to find the "lowest" energy conformation, defined as the rotamer which minimizes the RMS distance between all atoms
-        adjacent_on_old_molecule = molecule.get_adjacent_atoms(adjacent_atom)[0]
-        adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
-        molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
+        if group.num_atoms() > 3:
+            adjacent_on_old_molecule = molecule.get_adjacent_atoms(adjacent_atom)[0]
+            adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
+            molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
 
         try:
             molecule.check_for_conflicts()

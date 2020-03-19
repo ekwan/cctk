@@ -17,3 +17,5 @@ Supplemental files and all scripts can be found on Github (``tutorials/``).
    tutorial_04
    tutorial_05
    tutorial_06
+   tutorial_07
+   tutorial_08

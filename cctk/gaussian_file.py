@@ -238,8 +238,6 @@ class GaussianFile(File):
 
         #### parameters don't get printed every time for opt jobs
         if JobType.OPT in job_types:
-            print(bonds)
-            print(bonds[0])
             bonds = np.repeat(np.array([bonds[0]]), len(atomic_numbers)-1, axis=0).tolist() + [bonds[-1]]
             charge = list(np.tile(np.array(charge[0]), len(atomic_numbers)-1)) + [charge[-1]]
             multip = list(np.tile(np.array(multip[0]), len(atomic_numbers)-1)) + [multip[-1]]
@@ -387,13 +385,19 @@ class GaussianFile(File):
         return self.molecules.molecules[num]
 
     @classmethod
-    def write_ensemble_to_file(cls, filename, ensemble, header, **kwargs):
+    def write_ensemble_to_file(cls, filename, ensemble, headers, kwargs):
         """
         Writes an Ensemble to a file using Link1 specification.
+
+        Args:
+            filename (str): where to write the file
+            ensemble (Ensemble): ``Ensemble`` object to write
+            headers (list): headers for each ``write_molecule_to_file`` call
+            kwargs (list of dict): arguments for each ``write_molecule_to_file`` call
         """
         for idx, molecule in enumerate(ensemble.molecules):
             if idx == 0:
-                self.write_molecule_to_file(filename, molecule, header, append=False, **kwargs)
+                cls.write_molecule_to_file(filename, molecule, headers[idx], append=False, **kwargs[idx])
             else:
-                self.write_molecule_to_file(filename, molecule, header, append=True, **kwargs)
+                cls.write_molecule_to_file(filename, molecule, headers[idx], append=True, **kwargs[idx])
 

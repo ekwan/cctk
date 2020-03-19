@@ -16,6 +16,32 @@ from cctk.helper_functions import (
     get_isotopic_distribution,
 )
 
+class OneIndexedArray(np.ndarray):
+    """
+    Wrapper for ``np.array`` that's indexed from one, not zero, to store atomic numbers and geometries.
+
+    This only works on 1D or 2D arrays. Additionally, only the first index of a 2D array will be 1-indexed.
+    """
+
+    def __new__(cls, obj):
+        new = np.array(obj).view(cls)
+        return new
+
+    def __getitem__(self, index):
+        if isinstance(index, int) and index >= 0:
+            return super().__getitem__(index-1)
+        elif (isinstance(index, tuple)) and (len(index) == 2 and index[0] >= 0):
+            return super().__getitem__((index[0]-1, index[1]))
+        else:
+            return super().__getitem__(index)
+
+    def __setitem__(self, index, value):
+        if isinstance(index, int) and index >= 0:
+            super().__setitem__(index-1, value)
+        elif (isinstance(index, tuple)) and (len(index) == 2 and index[0] >= 0):
+            super().__setitem__((index[0]-1, index[1]), value)
+        else:
+            super().__setitem__(index, value)
 
 class Molecule:
     """
@@ -757,7 +783,7 @@ class Molecule:
         try:
             self.bonds.remove_node(number)
             self.geometry = np.delete(self.geometry, number - 1, axis=0)
-            self.atomic_numbers.pop(number - 1)
+            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1)
             return self
         except:
             raise ValueError("removing atom {number} failed!")
