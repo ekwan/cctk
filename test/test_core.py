@@ -115,88 +115,6 @@ class TestMAE(unittest.TestCase):
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
 
-class TestMolecule(unittest.TestCase):
-    def load_molecule(self, path="static/test_peptide.xyz"):
-        return cctk.XYZFile.read_file(path).molecule
-
-    def test_distance(self):
-        mol = self.load_molecule()
-        self.assertTrue(isinstance(mol, cctk.Molecule))
-
-        self.assertEqual(int(round(mol.get_distance(1,2)*10)), 10)
-        self.assertEqual(int(round(mol.get_distance(1,3)*10)), 14)
-        self.assertEqual(int(round(mol.get_distance(1,9)*10)), 38)
-
-        mol.set_distance(1, 2, 2.00)
-
-        self.assertEqual(int(round(mol.get_distance(1,2)*10)), 20)
-        self.assertEqual(int(round(mol.get_distance(1,3)*10)), 14)
-        self.assertEqual(int(round(mol.get_distance(1,9)*10)), 38)
-
-        self.assertTrue(mol.check_for_conflicts())
-        mol.set_distance(1, 2, 0.01)
-        self.assertRaises(ValueError, mol.check_for_conflicts)
-
-    def test_angle(self):
-        mol = self.load_molecule()
-        self.assertTrue(isinstance(mol, cctk.Molecule))
-
-        self.assertEqual(int(round(mol.get_angle(1,3,5))), 111)
-        self.assertEqual(int(round(mol.get_angle(3,5,7))), 110)
-        self.assertEqual(int(round(mol.get_angle(5,7,9))), 64)
-
-        mol.set_angle(1, 3, 5, 120)
-
-        self.assertEqual(int(round(mol.get_angle(1,3,5))), 120)
-
-    def test_dihedral(self):
-        mol = self.load_molecule()
-        self.assertTrue(isinstance(mol, cctk.Molecule))
-
-        self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 60)
-        self.assertEqual(int(round(mol.get_dihedral(16,14,17,18))), 11)
-        self.assertEqual(int(round(mol.get_dihedral(31,28,1,2))), 148)
-
-        mol.set_dihedral(1, 3, 5, 7, 120)
-
-        self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 120)
-
-    def test_fragment(self):
-        mol = self.load_molecule()
-        mol.assign_connectivity()
-        (frag1, frag2) = mol._get_bond_fragments(3, 5)
-        self.assertEqual(len(frag1), 27)
-        self.assertEqual(len(frag2), 4)
-
-        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
-        mol.remove_bond(3,5)
-        self.assertEqual(len(mol._get_fragment_containing(5)), 4)
-        self.assertFalse(mol.are_connected(3,5))
-        mol.add_bond(3,5)
-        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
-        self.assertTrue(mol.are_connected(3,5))
-
-    def test_add_atoms(self):
-        mol = cctk.Molecule(np.array([2], dtype=np.int8), [[0, 0, 0]])
-        self.assertEqual(mol.num_atoms(), 1)
-
-        mol.add_atom("He", [1, 0, 0])
-        self.assertListEqual(list(mol.atomic_numbers), [2, 2])
-        self.assertEqual(mol.num_atoms(), 2)
-
-        mol.add_atom("Ar", [3, 0, 0])
-        self.assertEqual(mol.num_atoms(), 3)
-
-        mol.add_atom_at_centroid("He", [2, 3])
-        self.assertEqual(mol.num_atoms(), 4)
-        self.assertListEqual(list(mol.get_vector(4)), [2, 0, 0])
-
-    def test_mass_spec(self):
-        mol = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]])
-        masses, weights = mol.calculate_mass_spectrum()
-        self.assertListEqual(list(masses), [23.])
-        self.assertListEqual(list(weights), [1.])
-
 class TestGroup(unittest.TestCase):
     def test_group_add(self):
         path = "static/acetaldehyde.out"
@@ -297,21 +215,21 @@ class TestEnsemble(unittest.TestCase):
         ensemble = ensemble.align()
         template = ensemble.molecules[0].geometry
         for molecule in ensemble.molecules:
-            for i in range(0,len(template)):
+            for i in range(1,len(template)+1):
                 self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
         ensemble2 = self.generate_test_ensemble()
         ensemble2 = ensemble2.align(atoms="heavy")
         template = ensemble2.molecules[0].geometry
         for molecule in ensemble2.molecules:
-            for i in range(0,len(template)):
+            for i in range(1,len(template)+1):
                 self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
         ensemble3 = self.generate_test_ensemble()
         ensemble3 = ensemble3.align(atoms=[13, 4, 27, 6, 9, 14])
         template = ensemble3.molecules[0].geometry
         for molecule in ensemble3.molecules:
-            for i in range(0,len(template)):
+            for i in range(1,len(template)+1):
                 self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
 

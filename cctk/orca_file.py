@@ -67,8 +67,9 @@ class OrcaFile(File):
         text = f"{header.strip()}\n\n"
 
         text += f"* xyz {int(molecule.charge)} {int(molecule.multiplicity)}\n"
-        for index, line in enumerate(molecule.geometry):
-            text += f"{molecule.atomic_numbers[index]:2d}     {line[0]:.8f}      {line[1]:.8f}      {line[2]:.8f}\n"
+        for index, Z in enumerate(molecule.atomic_numbers, start=1):
+            line = molecule.get_vector(index)
+            text += f"{Z:2d}     {line[0]:.8f}      {line[1]:.8f}      {line[2]:.8f}\n"
 
         text += "*\n"
         text += "\n"

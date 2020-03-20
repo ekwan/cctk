@@ -1,5 +1,6 @@
 from .file import File
-from .molecule import Molecule, OneIndexedArray
+from .array import OneIndexedArray
+from .molecule import Molecule
 from .ensemble import Ensemble, ConformationalEnsemble
 from .group import Group
 

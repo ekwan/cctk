@@ -205,6 +205,9 @@ def compute_rotation_matrix(axis, theta):
     theta = np.radians(theta)
     axis = compute_unit_vector(axis)
 
+    print(axis)
+    print(theta)
+
     a = math.cos(theta / 2.0)
     b, c, d = -axis * math.sin(theta / 2.0)
 
@@ -217,15 +220,6 @@ def compute_rotation_matrix(axis, theta):
             [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc],
         ]
     )
-
-
-def to_radians(theta):
-    return (theta * math.pi) / 180
-
-
-def to_degrees(theta):
-    return (theta * 180) / math.pi
-
 
 def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     """

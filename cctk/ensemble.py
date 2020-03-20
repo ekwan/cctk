@@ -96,11 +96,8 @@ class Ensemble:
         except:
             raise TypeError(f"atom number {number} must be integer")
 
-        if number > len(self.molecules):
+        if number >= len(self.molecules):
             raise ValueError(f"atom number {number} too large!")
-
-        if number <= 0:
-            raise ValueError(f"atom number {number} invalid: must be a positive integer!")
 
     @classmethod
     def join_ensembles(cls, ensembles, name=None):
@@ -210,12 +207,12 @@ class ConformationalEnsemble(Ensemble):
 
         return new_ensemble
 
-    def align(self, align_to=1, atoms=None, return_rmsd=False):
+    def align(self, align_to=0, atoms=None, return_rmsd=False):
         """
         Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
 
         Args:
-            align_to (int): which geometry to align to (1-indexed)
+            align_to (int): which geometry to align to (0-indexed)
             atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
                 alternatively, specify ``None`` for all atoms or "heavy" for all heavy atoms
             return_rmsd (Bool): whether to return RMSD before and after rotation
@@ -227,13 +224,12 @@ class ConformationalEnsemble(Ensemble):
         self._check_molecule_number(align_to)
 
         if atoms is None:
-            atoms = np.arange(0, self.molecules[0].num_atoms())
+            atoms = np.arange(1, self.molecules[0].num_atoms() + 1)
         elif isinstance(atoms, str) and (atoms == "heavy"):
             atoms = self.molecules[0].get_heavy_atoms()
         else:
             try:
                 atoms = np.array(atoms)
-                atoms += -1
 
                 if len(atoms) < 3:
                     raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
@@ -241,13 +237,12 @@ class ConformationalEnsemble(Ensemble):
             except:
                 raise ValueError("atom numbers is not a recognized keyword and cannot be cast to numpy array... try again!")
 
-        #### atom numbers is 0-indexed now
         #### move everything to the center!
         for molecule in self.molecules:
             centroid = molecule.geometry[atoms].mean(axis=0)
             molecule.translate_molecule(-centroid)
 
-        template = self.molecules[align_to - 1].geometry[atoms]
+        template = self.molecules[align_to].geometry[atoms]
         before_rmsd = 0
         after_rmsd = 0
 

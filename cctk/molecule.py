@@ -4,6 +4,7 @@ import networkx as nx
 
 from functools import lru_cache
 
+from cctk import OneIndexedArray
 from cctk.helper_functions import (
     get_symbol,
     get_number,
@@ -16,45 +17,19 @@ from cctk.helper_functions import (
     get_isotopic_distribution,
 )
 
-class OneIndexedArray(np.ndarray):
-    """
-    Wrapper for ``np.array`` that's indexed from one, not zero, to store atomic numbers and geometries.
-
-    This only works on 1D or 2D arrays. Additionally, only the first index of a 2D array will be 1-indexed.
-    """
-
-    def __new__(cls, obj):
-        new = np.array(obj).view(cls)
-        return new
-
-    def __getitem__(self, index):
-        if isinstance(index, int) and index >= 0:
-            return super().__getitem__(index-1)
-        elif (isinstance(index, tuple)) and (len(index) == 2 and index[0] >= 0):
-            return super().__getitem__((index[0]-1, index[1]))
-        else:
-            return super().__getitem__(index)
-
-    def __setitem__(self, index, value):
-        if isinstance(index, int) and index >= 0:
-            super().__setitem__(index-1, value)
-        elif (isinstance(index, tuple)) and (len(index) == 2 and index[0] >= 0):
-            super().__setitem__((index[0]-1, index[1]), value)
-        else:
-            super().__setitem__(index, value)
-
 class Molecule:
     """
     Class that represents a single molecule, abstractly.
 
-    Outward-facing methods are indexed from one (i.e. ``self.get_vector(1)`` returns the first element of ``self.geometry``).
-    Internal methods (prefixed with ``_``) are sometimes zero-indexed, and list attributes (e.g. ``self.geometry``, ``self.atomic_numbers``) are zero-indexed inherently.
-    Whenever possible, one-indexed accessor functions have been added to prevent confusion: ``self.bonds[i][j]`` may cause unintended behavior, but ``self.add_bond(i,j)`` should work as expected.
+    In contrast to typical Python behavior, ``atomic_numbers`` and ``geometry`` are indexed from one, to simplify interfacing with computational chemistry programs.
+    This has been done by defining a custom wrapper for ``numpy.ndarray`` called ``cctk.OneIndexedArray``.
+
+    All other datatypes are indexed from 0.
 
     Attributes:
         name (str): for identification, optional
-        atomic_numbers (np.array, dtype=np.int8): list of atomic numbers
-        geometry (np.array): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
+        atomic_numbers (cctk.OneIndexedArray, dtype=np.int8): list of atomic numbers
+        geometry (cctk.OneIndexedArray): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
@@ -106,8 +81,8 @@ class Molecule:
                 raise TypeError("multiplicity must be positive integer or castable to positive integer")
         assert multiplicity > 0, "multiplicity must be positive"
 
-        self.atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
-        self.geometry = np.array(geometry)
+        self.atomic_numbers = OneIndexedArray(atomic_numbers, dtype=np.int8)
+        self.geometry = OneIndexedArray(geometry)
 
         if bonds:
             for bond in bonds:
@@ -328,16 +303,15 @@ class Molecule:
         Get the fragment containing the atom with number ``atom``.
 
         Args:
-            atom (int): the number of the atom (indexed from one)
+            atom (int): the number of the atom
 
         Returns:
-            a (zero-indexed) list of all the atoms in the fragment
+            a list of all the atoms in the fragment
         """
 
         self._check_atom_number(atom)
         fragments = nx.connected_components(self.bonds)
 
-        #### fragment is zero-indexed
         for fragment in fragments:
             if atom in fragment:
                 return list(fragment)
@@ -391,7 +365,7 @@ class Molecule:
         delta = distance - current_distance
         unitv = compute_unit_vector(vb)
         for atom in atoms_to_move:
-            self.geometry[atom - 1] = self.geometry[atom - 1] + (delta * unitv)
+            self.geometry[atom] = self.geometry[atom] + (delta * unitv)
 
         #### check everything worked okay...
         v1f = self.get_vector(atom1)
@@ -482,9 +456,8 @@ class Molecule:
         #### perform the actual rotation
         rot_axis = np.cross(v1, v3)
         rot_matrix = compute_rotation_matrix(rot_axis, delta)
-
         for atom in atoms_to_move:
-            self.geometry[atom - 1] = list(np.dot(rot_matrix, self.get_vector(atom)))
+            self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom))
 
         #### and move it back!
         self.translate_molecule(v2)
@@ -590,7 +563,6 @@ class Molecule:
             return
 
         #### now the real work begins...
-
         #### move everything to place atom2 at the origin
         v3 = self.get_vector(atom3, check=False)
         self.translate_molecule(-v3)
@@ -599,8 +571,7 @@ class Molecule:
         rot_matrix = compute_rotation_matrix(-self.get_vector(atom2, check=False), delta)
 
         for atom in atoms_to_move:
-            #### have to add one because atoms_to_move is zero indexed while get_vector is one indexed
-            self.geometry[atom - 1] = list(np.dot(rot_matrix, self.get_vector(atom)))
+            self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom, check=False))
 
         #### and move it back!
         self.translate_molecule(v3)
@@ -624,7 +595,9 @@ class Molecule:
         Returns:
             the Molecule object
         """
-        self.geometry = np.array(self.geometry) + np.repeat([vector], len(self.geometry), axis=0)
+        for atom in range(1, self.num_atoms() + 1):
+            self.geometry[atom] = self.geometry[atom] + vector
+
         return self
 
     def rotate_molecule(self, axis, degrees):
@@ -640,8 +613,8 @@ class Molecule:
         """
         rot_matrix = compute_rotation_matrix(axis, degrees)
 
-        for atom in range(0, self.num_atoms()):
-            self.geometry[atom] = list(np.dot(rot_matrix, self.geometry[atom]))
+        for atom in range(1, self.num_atoms() + 1):
+            self.geometry[atom] = np.dot(rot_matrix, self.geometry[atom])
 
         return self
 
@@ -737,7 +710,7 @@ class Molecule:
             self._check_atom_number(atom)
             coords[index] = self.get_vector(atom)
             if weighted == True:
-                weights[index] = self.atomic_numbers[atom - 1]
+                weights[index] = self.atomic_numbers[atom]
 
         new_coord = list(np.average(coords, weights=weights, axis=0))
         return self.add_atom(coordinates=new_coord, symbol=symbol)
@@ -761,8 +734,8 @@ class Molecule:
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atomic_numbers = np.append(self.atomic_numbers, [number])
-        self.geometry = np.append(self.geometry, [coordinates], axis=0)
+        self.atomic_numbers = np.append(self.atomic_numbers, [number]).view(OneIndexedArray)
+        self.geometry = np.append(self.geometry, [coordinates], axis=0).view(OneIndexedArray)
         self.bonds.add_node(self.num_atoms())
 
         return self
@@ -782,8 +755,8 @@ class Molecule:
 
         try:
             self.bonds.remove_node(number)
-            self.geometry = np.delete(self.geometry, number - 1, axis=0)
-            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1)
+            self.geometry = np.delete(self.geometry, number, axis=0).view(OneIndexedArray)
+            self.atomic_numbers = np.delete(self.atomic_numbers, number).view(OneIndexedArray)
             return self
         except:
             raise ValueError("removing atom {number} failed!")
@@ -799,7 +772,7 @@ class Molecule:
             the atomic number of that atom
         """
         self._check_atom_number(atom)
-        return self.atomic_numbers[atom - 1]
+        return self.atomic_numbers[atom]
 
     def get_vector(self, atom, atom2=None, check=True):
         """
@@ -820,9 +793,9 @@ class Molecule:
         if atom2:
             if check:
                 self._check_atom_number(atom2)
-            return self.geometry[atom - 1] - self.geometry[atom2 - 1]
+            return (self.geometry[atom] - self.geometry[atom2]).view(np.ndarray)
         else:
-            return self.geometry[atom - 1]
+            return self.geometry[atom].view(np.ndarray)
 
     def get_distance(self, atom1, atom2, check=True, _dist=compute_distance_between):
         """
@@ -921,7 +894,7 @@ class Molecule:
             atom3 (int): number of the third atom
             atom4 (int): number of the fourth atom
             check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
-            _dihedral (function): function usd to compute dihedral
+            _dihedral (function): function used to compute dihedral
 
         Returns:
             the dihedral angle, in degrees
@@ -973,7 +946,7 @@ class Molecule:
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
-        if atom1 - 1 in self._get_fragment_containing(atom2):
+        if atom1 in self._get_fragment_containing(atom2):
             return True
         else:
             return False
@@ -988,19 +961,19 @@ class Molecule:
         number = get_number(symbol)
         atoms = []
 
-        for index, atom in enumerate(self.atomic_numbers):
+        for index, atom in enumerate(self.atomic_numbers, start=1):
             if atom == number:
-                atoms.append(index + 1)
+                atoms.append(index)
 
         return atoms
 
     def get_heavy_atoms(self):
         """
-        Returns a zero-indexed list of all the heavy atoms in the molecule (i.e., not hydrogen), for array indexing.
+        Returns a list of all the heavy atoms in the molecule (i.e., not hydrogen), for array indexing.
         """
         atoms = []
 
-        for index, atom in enumerate(self.atomic_numbers):
+        for index, atom in enumerate(self.atomic_numbers, start=1):
             if atom != 1:
                 atoms.append(index)
 
@@ -1085,7 +1058,7 @@ class Molecule:
 
         self._check_atom_number(atom)
 
-        return f"{get_symbol(self.atomic_numbers[atom-1])}{atom}"
+        return f"{get_symbol(self.atomic_numbers[atom])}{atom}"
 
     def perturb(self, size=0.005):
         """
@@ -1104,3 +1077,12 @@ class Molecule:
 
         self.geometry = geometry + random
         return self
+
+    def center(self):
+        """
+        Moves the centroid to the origin.
+        """
+        atoms = np.arange(1, self.num_atoms()+1)
+        self.translate_molecule(-self.geometry[atoms].mean(axis=0))
+        return self
+

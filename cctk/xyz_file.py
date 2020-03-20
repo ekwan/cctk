@@ -68,7 +68,9 @@ class XYZFile(File):
             text += f"{self.title}\n"
         except:
             text += "title\n"
-        for index, line in enumerate(self.molecule.geometry):
-            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(self.molecule.atomic_numbers[index]), line[0], line[1], line[2])
+
+        for index, Z in enumerate(self.molecule.atomic_numbers, start=1):
+            line = self.molecule.get_vector(index)
+            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(Z), line[0], line[1], line[2])
 
         super().write_file(filename, text)
