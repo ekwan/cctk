@@ -230,7 +230,6 @@ class ConformationalEnsemble(Ensemble):
         else:
             try:
                 atoms = np.array(atoms)
-
                 if len(atoms) < 3:
                     raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
 
@@ -245,6 +244,8 @@ class ConformationalEnsemble(Ensemble):
         template = self.molecules[align_to].geometry[atoms]
         before_rmsd = 0
         after_rmsd = 0
+
+        print(f"atoms is {atoms}")
 
         #### perform alignment using Kabsch algorithm
         new_ensemble = copy.deepcopy(self)

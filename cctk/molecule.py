@@ -573,6 +573,8 @@ class Molecule:
         for atom in atoms_to_move:
             self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom, check=False))
 
+        error = self.get_dihedral(atom1, atom2, atom3, atom4, check=False) - dihedral
+
         #### and move it back!
         self.translate_molecule(v3)
 
@@ -580,6 +582,7 @@ class Molecule:
             final_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4, check=False)
 
             #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
+            #### this will throw ValueError for differences of about 2 degrees
             if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
                 raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
 

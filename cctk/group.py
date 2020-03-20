@@ -87,8 +87,8 @@ class Group(Molecule):
 
         attach_to = group.attach_to
         other_indices = np.ones_like(group.atomic_numbers).astype(bool)
-        other_indices[attach_to - 1] = False # zero indexed
-        other_indices[group.adjacent - 1] = False
+        other_indices[attach_to] = False 
+        other_indices[group.adjacent] = False
 
         #### we need to change the bond length somewhat to prevent strange behavior
         old_radius = get_covalent_radius(molecule.atomic_numbers[add_to])
@@ -114,13 +114,12 @@ class Group(Molecule):
         theta = compute_angle_between(v_g, v_m)
 
         #### rotate each atom and add it...
-        new_center = molecule.get_vector(add_to)
+        center_pos = molecule.get_vector(add_to)
         rot = compute_rotation_matrix(np.cross(v_g, v_m), -(180 - theta))
         for vector in group.geometry[other_indices]:
-            new_v = np.dot(rot, vector) + new_center
+            new_v = np.dot(rot, vector) + center_pos
             molecule.geometry = np.vstack((molecule.geometry, new_v))
-
-        molecule.geometry = molecule.geometry.view(OneIndexedArray)
+            molecule.geometry = molecule.geometry.view(OneIndexedArray)
 
         #### now we have to merge the new bonds
         for (atom1, atom2) in group.bonds.edges():

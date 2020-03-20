@@ -52,9 +52,10 @@ class TestMolecule(unittest.TestCase):
         self.assertEqual(int(round(mol.get_dihedral(16,14,17,18))), 11)
         self.assertEqual(int(round(mol.get_dihedral(31,28,1,2))), 148)
 
-        mol.set_dihedral(1, 3, 5, 7, 120)
-
-        self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 120)
+        theta = [1, 20, 89, 66, 180, 215, 333]
+        for t in theta:
+            mol.set_dihedral(1, 3, 5, 7, t)
+            self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), t)
 
     def test_fragment(self):
         mol = self.load_molecule()

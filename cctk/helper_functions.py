@@ -205,9 +205,6 @@ def compute_rotation_matrix(axis, theta):
     theta = np.radians(theta)
     axis = compute_unit_vector(axis)
 
-    print(axis)
-    print(theta)
-
     a = math.cos(theta / 2.0)
     b, c, d = -axis * math.sin(theta / 2.0)
 
