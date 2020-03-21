@@ -146,7 +146,7 @@ class ConformationalEnsemble(Ensemble):
 
         Args:
             atomic_numbers (list): list of atomic numbers.
-            geometry (list): list of 3-tuples of xyz coordinates
+            geometry (np.ndarray): list of 3-tuples of xyz coordinates
             bonds (list): list of edges (i.e. an n x 2 `numpy` array).
             charges (int): molecular charge - will default to 0 for all molecules.
             multiplicities (int): spin multiplicity - will default to 1 (singlet) for all molecules.
@@ -154,12 +154,20 @@ class ConformationalEnsemble(Ensemble):
         if (atomic_numbers is None) or (geometries is None):
             return
 
-        for geometry in geometries:
-            if len(atomic_numbers) != len(geometry):
+        for geometry, z in zip(geometries, atomic_numbers):
+            if len(z) != len(geometry):
                 raise TypeError("atoms and geometries must be the same length!")
 
-            mol = Molecule(atomic_numbers, geometry, **kwargs)
-            self.add_molecule(mol)
+        assert all(set(z) == set(atomic_numbers[0]) for z in atomic_numbers), "not all atomic numbers match; can't make ConformationalEnsemble"
+        assert all(len(z) == len(atomic_numbers[0]) for z in atomic_numbers), "not all atomic numbers match; can't make ConformationalEnsemble"
+        assert all(g.shape == geometries[0].shape for g in geometries), "not all geometries match; can't make ConformationalEnsemble!"
+
+        for x in ["charges", "multiplicities", "bonds"]:
+            if x in kwargs.keys():
+                if isinstance(kwargs[x], list) and len(kwargs[x]) > 1:
+                    assert all(y == kwargs[x][0] for y in kwargs[x]), f"not all {x} match; can't make ConformationalEnsemble!"
+
+        super().batch_add(atomic_numbers, geometries, **kwargs)
 
     def add_molecule(self, molecule, energy=None):
         """

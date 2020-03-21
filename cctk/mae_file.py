@@ -40,8 +40,9 @@ class MAEFile(File):
 
         (geometries, symbols, bonds, p_names, p_vals, conformers) = cls._read_mae(filename, **kwargs)
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
+        atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
         if conformers == True:
-            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=bonds.edges())
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[bonds.edges() for g in geometries])
         else:
             file.molecules = Ensemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[b.edges() for b in bonds])
 

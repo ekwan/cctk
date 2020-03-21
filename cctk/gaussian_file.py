@@ -3,7 +3,7 @@ import numpy as np
 
 from enum import Enum
 
-from cctk import File, Ensemble, Molecule
+from cctk import File, Ensemble, Molecule, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 import cctk.parse_gaussian as parse
@@ -29,7 +29,7 @@ class GaussianFile(File):
     Class for Gaussian files. Composes ``Ensemble``.
 
     Attributes:
-        molecules (Ensemble): ``Ensemble`` instance
+        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
         header (str): optional, header of .gjf file
         footer (str): optional, footer of .gjf file
@@ -46,10 +46,11 @@ class GaussianFile(File):
         gibbs_free_energy (float): gibbs free energy, from vibrational correction
         enthalpy (float): enthalpy, from vibrational correction
         title (str): optional, title of .gjf file
+        conformational_ensemble (Bool): whether or not molecules is an ``Ensemble`` or ``ConformationalEnsemble`` instance
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None, job_types=None, theory=None, header=None, footer=None, title="title",
+        self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None, job_types=None, theory=None, header=None, footer=None, title="title", conformational_ensemble=False,
     ):
         """
         Create new GaussianFile object.
@@ -87,9 +88,16 @@ class GaussianFile(File):
             multiplicities = list(np.ones(shape=len(geometries)))
 
         if (len(atomic_numbers) > 0) and (len(geometries) > 0):
-            self.molecules = Ensemble(
-                atomic_numbers=atomic_numbers, geometries=geometries, bonds=bonds, charges=charges, multiplicities=multiplicities
-            )
+            arguments = {"atomic_numbers": atomic_numbers, "geometries": geometries, "bonds": bonds, "charges": charges, "multiplicities": multiplicities}
+            if conformational_ensemble:
+                self.molecules = ConformationalEnsemble(**arguments)
+            else:
+                try:
+                    self.molecules = ConformationalEnsemble(**arguments)
+                    conformational_ensemble = True
+                except AssertionError as e:
+                    self.molecules = Ensemble(**arguments)
+
         self.header = header
         self.footer = footer
         self.title = title
@@ -218,6 +226,7 @@ class GaussianFile(File):
                 success += 1
 
         (geometries, atom_lists, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
+        geometries = np.array(geometries)
         atomic_numbers = []
 
         #### convert to right datatype

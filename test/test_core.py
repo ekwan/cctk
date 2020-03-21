@@ -49,6 +49,7 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertEqual(file.title, "title")
         self.assertEqual(file.footer, None)
+        self.assertTrue(isinstance(file.molecules, cctk.ConformationalEnsemble))
 
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
