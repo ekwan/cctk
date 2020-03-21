@@ -121,15 +121,6 @@ class TestGroup(unittest.TestCase):
         old_path = "static/14-butanedione.gjf"
         new_path = "static/new_14-butanedione.gjf"
 
-        file = cctk.GaussianFile.read_file(new_path)
-        mol = file.get_molecule()
-        print(mol.atomic_numbers)
-        print(type(mol.atomic_numbers))
-        print(mol.geometry)
-        print(type(mol.atomic_numbers))
-
-        mol.set_dihedral(1,2,5,11,12)
-
         file = cctk.GaussianFile.read_file(path)
         group = cctk.Group.new_from_molecule(attach_to=6, molecule=file.get_molecule())
         new_mol = cctk.Group.add_group_to_molecule(file.get_molecule(), group, 5)

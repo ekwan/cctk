@@ -20,3 +20,6 @@ tutorial/*nics_ene/nics*
 tutorial/*nics_ene/pop*
 dist/*
 MANIFEST
+__pycache__/
+*.py[cod]
+

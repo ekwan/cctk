@@ -238,14 +238,11 @@ class ConformationalEnsemble(Ensemble):
 
         #### move everything to the center!
         for molecule in self.molecules:
-            centroid = molecule.geometry[atoms].mean(axis=0)
-            molecule.translate_molecule(-centroid)
+            molecule.center()
 
         template = self.molecules[align_to].geometry[atoms]
         before_rmsd = 0
         after_rmsd = 0
-
-        print(f"atoms is {atoms}")
 
         #### perform alignment using Kabsch algorithm
         new_ensemble = copy.deepcopy(self)

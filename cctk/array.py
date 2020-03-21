@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 class OneIndexedArray(np.ndarray):
     """
@@ -13,6 +14,7 @@ class OneIndexedArray(np.ndarray):
         return new
 
     def __getitem__(self, index):
+        index = copy.deepcopy(index)
         if isinstance(index, slice):
             new_index = slice(index.start - 1, index.stop - 1, index.step)
             return super().__getitem__(new_index)
@@ -48,6 +50,7 @@ class OneIndexedArray(np.ndarray):
 #            raise IndexError(f"invalid index {index} for OneIndexedArray")
 
     def __setitem__(self, index, value):
+        index = copy.deepcopy(index)
         if isinstance(index, int):
             if index > 0:
                 if self.ndim == 1:
