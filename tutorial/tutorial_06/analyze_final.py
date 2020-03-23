@@ -23,10 +23,10 @@ ensemble = ConformationalEnsemble()
 for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
         continue
-   
-    try:  
+
+    try:
         output_file = GaussianFile.read_file(filename)
-        
+
         if len(output_file.energies) > 0:
             mol = output_file.get_molecule() 
             ensemble.add_molecule(mol, energy=output_file.gibbs_free_energy*627.509)
@@ -39,7 +39,7 @@ print(f"{len(ensemble.molecules)} conformers after elimination of redundant")
 print("writing final conformers to disk as ``conformer_final_xx.gjf``...")
 
 for idx, molecule in enumerate(list(ensemble.molecules[np.argsort(ensemble.energies)])):
-    items = [idx, f"{np.sort(ensemble.energies)[idx] - np.min(ensemble.energies):06.3f}"]    
+    items = [idx, f"{np.sort(ensemble.energies)[idx] - np.min(ensemble.energies):06.3f}"]
     GaussianFile.write_molecule_to_file(f"conformer_final_{idx:02d}.gjf", molecule, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)", None)
 
     for atoms in to_rotate:

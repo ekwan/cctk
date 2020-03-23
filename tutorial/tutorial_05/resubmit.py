@@ -56,7 +56,7 @@ for filename in glob.iglob(args["filename"], recursive=True):
 
             if args["output"]:
                 newfile = args["output"]
-            
+
             output_file.write_file(newfile)
             print(f"{filename} > {newfile}")
     except:

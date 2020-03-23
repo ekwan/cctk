@@ -23,7 +23,7 @@ text_width = 70
 for filename in sorted(glob.glob(filenames, recursive=True)):
     if re.search("slurm", filename):
         continue
-    
+
     try:
         output_file = GaussianFile.read_file(filename)
 
@@ -35,9 +35,9 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
         success = "NO"
         if output_file.success:
             success = output_file.success
-        
+
         imaginaries = "--"
-        try: 
+        try:
             if output_file.num_imaginaries() > 0:
                 if output_file.num_imaginaries() > 1:
                     imaginaries = ", ".join(output_file.imaginaries())
@@ -47,10 +47,10 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
             #### Will raise ValueError if job is not of type "FREQ"
             pass
 
-        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])   
-    
+        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])
+
     except:
-        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])   
+        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])
 
 if len(info) > 0:
     min_energy = np.min([x[2] for x in info])
@@ -68,5 +68,5 @@ if len(info) > 0:
     for row in info:
         print("{0:{text_width}}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row, text_width=text_width))
 
-else: 
+else:
     print("no jobs to analyze!")
