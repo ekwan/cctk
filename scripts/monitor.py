@@ -63,5 +63,5 @@ try:
             distances[i]
         ))
 
-except ValueError as e:
-    print(f"job has not finished any iterations: {e}")
+except:
+    print(f"job has not finished any iterations")

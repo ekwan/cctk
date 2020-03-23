@@ -233,6 +233,26 @@ class TestEnsemble(unittest.TestCase):
             for i in range(1,len(template)+1):
                 self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
+class TestPDB(unittest.TestCase):
+    def test_write_traj(self):
+        path = "static/gaussian_file.out"
+        file = cctk.GaussianFile.read_file(path)
+        mols = file.molecules
+        self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
+
+        old_path = "static/traj.pdb"
+        new_path = "static/new_traj.pdb"
+
+        cctk.PDBFile.write_ensemble_to_trajectory(new_path, mols)
+
+        with open(old_path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
 
 if __name__ == '__main__':
     unittest.main()

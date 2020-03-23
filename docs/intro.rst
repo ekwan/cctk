@@ -74,6 +74,50 @@ Now, run ``conda activate cctk`` to enter the ``cctk`` Python environment (and `
 
 (More complete guides to ``conda`` usage can be found elsewhere.)
 
+**Upgrading**
+
+To get the latest version of *cctk*, navigate to the correct ``conda`` environment and run::
+
+    $ pip install --upgrade cctk
+
+Your First *cctk* Script
+------------------------
+
+Once you have *cctk* properly installed, you can write a simple "hello world" program. 
+
+Create a sample ``.xyz`` file (for instance, ``water.xyz``)::
+
+    3
+    hello world
+    O 0.0 0.0 0.0
+    H 1.0 0.0 0.0
+    H 0.0 1.0 0.0
+
+Now create a file called ``hello_world.py``::
+
+    import cctk
+
+    file = cctk.XYZFile.read_file("water.xyz")
+
+    print(f"{file.title} is title")
+    print(f"{file.molecule.atomic_numbers} is atomic numbers")
+    
+    angle = file.molecule.get_angle(2,1,3)
+    print(f"The angle between atoms 2, 1, and 3 is {angle} degrees")
+
+    if angle < 105:
+        print("This is a strained water molecule!")
+
+Running this script produces the following output::
+
+    $ ls
+    hello_world.py  water.xyz
+    $ python hello_world.py
+    hello world is title
+    [8 1 1] is atomic numbers
+    The angle between atoms 2, 1, and 3 is 90.0 degrees
+    This is a strained water molecule!  
+
 Using *cctk*
 ____________
 
