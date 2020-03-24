@@ -1,7 +1,11 @@
-# cctk
-## Computational Chemistry Toolkit
 
-*This is a Python 3-based library for working with computational chemistry data*.
+# cctk
+## computational chemistry toolkit
+
+*A Python 3-based library for working with computational chemistry data*.
+
+[![PyPI version](https://badge.fury.io/py/cctk.svg)](https://badge.fury.io/py/cctk)
+[![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
 
 ## Contents: 
  - [Overview](#overview) 
@@ -29,7 +33,7 @@ Potential uses for *cctk* include:
  
 ### Compatible File Types:
  - Gaussian 16 `.out` (read) and `.gjf` (read/write).
- - `.xyz` (read/write)
+ - `.xyz` (read/write
  - `.mol2` (read)
  - `.mae` (read)
  - Orca `.inp` (write)
