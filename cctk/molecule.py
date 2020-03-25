@@ -33,6 +33,7 @@ class Molecule:
         bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
+        nmr_isotropic (cctk.OneIndexedArray): NMR isotropic shifts
     """
 
     def __init__(self, atomic_numbers, geometry, name=None, bonds=None, charge=0, multiplicity=1):

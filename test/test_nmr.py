@@ -9,6 +9,9 @@ class TestNMR(unittest.TestCase):
     def test_basic(self):
         mol = self.load_molecule()
 
+        self.assertTrue(isinstance(mol.nmr_isotropic, cctk.OneIndexedArray))
+        self.assertEqual(len(mol.nmr_isotropic), len(mol.atomic_numbers))
+
 '''
     def test_translate(self):
         mol = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]])

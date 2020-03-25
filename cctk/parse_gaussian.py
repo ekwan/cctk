@@ -277,3 +277,17 @@ def extract_initial_geometry(lines):
         geometry[idx] = frags[1:]
         symbols[idx] = frags[0]
     return geometry, symbols
+
+def read_nmr_shifts(lines, num_atoms):
+    """
+    Helper method to search through output file and read NMR shifts.
+
+    Args:
+        lines (list): list of lines in file
+        num_atoms (int): number of atoms expected
+
+    Returns:
+        list of isotropic NMR shifts (np.ndarray)
+    """
+    return np.zeros(shape=num_atoms)
+

@@ -3,7 +3,7 @@ import numpy as np
 
 from enum import Enum
 
-from cctk import File, Ensemble, Molecule, ConformationalEnsemble
+from cctk import File, Ensemble, Molecule, ConformationalEnsemble, OneIndexedArray
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
 import cctk.parse_gaussian as parse
@@ -288,6 +288,10 @@ class GaussianFile(File):
                 f.frequencies = sorted(frequencies)
             except:
                 raise ValueError("error finding frequencies")
+
+        if JobType.NMR in job_types:
+            nmr_shifts = parse.read_nmr_shifts(lines, f.molecules[-1].num_atoms())
+            f.molecules[-1].nmr_isotropic = nmr_shifts.view(OneIndexedArray)
 
         if return_lines:
             return f, lines
