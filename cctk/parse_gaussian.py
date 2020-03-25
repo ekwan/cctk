@@ -291,3 +291,15 @@ def read_nmr_shifts(lines, num_atoms):
     """
     return np.zeros(shape=num_atoms)
 
+def split_link1(lines):
+    """
+    Splits ``lines`` list into blocks by Link1.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        list of list of lines by Link1 section; so a file with one Link1 specification would return [lines1, lines2]
+    """
+
+    pass
