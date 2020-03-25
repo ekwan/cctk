@@ -4,7 +4,7 @@ import cctk
 
 class TestNMR(unittest.TestCase):
     def load_molecule(self, path="test/static/LSD_custom.out"):
-        return cctk.GaussianFile.read_file(path).molecule
+        return cctk.GaussianFile.read_file(path).get_molecule()
 
     def test_basic(self):
         mol = self.load_molecule()

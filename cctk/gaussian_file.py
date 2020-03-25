@@ -248,7 +248,10 @@ class GaussianFile(File):
 
         #### parameters don't get printed every time for opt jobs
         if JobType.OPT in job_types:
-            bonds = np.repeat(np.array([bonds[0]]), len(atomic_numbers)-1, axis=0).tolist() + [bonds[-1]]
+            if len(bonds) > 0:
+                bonds = np.repeat(np.array([bonds[0]]), len(atomic_numbers)-1, axis=0).tolist() + [bonds[-1]]
+            else: # monoatomics, etc
+                bonds = [[] for z in atomic_numbers]
             charge = list(np.tile(np.array(charge[0]), len(atomic_numbers)-1)) + [charge[-1]]
             multip = list(np.tile(np.array(multip[0]), len(atomic_numbers)-1)) + [multip[-1]]
 
@@ -369,6 +372,7 @@ class GaussianFile(File):
         f.header = header
         f.footer = footer
         f.title = title
+        f.success = 0
 
         if return_lines:
             return f, lines

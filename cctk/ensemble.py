@@ -60,7 +60,7 @@ class Ensemble:
         if multiplicities is None:
             multiplicities = list(np.ones(shape=len(atomic_numbers)))
 
-        if bonds is None:
+        if (bonds is None) or len(bonds) == 0:
             bonds = [None] * len(atomic_numbers)
 
         n_atoms = len(atomic_numbers)
@@ -68,6 +68,7 @@ class Ensemble:
         n_bonds = len(bonds)
         n_charges = len(charges)
         n_multiplicities = len(multiplicities)
+
         assert n_atoms == n_geometries, f"there are {n_atoms} atomic number lists, but {n_geometries} geometry lists"
         assert n_atoms == n_bonds, f"there are {n_atoms} atomic number lists, but found {n_bonds} bond lists"
         assert n_atoms == n_charges, f"there are {n_atoms} atomic number lists, but found {n_charges} charge lists"

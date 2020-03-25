@@ -30,7 +30,10 @@ try:
 
     if output_file.success:
         print("Optimization converged!")
-        print(f"{output_file.num_imaginaries()} imaginary frequencies")
+        try:
+            print(f"{output_file.num_imaginaries()} imaginary frequencies")
+        except:
+            pass
 
     #### often you care about the largest atom and its neighbors... so this will automatically print that bond distance 
     mol = output_file.molecules[0]
