@@ -291,7 +291,8 @@ class GaussianFile(File):
 
         if JobType.NMR in job_types:
             nmr_shifts = parse.read_nmr_shifts(lines, f.molecules[-1].num_atoms())
-            f.molecules[-1].nmr_isotropic = nmr_shifts.view(OneIndexedArray)
+            for idx, shifts in nmr_shifts:
+                f.molecules[idx].nmr_isotropic = shifts.view(OneIndexedArray)
 
         if return_lines:
             return f, lines
