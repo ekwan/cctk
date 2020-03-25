@@ -4,7 +4,7 @@ import cctk
 
 class TestXYZ(unittest.TestCase):
     def test_readfile(self):
-        path = "static/test_peptide.xyz"
+        path = "test/static/test_peptide.xyz"
         file = cctk.XYZFile.read_file(path)
         self.assertEqual(file.title, "peptide example")
 
@@ -14,8 +14,8 @@ class TestXYZ(unittest.TestCase):
         self.assertTrue(mol.check_for_conflicts())
 
     def test_writefile(self):
-        path = "static/test_peptide.xyz"
-        new_path = "static/test_peptide_copy.xyz"
+        path = "test/static/test_peptide.xyz"
+        new_path = "test/static/test_peptide_copy.xyz"
 
         file = cctk.XYZFile.read_file(path)
         file.write_file(new_path)
@@ -31,7 +31,7 @@ class TestXYZ(unittest.TestCase):
 
 class TestGaussian(unittest.TestCase):
     def test_read_gjf_file(self):
-        path = "static/gaussian_file.gjf"
+        path = "test/static/gaussian_file.gjf"
         file = cctk.GaussianFile.read_file(path)
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertEqual(file.title, "title")
@@ -44,7 +44,7 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(mol.multiplicity, 1)
 
     def test_read_out_file(self):
-        path = "static/gaussian_file.out"
+        path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertEqual(file.title, "title")
@@ -57,8 +57,8 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(mol.charge, 0)
         self.assertEqual(mol.multiplicity, 1)
 
-        old_path = "static/gaussian_file.gjf"
-        new_path = "static/new_gjf.gjf"
+        old_path = "test/static/gaussian_file.gjf"
+        new_path = "test/static/new_gjf.gjf"
 
         file.write_file(new_path, molecule=2)
 
@@ -73,7 +73,7 @@ class TestGaussian(unittest.TestCase):
 
 class TestMOL2(unittest.TestCase):
     def test_read(self):
-        path = "static/dodecane.mol2"
+        path = "test/static/dodecane.mol2"
         file = cctk.MOL2File.read_file(path)
         self.assertTrue(isinstance(file, cctk.MOL2File))
 
@@ -88,7 +88,7 @@ class TestMOL2(unittest.TestCase):
         self.assertEqual(mol.get_bond_order(1,2), 1)
 
     def test_bulk_read(self):
-        path = "static/dodecane-csearch.mol2"
+        path = "test/static/dodecane-csearch.mol2"
         file = cctk.MOL2File.read_file(path)
         self.assertTrue(isinstance(file, cctk.MOL2File))
 
@@ -102,7 +102,7 @@ class TestMOL2(unittest.TestCase):
 
 class TestMAE(unittest.TestCase):
     def test_read(self):
-        path = "static/dodecane_csearch-out.mae"
+        path = "test/static/dodecane_csearch-out.mae"
         (file, pnames, pvals) = cctk.MAEFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.MAEFile))
         self.assertEqual(len(pnames), 597)
@@ -118,14 +118,14 @@ class TestMAE(unittest.TestCase):
 
 class TestGroup(unittest.TestCase):
     def test_group_add(self):
-        path = "static/acetaldehyde.out"
-        old_path = "static/14-butanedione.gjf"
-        new_path = "static/new_14-butanedione.gjf"
+        path = "test/static/acetaldehyde.out"
+        old_path = "test/static/14-butanedione.gjf"
+        new_path = "test/static/new_14-butanedione.gjf"
 
         file = cctk.GaussianFile.read_file(path)
         group = cctk.Group.new_from_molecule(attach_to=6, molecule=file.get_molecule())
         new_mol = cctk.Group.add_group_to_molecule(file.get_molecule(), group, 5)
-        file.write_file("static/new_14-butanedione.gjf", molecule=new_mol)
+        file.write_file("test/static/new_14-butanedione.gjf", molecule=new_mol)
 
         with open(old_path) as old:
             with open(new_path) as new:
@@ -138,9 +138,9 @@ class TestGroup(unittest.TestCase):
 
 class TestXYZ(unittest.TestCase):
     def test_writefile(self):
-        read_path = "static/test_peptide.xyz"
-        path = "static/test_peptide.inp"
-        new_path = "static/test_peptide_copy.inp"
+        read_path = "test/static/test_peptide.xyz"
+        path = "test/static/test_peptide.inp"
+        new_path = "test/static/test_peptide_copy.inp"
 
         file = cctk.XYZFile.read_file(read_path)
         header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint\n%pal nproc 4 end\n%maxcore 4000\n%mdci\n    density none\nend"
@@ -172,7 +172,7 @@ class TestXYZ(unittest.TestCase):
 
 class TestEnsemble(unittest.TestCase):
     def generate_test_ensemble(self):
-        path = "static/test_peptide.xyz"
+        path = "test/static/test_peptide.xyz"
         file = cctk.XYZFile.read_file(path)
         mol = file.molecule
 
@@ -235,13 +235,13 @@ class TestEnsemble(unittest.TestCase):
 
 class TestPDB(unittest.TestCase):
     def test_write_traj(self):
-        path = "static/gaussian_file.out"
+        path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
         mols = file.molecules
         self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
 
-        old_path = "static/traj.pdb"
-        new_path = "static/new_traj.pdb"
+        old_path = "test/static/traj.pdb"
+        new_path = "test/static/new_traj.pdb"
 
         cctk.PDBFile.write_ensemble_to_trajectory(new_path, mols)
 

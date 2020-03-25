@@ -3,7 +3,7 @@ import numpy as np
 import cctk
 
 class TestMolecule(unittest.TestCase):
-    def load_molecule(self, path="static/test_peptide.xyz"):
+    def load_molecule(self, path="test/static/test_peptide.xyz"):
         return cctk.XYZFile.read_file(path).molecule
 
     def test_basic(self):
