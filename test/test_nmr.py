@@ -3,6 +3,12 @@ import numpy as np
 import cctk
 
 class TestNMR(unittest.TestCase):
+
+    def test_link1(self):
+        molecule = cctk.GaussianFile.read_file("test/static/methane2.out")
+
+
+'''
     def load_molecule(self, path="test/static/LSD_custom.out"):
         return cctk.GaussianFile.read_file(path).get_molecule()
 
@@ -12,7 +18,6 @@ class TestNMR(unittest.TestCase):
         self.assertTrue(isinstance(mol.nmr_isotropic, cctk.OneIndexedArray))
         self.assertEqual(len(mol.nmr_isotropic), len(mol.atomic_numbers))
 
-'''
     def test_translate(self):
         mol = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]])
 
