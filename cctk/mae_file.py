@@ -40,10 +40,10 @@ class MAEFile(File):
 
         (geometries, symbols, bonds, p_names, p_vals, conformers) = cls._read_mae(filename, **kwargs)
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
-        atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
         if conformers == True:
-            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[bonds.edges() for g in geometries])
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=bonds.edges())
         else:
+            atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
             file.molecules = Ensemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[b.edges() for b in bonds])
 
         return file, p_names, p_vals
@@ -260,3 +260,18 @@ class MAEFile(File):
             property_values,
             contains_conformers,
         )
+
+    def get_molecule(self, num=None):
+        """
+        Returns the last molecule from the ensemble.
+
+        If ``num`` is specified, returns ``self.molecules[num]``
+        """
+        # some methods pass num=None, which overrides setting the default above
+        if num is None:
+            num = -1
+
+        if not isinstance(num, int):
+            raise TypeError("num must be int")
+
+        return self.molecules[num]

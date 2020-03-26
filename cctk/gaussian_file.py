@@ -22,14 +22,15 @@ class JobType(Enum):
     IRC = "irc"
     NMR = "nmr"
     POP = "pop"
+    FORCE = "force"
 
 
 class GaussianFile(File):
     """
-    Class for Gaussian files. Composes ``Ensemble``.
+    Class for Gaussian files. Composes ``ConformationalEnsemble``.
 
     Attributes:
-        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` instance
+        molecules (Ensemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
         header (str): optional, header of .gjf file
         footer (str): optional, footer of .gjf file
@@ -46,11 +47,10 @@ class GaussianFile(File):
         gibbs_free_energy (float): gibbs free energy, from vibrational correction
         enthalpy (float): enthalpy, from vibrational correction
         title (str): optional, title of .gjf file
-        conformational_ensemble (Bool): whether or not molecules is an ``Ensemble`` or ``ConformationalEnsemble`` instance
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None, job_types=None, theory=None, header=None, footer=None, title="title", conformational_ensemble=False,
+        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, theory=None, header=None, footer=None, title="title", conformational_ensemble=False,
     ):
         """
         Create new GaussianFile object.
@@ -81,22 +81,9 @@ class GaussianFile(File):
             if not all(isinstance(job, JobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
 
-        if charges is None:
-            charges = list(np.zeros(shape=len(geometries)))
-
-        if multiplicities is None:
-            multiplicities = list(np.ones(shape=len(geometries)))
-
         if (len(atomic_numbers) > 0) and (len(geometries) > 0):
-            arguments = {"atomic_numbers": atomic_numbers, "geometries": geometries, "bonds": bonds, "charges": charges, "multiplicities": multiplicities}
-            if conformational_ensemble:
-                self.molecules = ConformationalEnsemble(**arguments)
-            else:
-                try:
-                    self.molecules = ConformationalEnsemble(**arguments)
-                    conformational_ensemble = True
-                except AssertionError as e:
-                    self.molecules = Ensemble(**arguments)
+            arguments = {"atomic_numbers": atomic_numbers, "geometries": geometries, "bonds": bonds, "charge": charge, "multiplicity": multiplicity}
+            self.molecules = ConformationalEnsemble(**arguments)
 
         self.header = header
         self.footer = footer
@@ -225,16 +212,15 @@ class GaussianFile(File):
             if line.strip().startswith("Normal termination"):
                 success += 1
 
-        (geometries, atom_lists, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
+        (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
         geometries = np.array(geometries)
         atomic_numbers = []
 
         #### convert to right datatype
-        for atom_list in atom_lists:
-            try:
-                atomic_numbers.append(np.array(atom_list, dtype=np.int8))
-            except:
-                atomic_numbers.append(np.array(list(map(get_number, atom_list)), dtype=np.int8))
+        try:
+            atomic_numbers = np.array(atom_list, dtype=np.int8)
+        except:
+            atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
 
         footer = None
         if re.search("modredundant", str(header)):
@@ -243,19 +229,10 @@ class GaussianFile(File):
             footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
         bonds = parse.read_bonds(lines)
-        charge = [int(x) for x in parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)]
-        multip = [int(x) for x in parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)]
+        charge = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0]
+        multip = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0]
 
-        #### parameters don't get printed every time for opt jobs
-        if JobType.OPT in job_types:
-            if len(bonds) > 0:
-                bonds = np.repeat(np.array([bonds[0]]), len(atomic_numbers)-1, axis=0).tolist() + [bonds[-1]]
-            else: # monoatomics, etc
-                bonds = [[] for z in atomic_numbers]
-            charge = list(np.tile(np.array(charge[0]), len(atomic_numbers)-1)) + [charge[-1]]
-            multip = list(np.tile(np.array(multip[0]), len(atomic_numbers)-1)) + [multip[-1]]
-
-        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charges=charge, multiplicities=multip)
+        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
         f.energies = energies
         f.scf_iterations = scf_iterations
         f.header = header
@@ -373,7 +350,7 @@ class GaussianFile(File):
 
         geometries = np.array([geometries])
 
-        f = GaussianFile([atomic_numbers], geometries, charges=[charge], multiplicities=[multip])
+        f = GaussianFile(atomic_numbers, geometries, charge=charge, multiplicity=multip)
         f.header = header
         f.footer = footer
         f.title = title
@@ -388,7 +365,7 @@ class GaussianFile(File):
         """
         Returns the last molecule (from an optimization job) or the only molecule (from other jobs).
 
-        If ``num`` is specified, returns that job (1-indexed for positive numbers). So ``job.get_molecule(3)`` will return the 3rd element of ``job.molecules``, not the 4th.
+        If ``num`` is specified, returns ``self.molecules[num]``
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -397,11 +374,7 @@ class GaussianFile(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        #### enforce 1-indexing for positive numbers
-        if num > 0:
-            num += -1
-
-        return self.molecules.molecules[num]
+        return self.molecules[num]
 
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, headers, kwargs):

@@ -55,7 +55,7 @@ class Molecule:
             geometry = np.array(geometry)
             geometry = geometry.astype(float)
         except:
-            raise TypeError("geometry cannot be cast to ndarray of floats!")
+            raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
 
         if not all(all(isinstance(y, float) for y in x) for x in geometry):
             raise TypeError("each element of self.geometry must be a 3-tuple")
@@ -82,8 +82,8 @@ class Molecule:
                 raise TypeError("multiplicity must be positive integer or castable to positive integer")
         assert multiplicity > 0, "multiplicity must be positive"
 
-        self.atomic_numbers = OneIndexedArray(atomic_numbers, dtype=np.int8)
-        self.geometry = OneIndexedArray(geometry)
+        self.atomic_numbers = atomic_numbers.view(OneIndexedArray)
+        self.geometry = geometry.view(OneIndexedArray)
 
         if bonds:
             for bond in bonds:
@@ -759,8 +759,8 @@ class Molecule:
 
         try:
             self.bonds.remove_node(number)
-            self.geometry = np.delete(self.geometry, number, axis=0).view(OneIndexedArray)
-            self.atomic_numbers = np.delete(self.atomic_numbers, number).view(OneIndexedArray)
+            self.geometry = np.delete(self.geometry, number - 1, axis=0).view(OneIndexedArray)
+            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(OneIndexedArray)
             return self
         except:
             raise ValueError("removing atom {number} failed!")

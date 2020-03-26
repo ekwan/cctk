@@ -2,6 +2,8 @@ import unittest, sys, os, io, copy
 import numpy as np
 import cctk
 
+print(cctk.__file__)
+
 class TestXYZ(unittest.TestCase):
     def test_readfile(self):
         path = "test/static/test_peptide.xyz"
@@ -99,6 +101,22 @@ class TestMOL2(unittest.TestCase):
             self.assertEqual(len(mol.atomic_numbers), 38)
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
+
+    def test_write(self):
+        path = "test/static/adamantane.mol2"
+        file = cctk.MOL2File.read_file(path)
+        new_path = "test/static/new_Ad.mol2"
+
+        file.write_file(new_path, title="title")
+
+        with open(path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
 
 class TestMAE(unittest.TestCase):
     def test_read(self):

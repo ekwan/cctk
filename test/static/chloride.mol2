@@ -1,0 +1,17 @@
+# title
+# Created by GaussView 6.0.16
+#
+
+#
+#
+
+@<TRIPOS>MOLECULE
+Molecule Name
+1 0
+SMALL
+NO_CHARGES
+
+
+@<TRIPOS>ATOM
+1 Cl1     0.0000     0.0000     0.0000 Cl
+@<TRIPOS>BOND

@@ -113,7 +113,7 @@ def read_geometries_and_energies(lines):
 
     # return result
     if len(file_symbol_lists) > 0:
-        return file_geometries, file_symbol_lists, file_energies, file_scf_iterations
+        return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
     else:
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
@@ -211,7 +211,7 @@ def read_bonds(lines):
             else:
                 raise ValueError(f"can't parse line {i} for bonding!")
 
-    return bond_array
+    return bond_array[0]
 
 
 def find_parameter(lines, parameter, expected_length, which_field):

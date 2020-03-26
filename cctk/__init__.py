@@ -10,4 +10,3 @@ from .mol2_file import MOL2File
 from .mae_file import MAEFile
 from .orca_file import OrcaFile
 from .pdb_file import PDBFile
-

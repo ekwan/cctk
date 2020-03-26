@@ -4,7 +4,7 @@ import networkx as nx
 
 from abc import abstractmethod
 
-from cctk import File, Ensemble, ConformationalEnsemble
+from cctk import File, Ensemble, ConformationalEnsemble, Molecule
 from cctk.helper_functions import get_symbol, get_number
 
 
@@ -38,10 +38,10 @@ class MOL2File(File):
 
         (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
-        atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
         if conformers == True:
-            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[bonds.edges() for g in geometries])
+            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=bonds.edges())
         else:
+            atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
             file.molecules = Ensemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[b.edges() for b in bonds])
 
         return file
@@ -253,3 +253,58 @@ class MOL2File(File):
             return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
         else:
             return (all_geometries, all_symbols, all_clean_symbols, all_bonds, contains_conformers)
+
+    def get_molecule(self, num=None):
+        """
+        Returns the last molecule from the ensemble.
+
+        If ``num`` is specified, returns ``self.molecules[num]``
+        """
+        # some methods pass num=None, which overrides setting the default above
+        if num is None:
+            num = -1
+
+        if not isinstance(num, int):
+            raise TypeError("num must be int")
+
+        return self.molecules[num]
+
+    @classmethod
+    def write_molecule_to_file(cls, filename, molecule, title=None):
+        """
+        Write a ``.gjf`` file using the given molecule.
+
+        Args:
+            filename (str): path to the new file
+            molecule (Molecule): which molecule to use -- a``Molecule`` object.
+            title (str): title of the file
+        """
+
+        text = f"# {title}\n#\n#\n\n#\n#\n\n"
+        text += f"@<TRIPOS>MOLECULE\nMolecule Name\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"
+        text += "@<TRIPOS>ATOM\n"
+        for idx, z in enumerate(molecule.atomic_numbers, start=1):
+            v = molecule.get_vector(idx)
+            text += f"{idx} {get_symbol(z)}{idx}    {v[0]: .4f}    {v[1]: .4f}    {v[2]: .4f} {get_symbol(z)}\n"
+        text += "@<TRIPOS>BOND\n"
+        count = 1
+        for atom1, atom2, weight in molecule.bonds.edges.data("weight", default=1):
+            text += f"{count} {atom1} {atom2} {weight}\n"
+            count += 1
+
+        super().write_file(filename, text)
+
+    def write_file(self, filename, molecule=None, **kwargs):
+        """
+        Write a ``.mol2`` file, using object attributes.
+
+        Args:
+            filename (str): path to the new file
+            molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
+                Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
+        """
+        if not isinstance(molecule, Molecule):
+            molecule = self.get_molecule(molecule)
+
+        self.write_molecule_to_file(filename, molecule, **kwargs)
