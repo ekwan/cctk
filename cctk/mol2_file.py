@@ -279,6 +279,7 @@ class MOL2File(File):
             molecule (Molecule): which molecule to use -- a``Molecule`` object.
             title (str): title of the file
         """
+        assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
 
         text = f"# {title}\n#\n#\n\n#\n#\n\n"
         text += f"@<TRIPOS>MOLECULE\nMolecule Name\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"

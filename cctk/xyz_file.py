@@ -56,21 +56,29 @@ class XYZFile(File):
         molecule = Molecule(atomic_numbers, geometry)
         return XYZFile(molecule, title)
 
-    def write_file(self, filename):
+    @classmethod
+    def write_molecule_to_file(cls, filename, molecule, title="title"):
         """
-        Write a .xyz file, using object attributes. "title" will be used as the title if none is defined.
+        Write an ``.xyz`` file, using object attributes.
 
         Args:
             filename (str): path to the new file
+            molecule (Molecule): molecule to write
+            title (str): title of file
         """
-        text = f"{self.molecule.num_atoms()}\n"
-        try:
-            text += f"{self.title}\n"
-        except:
-            text += "title\n"
+        assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
 
-        for index, Z in enumerate(self.molecule.atomic_numbers, start=1):
-            line = self.molecule.get_vector(index)
+        text = f"{molecule.num_atoms()}\n"
+        text += f"{title}\n"
+
+        for index, Z in enumerate(molecule.atomic_numbers, start=1):
+            line = molecule.get_vector(index)
             text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(Z), line[0], line[1], line[2])
 
         super().write_file(filename, text)
+
+    def write_file(self, filename):
+        """
+        Write an ``.xyz`` file, using object attributes.
+        """
+        self.write_molecule_to_file(filename, self.molecule, title=self.title)
