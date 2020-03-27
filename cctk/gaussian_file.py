@@ -191,90 +191,95 @@ class GaussianFile(File):
             filename (str): path to the out file
             return_lines (Bool): whether the lines of the file should be returned
         Returns:
-            GaussianFile object
-            (optional) the lines of the file
+            ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
+            (optional) the lines of the file (or list of lines of file for Link1 files)
         """
         if re.search("gjf$", filename):
             return cls._read_gjf_file(filename, return_lines)
 
-        lines = super().read_file(filename)
-        header = parse.search_for_block(lines, "#p", "----")
+        link1_lines = parse.split_link1(super().read_file(filename))
+        files = []
+        for lines in link1_lines:
+            #### automatically assign job types based on header
+            header = parse.search_for_block(lines, "#p", "----")
+            job_types = cls._assign_job_types(header)
 
-        #### automatically assign job types based on header
-        job_types = []
-        for name, member in JobType.__members__.items():
-            if re.search(f" {member.value}", str(header)):
-                job_types.append(member)
+            #### extract parameters
+            success = 0
+            for line in lines:
+                if line.strip().startswith("Normal termination"):
+                    success += 1
 
-        #### extract parameters
-        success = 0
-        for line in lines:
-            if line.strip().startswith("Normal termination"):
-                success += 1
+            (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
+            atomic_numbers = []
 
-        (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
-        geometries = np.array(geometries)
-        atomic_numbers = []
-
-        #### convert to right datatype
-        try:
-            atomic_numbers = np.array(atom_list, dtype=np.int8)
-        except:
-            atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
-
-        footer = None
-        if re.search("modredundant", str(header)):
-            footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
-            footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
-            footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
-
-        bonds = parse.read_bonds(lines)
-        charge = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0]
-        multip = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0]
-
-        f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
-        f.energies = energies
-        f.scf_iterations = scf_iterations
-        f.header = header
-        f.footer = footer
-        f.success = success
-
-        #### now for some job-type specific attributes
-        if JobType.OPT in job_types:
-            f.rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
-            f.rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
-
-        if JobType.FREQ in job_types:
-            enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
-            if len(enthalpies) == 1:
-                f.enthalpy = enthalpies[0]
-            elif len(enthalpies) > 1:
-                raise ValueError("too many enthalpies found!")
-
-            gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
-            if len(gibbs_vals) == 1:
-                f.gibbs_free_energy = gibbs_vals[0]
-            elif len(gibbs_vals) > 1:
-                raise ValueError("too many gibbs free energies found!")
-
-            frequencies = []
+            #### convert to right datatype
             try:
-                frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=2)
-                frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=3)
-                frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=4)
-                f.frequencies = sorted(frequencies)
+                atomic_numbers = np.array(atom_list, dtype=np.int8)
             except:
-                raise ValueError("error finding frequencies")
+                atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
 
-        if JobType.NMR in job_types:
-            nmr_shifts = parse.read_nmr_shifts(lines, f.molecules[-1].num_atoms())
-            for idx, shifts in nmr_shifts:
-                f.molecules[idx].nmr_isotropic = shifts.view(OneIndexedArray)
+            footer = None
+            if re.search("modredundant", str(header)):
+                footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
+                footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
+                footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
+
+            bonds = parse.read_bonds(lines)
+            charge = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0]
+            multip = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0]
+
+            f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
+            f.energies = energies
+            f.scf_iterations = scf_iterations
+            f.header = header
+            f.footer = footer
+            f.success = success
+
+            #### now for some job-type specific attributes
+            if JobType.OPT in job_types:
+                f.rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
+                f.rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+
+            if JobType.FREQ in job_types:
+                enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
+                if len(enthalpies) == 1:
+                    f.enthalpy = enthalpies[0]
+                elif len(enthalpies) > 1:
+                    raise ValueError("too many enthalpies found!")
+
+                gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
+                if len(gibbs_vals) == 1:
+                    f.gibbs_free_energy = gibbs_vals[0]
+                elif len(gibbs_vals) > 1:
+                    raise ValueError("too many gibbs free energies found!")
+
+                frequencies = []
+                try:
+                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=2)
+                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=3)
+                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=4)
+                    f.frequencies = sorted(frequencies)
+                except:
+                    raise ValueError("error finding frequencies")
+
+            if JobType.NMR in job_types:
+                assert len(f.molecules) == 1, "NMR jobs should not be combined with optimizations!"
+                nmr_shifts = parse.read_nmr_shifts(lines, f.molecules[-1].num_atoms())
+                f.molecules[0].nmr_isotropic = nmr_shifts.view(OneIndexedArray)
+
+            files.append(f)
 
         if return_lines:
-            return f, lines
+            if len(link1_lines) == 1:
+                return files[0], link1_lines[0]
+            else:
+                return files, link1_lines
         else:
-            return f
+            if len(link1_lines) == 1:
+                return files[0]
+            else:
+                return files
 
     @classmethod
     def _read_gjf_file(cls, filename, return_lines=False):
@@ -349,8 +354,9 @@ class GaussianFile(File):
             atomic_numbers = np.array(list(map(get_number, atomic_numbers)), dtype=np.int8)
 
         geometries = np.array([geometries])
+        job_types = cls._assign_job_types(header)
 
-        f = GaussianFile(atomic_numbers, geometries, charge=charge, multiplicity=multip)
+        f = GaussianFile(atomic_numbers, geometries, job_types=job_types, charge=charge, multiplicity=multip)
         f.header = header
         f.footer = footer
         f.title = title
@@ -393,3 +399,22 @@ class GaussianFile(File):
             else:
                 cls.write_molecule_to_file(filename, molecule, headers[idx], append=True, **kwargs[idx])
 
+
+    @classmethod
+    def _assign_job_types(cls, header):
+        """
+        Assigns ``JobType`` objects from route card.
+
+        For instance, "#p opt freq=noraman" would give an output of [JobType.OPT, JobType.FREQ].
+
+        Args:
+            header (str): Gaussian route card
+
+        Returns:
+            list of ``JobType`` objects
+        """
+        job_types = []
+        for name, member in JobType.__members__.items():
+            if re.search(f" {member.value}", str(header), re.IGNORECASE):
+                job_types.append(member)
+        return job_types

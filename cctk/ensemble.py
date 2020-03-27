@@ -40,6 +40,9 @@ class Ensemble:
     def __setitem__(self, key, item):
         self.molecules[key] = item
 
+    def __len__(self):
+        return len(self.molecules)
+
     def batch_add(self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None):
         """
         Automatically generates ``Molecule`` objects and adds them using ``self.add_molecule()``.
@@ -161,7 +164,7 @@ class ConformationalEnsemble(Ensemble):
         if (atomic_numbers is None) or (geometries is None):
             return
 
-        assert all(g.shape == geometries[0].shape for g in geometries), "not all geometries match; can't make ConformationalEnsemble!"
+        assert all(len(g) == len(geometries[0]) for g in geometries), "not all geometries match; can't make ConformationalEnsemble!"
 
         for g in geometries:
             mol = Molecule(atomic_numbers, g, bonds=bonds, charge=charge, multiplicity=multiplicity)

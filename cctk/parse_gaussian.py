@@ -211,7 +211,10 @@ def read_bonds(lines):
             else:
                 raise ValueError(f"can't parse line {i} for bonding!")
 
-    return bond_array[0]
+    if len(bond_array):
+        return bond_array[0]
+    else:
+        return None
 
 
 def find_parameter(lines, parameter, expected_length, which_field):
@@ -293,7 +296,7 @@ def read_nmr_shifts(lines, num_atoms):
 
 def split_link1(lines):
     """
-    Splits ``lines`` list into blocks by Link1.
+    Splits ``lines`` list into blocks by searching for "Entering Link 1".
 
     Args:
         lines (list): list of lines in file
@@ -301,5 +304,15 @@ def split_link1(lines):
     Returns:
         list of list of lines by Link1 section; so a file with one Link1 specification would return [lines1, lines2]
     """
+    link1_blocks = []
+    current_block = []
 
-    pass
+    for line in lines:
+        if re.search("Entering Link 1", line):
+            link1_blocks.append(current_block)
+            current_block = []
+        else:
+            current_block.append(line)
+
+    link1_blocks.append(current_block)
+    return link1_blocks[1:] #### the first block is just a few lines
