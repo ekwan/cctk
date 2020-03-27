@@ -59,7 +59,7 @@ def get_symbol(atomic_number):
 
 def get_number(atomic_symbol):
     """
-    Gets atomic number from a given element symbol.
+    Gets atomic number from a given element symbol (converted to titlecase using ``string.title()``).
 
     Args:
         atomic_symbol (str): the two-character symbol
@@ -67,8 +67,8 @@ def get_number(atomic_symbol):
     Returns:
         the atomic number
     """
-    if atomic_symbol in INV_ELEMENT_DICTIONARY:
-        return int(INV_ELEMENT_DICTIONARY[atomic_symbol])
+    if atomic_symbol.title() in INV_ELEMENT_DICTIONARY:
+        return int(INV_ELEMENT_DICTIONARY[atomic_symbol.title()])
     else:
         raise ValueError("unknown atomic symbol: ", atomic_symbol)
 
