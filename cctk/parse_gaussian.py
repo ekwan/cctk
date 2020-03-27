@@ -292,7 +292,19 @@ def read_nmr_shifts(lines, num_atoms):
     Returns:
         list of isotropic NMR shifts (np.ndarray)
     """
-    return np.zeros(shape=num_atoms)
+    # assumes that lines only come from one Link1 section
+    shieldings = []
+    for line in lines:
+        if line[14:23] == "Isotropic":
+            fields = line.split()
+            assert len(fields) == 8, f"Expected 8 fields on an NMR shielding output line but found {len(fields)} instead!"
+            try:
+                shielding = float(fields[4])
+            except:
+                raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
+            shieldings.append(shielding)
+    assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+    return np.asarray(shieldings)
 
 def split_link1(lines):
     """
