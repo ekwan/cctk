@@ -15,8 +15,8 @@ class Ensemble:
 
     Attributes:
         name (str): name, for identification
-        molecules (np.array): list of `Molecule` objects
-        energies (np.array): list of energies
+        molecules (np.ndarray): list of `Molecule` objects
+        energies (np.ndarray): list of energies
     """
 
     def __init__(self, name=None, **kwargs):

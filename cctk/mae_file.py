@@ -62,8 +62,8 @@ class MAEFile(File):
             print_status_messages (Bool):
 
         Returns:
-            geometries (np.array): array of 3-tuples of geometries
-            symbols (np.array): array of atom symbols (str)
+            geometries (np.ndarray): array of 3-tuples of geometries
+            symbols (np.ndarray): array of atom symbols (str)
             bonds (nx.Graph): ``NetworkX`` graph of bond information
             property_names:
             property_values:

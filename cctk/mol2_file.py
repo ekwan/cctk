@@ -67,17 +67,17 @@ class MOL2File(File):
             save_memory_for_conformers (bool): if True, the first dimension (geometry number) will be
                                             dropped from the symbols and bonds to prevent
                                             the storage of redundant information.  Thus,
-                                            symbols will be a one-dimensional :obj:`np.array` of
-                                            :obj:`str` and bonds will be a single :obj:`nx.Graph`.
+                                            symbols will be a one-dimensional ``np.ndarray`` of
+                                            ``str`` and bonds will be a single ``nx.Graph``.
 
             print_status_messages (bool): if True, update the progerss of the parsing operation to stdout.
 
         Returns:
             all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers
 
-            all_geometries: np.array(geometry number, atom number, xyz) -> position (float)
-            all_clean_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
-            all_symbols: np.array(geometry number, atom number) -> atom symbol (:obj:`str`)
+            all_geometries: np.ndarray(geometry number, atom number, xyz) -> position (float)
+            all_clean_symbols: np.ndarray(geometry number, atom number) -> atom symbol (:obj:`str`)
+            all_symbols: np.ndarray(geometry number, atom number) -> atom symbol (:obj:`str`)
             all_bonds: list(geometry_number) -> bond connectivity (:obj:`nx.Graph`)
             contains_conformers: bool (True if the geometries correspond to conformers.)
         """

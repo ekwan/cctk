@@ -188,7 +188,7 @@ def compute_rotation_matrix(axis, theta):
     Adapted from user "unutbu" on StackExchange.
 
     Args:
-        axis (vector): the vector to rotate about
+        axis (np.ndarray): the vector to rotate about
         theta (float): how much to rotate (in degrees)
 
     Returns:
@@ -270,7 +270,14 @@ def compute_RMSD(geometry1, geometry2):
 
 def get_isotopic_distribution(z):
     """
-    For an element with number ``z``, returns two ``np.array`` objects containing that element's weights and relative abundances.
+    For an element with number ``z``, returns two ``np.ndarray`` objects containing that element's weights and relative abundances.
+
+    Args:
+        z (int): atomic number
+
+    Returns:
+        masses (np.ndarray): list of isotope masses
+        weights (np.ndarray): list of weights (relative to 1.00 for largest)
     """
     z = str(z)
     masses = list(ISOTOPE_DICTIONARY[z].keys())

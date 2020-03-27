@@ -3,7 +3,7 @@ import copy
 
 class OneIndexedArray(np.ndarray):
     """
-    Wrapper for ``np.array`` that's indexed from one, not zero, to store atomic numbers and geometries.
+    Wrapper for ``np.ndarray`` that's indexed from one, not zero, to store atomic numbers and geometries.
     This only works on 1D or 2D arrays. Additionally, only the first index of a 2D array will be 1-indexed.
 
     Note that ``enumerate(one_indexed_array)`` will throw ``IndexError`` -- instead, use ``enumerate(one_indexed_array, start=1)``.

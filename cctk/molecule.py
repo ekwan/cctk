@@ -631,9 +631,9 @@ class Molecule:
         The default values should work nicely for low-res MS applications.
 
         Args:
-            formula (np.array, dtype=np.int8): vector containing atoms left to incorporate
-            masses (np.array): list of mass fragments at current iteration
-            weights (np.array): relative weights at current iteration
+            formula (np.ndarray, dtype=np.int8): vector containing atoms left to incorporate
+            masses (np.ndarray): list of mass fragments at current iteration
+            weights (np.ndarray): relative weights at current iteration
             cutoff (float): cutoff for similarity (masses within ``cutoff`` will be combined)
             mass_precision (int): number of decimal places to store for mass
             weight_precision (int): number of decimal places to store for weight
