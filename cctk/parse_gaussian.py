@@ -328,17 +328,20 @@ def extract_link0(lines):
         dictionary of link 0 commands
     """
     output = {}
+    #### find where the header starts
     for idx, line in enumerate(lines):
         if re.match(" #p", line):
             break
     end_idx = idx - 1
 
+    ##### then go back until the big header that says "GAUSSIAN 16"
     while not re.match(" \*\*\*\*\*\*\*\*", lines[idx]):
         idx += -1
         if idx < 10:
             raise ValueError("missed the termination point somehow")
     start_idx = idx
 
+    #### and search within that little block for lines matching the right description
     for line in lines[start_idx:end_idx]:
         if re.match(" \%", line):
             pieces = line[2:].split("=")

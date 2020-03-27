@@ -32,11 +32,10 @@ class GaussianFile(File):
     Attributes:
         molecules (Ensemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
-        header (str): optional, header/route card of .gjf file
+        route_card (str): optional, route card of .gjf file
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
         success (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
-        theory (dict): contains information from header
         energies (list): list of energies for each cycle
         scf_iterations (list): number of iterations per cycle
         max_displacements (list): list of max displacement values for each cycle
@@ -51,7 +50,7 @@ class GaussianFile(File):
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, theory=None, header=None, link0=None, footer=None, title="title",
+        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, route_card=None, link0=None, footer=None, title="title",
     ):
         """
         Create new GaussianFile object.
@@ -63,15 +62,14 @@ class GaussianFile(File):
             charges (int): the charge of the molecules
             multiplicities (int): the spin states of the molecules (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
             job_types (list): list of ``job_type`` instances
-            header (str): optional, header of ``.gjf`` file
+            route_card (str): optional, route card of ``.gjf`` file
             link0 (dict): optional, Link 0 commands of ``.gjf`` file
             footer (str): optional, footer of ``.gjf`` file
-            theory (dict): optional, contains information from header
             title (str): optional, title of ``.gjf`` file
 		"""
 
-        if header and not isinstance(header, str):
-            raise TypeError("header needs to be a string")
+        if route_card and not isinstance(route_card, str):
+            raise TypeError("route card needs to be a string")
 
         if link0 and not isinstance(link0, dict):
             raise TypeError("link0 needs to be a dict")
@@ -90,21 +88,21 @@ class GaussianFile(File):
             arguments = {"atomic_numbers": atomic_numbers, "geometries": geometries, "bonds": bonds, "charge": charge, "multiplicity": multiplicity}
             self.molecules = ConformationalEnsemble(**arguments)
 
-        self.header = header
+        self.route_card = route_card
         self.link0 = link0
         self.footer = footer
         self.title = title
         self.job_types = job_types
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False):
+    def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False):
         """
         Write a ``.gjf`` file using the given molecule.
 
         Args:
             filename (str): path to the new file
             molecule (Molecule): which molecule to use -- a ``Molecule`` object.
-            header (str): header for new file
+            route_card (str): route card for new file
             link0 (dict): dictionary of Link 0 commands
             footer (str): footer for new file
             title (str): title of the file, defaults to "title"
@@ -113,8 +111,8 @@ class GaussianFile(File):
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
 
-        if (header is None) or (not isinstance(header, str)):
-            raise ValueError("can't write a file without a header")
+        if (route_card is None) or (not isinstance(route_card, str)):
+            raise ValueError("can't write a file without a route card")
 
         #### generate the text
         text = ""
@@ -125,7 +123,7 @@ class GaussianFile(File):
             for key, val in link0.items():
                 text += f"%{key}={val}\n"
 
-        text += f"{header.strip()}\n\n{title}\n\n"
+        text += f"{route_card.strip()}\n\n{title}\n\n"
 
         text += f"{int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, Z in enumerate(molecule.atomic_numbers, start=1):
@@ -142,24 +140,24 @@ class GaussianFile(File):
         else:
             super().write_file(filename, text)
 
-    def write_file(self, filename, molecule=None, header=None, link0=None, footer=None, **kwargs):
+    def write_file(self, filename, molecule=None, route_card=None, link0=None, footer=None, **kwargs):
         """
-        Write a ``.gjf`` file, using object attributes. If no header is specified, the object's header/footer will be used.
+        Write a ``.gjf`` file, using object attributes. If no header/footer is specified, the object's header/footer will be used.
 
         Args:
             filename (str): path to the new file
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
                 Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
-            header (str): route card for new file
+            route_card (str): route card for new file
             link0 (dict): dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16}
             footer (str): footer for new file
         """
         if not isinstance(molecule, Molecule):
             molecule = self.get_molecule(molecule)
 
-        if header is None:
-            header = self.header
+        if route_card is None:
+            route_card = self.route_card
 
         if link0 is None:
             link0 = self.link0
@@ -167,7 +165,7 @@ class GaussianFile(File):
         if footer is None:
             footer = self.footer
 
-        self.write_molecule_to_file(filename, molecule, header, link0, footer, **kwargs)
+        self.write_molecule_to_file(filename, molecule, route_card, link0, footer, **kwargs)
 
     def num_imaginaries(self):
         """
@@ -239,7 +237,7 @@ class GaussianFile(File):
             f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
             f.energies = energies
             f.scf_iterations = scf_iterations
-            f.header = header
+            f.route_card = header
             f.link0 = link0
             f.footer = footer
             f.success = success
@@ -370,7 +368,7 @@ class GaussianFile(File):
         job_types = cls._assign_job_types(header)
 
         f = GaussianFile(atomic_numbers, geometries, job_types=job_types, charge=charge, multiplicity=multip)
-        f.header = header
+        f.route_card = header
         f.link0 = link0
         f.footer = footer
         f.title = title
@@ -397,7 +395,7 @@ class GaussianFile(File):
         return self.molecules[num]
 
     @classmethod
-    def write_ensemble_to_file(cls, filename, ensemble, headers, kwargs):
+    def write_ensemble_to_file(cls, filename, ensemble, route_cards, kwargs):
         """
         Writes an Ensemble to a file using Link1 specification.
 
@@ -409,9 +407,9 @@ class GaussianFile(File):
         """
         for idx, molecule in enumerate(ensemble.molecules):
             if idx == 0:
-                cls.write_molecule_to_file(filename, molecule, headers[idx], append=False, **kwargs[idx])
+                cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=False, **kwargs[idx])
             else:
-                cls.write_molecule_to_file(filename, molecule, headers[idx], append=True, **kwargs[idx])
+                cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=True, **kwargs[idx])
 
 
     @classmethod

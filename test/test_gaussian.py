@@ -6,7 +6,7 @@ class TestGaussian(unittest.TestCase):
     def test_read_gjf_file(self):
         path = "test/static/gaussian_file.gjf"
         file = cctk.GaussianFile.read_file(path)
-        self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertEqual(file.route_card, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ])
         self.assertDictEqual(file.link0, {"mem": "1GB", "chk": "test.chk"})
         self.assertEqual(file.title, "title")
@@ -21,7 +21,7 @@ class TestGaussian(unittest.TestCase):
     def test_read_out_file(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
-        self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertEqual(file.route_card, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertDictEqual(file.link0, {"mem": "32GB",  "nprocshared": "16"})
         self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ])
         self.assertEqual(file.title, "title")
