@@ -32,7 +32,8 @@ class GaussianFile(File):
     Attributes:
         molecules (Ensemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
-        header (str): optional, header of .gjf file
+        header (str): optional, header/route card of .gjf file
+        link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
         success (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
         theory (dict): contains information from header
@@ -50,7 +51,7 @@ class GaussianFile(File):
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, theory=None, header=None, footer=None, title="title", conformational_ensemble=False,
+        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, theory=None, header=None, link0=None, footer=None, title="title",
     ):
         """
         Create new GaussianFile object.
@@ -63,6 +64,7 @@ class GaussianFile(File):
             multiplicities (int): the spin states of the molecules (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
             job_types (list): list of ``job_type`` instances
             header (str): optional, header of ``.gjf`` file
+            link0 (dict): optional, Link 0 commands of ``.gjf`` file
             footer (str): optional, footer of ``.gjf`` file
             theory (dict): optional, contains information from header
             title (str): optional, title of ``.gjf`` file
@@ -70,6 +72,9 @@ class GaussianFile(File):
 
         if header and not isinstance(header, str):
             raise TypeError("header needs to be a string")
+
+        if link0 and not isinstance(link0, dict):
+            raise TypeError("link0 needs to be a dict")
 
         if footer and not isinstance(footer, str):
             raise TypeError("footer needs to be a string")
@@ -86,23 +91,22 @@ class GaussianFile(File):
             self.molecules = ConformationalEnsemble(**arguments)
 
         self.header = header
+        self.link0 = link0
         self.footer = footer
         self.title = title
         self.job_types = job_types
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, footer=None, memory=32, cores=16, chk_path=None, title="title", append=False):
+    def write_molecule_to_file(cls, filename, molecule, header, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False):
         """
         Write a ``.gjf`` file using the given molecule.
 
         Args:
             filename (str): path to the new file
-            molecule (Molecule): which molecule to use -- a``Molecule`` object.
-            memory (int): how many GB of memory to request
+            molecule (Molecule): which molecule to use -- a ``Molecule`` object.
             header (str): header for new file
+            link0 (dict): dictionary of Link 0 commands
             footer (str): footer for new file
-            cores (int): how many CPU cores to request
-            chk_path (str): path to checkpoint file, if desired
             title (str): title of the file, defaults to "title"
             append (Bool): whether or not to append to file using Link1 specifications
         """
@@ -116,10 +120,10 @@ class GaussianFile(File):
         text = ""
         if append:
             text += "--Link1--\n"
-        text += f"%nprocshared={int(cores)}\n"
-        text += f"%mem={int(memory)}GB\n"
-        if chk_path:
-            text += f"%chk={chk_path}\n"
+
+        if isinstance(link0, dict):
+            for key, val in link0.items():
+                text += f"%{key}={val}\n"
 
         text += f"{header.strip()}\n\n{title}\n\n"
 
@@ -138,19 +142,17 @@ class GaussianFile(File):
         else:
             super().write_file(filename, text)
 
-    def write_file(self, filename, molecule=None, header=None, footer=None, **kwargs):
+    def write_file(self, filename, molecule=None, header=None, link0=None, footer=None, **kwargs):
         """
         Write a ``.gjf`` file, using object attributes. If no header is specified, the object's header/footer will be used.
 
         Args:
             filename (str): path to the new file
-            memory (int): how many GB of memory to request
-            cores (int): how many CPU cores to request
-            chk_path (str): path to checkpoint file, if desired
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
                 Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
-            header (str): header for new file
+            header (str): route card for new file
+            link0 (dict): dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16}
             footer (str): footer for new file
         """
         if not isinstance(molecule, Molecule):
@@ -159,10 +161,13 @@ class GaussianFile(File):
         if header is None:
             header = self.header
 
+        if link0 is None:
+            link0 = self.link0
+
         if footer is None:
             footer = self.footer
 
-        self.write_molecule_to_file(filename, molecule, header, footer, **kwargs)
+        self.write_molecule_to_file(filename, molecule, header, link0, footer, **kwargs)
 
     def num_imaginaries(self):
         """
@@ -204,6 +209,8 @@ class GaussianFile(File):
             header = parse.search_for_block(lines, "#p", "----")
             job_types = cls._assign_job_types(header)
 
+            link0 = parse.extract_link0(lines)
+
             #### extract parameters
             success = 0
             for line in lines:
@@ -233,6 +240,7 @@ class GaussianFile(File):
             f.energies = energies
             f.scf_iterations = scf_iterations
             f.header = header
+            f.link0 = link0
             f.footer = footer
             f.success = success
 
@@ -295,6 +303,7 @@ class GaussianFile(File):
         """
         lines = super().read_file(filename)
         header = None
+        link0 = {}
         footer = None
         header_done = False
         title = None
@@ -306,6 +315,10 @@ class GaussianFile(File):
 
         for idx, line in enumerate(lines):
             if header is None:
+                if re.match("\%", line):
+                    pieces = line[1:].split("=")
+                    link0[pieces[0]] = pieces[1]
+                    continue
                 if re.match("#", line):
                     header = line
                     continue
@@ -358,6 +371,7 @@ class GaussianFile(File):
 
         f = GaussianFile(atomic_numbers, geometries, job_types=job_types, charge=charge, multiplicity=multip)
         f.header = header
+        f.link0 = link0
         f.footer = footer
         f.title = title
         f.success = 0

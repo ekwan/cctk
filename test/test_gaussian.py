@@ -7,6 +7,8 @@ class TestGaussian(unittest.TestCase):
         path = "test/static/gaussian_file.gjf"
         file = cctk.GaussianFile.read_file(path)
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ])
+        self.assertDictEqual(file.link0, {"mem": "1GB", "chk": "test.chk"})
         self.assertEqual(file.title, "title")
         self.assertEqual(file.footer, None)
 
@@ -20,6 +22,8 @@ class TestGaussian(unittest.TestCase):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
         self.assertEqual(file.header, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
+        self.assertDictEqual(file.link0, {"mem": "32GB",  "nprocshared": "16"})
+        self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ])
         self.assertEqual(file.title, "title")
         self.assertEqual(file.footer, None)
         self.assertTrue(isinstance(file.molecules, cctk.ConformationalEnsemble))
@@ -33,7 +37,7 @@ class TestGaussian(unittest.TestCase):
         old_path = "test/static/gaussian_file.gjf"
         new_path = "test/static/new_gjf.gjf"
 
-        file.write_file(new_path, molecule=1)
+        file.write_file(new_path, molecule=1, link0={"mem": "1GB", "chk": "test.chk"})
 
         with open(old_path) as old:
             with open(new_path) as new:

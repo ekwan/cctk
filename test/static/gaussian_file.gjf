@@ -1,5 +1,5 @@
-%nprocshared=16
-%mem=32GB
+%mem=1GB
+%chk=test.chk
 #p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)
 
 title

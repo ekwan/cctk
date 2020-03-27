@@ -316,3 +316,32 @@ def split_link1(lines):
 
     link1_blocks.append(current_block)
     return link1_blocks[1:] #### the first block is just a few lines
+
+def extract_link0(lines):
+    """
+    Extracts Link 0 commands from ``lines``.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        dictionary of link 0 commands
+    """
+    output = {}
+    for idx, line in enumerate(lines):
+        if re.match(" #p", line):
+            break
+    end_idx = idx - 1
+
+    while not re.match(" \*\*\*\*\*\*\*\*", lines[idx]):
+        idx += -1
+        if idx < 10:
+            raise ValueError("missed the termination point somehow")
+    start_idx = idx
+
+    for line in lines[start_idx:end_idx]:
+        if re.match(" \%", line):
+            pieces = line[2:].split("=")
+            output[pieces[0]] = pieces[1]
+
+    return output
