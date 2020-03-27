@@ -67,6 +67,20 @@ $ conda env create -f env.yml
 Now, run `conda activate cctk` to enter the *cctk* Python environment (and `conda deactivate` to leave).
 (More complete guides to `conda` usage can be found elsewhere.)
 
+#### Upgrading *cctk*
+
+To get the latest release of *cctk*, navigate to the correct `conda` environment and run:
+
+```
+$ pip install --upgrade cctk
+```
+
+To install the development version (may be unstable!), run:
+
+```
+$ pip install --upgrade git+git@github.com:ekwan/cctk.git@master 
+```
+
 ## Contents: 
 
 - `cctk/` contains the Python modules for *cctk* and the accompanying static data files.  
