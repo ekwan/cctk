@@ -95,7 +95,7 @@ class GaussianFile(File):
         self.job_types = job_types
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False):
+    def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False):
         """
         Write a ``.gjf`` file using the given molecule.
 
@@ -107,6 +107,7 @@ class GaussianFile(File):
             footer (str): footer for new file
             title (str): title of the file, defaults to "title"
             append (Bool): whether or not to append to file using Link1 specifications
+            print_symbol (Bool): whether to print atomic symbols (instead of atomic numbers)
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
@@ -128,7 +129,9 @@ class GaussianFile(File):
         text += f"{int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, Z in enumerate(molecule.atomic_numbers, start=1):
             line = molecule.get_vector(index)
-            text += f"{Z:2d} {line[0]:.8f} {line[1]:.8f} {line[2]:.8f}\n"
+            if print_symbol:
+                Z = get_symbol(Z)
+            text += f"{Z:2d}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
         text += "\n"
         if footer is not None:
