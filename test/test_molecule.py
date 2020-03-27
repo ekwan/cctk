@@ -113,5 +113,15 @@ class TestMolecule(unittest.TestCase):
         mol2_shift = mol2.translate_molecule(v2)
         self.assertListEqual(mol2.geometry.tolist()[0], mol2_shift.geometry.tolist()[0])
 
+    def test_combine(self):
+        m1 = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]], charge=-1, multiplicity=1)
+        m2 = cctk.Molecule(np.array([12], dtype=np.int8), [[2, 0, 0]], charge=2, multiplicity=1)
+
+        m3 = cctk.Molecule.combine_molecules(m1, m2)
+        self.assertTrue(isinstance(m3, cctk.Molecule))
+        self.assertEqual(m3.num_atoms(), 2)
+        self.assertEqual(m3.charge, 1)
+        self.assertEqual(m3.multiplicity, 1)
+
 if __name__ == '__main__':
     unittest.main()

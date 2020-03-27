@@ -1090,3 +1090,27 @@ class Molecule:
         self.translate_molecule(-self.geometry[atoms].mean(axis=0))
         return self
 
+    @classmethod
+    def combine_molecules(cls, molecule1, molecule2):
+        """
+        Combine two molecules into one final molecule.
+
+        Bonding information is not currently preserved.
+
+        Args:
+            molecule1 (Molecule): 1st molecule
+            molecule2 (Molecule): 2nd molecule
+
+        Returns:
+            new ``Molecule`` object
+        """
+
+        atoms = np.hstack((molecule1.atomic_numbers.T, molecule2.atomic_numbers.T)).view(OneIndexedArray)
+        geoms = np.vstack((molecule1.geometry, molecule2.geometry)).view(OneIndexedArray)
+        charge = molecule1.charge + molecule2.charge
+
+        s1 = (molecule1.multiplicity - 1) / 2
+        s2 = (molecule2.multiplicity - 1) / 2
+        multiplicity = (s1+s2) * 2 + 1
+
+        return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
