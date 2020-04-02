@@ -13,7 +13,7 @@ class TestNMR(unittest.TestCase):
         ensemble = gaussian_file.molecules
         molecule = ensemble[-1]
         self.assertListEqual(list(molecule.nmr_isotropic), [198.2259, 32.6869, 32.6869, 32.6869, 32.6869])
-        energy = ensemble.energies[-1]
+        energy = gaussian_file.energies[-1]
         self.assertEqual(energy, -40.5169484082)
 
     def test_nmr2(self):
