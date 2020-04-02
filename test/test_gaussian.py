@@ -28,6 +28,9 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(file.footer, None)
         self.assertTrue(isinstance(file.molecules, cctk.ConformationalEnsemble))
 
+        for mol, prop in file.molecules.iteritems():
+            self.assertEqual(prop["filename"], path)
+
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 31)

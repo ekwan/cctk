@@ -15,76 +15,41 @@ class Ensemble:
 
     Attributes:
         name (str): name, for identification
-        molecules (np.ndarray): list of `Molecule` objects
-        energies (np.ndarray): list of energies
+        items (dict):
+            keys: ``Molecule`` objects
+            values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None):
         """
-        Create new instance, and optionally create a bunch of molecules too.
+        Create new instance.
 
         Args:
             name (str): name of Ensemble
             **kwargs: to pass to ``self.batch_add()``
         """
         self.name = name
-        self.molecules = np.array([])
-        self.energies = np.array([])
-
-        if all(arg in kwargs for arg in ["atomic_numbers", "geometries"]):
-            self.batch_add(**kwargs)
+        self.items = {}
 
     def __getitem__(self, key):
-        return self.molecules[key]
+        return list(self.items)[key]
 
     def __setitem__(self, key, item):
-        self.molecules[key] = item
+        list(self.items)[key] = item
 
     def __len__(self):
-        return len(self.molecules)
+        return len(self.items)
 
-    def batch_add(self, atomic_numbers, geometries, bonds=None, charges=None, multiplicities=None):
-        """
-        Automatically generates ``Molecule`` objects and adds them using ``self.add_molecule()``.
+    def has_property(self, idx, prop):
+        if prop in list(self.items[self[idx]].keys()):
+            return True
+        else:
+            return False
 
-        Args:
-            atomic_numbers (list): list of lists of atomic numbers.
-            geometry (list): list of 3-tuples of xyz coordinates
-            bonds (list): list of edges (i.e. an n x 2 ``numpy`` array).
-            charges (int): list of molecular charges - will default to 0 for all molecules.
-            multiplicities (int): list of multiplicities - will default to 1 (singlet) for all molecules.
-        """
-        if (atomic_numbers is None) or (geometries is None):
-            return
+    def iteritems(self):
+        return self.items.items()
 
-        if charges is None:
-            charges = list(np.zeros(shape=len(atomic_numbers)))
-
-        if multiplicities is None:
-            multiplicities = list(np.ones(shape=len(atomic_numbers)))
-
-        if (bonds is None) or len(bonds) == 0:
-            bonds = [None] * len(atomic_numbers)
-
-        n_atoms = len(atomic_numbers)
-        n_geometries = len(geometries)
-        n_bonds = len(bonds)
-        n_charges = len(charges)
-        n_multiplicities = len(multiplicities)
-
-        assert n_atoms == n_geometries, f"there are {n_atoms} atomic number lists, but {n_geometries} geometry lists"
-        assert n_atoms == n_bonds, f"there are {n_atoms} atomic number lists, but found {n_bonds} bond lists"
-        assert n_atoms == n_charges, f"there are {n_atoms} atomic number lists, but found {n_charges} charge lists"
-        assert n_atoms == n_multiplicities, f"there are {n_atoms} atomic number lists, but found {n_multiplicities} multiplicity lists"
-
-        for numbers, geometry, bond_edges, charge, multiplicity in zip(atomic_numbers, geometries, bonds, charges, multiplicities):
-            if len(numbers) != len(geometry):
-                raise TypeError(f"expected {len(numbers)} atoms but found {len(geometry)}")
-
-            mol = Molecule(numbers, geometry, bonds=bond_edges, charge=charge, multiplicity=multiplicity)
-            self.add_molecule(mol)
-
-    def add_molecule(self, molecule, energy=None):
+    def add_molecule(self, molecule, properties={}):
         """
         Adds a molecule to the ensemble. ``copy.deepcopy`` is used so that an independent copy of the molecule is saved.
 
@@ -94,8 +59,8 @@ class Ensemble:
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
-        self.molecules = np.append(self.molecules, [copy.deepcopy(molecule)])
-        self.energies = np.append(self.energies, [energy])
+        mol = copy.deepcopy(molecule)
+        self.items[mol] = properties
 
     def _check_molecule_number(self, number):
         """
@@ -106,7 +71,7 @@ class Ensemble:
         except:
             raise TypeError(f"atom number {number} must be integer")
 
-        if number >= len(self.molecules):
+        if number >= len(self.items):
             raise ValueError(f"atom number {number} too large!")
 
     @classmethod
@@ -121,18 +86,11 @@ class Ensemble:
             ensembles (list of Ensembles): Ensemble objects to join
         """
         new_ensemble = Ensemble(name=name)
-        use_energies = True
         for ensemble in ensembles:
             assert isinstance(ensemble, Ensemble), "can't join an object that isn't an Ensemble!"
-            if len(ensemble.energies) != len(ensemble.molecules):
-                use_energies = False
 
         for ensemble in ensembles:
-            for idx, mol in np.ndenumerate(ensemble.molecules):
-                if use_energies:
-                    new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
-                else:
-                    new_ensemble.add_molecule(mol)
+            new_ensemble.items.update(ensemble.items)
 
         return new_ensemble
 
@@ -148,46 +106,24 @@ class ConformationalEnsemble(Ensemble):
         molecules (list): list of `Molecule` objects
     """
 
-    def batch_add(self, atomic_numbers=None, geometries=None, bonds=None, charge=0, multiplicity=1):
-        """
-        Automatically generates ``Molecule`` objects and adds them.
-
-        Takes only a single molecule's value for ``charge``/``multiplicity``/``atomic_numbers``/``bonds``, not a list of lists like ``Ensemble.__init__()``.
-
-        Args:
-            atomic_numbers (list): list of atomic numbers.
-            geometry (np.ndarray): list of 3-tuples of xyz coordinates
-            bonds (list): list of edges (i.e. an n x 2 `numpy` array).
-            charge (int): molecular charge - will default to 0 for all molecules.
-            multiplicity (int): spin multiplicity - will default to 1 (singlet) for all molecules.
-        """
-        if (atomic_numbers is None) or (geometries is None):
-            return
-
-        assert all(len(g) == len(geometries[0]) for g in geometries), "not all geometries match; can't make ConformationalEnsemble!"
-
-        for g in geometries:
-            mol = Molecule(atomic_numbers, g, bonds=bonds, charge=charge, multiplicity=multiplicity)
-            self.add_molecule(mol)
-
-    def add_molecule(self, molecule, energy=None):
+    def add_molecule(self, molecule, properties={}):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
-        if len(self.molecules) > 0:
-            if molecule.num_atoms() != self.molecules[0].num_atoms():
+        if len(self.items) > 0:
+            if molecule.num_atoms() != self[0].num_atoms():
                 raise ValueError("wrong number of atoms for this ensemble")
 
-            if molecule.charge != self.molecules[0].charge:
+            if molecule.charge != self[0].charge:
                 raise ValueError("wrong charge for this ensemble")
 
-            if molecule.multiplicity != self.molecules[0].multiplicity:
+            if molecule.multiplicity != self[0].multiplicity:
                 raise ValueError("wrong spin multiplicity for this ensemble")
 
-            if not np.array_equal(molecule.atomic_numbers, self.molecules[0].atomic_numbers):
+            if not np.array_equal(molecule.atomic_numbers, self[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
-        super().add_molecule(molecule, energy=energy)
+        super().add_molecule(molecule, properties)
 
     @classmethod
     def join_ensembles(cls, ensembles, name=None):
@@ -201,18 +137,12 @@ class ConformationalEnsemble(Ensemble):
             ensembles (list of ConformationalEnsembles): ConformationalEnsemble objects to join
         """
         new_ensemble = ConformationalEnsemble(name=name)
-        use_energies = True
         for ensemble in ensembles:
             assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't an ConformationalEnsemble!"
-            if len(ensemble.energies) != len(ensemble.molecules):
-                use_energies = False
 
         for ensemble in ensembles:
-            for idx, mol in np.ndenumerate(ensemble.molecules):
-                if use_energies:
-                    new_ensemble.add_molecule(mol, energy=ensemble.energies[idx])
-                else:
-                    new_ensemble.add_molecule(mol)
+            for mol, prop in ensemble.iteritems():
+                    new_ensemble.add_molecule(mol, prop)
 
         return new_ensemble
 
