@@ -14,6 +14,8 @@ class JobType(Enum):
     Class to contain allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
 
     The value should be the Gaussian keyword, to permit automatic assignment.
+
+    All jobs have type ``SP`` by default.
     """
 
     SP = "sp"
@@ -23,6 +25,16 @@ class JobType(Enum):
     NMR = "nmr"
     POP = "pop"
     FORCE = "force"
+
+#### This static variable tells what properties are expected from each JobType.
+EXPECTED_PROPERTIES = {
+    "sp": ["energies", "scf_iterations",],
+    "opt": ["rms_displacements", "rms_forces", ],
+    "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
+    "nmr": ["isotropic_shielding",],
+    "pop": ["charges",],
+    "force": ["forces",],
+}
 
 
 class GaussianFile(File):
@@ -36,21 +48,12 @@ class GaussianFile(File):
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
         success (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
-        energies (list): list of energies for each cycle
-        scf_iterations (list): number of iterations per cycle
-        max_displacements (list): list of max displacement values for each cycle
-        rms_displacements (list): list of rms displacement values for each cycle
-        max_forces (list): list of max force values for each cycle
-        rms_forces (list): list of rms force values for each cycle
-        gradients (list): list of gradient values for each cycle
-        frequencies (list): list of frequencies
-        gibbs_free_energy (float): gibbs free energy, from vibrational correction
-        enthalpy (float): enthalpy, from vibrational correction
         title (str): optional, title of .gjf file
+        properties (dict): dictionary containing properties from file, varies by file type
     """
 
     def __init__(
-        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, route_card=None, link0=None, footer=None, title="title",
+        self, atomic_numbers, geometries, bonds=None, charge=None, multiplicity=None, job_types=None, route_card=None, link0=None, footer=None, title="title", success=0
     ):
         """
         Create new GaussianFile object.
@@ -80,6 +83,9 @@ class GaussianFile(File):
         if title and not isinstance(title, str):
             raise TypeError("title needs to be a string")
 
+        if success and not isinstance(success, int):
+            raise TypeError("success needs to be an integer")
+
         if job_types is not None:
             if not all(isinstance(job, JobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
@@ -93,6 +99,8 @@ class GaussianFile(File):
         self.footer = footer
         self.title = title
         self.job_types = job_types
+        self.success = success
+        self.properties = {}
 
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False):
@@ -181,7 +189,7 @@ class GaussianFile(File):
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
         if JobType.FREQ in self.job_types:
-            return list(map(int, np.array(self.frequencies)[np.array(self.frequencies) < 0]))
+            return list(map(int, np.array(self.properties["frequencies"])[np.array(self.properties["frequencies"]) < 0]))
         else:
             raise TypeError("not a frequency job! can't get # imaginary frequencies!")
 
@@ -237,29 +245,26 @@ class GaussianFile(File):
             charge = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0]
             multip = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0]
 
-            f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip)
-            f.energies = energies
-            f.scf_iterations = scf_iterations
-            f.route_card = header
-            f.link0 = link0
-            f.footer = footer
-            f.success = success
+            f = GaussianFile(atomic_numbers, geometries, bonds, job_types=job_types, charge=charge, multiplicity=multip, route_card=header, link0=link0, footer=footer, success=success)
 
             #### now for some job-type specific attributes
+            f.properties["energies"] = energies
+            f.properties["scf_iterations"] = scf_iterations
+
             if JobType.OPT in job_types:
-                f.rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
-                f.rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+                f.properties["rms_forces"] = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
+                f.properties["rms_displacements"] = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
 
             if JobType.FREQ in job_types:
                 enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
                 if len(enthalpies) == 1:
-                    f.enthalpy = enthalpies[0]
+                    f.properties["enthalpy"] = enthalpies[0]
                 elif len(enthalpies) > 1:
                     raise ValueError("too many enthalpies found!")
 
                 gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
                 if len(gibbs_vals) == 1:
-                    f.gibbs_free_energy = gibbs_vals[0]
+                    f.properties["gibbs_free_energy"] = gibbs_vals[0]
                 elif len(gibbs_vals) > 1:
                     raise ValueError("too many gibbs free energies found!")
 
@@ -268,15 +273,15 @@ class GaussianFile(File):
                     frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=2)
                     frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=3)
                     frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=4)
-                    f.frequencies = sorted(frequencies)
+                    f.properties["frequencies"] = sorted(frequencies)
                 except:
                     raise ValueError("error finding frequencies")
 
             if JobType.NMR in job_types:
                 assert len(f.molecules) == 1, "NMR jobs should not be combined with optimizations!"
                 nmr_shifts = parse.read_nmr_shifts(lines, f.molecules[-1].num_atoms())
-                f.molecules[0].nmr_isotropic = nmr_shifts.view(OneIndexedArray)
-
+                f.properties["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
+            f.check_has_properties()
             files.append(f)
 
         if return_lines:
@@ -370,13 +375,7 @@ class GaussianFile(File):
         geometries = np.array([geometries])
         job_types = cls._assign_job_types(header)
 
-        f = GaussianFile(atomic_numbers, geometries, job_types=job_types, charge=charge, multiplicity=multip)
-        f.route_card = header
-        f.link0 = link0
-        f.footer = footer
-        f.title = title
-        f.success = 0
-
+        f = GaussianFile(atomic_numbers, geometries, job_types=job_types, charge=charge, multiplicity=multip, route_card=header, link0=link0, footer=footer, title=title)
         if return_lines:
             return f, lines
         else:
@@ -414,13 +413,12 @@ class GaussianFile(File):
             else:
                 cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=True, **kwargs[idx])
 
-
     @classmethod
     def _assign_job_types(cls, header):
         """
-        Assigns ``JobType`` objects from route card.
+        Assigns ``JobType`` objects from route card. ``Job.Type.SP`` is assigned by default.
 
-        For instance, "#p opt freq=noraman" would give an output of [JobType.OPT, JobType.FREQ].
+        For instance, "#p opt freq=noraman" would give an output of ``[JobType.SP, JobType.OPT, JobType.FREQ]``.
 
         Args:
             header (str): Gaussian route card
@@ -432,4 +430,15 @@ class GaussianFile(File):
         for name, member in JobType.__members__.items():
             if re.search(f" {member.value}", str(header), re.IGNORECASE):
                 job_types.append(member)
+        if JobType.SP not in job_types:
+            job_types.append(JobType.SP)
         return job_types
+
+    def check_has_properties(self):
+        """
+        Checks that the file has all the appropriate properties for its job types, and raises ValueError if not.
+        """
+        for job_type in self.job_types:
+            for prop in EXPECTED_PROPERTIES[job_type.value]:
+                if prop not in self.properties.keys():
+                    raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
