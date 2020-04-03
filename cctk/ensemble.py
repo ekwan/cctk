@@ -31,10 +31,8 @@ class Ensemble:
         self._items = {}
 
     def __str__(self):
-        if self.name is not None:
-            return f"Ensemble (name={self.name}, {len(_items)} molecules)"
-        else:
-            return f"Ensemble ({len(_items)} molecules)"
+        name = "None" if self.name is None else self.name
+        return f"Ensemble (name={name}, {len(_items)} molecules)"
 
     def __getitem__(self, key):
         if isinstance(key, Molecule):
@@ -173,8 +171,21 @@ class ConformationalEnsemble(Ensemble):
 
         return new_ensemble
 
-    def align(self, align_to=0, atoms=None, return_rmsd=False):
+    def align(self, to_geometry=0, with_atoms="heavy", compute_rmsd=False):
         """
+        Aligns every geometry in this ensemble to the specified geometry,
+        optionally computing the root-mean-square distance between each
+        geometry and the reference geometry.
+
+        Args:
+            to_geometry (int): the reference geometry to align to (0-indexed)
+            with_atoms (str or list): which atoms to use when computing alignments
+
+
+            "heavy" for all non-hydrogen atoms,
+                                      "all" for all atoms, or
+                                      a list of 1-indexed atom numbers
+
         Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
 
         Args:
