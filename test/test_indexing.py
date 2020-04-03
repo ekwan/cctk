@@ -12,6 +12,10 @@ class TestOneIndexedArray(unittest.TestCase):
         self.assertEqual(str(new_a[1:3]), "[1 2]")
         self.assertEqual(new_a[5], 5)
         self.assertEqual(new_a[1], 1)
+
+        self.assertEqual(new_a[[1]], 1)
+        self.assertListEqual(list(new_a[[1,2]]), [1,2])
+
         new_a[1] = 8
         self.assertEqual(str(new_a), "[8 2 3 4 5]")
         self.assertEqual(new_a[1], 8)

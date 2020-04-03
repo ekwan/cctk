@@ -45,9 +45,23 @@ class OneIndexedArray(np.ndarray):
             else:
                 index[0][index >= 1] += -1
                 return super().__getitem__(index)
+        elif isinstance(index, list):
+            if isinstance(index[0], bool):
+                return super().__getitem__(index)
+            elif isinstance(index[0], list):
+                if isinstance(index[0][0], bool):
+                    return super().__getitem__(index)
+                for i, v in enumerate(index[0]):
+                    if v >= 1:
+                        index[i] += -1
+                return super().__getitem__(index)
+            else:
+                for i, v in enumerate(index):
+                    if v >= 1:
+                        index[i] += -1
+                return super().__getitem__(index)
         else:
             return super().__getitem__(index)
-#            raise IndexError(f"invalid index {index} for OneIndexedArray")
 
     def __setitem__(self, index, value):
         index = copy.deepcopy(index)
@@ -82,6 +96,21 @@ class OneIndexedArray(np.ndarray):
                 super().__setitem__(index, value)
             else:
                 index[0][index >= 1] += -1
+                super().__setitem__(index, value)
+        elif isinstance(index, list):
+            if isinstance(index[0], bool):
+                super().__setitem__(index, value)
+            elif isinstance(index[0], list):
+                if isinstance(index[0][0], bool):
+                    super().__setitem__(index, value)
+                for i, v in enumerate(index[0]):
+                    if v >= 1:
+                        index[i] += -1
+                super().__setitem__(index, value)
+            else:
+                for i, v in enumerate(index):
+                    if v >= 1:
+                        index[i] += -1
                 super().__setitem__(index, value)
         else:
             super().__setitem__(index, value)
