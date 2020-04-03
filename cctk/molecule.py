@@ -102,6 +102,9 @@ class Molecule:
             for bond in bonds:
                 self.add_bond(bond[0], bond[1])
 
+    def __str__(self):
+        return f"Molecule (name={name}, {len(atomic_numbers)} atoms")
+
     def assign_connectivity(self, cutoff=0.5):
         """
         Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded.

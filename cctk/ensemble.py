@@ -31,6 +31,9 @@ class Ensemble:
         self.name = name
         self.items = {}
 
+    def __str__(self):
+        return f"Ensemble (name=f{name}, {len(_items)} molecules)"
+
     def __getitem__(self, key):
         return list(self.items)[key]
 
@@ -105,6 +108,13 @@ class ConformationalEnsemble(Ensemble):
         name (str): name, for identification
         molecules (list): list of `Molecule` objects
     """
+
+    def __str__(self):
+        n_atoms = 0
+        if len(self._items[0]) > 0:
+            first_molecule = self._items[0]
+            n_atoms = len(first_molecule.geometry)
+        return f"ConformationalEnsemble (name=f{name}, {len(_items)} molecules, {n_atoms} atoms)"
 
     def add_molecule(self, molecule, properties={}):
         """
