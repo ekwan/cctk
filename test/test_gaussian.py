@@ -28,7 +28,7 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(file.footer, None)
         self.assertTrue(isinstance(file.molecules, cctk.ConformationalEnsemble))
 
-        for mol, prop in file.molecules.iteritems():
+        for mol, prop in file.molecules.items():
             self.assertEqual(prop["filename"], path)
 
         mol = file.get_molecule()

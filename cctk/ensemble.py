@@ -15,7 +15,7 @@ class Ensemble:
 
     Attributes:
         name (str): name, for identification
-        items (dict):
+        _items (dict):
             keys: ``Molecule`` objects
             values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
     """
@@ -26,31 +26,40 @@ class Ensemble:
 
         Args:
             name (str): name of Ensemble
-            **kwargs: to pass to ``self.batch_add()``
         """
         self.name = name
-        self.items = {}
+        self._items = {}
 
     def __str__(self):
         return f"Ensemble (name=f{name}, {len(_items)} molecules)"
 
     def __getitem__(self, key):
-        return list(self.items)[key]
+        if isinstance(key, Molecule):
+            return self._items[key]
+        elif isinstance(key, int):
+            return list(self._items)[key]
+        else:
+            raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __setitem__(self, key, item):
-        list(self.items)[key] = item
+        if isinstance(key, Molecule):
+            self._items[key] = item
+        elif isinstance(key, int):
+            list(self._items)[key] = item
+        else:
+            raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __len__(self):
-        return len(self.items)
+        return len(self._items)
 
     def has_property(self, idx, prop):
-        if prop in list(self.items[self[idx]].keys()):
+        if prop in list(self._items[self[idx]].keys()):
             return True
         else:
             return False
 
-    def iteritems(self):
-        return self.items.items()
+    def items(self):
+        return self._items.items()
 
     def add_molecule(self, molecule, properties={}):
         """
@@ -63,7 +72,7 @@ class Ensemble:
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
         mol = copy.deepcopy(molecule)
-        self.items[mol] = properties
+        self._items[mol] = properties
 
     def _check_molecule_number(self, number):
         """
@@ -74,7 +83,7 @@ class Ensemble:
         except:
             raise TypeError(f"atom number {number} must be integer")
 
-        if number >= len(self.items):
+        if number >= len(self._items):
             raise ValueError(f"atom number {number} too large!")
 
     @classmethod
@@ -93,10 +102,12 @@ class Ensemble:
             assert isinstance(ensemble, Ensemble), "can't join an object that isn't an Ensemble!"
 
         for ensemble in ensembles:
-            new_ensemble.items.update(ensemble.items)
+            new_ensemble._items.update(ensemble.items)
 
         return new_ensemble
 
+    def to_df(self):
+        pass
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -120,7 +131,7 @@ class ConformationalEnsemble(Ensemble):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
-        if len(self.items) > 0:
+        if len(self._items) > 0:
             if molecule.num_atoms() != self[0].num_atoms():
                 raise ValueError("wrong number of atoms for this ensemble")
 
@@ -151,7 +162,7 @@ class ConformationalEnsemble(Ensemble):
             assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't an ConformationalEnsemble!"
 
         for ensemble in ensembles:
-            for mol, prop in ensemble.iteritems():
+            for mol, prop in ensemble.items():
                     new_ensemble.add_molecule(mol, prop)
 
         return new_ensemble
