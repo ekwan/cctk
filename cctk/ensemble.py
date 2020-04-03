@@ -31,7 +31,10 @@ class Ensemble:
         self._items = {}
 
     def __str__(self):
-        return f"Ensemble (name=f{name}, {len(_items)} molecules)"
+        if self.name is not None:
+            return f"Ensemble (name={self.name}, {len(_items)} molecules)"
+        else:
+            return f"Ensemble ({len(_items)} molecules)"
 
     def __getitem__(self, key):
         if isinstance(key, Molecule):
@@ -122,10 +125,13 @@ class ConformationalEnsemble(Ensemble):
 
     def __str__(self):
         n_atoms = 0
-        if len(self._items[0]) > 0:
-            first_molecule = self._items[0]
-            n_atoms = len(first_molecule.geometry)
-        return f"ConformationalEnsemble (name=f{name}, {len(_items)} molecules, {n_atoms} atoms)"
+        if len(self._items) > 0:
+            first_molecule = self[0]
+            n_atoms = first_molecule.num_atoms()
+        if self.name is not None:
+            return f"ConformationalEnsemble (name={self.name}, {len(self._items)} molecules, {n_atoms} atoms)"
+        else:
+            return f"ConformationalEnsemble ({len(self._items)} molecules, {n_atoms} atoms)"
 
     def add_molecule(self, molecule, properties={}):
         """

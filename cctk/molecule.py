@@ -103,7 +103,10 @@ class Molecule:
                 self.add_bond(bond[0], bond[1])
 
     def __str__(self):
-        return f"Molecule (name={name}, {len(atomic_numbers)} atoms")
+        if self.name is not None:
+            return f"Molecule (name={self.name}, {len(self.atomic_numbers)} atoms)"
+        else:
+            return f"Molecule ({len(self.atomic_numbers)} atoms)"
 
     def assign_connectivity(self, cutoff=0.5):
         """
