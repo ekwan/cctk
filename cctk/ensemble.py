@@ -3,8 +3,9 @@ import re
 import numpy as np
 import copy
 
+import cctk
 from cctk import Molecule
-from cctk.helper_functions import align_matrices, compute_RMSD
+from cctk.helper_functions import align_matrices
 
 
 class Ensemble:
@@ -31,10 +32,8 @@ class Ensemble:
         self._items = {}
 
     def __str__(self):
-        if self.name is not None:
-            return f"Ensemble (name={self.name}, {len(_items)} molecules)"
-        else:
-            return f"Ensemble ({len(_items)} molecules)"
+        name = "None" if self.name is None else self.name
+        return f"Ensemble (name={name}, {len(_items)} molecules)"
 
     def __getitem__(self, key):
         if isinstance(key, Molecule):
@@ -173,57 +172,80 @@ class ConformationalEnsemble(Ensemble):
 
         return new_ensemble
 
-    def align(self, align_to=0, atoms=None, return_rmsd=False):
+    def align(self, to_geometry=0, comparison_atoms="heavy", compute_RMSD=False):
         """
-        Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`. If `atom_numbers` is `None`, then a full alignment is performed.
+        Aligns every geometry in this ensemble to the specified geometry,
+        optionally computing the root-mean-square distance between each
+        geometry and the reference geometry.
 
         Args:
-            align_to (int): which geometry to align to (0-indexed)
-            atoms (list): which atoms to align in each molecule (1-indexed; must be at least 3)
-                alternatively, specify ``None`` for all atoms or "heavy" for all heavy atoms
-            return_rmsd (Bool): whether to return RMSD before and after rotation
+            to_geometry (int): the reference geometry to align to (0-indexed)
+            comparison_atoms (str or list): which atoms to use when computing alignments
+                                            "heavy" for all non-hydrogen atoms,
+                                            "all" for all atoms, or
+                                            a list of 1-indexed atom numbers
+            compute_RMSD (Bool): whether to return RMSD before and after rotation
+
+        Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`.
+        If `atom_numbers` is `None`, then a full alignment is performed.
+        The original ensemble will not be altered.  RMSDs will be calculated over the
+        comparison atoms only.
 
         Returns:
-            a new ``Ensemble()`` object with the objects aligned
-            (optional) before rmsd and after rmsd
+            new aligned ``ConformationalEnsemble`` or
+            new aligned ``ConformationalEnsemble``, before_RMSD array, after_RMSD array
         """
-        self._check_molecule_number(align_to)
+        # check inputs
+        self._check_molecule_number(to_geometry)
+        n_atoms = self[0].num_atoms()
 
-        if atoms is None:
-            atoms = np.arange(1, self.molecules[0].num_atoms() + 1)
-        elif isinstance(atoms, str) and (atoms == "heavy"):
-            atoms = self.molecules[0].get_heavy_atoms()
-        else:
-            try:
-                atoms = np.array(atoms)
-                if len(atoms) < 3:
-                    raise ValueError("not enough atoms for alignment - need 3 in 3D space!")
+        if isinstance(comparison_atoms, str):
+            if comparison_atoms == "all":
+                comparison_atoms = np.arange(1, n_atoms + 1)
+            elif comparison_atoms == "heavy":
+                comparison_atoms = self[0].get_heavy_atoms()
 
-            except:
-                raise ValueError("atom numbers is not a recognized keyword and cannot be cast to numpy array... try again!")
+        assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
-        #### move everything to the center!
-        for molecule in self.molecules:
-            molecule.center()
-
-        template = self.molecules[align_to].geometry[atoms]
-        before_rmsd = 0
-        after_rmsd = 0
-
-        #### perform alignment using Kabsch algorithm
+        # duplicate the ensemble
         new_ensemble = copy.deepcopy(self)
-        for molecule in new_ensemble.molecules:
-            before_rmsd += compute_RMSD(template, molecule.geometry[atoms])
-            new_geometry = align_matrices(molecule.geometry[atoms], molecule.geometry, template)
+
+        # translate all molecules to the origin
+        # with respect to the comparison atoms
+        for molecule in new_ensemble:
+            full_geometry = molecule.geometry
+            partial_geometry = full_geometry[comparison_atoms]
+            translation_vector = -partial_geometry.mean(axis=0)
+            molecule.translate_molecule(translation_vector)
+
+        full_template_geometry = new_ensemble[to_geometry].geometry
+        partial_template_geometry = full_template_geometry[comparison_atoms]
+        before_RMSDs = []
+        after_RMSDs = []
+
+        # perform alignment using Kabsch algorithm
+        for i,molecule in enumerate(new_ensemble):
+            full_geometry = molecule.geometry
+            partial_geometry = full_geometry[comparison_atoms]
+            #print("xxxxxxxxxxxxxxxx")
+            #print(partial_geometry)
+            if compute_RMSD:
+                before_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
+                before_RMSDs.append(before_RMSD)
+                #print(before_RMSD)
+            new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
+            #print("---")
+            #print(new_geometry[comparison_atoms])
             molecule.geometry = new_geometry
-            after_rmsd += compute_RMSD(template, molecule.geometry[atoms])
+            if compute_RMSD:
+                after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble[0], new_ensemble[i], comparison_atoms)
+                after_RMSDs.append(after_RMSD)
+                #print(after_RMSD)
+            assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
-            assert len(molecule.geometry) == len(molecule.atomic_numbers), "wrong number of geometry elements!"
-
-        if return_rmsd:
-            return new_ensemble, before_rmsd, after_rmsd
-        else:
-            return new_ensemble
+        if compute_RMSD:
+            return new_ensemble, before_RMSDs, after_RMSDs
+        return new_ensemble
 
     def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
         """

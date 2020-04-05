@@ -22,4 +22,4 @@ dist/*
 MANIFEST
 __pycache__/
 *.py[cod]
-
+test/static/phenylpropane*.gjf

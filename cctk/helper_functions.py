@@ -9,6 +9,7 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 from . import data  # relative-import the *package* containing the templates
+import cctk
 
 """
 This code populates ELEMENT_DICTIONARY and ISOTOPE_DICTIONARY from a static datafile.
@@ -247,25 +248,53 @@ def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     return P_full @ rotation
 
 
-def compute_RMSD(geometry1, geometry2):
+def compute_RMSD(geometry1, geometry2, using_atom_numbers="all", checks=True):
     """
-    Computes the root mean squared difference between two geometries.
+    Computes the root mean squared difference between two molecules/geometries.
 
     Args:
-        geometry1 (list, or equivalent): first geometry
-        geometry2 (list, or equivalent): second geometry
+        geometry1 (Molecule or np.array (dimensions: n atoms x 3): molecule or geometry
+        geometry2 (Molecule or np.array (dimensions: n atoms x 3): molecule or geometry
+        using_atom_numbers (str or list): which atoms to consider for the RMSD calculation;
+                                          use "all" to consider all atoms or a list of
+                                          1-indexed atom numbers
+        checks (bool): whether to check that the inputs make sense (True by default)
+
+    Returns:
+        the root-mean-square distance between the two geometries
     """
-    if len(geometry1) != len(geometry2):
+    if isinstance(geometry1, cctk.Molecule):
+        geometry1 = geometry1.geometry
+    if isinstance(geometry2, cctk.Molecule):
+        geometry2 = geometry2.geometry
+    if checks and not isinstance(geometry1, cctk.OneIndexedArray):
+        raise ValueError(f"expected cctk.OneIndexedarray but got {str(type(geometry1))} instead")
+    if checks and not isinstance(geometry2, cctk.OneIndexedArray):
+        raise ValueError(f"expected cctk.OneIndexedarray but got {str(type(geometry2))} instead")
+
+    n_atoms = len(geometry1)
+    if checks and len(geometry2) != n_atoms:
         raise ValueError("can't compare two geometries with different lengths!")
 
-    try:
-        geometry1 = np.array(geometry1)
-        geometry2 = np.array(geometry2)
-    except:
-        raise TypeError("geometries cannot be cast to numpy arrays!")
+    if isinstance(using_atom_numbers, str):
+        if using_atom_numbers == "all":
+            using_atom_numbers = list(range(1,n_atoms+1))
+        else:
+            raise ValueError(f"unknown argument {using_atom_numbers}")
 
-    squared_difference = np.square(geometry1 - geometry2)
-    temp = np.sum(squared_difference) / (3 * len(geometry1))
+    if checks:
+        assert len(using_atom_numbers) > 0, "must specify at least one atom number"
+        n_atoms = len(geometry1)
+        for i in using_atom_numbers:
+            assert 1 <= i <= n_atoms, f"atom number {i} out of range"
+        assert len(set(using_atom_numbers)) == len(using_atom_numbers), f"duplicate atom numbers found"
+    else:
+        raise ValueError(f"unexpected type for using_atom_numbers, expected np.ndarray but got {str(type(using_atom_numbers))}")
+
+    partial_geometry_1 = geometry1[using_atom_numbers]
+    partial_geometry_2 = geometry2[using_atom_numbers]
+    squared_difference = np.square(partial_geometry_1 - partial_geometry_2)
+    temp = np.sum(squared_difference) / n_atoms
     return np.sqrt(temp)
 
 def get_isotopic_distribution(z):
