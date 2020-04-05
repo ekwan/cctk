@@ -130,7 +130,9 @@ class GaussianFile(File):
             line = molecule.get_vector(index)
             if print_symbol:
                 Z = get_symbol(Z)
-            text += f"{Z:2d}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
+                text += f"{Z:>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
+            else:
+                text += f"{Z:2d}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
         text += "\n"
         if footer is not None:
@@ -401,23 +403,6 @@ class GaussianFile(File):
         return self.molecules[num]
 
     @classmethod
-    def write_ensemble_to_file(cls, filename, ensemble, route_cards, kwargs):
-        """
-        Writes an Ensemble to a file using Link1 specification.
-
-        Args:
-            filename (str): where to write the file
-            ensemble (Ensemble): ``Ensemble`` object to write
-            headers (list): headers for each ``write_molecule_to_file`` call
-            kwargs (list of dict): arguments for each ``write_molecule_to_file`` call
-        """
-        for idx, molecule in enumerate(ensemble._items):
-            if idx == 0:
-                cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=False, **kwargs[idx])
-            else:
-                cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=True, **kwargs[idx])
-
-    @classmethod
     def _assign_job_types(cls, header):
         """
         Assigns ``JobType`` objects from route card. ``Job.Type.SP`` is assigned by default.
@@ -448,3 +433,37 @@ class GaussianFile(File):
             for prop in EXPECTED_PROPERTIES[job_type.value]:
                 if not self.molecules.has_property(-1, prop):
                     raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
+
+    @classmethod
+    def write_ensemble_to_file(cls, filename, ensemble, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", print_symbol=False):
+            """
+            Writes an Ensemble to a file using Link1 specification.
+
+            Args:
+                filename (str): where to write the file
+                ensemble (Ensemble): ``Ensemble`` object to write
+                headers (list): headers for each ``write_molecule_to_file`` call
+                kwargs (list of dict): arguments for each ``write_molecule_to_file`` call
+            """
+            if not isinstance(route_card, list):
+                route_card = [route_card for m in ensemble._items]
+
+            if not isinstance(link0, list):
+                link0 = [link0 for m in ensemble._items]
+
+            if not isinstance(footer, list):
+                footer = [footer for m in ensemble._items]
+
+            if not isinstance(title, list):
+                title = [title for m in ensemble._items]
+
+            if not isinstance(print_symbol, list):
+                print_symbol = [print_symbol for m in ensemble._items]
+
+            for idx, molecule in enumerate(ensemble._items):
+                if idx == 0:
+                    cls.write_molecule_to_file(filename, molecule, route_card[idx], link0[idx], footer=footer[idx], title=title[idx], print_symbol=print_symbol[idx], append=False)
+                else:
+                    cls.write_molecule_to_file(filename, molecule, route_card[idx], link0[idx], footer=footer[idx], title=title[idx], print_symbol=print_symbol[idx], append=True)
+
+

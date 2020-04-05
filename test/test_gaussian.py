@@ -63,5 +63,24 @@ class TestGaussian(unittest.TestCase):
         self.assertListEqual(f[1].job_types, [cctk.JobType.NMR, cctk.JobType.SP])
         self.assertListEqual(f[2].job_types, [cctk.JobType.NMR, cctk.JobType.SP])
 
+
+    def test_write_ensemble(self):
+        path = "test/static/gaussian_file.out"
+        file = cctk.GaussianFile.read_file(path)
+        ense = file.molecules
+
+        old_path = "test/static/ensemble.gjf"
+        new_path = "test/static/new_ensemble.gjf"
+        cctk.GaussianFile.write_ensemble_to_file(new_path, ense, "#p opt freq=noraman b3lyp/6-31g(d)", print_symbol=True)
+
+        with open(old_path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
+
 if __name__ == '__main__':
     unittest.main()

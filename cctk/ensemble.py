@@ -149,6 +149,10 @@ class ConformationalEnsemble(Ensemble):
             if not np.array_equal(molecule.atomic_numbers, self[0].atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
+            #### only save one copy to save space
+            molecule.bonds = self[0].bonds
+            molecule.atomic_numbers = self[0].atomic_numbers
+
         super().add_molecule(molecule, properties)
 
     @classmethod
