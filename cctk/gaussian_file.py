@@ -411,7 +411,7 @@ class GaussianFile(File):
             headers (list): headers for each ``write_molecule_to_file`` call
             kwargs (list of dict): arguments for each ``write_molecule_to_file`` call
         """
-        for idx, molecule in enumerate(ensemble.molecules):
+        for idx, molecule in enumerate(ensemble._items):
             if idx == 0:
                 cls.write_molecule_to_file(filename, molecule, route_cards[idx], append=False, **kwargs[idx])
             else:
