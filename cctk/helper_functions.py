@@ -283,3 +283,11 @@ def get_isotopic_distribution(z):
     masses = list(ISOTOPE_DICTIONARY[z].keys())
     weights = list(ISOTOPE_DICTIONARY[z].values())
     return np.array(masses), np.array(weights)
+
+def draw_isotopologue(z):
+    """
+    For an element with number ``z``, return a weighted random atomic mass (so will return 12 99% of the time and 13 1% of the time for carbon).
+    """
+    z = str(z)
+    masses, weights = get_isotopic_distribution(z)
+    return np.random.choice(masses, p=weights)

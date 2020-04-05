@@ -13,6 +13,8 @@ class TestOneIndexedArray(unittest.TestCase):
         self.assertEqual(new_a[5], 5)
         self.assertEqual(new_a[1], 1)
 
+        self.assertTrue(isinstance(cctk.OneIndexedArray(new_a), cctk.OneIndexedArray))
+
         self.assertEqual(new_a[[1]], 1)
         self.assertListEqual(list(new_a[[1,2]]), [1,2])
 
