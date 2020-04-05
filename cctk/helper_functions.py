@@ -287,7 +287,7 @@ def compute_RMSD(geometry1, geometry2, using_atom_numbers="all", checks=True):
         n_atoms = len(geometry1)
         for i in using_atom_numbers:
             assert 1 <= i <= n_atoms, f"atom number {i} out of range"
-        assert len(set(using_atom_numbers)) == n_atoms, f"duplicate atom numbers found"
+        assert len(set(using_atom_numbers)) == len(using_atom_numbers), f"duplicate atom numbers found"
     else:
         raise ValueError(f"unexpected type for using_atom_numbers, expected np.ndarray but got {str(type(using_atom_numbers))}")
 

@@ -218,25 +218,30 @@ class ConformationalEnsemble(Ensemble):
             translation_vector = -partial_geometry.mean(axis=0)
             molecule.translate_molecule(translation_vector)
 
-        full_template = new_ensemble[to_geometry].geometry
-        partial_template = full_template[comparison_atoms]
+        full_template_geometry = new_ensemble[to_geometry].geometry
+        partial_template_geometry = full_template_geometry[comparison_atoms]
         before_RMSDs = []
         after_RMSDs = []
 
         # perform alignment using Kabsch algorithm
-        for full_molecule in new_ensemble:
-            full_molecule = full_molecule.geometry
-            partial_molecule = full_molecule[comparison_atoms]
+        for i,molecule in enumerate(new_ensemble):
+            full_geometry = molecule.geometry
+            partial_geometry = full_geometry[comparison_atoms]
+            #print("xxxxxxxxxxxxxxxx")
+            #print(partial_geometry)
             if compute_RMSD:
-                before_RMSD = cctk.helper_functions.compute_RMSD(partial_template, partial_molecule)
+                before_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
                 before_RMSDs.append(before_RMSD)
-            new_geometry = align_matrices(partial_molecule, full_molecule, partial_template)
-            full_molecule.geometry = new_geometry
-            partial_molecule = full_molecule.geometry[comparison_atoms]
+                #print(before_RMSD)
+            new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
+            #print("---")
+            #print(new_geometry[comparison_atoms])
+            molecule.geometry = new_geometry
             if compute_RMSD:
-                after_RMSD = cctk.helper_functions.compute_RMSD(partial_template, partial_molecule)
+                after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble[0], new_ensemble[i], comparison_atoms)
                 after_RMSDs.append(after_RMSD)
-            assert len(full_molecule.geometry) == n_atoms, "wrong number of geometry elements!"
+                #print(after_RMSD)
+            assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
         if compute_RMSD:
             return new_ensemble, before_RMSDs, after_RMSDs
