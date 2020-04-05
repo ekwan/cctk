@@ -55,13 +55,25 @@ class Ensemble:
         return len(self._items)
 
     def has_property(self, idx, prop):
+        """
+        Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
+        """
         if prop in list(self._items[self[idx]].keys()):
             return True
         else:
             return False
 
     def items(self):
+        """
+        Returns a list of (molecule, properties) tuple pairs.
+        """
         return self._items.items()
+
+    def molecules(self):
+        """
+        Returns a list of the constituent molecules.
+        """
+        return list(self._items)
 
     def add_molecule(self, molecule, properties={}):
         """

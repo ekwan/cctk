@@ -114,6 +114,9 @@ class GaussianFile(File):
         if (route_card is None) or (not isinstance(route_card, str)):
             raise ValueError("can't write a file without a route card")
 
+        if not re.match(r"#p", route_card):
+            raise Warning(f"route card doesn't start with #p: {route_card}")
+
         #### generate the text
         text = ""
         if append:
@@ -192,6 +195,8 @@ class GaussianFile(File):
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
         Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
 
+        Note: 
+
         Will throw ``ValueError`` if there have been no successful iterations.
 
         Args:
@@ -209,6 +214,8 @@ class GaussianFile(File):
         for link1idx, lines in enumerate(link1_lines):
             #### automatically assign job types based on header
             header = parse.search_for_block(lines, "#p", "----")
+            if header is None:
+                raise ValueError("can't find route card! (perhaps '#p' wasn't employed?)")
             job_types = cls._assign_job_types(header)
 
             link0 = parse.extract_link0(lines)

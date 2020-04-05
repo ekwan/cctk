@@ -90,26 +90,6 @@ class TestMAE(unittest.TestCase):
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
 
-class TestGroup(unittest.TestCase):
-    def test_group_add(self):
-        path = "test/static/acetaldehyde.out"
-        old_path = "test/static/14-butanedione.gjf"
-        new_path = "test/static/new_14-butanedione.gjf"
-
-        file = cctk.GaussianFile.read_file(path)
-        group = cctk.Group.new_from_molecule(attach_to=6, molecule=file.get_molecule())
-        new_mol = cctk.Group.add_group_to_molecule(file.get_molecule(), group, 5)
-        file.write_file("test/static/new_14-butanedione.gjf", molecule=new_mol)
-
-        with open(old_path) as old:
-            with open(new_path) as new:
-                self.assertListEqual(
-                    list(new),
-                    list(old)
-                )
-
-        os.remove(new_path)
-
 class TestXYZ(unittest.TestCase):
     def test_writefile(self):
         read_path = "test/static/test_peptide.xyz"
@@ -143,69 +123,6 @@ class TestXYZ(unittest.TestCase):
                 )
 
         os.remove(new_path)
-
-class TestEnsemble(unittest.TestCase):
-    def generate_test_ensemble(self):
-        path = "test/static/test_peptide.xyz"
-        file = cctk.XYZFile.read_file(path)
-        mol = file.molecule
-
-        e1 = np.array([1, 0, 0])
-        e2 = np.array([0, 1, 0])
-        e3 = np.array([0, 0, 1])
-
-        ensemble = cctk.ConformationalEnsemble()
-        ensemble.add_molecule(mol)
-        self.assertEqual(len(ensemble.molecules), 1)
-
-        mol_rot = copy.deepcopy(ensemble.molecules[0]).rotate_molecule(e1, 90)
-        ensemble.add_molecule(mol_rot)
-        self.assertEqual(len(ensemble.molecules), 2)
-
-        mol_trans = copy.deepcopy(ensemble.molecules[0]).translate_molecule(e2)
-        ensemble.add_molecule(mol_trans)
-        self.assertEqual(len(ensemble.molecules), 3)
-
-        mol_trans_rot = copy.deepcopy(ensemble.molecules[1].translate_molecule(e2))
-        ensemble.add_molecule(mol_trans_rot)
-        self.assertEqual(len(ensemble.molecules), 4)
-
-        mol_rot_trans = copy.deepcopy(ensemble.molecules[2].rotate_molecule(e1, 90))
-        ensemble.add_molecule(mol_rot_trans)
-        self.assertEqual(len(ensemble.molecules), 5)
-
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[4].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[5].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[6].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[7].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[4].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[5].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[6].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble.molecules[7].rotate_molecule(e3, -20)))
-        return ensemble
-
-    def test_align(self):
-        #### since all the molecules are identical, every way we do this should be totally fine
-        ensemble = self.generate_test_ensemble()
-        ensemble = ensemble.align()
-        template = ensemble.molecules[0].geometry
-        for molecule in ensemble.molecules:
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
-
-        ensemble2 = self.generate_test_ensemble()
-        ensemble2 = ensemble2.align(atoms="heavy")
-        template = ensemble2.molecules[0].geometry
-        for molecule in ensemble2.molecules:
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
-
-        ensemble3 = self.generate_test_ensemble()
-        ensemble3 = ensemble3.align(atoms=[13, 4, 27, 6, 9, 14])
-        template = ensemble3.molecules[0].geometry
-        for molecule in ensemble3.molecules:
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
 class TestPDB(unittest.TestCase):
     def test_write_traj(self):

@@ -19,5 +19,10 @@ class TestElement(unittest.TestCase):
         self.assertEqual(helper.get_symbol(46), "Pd")
         self.assertEqual(helper.get_symbol(6), "C")
 
+    def test_isotope(self):
+        m, w = helper.get_isotopic_distribution(1)
+        self.assertListEqual(list(m), [1.007825, 2.014102, 3.016049])
+        self.assertListEqual(list(w), [0.999885, 0.000115, 0.0])
+
 if __name__ == '__main__':
     unittest.main()

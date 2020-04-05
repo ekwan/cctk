@@ -21,7 +21,7 @@ class TestNMR(unittest.TestCase):
         gaussian_file = cctk.GaussianFile.read_file("test/static/methane2.out")
         self.assertEqual(len(gaussian_file), 2)
         first_link = gaussian_file[0]
-        self.assertListEqual(first_link.job_types, [JobType.OPT, JobType.FREQ])
+        self.assertListEqual(first_link.job_types, [JobType.OPT, JobType.FREQ, JobType.SP])
         second_link = gaussian_file[1]
         ensemble = second_link.molecules
         molecule = ensemble[-1]
@@ -32,14 +32,14 @@ class TestNMR(unittest.TestCase):
         gaussian_file = cctk.GaussianFile.read_file("test/static/ethane.out")
         self.assertEqual(len(gaussian_file), 3)
         first_link = gaussian_file[0]
-        self.assertListEqual(first_link.job_types, [JobType.OPT, JobType.FREQ])
+        self.assertListEqual(first_link.job_types, [JobType.OPT, JobType.FREQ, JobType.SP])
         second_link = gaussian_file[1]
-        self.assertListEqual(second_link.job_types, [JobType.NMR])
+        self.assertListEqual(second_link.job_types, [JobType.NMR, JobType.SP])
         ensemble = second_link.molecules
         molecule = ensemble[-1]
         self.assertListEqual(list(molecule.nmr_isotropic), [180.3673, 31.2068, 31.207, 31.2068, 180.3673, 31.2068, 31.207, 31.2068])
         third_link = gaussian_file[2]
-        self.assertListEqual(third_link.job_types, [JobType.NMR])
+        self.assertListEqual(third_link.job_types, [JobType.NMR, JobType.SP])
         ensemble = third_link.molecules
         molecule = ensemble[-1]
         self.assertListEqual(list(molecule.nmr_isotropic), [198.2259, 32.6869, 32.6869, 32.6869, 32.6869])
