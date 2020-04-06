@@ -27,14 +27,14 @@ class TestAlign(unittest.TestCase):
         aligned_ensemble, before_RMSD, after_RMSD = conformational_ensemble.align(to_geometry=0, comparison_atoms=comparison_atoms, compute_RMSD=True)
         for before,after in zip(before_RMSD, after_RMSD):
             self.assertLess(after,0.0001)
-            #print(f"{before:6.2f}   {after:6.2f}")
-        m0 = aligned_ensemble[0]
-        for i,molecule in enumerate(aligned_ensemble):
-            filename = f"test/static/phenylpropane_{i+1}.gjf"
-            route_card = "#"
-            cctk.GaussianFile.write_molecule_to_file(filename, molecule, route_card)
-            rmsd = cctk.helper_functions.compute_RMSD(m0,molecule,comparison_atoms)
-            #print("after:",rmsd)
+        cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned.gjf", aligned_ensemble, "#p")
+
+        #for i,molecule in enumerate(aligned_ensemble):
+        #    filename = f"test/static/phenylpropane_{i+1}.gjf"
+        #    route_card = "#"
+        #    cctk.GaussianFile.write_molecule_to_file(filename, molecule, route_card)
+        #    rmsd = cctk.helper_functions.compute_RMSD(m0,molecule,comparison_atoms)
+        #    #print("after:",rmsd)
 
 if __name__ == '__main__':
     unittest.main()
