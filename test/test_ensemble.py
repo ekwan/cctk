@@ -3,6 +3,32 @@ import numpy as np
 import cctk
 
 class TestEnsemble(unittest.TestCase):
+    def test_indexing(self):
+        path = "test/static/gaussian_file.out"
+        file = cctk.GaussianFile.read_file(path)
+        mols = file.molecules
+        self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
+
+        self.assertEqual(len(mols), 3)
+        self.assertTrue(isinstance(mols[0], cctk.Molecule))
+        self.assertEqual(len(mols[0:10]), 3)
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
+
+        mols[mols[1],"energy"] = 300
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 300, -1159.56782622])
+        mols[1,"energy"] = 200
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, -1159.56782622])
+        mols[[1,2],"energy"] = [200, 201]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, 201])
+        mols[1:3,"energy"] = [203, 204]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 203, 204])
+        mols[[mols[1],mols[2]],"energy"] = [100, 101]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 100, 101])
+
+        for (m, p) in mols:
+            self.assertTrue(isinstance(m, cctk.Molecule))
+            self.assertTrue(isinstance(p, dict))
+
     def generate_test_ensemble(self):
         path = "test/static/test_peptide.xyz"
         file = cctk.XYZFile.read_file(path)

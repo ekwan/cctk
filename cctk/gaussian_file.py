@@ -248,7 +248,7 @@ class GaussianFile(File):
             f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success)
 
             molecules = [None] * len(geometries)
-            properties = [{}] * len(geometries)
+            properties = [{} for _ in range(len(geometries))]
             for idx, geom in enumerate(geometries):
                 molecules[idx] = Molecule(atomic_numbers, geom, charge=charge, multiplicity=multip, bonds=bonds)
                 properties[idx]["energy"] = energies[idx]

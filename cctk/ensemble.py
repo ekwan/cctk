@@ -12,7 +12,12 @@ class Ensemble:
     """
     Class that represents a group of molecules. They do not all need to have the same atoms or bonds.
 
-    Calling ``ensemble[x]`` is shorthand for calling ``ensemble.molecules[x]``.
+    Ensembles are composed of molecules and properties. Molecules are ``Molecule`` objects, whereas properties are ``dict`` objects containing calculation-specific information.
+
+    There are various shortcuts for handling ``Ensemble`` objects:
+    - ``Ensemble`` can be treated like a list of ``Molecule`` objects, so ``ensemble[0]`` will return the first molecule, ``len(ensemble)`` the number of molecules, and so forth.
+    - ``Ensemble`` can also return the corresponding properties, when passed a molecule: so ``ensemble[molecule]`` will return the corresponding properties dictionary.
+    - ``Ensemble`` can also take tuples, allowing for dataframe-like behavior: so ``ensemble[1:3, "energy"]`` will return the energies of molecules 2-4.
 
     Attributes:
         name (str): name, for identification
@@ -40,19 +45,67 @@ class Ensemble:
             return self._items[key]
         elif isinstance(key, int):
             return list(self._items)[key]
+        elif isinstance(key, list):
+            return [self[k] for k in key]
+        elif isinstance(key, slice):
+            start, stop, step = key.indices(len(self))
+            return [self[i] for i in range(start, stop, step)]
+        elif isinstance(key, tuple):
+            (key1, key2) = key
+            mols = self[key1]
+            if isinstance(key1, list):
+                if all(isinstance(k, Molecule) for k in key1):
+                    mols = key1
+            elif isinstance(key1, Molecule):
+                mols = key1
+            if key2 is None:
+                return mols
+            else:
+                if isinstance(mols, list):
+                    return [self[mol][key2] for mol in mols]
+                else:
+                    return self[mols][key2]
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __setitem__(self, key, item):
         if isinstance(key, Molecule):
+            assert isinstance(item, dict), "properties must be dict"
             self._items[key] = item
         elif isinstance(key, int):
+            assert isinstance(item, Molecule), "can't add something that isn't a molecule to keys of ensemble!"
             list(self._items)[key] = item
+        elif isinstance(key, list):
+            assert len(item) == len(key), "wrong number of items to assign to list index!"
+            for k, i in zip(key, item):
+                self[k] = i
+        elif isinstance(key, slice):
+            start, stop, step = key.indices(len(self))
+            assert len(item) == len(range(start, stop, step)), "wrong number of items to assign to slice index!"
+            for i in range(start, stop, step):
+                self[i] = item[i]
+        elif isinstance(key, tuple):
+            (key1, key2) = key
+            mols = self[key1]
+            if isinstance(key1, list):
+                if all(isinstance(k, Molecule) for k in key1):
+                    mols = key1
+            elif isinstance(key1, Molecule):
+                mols = key1
+            if isinstance(mols, list):
+                assert len(item) == len(mols), "wrong number of items to assign to tuple index"
+                for m, i in zip(mols, item):
+                    self[m][key2] = i
+            else:
+                self[mols][key2] = item
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __len__(self):
         return len(self._items)
+
+    def __iter__(self):
+        return iter(self.items())
 
     def has_property(self, idx, prop):
         """
@@ -120,8 +173,6 @@ class Ensemble:
 
         return new_ensemble
 
-    def to_df(self):
-        pass
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -228,7 +279,7 @@ class ConformationalEnsemble(Ensemble):
 
         # translate all molecules to the origin
         # with respect to the comparison atoms
-        for molecule in new_ensemble:
+        for molecule, _ in new_ensemble:
             full_geometry = molecule.geometry
             partial_geometry = full_geometry[comparison_atoms]
             translation_vector = -partial_geometry.mean(axis=0)
@@ -240,7 +291,7 @@ class ConformationalEnsemble(Ensemble):
         after_RMSDs = []
 
         # perform alignment using Kabsch algorithm
-        for i,molecule in enumerate(new_ensemble):
+        for i, (molecule, _) in enumerate(new_ensemble):
             full_geometry = molecule.geometry
             partial_geometry = full_geometry[comparison_atoms]
             #print("xxxxxxxxxxxxxxxx")
