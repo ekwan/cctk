@@ -243,20 +243,14 @@ class ConformationalEnsemble(Ensemble):
         for i,molecule in enumerate(new_ensemble):
             full_geometry = molecule.geometry
             partial_geometry = full_geometry[comparison_atoms]
-            #print("xxxxxxxxxxxxxxxx")
-            #print(partial_geometry)
             if compute_RMSD:
                 before_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
                 before_RMSDs.append(before_RMSD)
-                #print(before_RMSD)
             new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
-            #print("---")
-            #print(new_geometry[comparison_atoms])
             molecule.geometry = new_geometry
             if compute_RMSD:
                 after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble[0], new_ensemble[i], comparison_atoms)
                 after_RMSDs.append(after_RMSD)
-                #print(after_RMSD)
             assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
         if compute_RMSD:

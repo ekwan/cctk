@@ -114,8 +114,7 @@ class GaussianFile(File):
         if (route_card is None) or (not isinstance(route_card, str)):
             raise ValueError("can't write a file without a route card")
 
-        if not re.match(r"#p", route_card):
-            raise Warning(f"route card doesn't start with #p: {route_card}")
+        assert re.match(r"^#p", route_card), f"route card doesn't start with #p: {route_card}"
 
         #### generate the text
         text = ""
@@ -195,7 +194,7 @@ class GaussianFile(File):
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
         Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
 
-        Note: 
+        Note:
 
         Will throw ``ValueError`` if there have been no successful iterations.
 
@@ -444,28 +443,74 @@ class GaussianFile(File):
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", print_symbol=False):
             """
-            Writes an Ensemble to a file using Link1 specification.
+            Write each structure in the specified ensemble to a single Gaussian input file
+            by using the Link1 specification.
 
             Args:
                 filename (str): where to write the file
                 ensemble (Ensemble): ``Ensemble`` object to write
-                headers (list): headers for each ``write_molecule_to_file`` call
-                kwargs (list of dict): arguments for each ``write_molecule_to_file`` call
+                route_card (str or list): to use the same route card for every link, use a single string;
+                                          otherwise, provide a list whose entries parallel the ensemble members
+                link0 (dict or list of dicts): to use the same memory/processors for every link, use a single string;
+                                               otherwise, provide a list
+                footer (None/str or list): use None for no text after geometry, provide a str to specify a footer,
+                                           or provide some combination of the above as a list
+                title (str or list): use a single string to provide a generic title for every link or a list as above
+                print_symbol (bool or list): whether to print atomic symbols or atomic numbers in the geometry specification;
+                                             use a single bool or a list as above
+
             """
-            if not isinstance(route_card, list):
+            n_geometries = len(ensemble)
+            assert len(ensemble) > 0, "cannot write a blank ensemble"
+
+            if isinstance(route_card, str):
+                assert re.match(r"^#p", route_card), "route card should start with #p: {route_card}"
                 route_card = [route_card for m in ensemble._items]
+            elif isinstance(route_card, list):
+                assert len(route_card) == n_geometries, f"expected {n_geometries} route cards but got {len(route_card)}"
+                for card in route_card:
+                    assert isinstance(card, str), "expected route card to be a str"
+                    assert re.match(r"^#p", route_card), "route card should start with #p: f{card}"
+            else:
+                raise ValueError(f"unexpected type for route_card: {str(type(route_card))}")
 
-            if not isinstance(link0, list):
+            if isinstance(link0, dict):
                 link0 = [link0 for m in ensemble._items]
+            elif isinstance(link0, list):
+                assert len(link0) == n_geometries, f"expected {n_geometries} link0 entries, but got {len(link0)}"
+                for d in link0:
+                    assert isinstance(d, dict), f"expected dict for link0 but got {str(type(d))}"
+            else:
+                raise ValueError(f"unexpected type for link0: {str(type(link0))}")
 
-            if not isinstance(footer, list):
+            if footer is None or isinstance(footer, str):
                 footer = [footer for m in ensemble._items]
+            elif isinstance(footer, list):
+                assert len(footer) == n_geometries, f"expected {n_geometries} footers, but got {len(footer)}"
+                for f in footer:
+                    assert f is None or isinstance(f, str), f"expected str or None for footer but got {str(type(f))}"
+            else:
+                raise ValueError(f"unexpected type for footer: {str(type(footer))}")
 
-            if not isinstance(title, list):
+            if isinstance(title, str):
+                assert len(title.strip()) > 0, "zero-length titles not allowed"
                 title = [title for m in ensemble._items]
+            elif isinstance(title, list):
+                assert len(title) == n_geometries, f"expected {n_geometries} route cards but got {len(title)}"
+                for card in title:
+                    assert isinstance(card, str), "expected title to be a str"
+                    assert len(title.strip()) > 0, "zero-length titles are not allowed"
+            else:
+                raise ValueError(f"unexpected type for title: {str(type(title))}")
 
-            if not isinstance(print_symbol, list):
+            if isinstance(print_symbol, bool):
                 print_symbol = [print_symbol for m in ensemble._items]
+            elif isinstance(print_symbol, list):
+                assert len(print_symbol) == n_geometries, f"expected {n_geometries} print_symbol entries but got {len(print_symbol)}"
+                for s in print_symbol:
+                    assert isinstance(s, bool), f"expected bool for print_symbol but got {str(type(s))}"
+            else:
+                raise ValueError(f"unexpected type for print_symbol: {str(type(print_symbol))}")
 
             for idx, molecule in enumerate(ensemble._items):
                 if idx == 0:
