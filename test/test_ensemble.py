@@ -14,6 +14,11 @@ class TestEnsemble(unittest.TestCase):
         self.assertEqual(len(mols[0:10]), 3)
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
 
+        with self.assertRaises(KeyError):
+            mols[0:10,"enthalpy"]
+
+        self.assertListEqual(list(mols.keys()), list(mols._items.keys()))
+
         mols[mols[1],"energy"] = 300
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 300, -1159.56782622])
         mols[1,"energy"] = 200

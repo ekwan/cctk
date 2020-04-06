@@ -61,10 +61,13 @@ class Ensemble:
             if key2 is None:
                 return mols
             else:
-                if isinstance(mols, list):
-                    return [self[mol][key2] for mol in mols]
-                else:
-                    return self[mols][key2]
+                try:
+                    if isinstance(mols, list):
+                        return [self[mol][key2] for mol in mols]
+                    else:
+                        return self[mols][key2]
+                except KeyError as e:
+                    raise KeyError(f"property {key2} not defined for all molecules!")
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
@@ -107,6 +110,12 @@ class Ensemble:
     def __iter__(self):
         return iter(self.items())
 
+    def keys(self):
+        return self._items.keys()
+
+    def values(self):
+        return self._items.values()
+
     def has_property(self, idx, prop):
         """
         Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
@@ -126,7 +135,13 @@ class Ensemble:
         """
         Returns a list of the constituent molecules.
         """
-        return list(self._items)
+        return list(self.keys())
+
+    def properties(self):
+        """
+        Returns a list of the constituent properties.
+        """
+        return list(self.values())
 
     def add_molecule(self, molecule, properties={}):
         """
