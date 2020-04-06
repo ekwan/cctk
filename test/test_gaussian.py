@@ -82,5 +82,12 @@ class TestGaussian(unittest.TestCase):
 
         os.remove(new_path)
 
+    def test_force_extraction(self):
+        path = "test/static/dcm_force.out"
+        file = cctk.GaussianFile.read_file(path)
+        ense = file.molecules
+
+        self.assertListEqual(list(ense[0, "forces"][0]), [2.672010074,2.672010074,0.0])
+
 if __name__ == '__main__':
     unittest.main()

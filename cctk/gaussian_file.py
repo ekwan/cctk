@@ -32,8 +32,8 @@ EXPECTED_PROPERTIES = {
     "opt": ["rms_displacement", "rms_force", ],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
     "nmr": ["isotropic_shielding",],
-    "pop": ["charge_",],
-    "force": ["force_",],
+    "pop": ["charges",],
+    "force": ["forces",],
 }
 
 
@@ -291,8 +291,14 @@ class GaussianFile(File):
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
                 properties[0]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
 
+            if JobType.FORCE in job_types:
+                assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
+                forces = parse.read_forces(lines)
+                properties[0]["forces"] = forces 
+
             for mol, prop in zip(molecules, properties):
                 f.molecules.add_molecule(mol, properties=prop)
+
             f.check_has_properties()
             files.append(f)
 

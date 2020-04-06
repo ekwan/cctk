@@ -360,3 +360,24 @@ def extract_link0(lines):
             output[pieces[0]] = pieces[1]
 
     return output
+
+def read_forces(lines):
+    """
+    Reads forces from a Gaussian ``force`` job.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        (n x 3) ``cctk.OneIndexedArray`` of forces
+    """
+    forces = []
+    force_block = search_for_block(lines, "Forces \(Hartrees/Bohr\)", "Cartesian Forces", join="\n")
+    for line in force_block.split("\n")[2:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 5:
+            forces.append([float(fields[2]), float(fields[3]), float(fields[4])])
+
+    return np.array(forces)
