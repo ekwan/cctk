@@ -24,7 +24,7 @@ class TestNMR(unittest.TestCase):
         self.assertListEqual(first_link.job_types, [JobType.OPT, JobType.FREQ, JobType.SP])
         ensemble = first_link.molecules
         energies = [ ensemble[molecule]["energy"] for molecule in ensemble.molecules() ]
-        self.assertListEqual(energies, [-40.5183831835, -40.5183831835, -40.5183831835])
+        self.assertListEqual(energies, [-40.5169484082, -40.5183831835, -40.5183831835])
         #for molecule,properties in ensemble:
         #    print(molecule)
         #    print(properties)
