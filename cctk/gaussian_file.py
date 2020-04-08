@@ -32,7 +32,7 @@ EXPECTED_PROPERTIES = {
     "opt": ["rms_displacement", "rms_force", ],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
     "nmr": ["isotropic_shielding",],
-    "pop": ["charges",],
+    "pop": [],
     "force": ["forces",],
 }
 
@@ -294,7 +294,18 @@ class GaussianFile(File):
             if JobType.FORCE in job_types:
                 assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
                 forces = parse.read_forces(lines)
-                properties[0]["forces"] = forces 
+                properties[0]["forces"] = forces
+
+            if JobType.POP in job_types:
+                if re.search("hirshfeld", f.route_card):
+                    charges, spins = parse.read_hirshfeld_charges(lines)
+                    properties[-1]["hirshfeld_charges"] = charges
+                    properties[-1]["hirshfeld_spins"] = spins
+            try:
+                charges = parse.read_mulliken_charges(lines)
+                properties[-1]["mulliken_charges"] = charges
+            except:
+                pass
 
             for mol, prop in zip(molecules, properties):
                 f.molecules.add_molecule(mol, properties=prop)

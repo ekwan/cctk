@@ -87,7 +87,19 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         ense = file.molecules
 
-        self.assertListEqual(list(ense[0, "forces"][0]), [2.672010074,2.672010074,0.0])
+        self.assertListEqual(list(ense[0, "forces"][1]), [2.672010074,2.672010074,0.0])
+
+    def test_charges(self):
+        path = "test/static/dcm_force.out"
+        file = cctk.GaussianFile.read_file(path)
+        ense = file.molecules
+        self.assertEqual(ense[-1, "mulliken_charges"][1], -0.051271)
+
+        path = "test/static/h2o.out"
+        file = cctk.GaussianFile.read_file(path)
+        ense = file.molecules
+        self.assertEqual(ense[-1, "hirshfeld_charges"][1], -0.312885)
+        self.assertEqual(ense[-1, "hirshfeld_spins"][1], 0)
 
 if __name__ == '__main__':
     unittest.main()

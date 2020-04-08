@@ -2,6 +2,7 @@ import numpy as np
 import re
 
 from cctk.helper_functions import get_symbol
+from cctk import OneIndexedArray
 
 """
 Functions to help with parsing Gaussian files
@@ -380,4 +381,50 @@ def read_forces(lines):
         if len(fields) == 5:
             forces.append([float(fields[2]), float(fields[3]), float(fields[4])])
 
-    return np.array(forces)
+    return OneIndexedArray(forces)
+
+def read_mulliken_charges(lines):
+    """
+    Reads charges from a Gaussian ``pop`` job.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        ``cctk.OneIndexedArray`` of charges
+    """
+    charges = []
+    charge_block = search_for_block(lines, " Mulliken charges:", " Sum of Mulliken charges", join="\n")
+    for line in charge_block.split("\n")[2:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 3:
+            charges.append(float(fields[2]))
+
+    return OneIndexedArray(charges)
+
+def read_hirshfeld_charges(lines):
+    """
+    Reads charges from a Gaussian ``pop`` job.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        ``cctk.OneIndexedArray`` of charges
+        ``cctk.OneIndexedArray`` of spin densities
+    """
+    charges = []
+    spins = []
+    charge_block = search_for_block(lines, "Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", join="\n")
+    for line in charge_block.split("\n")[2:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 8:
+            charges.append(float(fields[2]))
+            spins.append(float(fields[3]))
+
+    return OneIndexedArray(charges), OneIndexedArray(spins)
+
