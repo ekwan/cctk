@@ -296,7 +296,8 @@ def read_nmr_shifts(lines, num_atoms):
     # assumes that lines only come from one Link1 section
     shieldings = []
     for line in lines:
-        if line[14:23] == "Isotropic":
+        fields = line.split()
+        if len(fields) == 8 and fields[2] == "Isotropic" and fields[5] == "Anisotropy":
             fields = line.split()
             assert len(fields) == 8, f"Expected 8 fields on an NMR shielding output line but found {len(fields)} instead!"
             try:

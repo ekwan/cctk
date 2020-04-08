@@ -93,6 +93,9 @@ class GaussianFile(File):
         self.job_types = job_types
         self.success = success
 
+    def __str__(self):
+        return f"GaussianFile (title=\"{str(self.title)}\", {len(self.molecules)} entries in Ensemble)"
+
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False):
         """

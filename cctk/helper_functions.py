@@ -320,3 +320,163 @@ def draw_isotopologue(z):
     z = str(z)
     masses, weights = get_isotopic_distribution(z)
     return np.random.choice(masses, p=weights)
+
+# dict: atomic symbol --> (slope, intercept)
+# defines the slope to be positive
+DEFAULT_NMR_SCALING_FACTORS = {
+        "H" : (1.0716,  31.6660),
+        "C" : (1.0300, 180.4300),
+        "N" : (0.9776, 244.5626)
+}
+
+def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="default"):
+    """
+    Apply linear scaling to isotropic shieldings to get chemical shifts.
+    Shifts are calculated as (intercept-shielding)/slope.
+    If there are no shifts available for a structure, None will be placed in both
+    return lists.
+
+    Args:
+        ensemble: an ``Ensemble`` with calculated nmr shifts
+        symmetrical_atom_numbers: None to perform no symmetry-averaging, a list of lists
+                                  of 1-indexed atom numbers (e.g. [ [2,4,5], [7,8] ]) for
+                                  a ConformationalEnsemble, or triply-nested lists for an
+                                  Ensemble, where the outer index refers to the index of
+                                  the Ensemble.
+        scaling_factors: "default" to use DEFAULT_NMR_SCALING_FACTORS or a dict
+                         (atomic symbol --> (slope,intercept)).  Elements for
+                         which scaling factors are not provided will be ignored.
+
+    Returns:
+        scaled_shifts: np.array (matching the shape of the original shieldings minus symmetry averaging)
+        shift_labels: np.array (also matches shape)
+    """
+    # check inputs
+    assert isinstance(ensemble, cctk.Ensemble), f"expected Ensemble but got {str(type(ensemble))} instead"
+    assert len(ensemble) > 0, "empty ensemble not allowed"
+    if symmetrical_atom_numbers is None:
+        symmetrical_atom_numbers = []
+    assert isinstance(symmetrical_atom_numbers, list), f"symmetrical atom numbers should be specified as a list of lists, but got {str(type(ensemble))} instead"
+    for l in symmetrical_atom_numbers:
+        assert isinstance(l, list), f"symmetrical atom numbers must be specified as lists, but got {str(type(l))} instead: {str(l)}"
+    if scaling_factors == "default":
+        scaling_factors = DEFAULT_NMR_SCALING_FACTORS
+    else:
+        assert isinstance(scaling_factors, dict)
+        assert len(scaling_factors) > 0, "must provide scaling factors"
+
+    # get shieldings and scale
+    all_scaled_shifts = []
+    all_shift_labels = []
+    for i,(molecule,properties) in enumerate(ensemble.items()):
+        if "isotropic_shielding" in properties:
+            # get atom numbers and atomic elements as OneIndexedArrays
+            atomic_numbers = molecule.atomic_numbers
+            n_atoms = len(atomic_numbers)
+            atomic_symbols = [ get_symbol(n) for n in atomic_numbers ]
+            atomic_symbols = cctk.OneIndexedArray(atomic_symbols)
+            atom_numbers = list(range(1,n_atoms+1))
+            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
+            all_labels = [ f"{current_symbol}{atom_number}" for current_symbol,atom_number in zip(atomic_symbols,atom_numbers) ]
+            all_labels = cctk.OneIndexedArray(all_labels)
+            label_dict = dict(zip(atom_numbers,all_labels))
+
+            # check symmetrical atom numbers make sense
+            n_atoms = len(atomic_numbers)
+            symmetrical_groups_dict = {}    # symbol --> [ [list1], [list2], ...] where each list is a group of symmetrical atom numbers
+            symmetrical_groups_dict2 = {}   # symbol --> [ union of all symmetrical atom numbers for this symbol ]
+            unique_atoms_dict = {}          # symbol --> [ union of all unique atom numbers for this symbol ]
+            for symmetrical_group in symmetrical_atom_numbers:
+                assert len(symmetrical_group) > 1, "must be at least 2 symmetrical nuclei in a group"
+                assert len(symmetrical_group) == len(set(symmetrical_group)), f"check for duplicate atom numbers in {symmetrical_group}"
+                symmetrical_symbol = None
+                for atom_number in symmetrical_group:
+                    assert 1 <= atom_number <= n_atoms, f"atom number {atom_number} is out of range"
+                    if symmetrical_symbol is None:
+                        symmetrical_symbol = atomic_symbols[atom_number]
+                        assert symmetrical_symbol in scaling_factors, f"no scaling factors available for the element {symmetrical_symbol}"
+                    assert atomic_symbols[atom_number] == symmetrical_symbol,\
+                           (f"all atoms in a symmetrical group must correspond to the same element\n"
+                            f"expected element {symmetrical_symbol} for atom {atom_number},"
+                            f"but got element {atomic_symbols[atom_number]}")
+                if symmetrical_symbol not in symmetrical_groups_dict:
+                    symmetrical_groups_dict[symmetrical_symbol] = []
+                symmetrical_groups_dict[symmetrical_symbol].append(symmetrical_group)
+                if symmetrical_symbol not in symmetrical_groups_dict2:
+                    symmetrical_groups_dict2[symmetrical_symbol] = []
+                symmetrical_groups_dict2[symmetrical_symbol].extend(symmetrical_group)
+
+            # get shieldings
+            all_shieldings = properties["isotropic_shielding"]
+
+            # iterate through requested elements
+            molecule_shifts = []
+            molecule_labels = []
+            for symbol_of_interest,(slope,intercept) in scaling_factors.items():
+                # sanity checks
+                assert isinstance(slope,float), f"expected slope to be float, but got {str(type(slope))}"
+                assert slope != 0, "zero slope not allowed"
+                assert isinstance(intercept,float), f"expected intercept to be float, but got {str(type(intercept))}"
+
+                # determine unique atoms 
+                unique_atom_numbers_list = []
+                for atomic_symbol,atom_number in zip(atomic_symbols,atom_numbers):
+                    if atomic_symbol != symbol_of_interest:
+                        continue
+                    if symbol_of_interest in symmetrical_groups_dict2:
+                        if atom_number in symmetrical_groups_dict2[symbol_of_interest]:
+                            continue
+                    unique_atom_numbers_list.append(atom_number)
+
+                # extract relevant shieldings and labels for unique atoms
+                if len(unique_atom_numbers_list) > 0:
+                    selected_shieldings = list(all_shieldings[unique_atom_numbers_list])
+                    selected_labels = list(all_labels[unique_atom_numbers_list])
+                else:
+                    selected_shieldings = []
+                    selected_labels = []
+
+                # extract relevant shieldings and labels for symmetrical groups
+                symmetrical_groups = []
+                if symbol_of_interest in symmetrical_groups_dict:
+                    symmetrical_groups = symmetrical_groups_dict[symbol_of_interest]
+                for symmetrical_group in symmetrical_groups:
+                    first_atom_number = symmetrical_group[0]
+                    current_atomic_symbol = atomic_symbols[first_atom_number]
+                    if current_atomic_symbol == symbol_of_interest:
+                        group_shieldings = all_shieldings[symmetrical_group]
+                        averaged_shielding = group_shieldings.mean()
+                        selected_shieldings.append(averaged_shielding)
+                        label = f"{current_atomic_symbol}"
+                        for j,atom_number in enumerate(symmetrical_group):
+                            label += f"{atom_number}"
+                            if j < len(symmetrical_group) - 1:
+                                label += "/"
+                        selected_labels.append(label)
+
+                # apply scaling
+                assert len(selected_shieldings) == len(selected_labels), "shieldings and labels should have 1:1 correspondence"
+                selected_shifts = np.array(selected_shieldings)
+                selected_shifts = (intercept-selected_shifts)/slope
+                selected_labels = np.array(selected_labels)
+
+                # update results
+                molecule_shifts.extend(selected_shifts)
+                molecule_labels.extend(selected_labels)
+
+            # update master results if appropriate
+            if len(molecule_shifts) > 0:
+                all_scaled_shifts.append(molecule_shifts)
+                all_shift_labels.append(molecule_labels)
+            else:
+                # assume this means a bug
+                raise ValueError("no relevant shieldings were extracted for this molecule!")
+        else:
+            # there are no shieldings available, so append None
+            all_scaled_shifts.append(None)
+            all_shift_labels.append(None)
+
+    # return result
+    scaled_shifts = np.array(all_scaled_shifts)
+    shift_labels = np.array(all_shift_labels)
+    return scaled_shifts, shift_labels
