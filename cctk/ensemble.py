@@ -157,8 +157,8 @@ class Ensemble:
         assert isinstance(properties, dict), "properties must be a dict"
 
         if copy:
-            mol = copy.deepcopy(molecule)
-        self._items[mol] = properties
+            molecule = copy.deepcopy(molecule)
+        self._items[molecule] = properties
 
     def _check_molecule_number(self, number):
         """
