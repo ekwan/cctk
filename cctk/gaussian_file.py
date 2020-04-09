@@ -304,9 +304,16 @@ class GaussianFile(File):
                     charges, spins = parse.read_hirshfeld_charges(lines)
                     properties[-1]["hirshfeld_charges"] = charges
                     properties[-1]["hirshfeld_spins"] = spins
+
             try:
                 charges = parse.read_mulliken_charges(lines)
                 properties[-1]["mulliken_charges"] = charges
+            except:
+                pass
+
+            try:
+                dipole = parse.read_dipole_moment(lines)
+                properties[-1]["dipole_moment"] = dipole
             except:
                 pass
 

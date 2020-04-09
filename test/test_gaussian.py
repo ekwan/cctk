@@ -101,5 +101,11 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(ense[-1, "hirshfeld_charges"][1], -0.312885)
         self.assertEqual(ense[-1, "hirshfeld_spins"][1], 0)
 
+    def test_dipole(self):
+        path = "test/static/dcm_force.out"
+        file = cctk.GaussianFile.read_file(path)
+        ense = file.molecules
+        self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
+
 if __name__ == '__main__':
     unittest.main()

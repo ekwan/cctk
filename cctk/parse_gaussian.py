@@ -429,3 +429,20 @@ def read_hirshfeld_charges(lines):
 
     return OneIndexedArray(charges), OneIndexedArray(spins)
 
+def read_dipole_moment(lines):
+    """
+    Reads dipole moment from a Gaussian job.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        dipole moment (magnitude only)
+    """
+    dipole_block = search_for_block(lines, "Dipole moment \(field-independent basis, Debye\)", "Quadrupole moment \(field-independent basis, Debye-Ang\):", join="\n")
+    for line in dipole_block.split("\n")[1:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 8:
+            return float(fields[7])
