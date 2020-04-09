@@ -37,9 +37,9 @@ class TestMOL2(unittest.TestCase):
 
         ensemble = file.molecules
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
-        self.assertEqual(len(ensemble.molecules), 1)
+        self.assertEqual(len(ensemble), 1)
 
-        mol = ensemble.molecules[0]
+        mol = ensemble[0]
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(len(mol.atomic_numbers), 38)
         self.assertEqual(len(mol.geometry), 38)
@@ -52,8 +52,8 @@ class TestMOL2(unittest.TestCase):
 
         ensemble = file.molecules
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
-        self.assertEqual(len(ensemble.molecules), 597)
-        for mol in ensemble.molecules:
+        self.assertEqual(len(ensemble), 597)
+        for mol in ensemble.molecules():
             self.assertEqual(len(mol.atomic_numbers), 38)
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
@@ -84,8 +84,8 @@ class TestMAE(unittest.TestCase):
 
         ensemble = file.molecules
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
-        self.assertEqual(len(ensemble.molecules), 597)
-        for mol in ensemble.molecules:
+        self.assertEqual(len(ensemble), 597)
+        for mol in ensemble.molecules():
             self.assertEqual(len(mol.atomic_numbers), 38)
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)

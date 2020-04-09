@@ -4,7 +4,7 @@ import networkx as nx
 
 from abc import abstractmethod
 
-from cctk import File, Ensemble, ConformationalEnsemble
+from cctk import File, Ensemble, ConformationalEnsemble, Molecule
 from cctk.helper_functions import get_symbol, get_number
 
 
@@ -40,11 +40,14 @@ class MAEFile(File):
 
         (geometries, symbols, bonds, p_names, p_vals, conformers) = cls._read_mae(filename, **kwargs)
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
+
         if conformers == True:
-            file.molecules = ConformationalEnsemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=bonds.edges())
+            file.molecules = ConformationalEnsemble()
         else:
-            atomic_numbers = np.tile(atomic_numbers, (len(geometries), 1))
-            file.molecules = Ensemble(geometries=geometries, atomic_numbers=atomic_numbers, bonds=[b.edges() for b in bonds])
+            file.molecules = Ensemble()
+
+        for geom in geometries:
+            file.molecules.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
 
         return file, p_names, p_vals
 
