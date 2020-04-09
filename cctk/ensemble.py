@@ -143,18 +143,22 @@ class Ensemble:
         """
         return list(self.values())
 
-    def add_molecule(self, molecule, properties={}):
+    def add_molecule(self, molecule, properties={}, copy=False):
         """
-        Adds a molecule to the ensemble. ``copy.deepcopy`` is used so that an independent copy of the molecule is saved.
+        Adds a molecule to the ensemble.
 
         Args:
             molecule (Molecule): the molecule to be added
+            properties (dict): property name (str) to property value
+            copy (bool): whether to store an independent copy of the molecule
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
+        assert isinstance(properties, dict), "properties must be a dict"
 
-        mol = copy.deepcopy(molecule)
-        self._items[mol] = properties
+        if copy:
+            molecule = copy.deepcopy(molecule)
+        self._items[molecule] = properties
 
     def _check_molecule_number(self, number):
         """
@@ -210,7 +214,7 @@ class ConformationalEnsemble(Ensemble):
         else:
             return f"ConformationalEnsemble ({len(self._items)} molecules, {n_atoms} atoms)"
 
-    def add_molecule(self, molecule, properties={}):
+    def add_molecule(self, molecule, properties={}, copy=False):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
@@ -231,26 +235,26 @@ class ConformationalEnsemble(Ensemble):
             molecule.bonds = self[0].bonds
             molecule.atomic_numbers = self[0].atomic_numbers
 
-        super().add_molecule(molecule, properties)
+        super().add_molecule(molecule, properties, copy)
 
     @classmethod
-    def join_ensembles(cls, ensembles, name=None):
+    def join_ensembles(cls, ensembles, name=None, copy=False):
         """
         Creates a new ConformationalEnsemble object from existing ensembles.
-
-        If every ensemble has energies defined, then the new ensemble will have energies defined too.
+        Both molecules and properties are copied.
 
         Args:
             name (str): name of ConformationalEnsemble created
             ensembles (list of ConformationalEnsembles): ConformationalEnsemble objects to join
+            copy (bool): whether to make copies of the component molecules
         """
         new_ensemble = ConformationalEnsemble(name=name)
         for ensemble in ensembles:
-            assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't an ConformationalEnsemble!"
+            assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't a ConformationalEnsemble!"
 
         for ensemble in ensembles:
             for mol, prop in ensemble.items():
-                    new_ensemble.add_molecule(mol, prop)
+                    new_ensemble.add_molecule(mol, prop, copy)
 
         return new_ensemble
 
