@@ -24,7 +24,8 @@ class TestAlign(unittest.TestCase):
             m = e[-1]
             conformational_ensemble.add_molecule(m)
         comparison_atoms = [1,2,3,4,5,6]
-        aligned_ensemble, before_RMSD, after_RMSD = conformational_ensemble.align(to_geometry=0, comparison_atoms=comparison_atoms, compute_RMSD=True)
+        # added np.int64 here to check that the to_geometry parameter will take any int
+        aligned_ensemble, before_RMSD, after_RMSD = conformational_ensemble.align(to_geometry=np.int64(0), comparison_atoms=comparison_atoms, compute_RMSD=True)
         for before,after in zip(before_RMSD, after_RMSD):
             self.assertLess(after,0.0001)
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned.gjf", aligned_ensemble, "#p")

@@ -43,7 +43,7 @@ class Ensemble:
     def __getitem__(self, key):
         if isinstance(key, Molecule):
             return self._items[key]
-        elif isinstance(key, int):
+        elif isinstance(key, (int,np.integer)):
             return list(self._items)[key]
         elif isinstance(key, list):
             return [self[k] for k in key]
