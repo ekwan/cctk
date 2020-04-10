@@ -197,11 +197,6 @@ class ConformationalEnsemble(Ensemble):
     """
     Class that represents a group of conformers. All members must have the same atom types in the same order.
 
-    Allows you to align and remove redundant molecules, unlike ``Ensemble``.
-
-    Attributes:
-        name (str): name, for identification
-        molecules (list): list of `Molecule` objects
     """
 
     def __str__(self):
@@ -264,6 +259,10 @@ class ConformationalEnsemble(Ensemble):
         optionally computing the root-mean-square distance between each
         geometry and the reference geometry.
 
+	Alignments are based on `atom_numbers`.
+        The current ensemble will not be altered.  RMSDs will be calculated over the
+        comparison atoms only.
+
         Args:
             to_geometry (int): the reference geometry to align to (0-indexed)
             comparison_atoms (str or list): which atoms to use when computing alignments
@@ -271,11 +270,6 @@ class ConformationalEnsemble(Ensemble):
                                             "all" for all atoms, or
                                             a list of 1-indexed atom numbers
             compute_RMSD (Bool): whether to return RMSD before and after rotation
-
-        Aligns every geometry to the specified geometry based on the atoms in `atom_numbers`.
-        If `atom_numbers` is `None`, then a full alignment is performed.
-        The original ensemble will not be altered.  RMSDs will be calculated over the
-        comparison atoms only.
 
         Returns:
             new aligned ``ConformationalEnsemble`` or
@@ -290,6 +284,9 @@ class ConformationalEnsemble(Ensemble):
                 comparison_atoms = np.arange(1, n_atoms + 1)
             elif comparison_atoms == "heavy":
                 comparison_atoms = self[0].get_heavy_atoms()
+        assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
+        for a in comparison_atoms:
+            assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
 
         assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
@@ -327,37 +324,65 @@ class ConformationalEnsemble(Ensemble):
             return new_ensemble, before_RMSDs, after_RMSDs
         return new_ensemble
 
-    def eliminate_redundant(self, cutoff=0.5, heavy_only=True, atom_numbers=None):
+    def eliminate_redundant(self, RMSD_cutoff=0.5, comparison_atoms="heavy"):
         """
-        Returns non-redundant conformations. When redundancies are found, only the first geometry is kept.
-        This will change the numbering of all the ensembles!
+        Aligns every geometry in this ensemble to the specified geometry,
+        and then creates a new ensemble that contains only the non-redundant conformers.
+        If energies are available, the lowest energy conformer will be kept for every redundancy.
+        The current ensemble will not be modified.
 
         Args:
-            cutoff (float): molecules with less than this value for RMSD will be considered redundant and eliminated.
-            heavy_only (Bool): if ``True``, then only heavy atoms are considered for the RMSD calculation
-            atom_numbers (list): 1-indexed list of atoms to consider for RMSD calculation - if present, overrides ``heavy_only``
+            RMSD_cutoff (float): remove conformers that are more similar than this threshold
+            to_geometry (int): the reference geometry to align to (0-indexed)
+            comparison_atoms (str or list): which atoms to use when computing alignments
+                                            "heavy" for all non-hydrogen atoms,
+                                            "all" for all atoms, or
+                                            a list of 1-indexed atom numbers
 
         Returns:
-            a new ``ConformationalEnsemble`` object where redundant conformers have been deleted and all molecules have been aligned
+            new ```ConformationalEnsemble```, RMSDs to the reference geometry
         """
-        if atom_numbers:
-            atom_numbers = [n - 1 for n in atom_numbers]
-        else:
-            if heavy_only:
-                atom_numbers = self.molecules[0].get_heavy_atoms()
-            else:
-                atom_numbers = list(range(len(self.molecules[0])))
+        # check inputs
+        n_atoms = self[0].num_atoms()
+        if isinstance(comparison_atoms, str):
+            if comparison_atoms == "all":
+                comparison_atoms = np.arange(1, n_atoms + 1)
+            elif comparison_atoms == "heavy":
+                comparison_atoms = self[0].get_heavy_atoms()
+        assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
+        for a in comparison_atoms:
+            assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
 
-        for m in self.molecules:
-            for n in atom_numbers:
-                try:
-                    #### atom_numbers is 0-indexed
-                    m._check_atom_number(n + 1)
-                except:
-                    raise ValueError(f"molecule in ensemble does not have atom {n}!")
+        assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
+        assert isinstance(RMSD_cutoff, float), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
+        assert RMSD_cutoff > 0.0001, "must use a big enough RMSD cutoff"
+
+        # align all molecules
+        old_ensemble = self.align(to_geometry=0, comparison_atoms=comparison_atoms, compute_RMSD=False)
+
+        # sort molecules by energy if available
+        energies_available = True
+        for molecule,properties in old_ensemble.items():
+            if "energy" not in properties:
+                energies_available = False
+                break
+
+        if energies_available:
+            energies = old_ensemble[:,"energy"]
+            sorted_indices = list(np.argsort(energies))
+            old_ensemble = old_ensemble[sorted_indices]
+
+
+        # add molecules one by one
+        new_ensemble = self.__init__()
+        print(type(new_ensemble))
+        first_molecule = old_ensemble[0]
+        first_molecule_properties = old_ensemble[first_molecule]
+        new_ensemble.add_molecule(first_molecule, first_molecule_properties)
+
+        '''
         #### align all molecules
-        new_ensemble = self.align(atoms=atom_numbers)
         to_delete = [False] * len(new_ensemble.molecules)
 
         for i in range(len(new_ensemble.molecules)):
@@ -381,6 +406,7 @@ class ConformationalEnsemble(Ensemble):
                 new_ensemble.energies = np.delete(new_ensemble.energies, i)
 
         return new_ensemble
+        '''
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """
