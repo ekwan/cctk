@@ -3,6 +3,8 @@ import numpy as np
 import cctk
 import glob as glob
 
+# tests ensemble.molecules indexing
+#
 # python -m unittest test.test_ensemble2.TestEnsemble2
 class TestEnsemble2(unittest.TestCase):
     def test_ensemble(self):
@@ -14,9 +16,29 @@ class TestEnsemble2(unittest.TestCase):
             m = e.molecules[-1]
             p = e[m].properties_list()[0]
             conformational_ensemble.add_molecule(m,p)
-        print(conformational_ensemble.molecules[0])
-        print(conformational_ensemble.molecules[0:2])
-        print(conformational_ensemble.molecules[[0,1,2]])
+        m1 = conformational_ensemble.molecules[0]
+        self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
+        l1 = conformational_ensemble.molecules[0:2]
+        self.assertEqual(len(l1), 2)
+        m1 = l1[0]
+        m2 = l1[1]
+        self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
+        self.assertEqual(conformational_ensemble[m2,"filename"], 'test/static/phenylpropane_2.out')
+        l2 = conformational_ensemble.molecules[[0,2,3]]
+        l3 = conformational_ensemble[l2,"filename"]
+        self.assertListEqual(l3, ['test/static/phenylpropane_1.out', 'test/static/phenylpropane_3.out', 'test/static/phenylpropane_4.out'])
+        l4 = conformational_ensemble.molecules[0:4:2]
+        self.assertListEqual(conformational_ensemble[l4,"filename"], ['test/static/phenylpropane_1.out', 'test/static/phenylpropane_3.out'])
+        m3 = conformational_ensemble.molecules[-1]
+        self.assertEqual(conformational_ensemble[m3,"filename"], 'test/static/phenylpropane_6.out')
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[-10]
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[10]
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[[1,7]]
+        with self.assertRaises(ValueError):
+            m4 = conformational_ensemble.molecules["abc"]
 
     def test_ensemble_indexing(self):
         path = "test/static/gaussian_file.out"
