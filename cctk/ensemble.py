@@ -66,8 +66,30 @@ class Ensemble:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __setitem__(self, key, item):
-        if 1:
-            pass
+        assert isinstance(key, tuple), "need two indexes to set a value in an ensemble!"
+        idx = key[0]
+        name = key[1]
+
+        if isinstance(idx, slice):
+            start, stop, step = idx.indices(len(self))
+            self[list(range(start, stop, step)), name] = item
+        elif isinstance(idx, (list, np.ndarray)) and isinstance(item, (list, np.ndarray)):
+            assert len(idx) == len(item), f"can't set {len(item)} items into {len(key)} variables (cf. pigeonhole principle)"
+            for (k, i) in zip(key, item):
+                self[k, name] = i
+        elif isinstance(idx, (list, np.ndarray)):
+            for k in idx:
+                self[k, name] = item
+        elif isinstance(idx, (int, np.integer)):
+            mol = self.molecule_list()[idx]
+            self[mol, name] = item
+        elif isinstance(idx, cctk.Molecule):
+            if isinstance(name, (list, np.ndarray)):
+                for n in name:
+                    self[idx,n] = item
+            #### we can't assign multiple items to a list of names since that would preclude assigning a list to a single variable
+            else:
+                self._items[idx][name] = item
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
@@ -127,6 +149,12 @@ class Ensemble:
             return result[0]
         else:
             return result
+
+    def get_property_dict(self, idx):
+        assert isinstance(idx, (int, np.integer, cctk.Molecule)), "index must be int or Molecule"
+        ensemble = self[idx]
+        assert len(ensemble) == 1, "idx returned too many ensembles"
+        return ensemble.properties_list()[0]
 
     def items(self):
         """

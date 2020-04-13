@@ -38,5 +38,13 @@ class TestEnsemble2(unittest.TestCase):
         self.assertEqual(mols[2, "energy"], -1159.56782622)
         self.assertEqual(mols[2, "enthalpy"], -1159.314817)
 
+        mols[2, "potato"] = "russet"
+        self.assertEqual(mols[2, "potato"], "russet")
+        mols[:, "oil_type"] = "grapeseed"
+        self.assertEqual(mols[:, "oil_type"], ["grapeseed"] * 3) # nut allergies are no joke
+        mols[1, ["colonel", "condiment"]] = "mustard"
+        self.assertEqual(mols[1, "condiment"], "mustard")
+        self.assertEqual(mols[1, "colonel"], "mustard") # cf. Clue (1985)
+
 if __name__ == '__main__':
     unittest.main()
