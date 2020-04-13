@@ -12,7 +12,7 @@ class TestEnsemble2(unittest.TestCase):
         conformational_ensemble = cctk.ConformationalEnsemble()
         for filename in sorted(glob.glob(path)):
             gaussian_file = cctk.GaussianFile.read_file(filename)
-            e = gaussian_file.molecules
+            e = gaussian_file.ensemble
             m = e.molecules[-1]
             p = e[m].properties_list()[0]
             conformational_ensemble.add_molecule(m,p)
@@ -43,7 +43,7 @@ class TestEnsemble2(unittest.TestCase):
     def test_ensemble_indexing(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
-        mols = file.molecules
+        mols = file.ensemble
         self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
 
         self.assertEqual(len(mols), 3)
@@ -62,11 +62,29 @@ class TestEnsemble2(unittest.TestCase):
 
         mols[2, "potato"] = "russet"
         self.assertEqual(mols[2, "potato"], "russet")
+        self.assertEqual(mols[-1, "potato"], "russet")
         mols[:, "oil_type"] = "grapeseed"
         self.assertEqual(mols[:, "oil_type"], ["grapeseed"] * 3) # nut allergies are no joke
         mols[1, ["colonel", "condiment"]] = "mustard"
         self.assertEqual(mols[1, "condiment"], "mustard")
         self.assertEqual(mols[1, "colonel"], "mustard") # cf. Clue (1985)
+
+        self.assertListEqual(list(mols.keys()), list(mols._items.keys()))
+
+        mols[1,"energy"] = 300
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 300, -1159.56782622])
+        mols[1,"energy"] = 200
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, -1159.56782622])
+        mols[[1,2],"energy"] = [200, 201]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, 201])
+        mols[1:3,"energy"] = [203, 204]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 203, 204])
+        mols[[1,2],"energy"] = [100, 101]
+        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 100, 101])
+
+        for (m, p) in mols:
+            self.assertTrue(isinstance(m, cctk.Molecule))
+            self.assertTrue(isinstance(p, dict))
 
 if __name__ == '__main__':
     unittest.main()

@@ -75,7 +75,7 @@ class Ensemble:
             self[list(range(start, stop, step)), name] = item
         elif isinstance(idx, (list, np.ndarray)) and isinstance(item, (list, np.ndarray)):
             assert len(idx) == len(item), f"can't set {len(item)} items into {len(key)} variables (cf. pigeonhole principle)"
-            for (k, i) in zip(key, item):
+            for (k, i) in zip(idx, item):
                 self[k, name] = i
         elif isinstance(idx, (list, np.ndarray)):
             for k in idx:
@@ -91,7 +91,7 @@ class Ensemble:
             else:
                 self._items[idx][name] = item
         else:
-            raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
+            raise KeyError(f"not a valid datatype for Ensemble index: {type(idx)}")
 
     def __len__(self):
         return len(self._items)

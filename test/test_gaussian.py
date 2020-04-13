@@ -26,9 +26,9 @@ class TestGaussian(unittest.TestCase):
         self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP])
         self.assertEqual(file.title, "title")
         self.assertEqual(file.footer, None)
-        self.assertTrue(isinstance(file.molecules, cctk.ConformationalEnsemble))
+        self.assertTrue(isinstance(file.ensemble, cctk.ConformationalEnsemble))
 
-        for mol, prop in file.molecules.items():
+        for mol, prop in file.ensemble.items():
             self.assertEqual(prop["filename"], path)
 
         mol = file.get_molecule()
@@ -67,7 +67,7 @@ class TestGaussian(unittest.TestCase):
     def test_write_ensemble(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
-        ense = file.molecules
+        ense = file.ensemble
 
         old_path = "test/static/ensemble.gjf"
         new_path = "test/static/new_ensemble.gjf"
@@ -85,26 +85,26 @@ class TestGaussian(unittest.TestCase):
     def test_force_extraction(self):
         path = "test/static/dcm_force.out"
         file = cctk.GaussianFile.read_file(path)
-        ense = file.molecules
+        ense = file.ensemble
 
         self.assertListEqual(list(ense[0, "forces"][1]), [2.672010074,2.672010074,0.0])
 
     def test_charges(self):
         path = "test/static/dcm_force.out"
         file = cctk.GaussianFile.read_file(path)
-        ense = file.molecules
+        ense = file.ensemble
         self.assertEqual(ense[-1, "mulliken_charges"][1], -0.051271)
 
         path = "test/static/h2o.out"
         file = cctk.GaussianFile.read_file(path)
-        ense = file.molecules
+        ense = file.ensemble
         self.assertEqual(ense[-1, "hirshfeld_charges"][1], -0.312885)
         self.assertEqual(ense[-1, "hirshfeld_spins"][1], 0)
 
     def test_dipole(self):
         path = "test/static/dcm_force.out"
         file = cctk.GaussianFile.read_file(path)
-        ense = file.molecules
+        ense = file.ensemble
         self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
 
 if __name__ == '__main__':
