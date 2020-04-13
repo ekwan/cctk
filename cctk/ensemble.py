@@ -40,69 +40,32 @@ class Ensemble:
 
     def __str__(self):
         name = "None" if self.name is None else self.name
-        return f"Ensemble (name={name}, {len(_items)} molecules)"
+        return f"Ensemble (name={name}, {len(self._items)} molecules)"
 
     def __getitem__(self, key):
-        if isinstance(key, Molecule):
-            return self._items[key]
-        elif isinstance(key, (int,np.integer)):
-            return list(self._items)[key]
+        if isinstance(key, (int, np.integer)):
+            mol = self.molecule_list()[key]
+            prop = self.properties_list()[key]
+            new = type(self)(name=self.name) # will return either Ensemble or subclass thereof
+            new.add_molecule(mol, properties=prop)
+            return new
+        elif isinstance(key, Molecule):
+            idx = self.molecule_list().index(key)
+            return self[idx]
         elif isinstance(key, list):
-            return [self[k] for k in key]
+            new_list = [self[k] for k in key]
+            return self.join_ensembles(new_list, name=self.name)
         elif isinstance(key, slice):
             start, stop, step = key.indices(len(self))
-            return [self[i] for i in range(start, stop, step)]
+            return self[list(range(start, stop, step))]
         elif isinstance(key, tuple):
-            (key1, key2) = key
-            mols = self[key1]
-            if isinstance(key1, list):
-                if all(isinstance(k, Molecule) for k in key1):
-                    mols = key1
-            elif isinstance(key1, Molecule):
-                mols = key1
-            if key2 is None:
-                return mols
-            else:
-                try:
-                    if isinstance(mols, list):
-                        return [self[mol][key2] for mol in mols]
-                    else:
-                        return self[mols][key2]
-                except KeyError as e:
-                    raise KeyError(f"property {key2} not defined for all molecules!")
+            pass
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __setitem__(self, key, item):
-        if isinstance(key, Molecule):
-            assert isinstance(item, dict), "properties must be dict"
-            self._items[key] = item
-        elif isinstance(key, int):
-            assert isinstance(item, Molecule), "can't add something that isn't a molecule to keys of ensemble!"
-            list(self._items)[key] = item
-        elif isinstance(key, list):
-            assert len(item) == len(key), "wrong number of items to assign to list index!"
-            for k, i in zip(key, item):
-                self[k] = i
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            assert len(item) == len(range(start, stop, step)), "wrong number of items to assign to slice index!"
-            for i in range(start, stop, step):
-                self[i] = item[i]
-        elif isinstance(key, tuple):
-            (key1, key2) = key
-            mols = self[key1]
-            if isinstance(key1, list):
-                if all(isinstance(k, Molecule) for k in key1):
-                    mols = key1
-            elif isinstance(key1, Molecule):
-                mols = key1
-            if isinstance(mols, list):
-                assert len(item) == len(mols), "wrong number of items to assign to tuple index"
-                for m, i in zip(mols, item):
-                    self[m][key2] = i
-            else:
-                self[mols][key2] = item
+        if 1:
+            pass
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
@@ -122,7 +85,7 @@ class Ensemble:
         """
         Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
         """
-        if prop in list(self._items[self[idx]].keys()):
+        if prop in self.properties_list()[idx]:
             return True
         else:
             return False
@@ -133,11 +96,17 @@ class Ensemble:
         """
         return self._items.items()
 
-    #def molecules(self):
-    #    """
-    #    Returns a list of the constituent molecules.
-    #    """
-    #    return list(self.keys())
+    def molecule_list(self):
+        """
+        Returns a list of the constituent molecules.
+        """
+        return list(self.keys())
+
+    def properties_list(self):
+        """
+        Returns a list of the constituent molecules.
+        """
+        return list(self.values())
 
     class _MoleculeIndexer():
         def __init__(self, ensemble):
@@ -191,7 +160,7 @@ class Ensemble:
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
-        assert isinstance(properties, dict), "properties must be a dict"
+        assert isinstance(properties, dict), f"properties must be a dict and not type {type(properties)}"
 
         if copy:
             molecule = copy.deepcopy(molecule)
@@ -239,7 +208,7 @@ class ConformationalEnsemble(Ensemble):
     def __str__(self):
         n_atoms = 0
         if len(self._items) > 0:
-            first_molecule = self[0]
+            first_molecule = self.molecule_list()[0]
             n_atoms = first_molecule.num_atoms()
         if self.name is not None:
             return f"ConformationalEnsemble (name={self.name}, {len(self._items)} molecules, {n_atoms} atoms)"
@@ -251,21 +220,22 @@ class ConformationalEnsemble(Ensemble):
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
         if len(self._items) > 0:
-            if molecule.num_atoms() != self[0].num_atoms():
+            initial_mol = self.molecule_list()[0]
+            if molecule.num_atoms() != initial_mol.num_atoms():
                 raise ValueError("wrong number of atoms for this ensemble")
 
-            if molecule.charge != self[0].charge:
+            if molecule.charge != initial_mol.charge:
                 raise ValueError("wrong charge for this ensemble")
 
-            if molecule.multiplicity != self[0].multiplicity:
+            if molecule.multiplicity != initial_mol.multiplicity:
                 raise ValueError("wrong spin multiplicity for this ensemble")
 
-            if not np.array_equal(molecule.atomic_numbers, self[0].atomic_numbers):
+            if not np.array_equal(molecule.atomic_numbers, initial_mol.atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
             #### only save one copy to save space
-            molecule.bonds = self[0].bonds
-            molecule.atomic_numbers = self[0].atomic_numbers
+            molecule.bonds = initial_mol.bonds
+            molecule.atomic_numbers = initial_mol.atomic_numbers
 
         super().add_molecule(molecule, properties, copy)
 
