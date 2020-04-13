@@ -35,7 +35,12 @@ class TestAlign(unittest.TestCase):
         #    for k,v in properties.items():
         #        print(k,v)
         #    print
-        #ensemble2 = aligned_ensemble.eliminate_redundant()
+        ensemble2 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy")
+        self.assertEqual(len(ensemble2), 2)
+        cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned2.gjf", ensemble2, "#p")
+        ensemble3 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms=comparison_atoms)
+        self.assertEqual(len(ensemble3), 1)
+        cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned3.gjf", ensemble3, "#p")
 
         #for i,molecule in enumerate(aligned_ensemble):
         #    filename = f"test/static/phenylpropane_{i+1}.gjf"
