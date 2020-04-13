@@ -342,43 +342,26 @@ class ConformationalEnsemble(Ensemble):
                 energies_available = False
                 break
 
+        n_molecules = len(old_ensemble)
+        sorted_indices = list(range(n_molecules))
         if energies_available:
             energies = old_ensemble[:,"energy"]
             sorted_indices = list(np.argsort(energies))
-            old_ensemble = old_ensemble[sorted_indices]
-
+ 
         # add molecules one by one
-        new_ensemble = self.__init__()
-        first_molecule = old_ensemble[0]
-        first_molecule_properties = old_ensemble[first_molecule]
-        new_ensemble.add_molecule(first_molecule, first_molecule_properties)
-
-        '''
-        #### align all molecules
-        to_delete = [False] * len(new_ensemble.molecules)
-
-        for i in range(len(new_ensemble.molecules)):
-            if to_delete[i]:
-                continue
-            for j in range(i + 1, len(new_ensemble.molecules)):
-                if to_delete[j]:
-                    continue
-
-                geometry1 = new_ensemble.molecules[i].geometry[atom_numbers]
-                geometry2 = new_ensemble.molecules[j].geometry[atom_numbers]
-
-                rmsd = compute_RMSD(geometry1, geometry2)
-                if rmsd < cutoff:
-                    to_delete[j] = True
-
-        #### you have to delete in reverse order or you'll throw off the subsequent indices
-        for i in sorted(range(len(new_ensemble.molecules)), reverse=True):
-            if to_delete[i]:
-                new_ensemble.molecules = np.delete(new_ensemble.molecules, i)
-                new_ensemble.energies = np.delete(new_ensemble.energies, i)
-
+        new_ensemble = ConformationalEnsemble()
+        for i in sorted_indices:
+            candidate_molecule = old_ensemble[i]
+            candidate_molecule_properties = old_ensemble[candidate_molecule]
+            ok_to_add = True
+            for existing_molecule in new_ensemble.molecules():
+                candidate_rmsd = cctk.helper_functions.compute_RMSD(candidate_molecule, existing_molecule, comparison_atoms, checks=False)
+                if candidate_rmsd < RMSD_cutoff:
+                    ok_to_add = False
+                    break
+            if ok_to_add:
+                new_ensemble.add_molecule(candidate_molecule, candidate_molecule_properties)
         return new_ensemble
-        '''
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """

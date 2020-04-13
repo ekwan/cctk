@@ -268,28 +268,28 @@ def compute_RMSD(geometry1, geometry2, using_atom_numbers="all", checks=True):
     if isinstance(geometry2, cctk.Molecule):
         geometry2 = geometry2.geometry
     if checks and not isinstance(geometry1, cctk.OneIndexedArray):
-        raise ValueError(f"expected cctk.OneIndexedarray but got {str(type(geometry1))} instead")
+        raise ValueError(f"expected cctk.OneIndexedArray but got {str(type(geometry1))} instead")
     if checks and not isinstance(geometry2, cctk.OneIndexedArray):
-        raise ValueError(f"expected cctk.OneIndexedarray but got {str(type(geometry2))} instead")
+        raise ValueError(f"expected cctk.OneIndexedArray but got {str(type(geometry2))} instead")
 
     n_atoms = len(geometry1)
     if checks and len(geometry2) != n_atoms:
         raise ValueError("can't compare two geometries with different lengths!")
 
-    if isinstance(using_atom_numbers, str):
-        if using_atom_numbers == "all":
-            using_atom_numbers = list(range(1,n_atoms+1))
-        else:
-            raise ValueError(f"unknown argument {using_atom_numbers}")
-
     if checks:
-        assert len(using_atom_numbers) > 0, "must specify at least one atom number"
-        n_atoms = len(geometry1)
-        for i in using_atom_numbers:
-            assert 1 <= i <= n_atoms, f"atom number {i} out of range"
-        assert len(set(using_atom_numbers)) == len(using_atom_numbers), f"duplicate atom numbers found"
-    else:
-        raise ValueError(f"unexpected type for using_atom_numbers, expected np.ndarray but got {str(type(using_atom_numbers))}")
+        if isinstance(using_atom_numbers, str):
+            if using_atom_numbers == "all":
+                using_atom_numbers = list(range(1,n_atoms+1))
+            else:
+                raise ValueError(f"unknown argument {using_atom_numbers}")
+        elif isinstance(using_atom_numbers, (list, np.ndarray)):
+            assert len(using_atom_numbers) > 0, "must specify at least one atom number"
+            n_atoms = len(geometry1)
+            for i in using_atom_numbers:
+                assert 1 <= i <= n_atoms, f"atom number {i} out of range"
+            assert len(set(using_atom_numbers)) == len(using_atom_numbers), f"duplicate atom numbers found"
+        else:
+            raise ValueError(f"unexpected type for using_atom_numbers, expected str, list, or np.ndarray but got {str(type(using_atom_numbers))}")
 
     partial_geometry_1 = geometry1[using_atom_numbers]
     partial_geometry_2 = geometry2[using_atom_numbers]

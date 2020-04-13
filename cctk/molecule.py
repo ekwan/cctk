@@ -775,13 +775,46 @@ class Molecule:
         Get the atomic number for a given atom.
 
         Args:
-            atom1 (int): number of the first atom
+            atom (int): number of the first atom
 
         Returns:
-            the atomic number of that atom
+            atomic_number (int): the atomic number of that atom
         """
         self._check_atom_number(atom)
         return self.atomic_numbers[atom]
+
+    def get_atomic_symbol(self, atom):
+        """
+        Get the atomic symbol for a given atom.
+
+        Args:
+            atom (int): number of the first atom
+
+        Returns:
+            atomic_symbol (str): the atomic symbol of that atom
+         """
+        atomic_number = self.get_atomic_number(atom)
+        return get_symbol(atomic_number)
+
+    def get_atomic_symbols(self):
+        """
+        Get a list of atomic symbols for this Molecule.
+
+        Returns:
+            atomic_symbols (cctk.OneIndexedArray): the atomic symbols
+        """
+        n_atoms = self.get_n_atoms()
+        l = [ self.get_atomic_symbol(i) for i in range(1,n_atoms+1) ]
+        return OneIndexedArray(l)
+
+    def get_n_atoms(self):
+        """
+        Determine how many atoms are in this Molecule.
+
+        Returns
+            n_atoms (int): the number of atoms
+        """
+        return len(self.atomic_numbers)
 
     def get_vector(self, atom, atom2=None, check=True):
         """
