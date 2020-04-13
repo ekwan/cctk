@@ -59,7 +59,9 @@ class Ensemble:
             start, stop, step = key.indices(len(self))
             return self[list(range(start, stop, step))]
         elif isinstance(key, tuple):
-            pass
+            return self.get_property(key[0], key[1])
+        elif key is None:
+            return self
         else:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
@@ -81,21 +83,6 @@ class Ensemble:
     def values(self):
         return self._items.values()
 
-    def has_property(self, idx, prop):
-        """
-        Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
-        """
-        if prop in self.properties_list()[idx]:
-            return True
-        else:
-            return False
-
-    def items(self):
-        """
-        Returns a list of (molecule, properties) tuple pairs.
-        """
-        return self._items.items()
-
     def molecule_list(self):
         """
         Returns a list of the constituent molecules.
@@ -107,6 +94,45 @@ class Ensemble:
         Returns a list of the constituent molecules.
         """
         return list(self.values())
+
+    def has_property(self, idx, prop):
+        """
+        Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
+        """
+        if prop in self.properties_list()[idx]:
+            return True
+        else:
+            return False
+
+    def get_property(self, idx, prop):
+        """
+        """
+        ensemble = self[idx]
+        result = []
+        for m, p in ensemble.items():
+            if isinstance(prop, list):
+                row = []
+                for x in prop:
+                    if x in p:
+                        row.append(p[x])
+                    else:
+                        row.append(None)
+                result.append(row)
+            else:
+                if prop in p:
+                    result.append(p[prop])
+                else:
+                    result.append(None)
+        if len(ensemble) == 1:
+            return result[0]
+        else:
+            return result
+
+    def items(self):
+        """
+        Returns a list of (molecule, properties) tuple pairs.
+        """
+        return self._items.items()
 
     class _MoleculeIndexer():
         def __init__(self, ensemble):

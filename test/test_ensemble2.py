@@ -27,5 +27,16 @@ class TestEnsemble2(unittest.TestCase):
         self.assertEqual(len(mols), 3)
         self.assertTrue(isinstance(mols[0], cctk.ConformationalEnsemble))
 
+        self.assertListEqual(mols.get_property(None, "energy"), [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertListEqual(mols.get_property(None, "enthalpy"), [None, None, -1159.314817])
+
+        self.assertListEqual(mols[:,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertListEqual(mols[:,"enthalpy"], [None, None, -1159.314817])
+
+        self.assertEqual(mols[-1,"energy"], -1159.56782622)
+        self.assertEqual(mols[-1,"enthalpy"], -1159.314817)
+        self.assertEqual(mols[2, "energy"], -1159.56782622)
+        self.assertEqual(mols[2, "enthalpy"], -1159.314817)
+
 if __name__ == '__main__':
     unittest.main()
