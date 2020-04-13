@@ -14,8 +14,9 @@ class TestEnsemble2(unittest.TestCase):
             m = e.molecules[-1]
             p = e[m]
             conformational_ensemble.add_molecule(m,p)
-        print(conformational_ensemble[0])
-        print(conformational_ensemble[0:2])
+        print(conformational_ensemble.molecules[0])
+        print(conformational_ensemble.molecules[0:2])
+        print(conformational_ensemble.molecules[[0,1,2]])
 
 if __name__ == '__main__':
     unittest.main()

@@ -151,7 +151,7 @@ class Ensemble:
             elif isinstance(key, list):
                 return_list = []
                 for k in key:
-                    assert isinstance(key, (int, np.integer)), f"key {k} is not an integer"
+                    assert isinstance(k, (int, np.integer)), f"key {k} is not an integer, type is {str(type(k))}"
                     assert 0 <= k < n_items, f"key {k} is out of range...must be between 0 and {n_items-1}"
                     return_list.append(items_list[k])
                 return return_list
