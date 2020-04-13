@@ -42,14 +42,7 @@ class Ensemble:
 
     def __getitem__(self, key):
         if isinstance(key, Molecule):
-            return self._items[key]
-        elif isinstance(key, (int,np.integer)):
-            return list(self._items)[key]
-        elif isinstance(key, list):
-            return [self[k] for k in key]
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            return [self[i] for i in range(start, stop, step)]
+            return Ensemble
         elif isinstance(key, tuple):
             (key1, key2) = key
             mols = self[key1]
@@ -72,37 +65,7 @@ class Ensemble:
             raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
 
     def __setitem__(self, key, item):
-        if isinstance(key, Molecule):
-            assert isinstance(item, dict), "properties must be dict"
-            self._items[key] = item
-        elif isinstance(key, int):
-            assert isinstance(item, Molecule), "can't add something that isn't a molecule to keys of ensemble!"
-            list(self._items)[key] = item
-        elif isinstance(key, list):
-            assert len(item) == len(key), "wrong number of items to assign to list index!"
-            for k, i in zip(key, item):
-                self[k] = i
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            assert len(item) == len(range(start, stop, step)), "wrong number of items to assign to slice index!"
-            for i in range(start, stop, step):
-                self[i] = item[i]
-        elif isinstance(key, tuple):
-            (key1, key2) = key
-            mols = self[key1]
-            if isinstance(key1, list):
-                if all(isinstance(k, Molecule) for k in key1):
-                    mols = key1
-            elif isinstance(key1, Molecule):
-                mols = key1
-            if isinstance(mols, list):
-                assert len(item) == len(mols), "wrong number of items to assign to tuple index"
-                for m, i in zip(mols, item):
-                    self[m][key2] = i
-            else:
-                self[mols][key2] = item
-        else:
-            raise KeyError(f"not a valid datatype for Ensemble key: {type(key)}")
+        pass
 
     def __len__(self):
         return len(self._items)
@@ -131,17 +94,28 @@ class Ensemble:
         """
         return self._items.items()
 
-    def molecules(self):
+    def molecules(self, num=None):
         """
         Returns a list of the constituent molecules.
         """
-        return list(self.keys())
+        if num is None:
+            return list(self.keys())
+        else:
+            assert isinstance(num, int), "num must be integer"
+            return list(self.keys())[num]
 
-    def properties(self):
+    def properties(self, num=None):
         """
         Returns a list of the constituent properties.
         """
-        return list(self.values())
+        if num is None:
+            return list(self.values())
+        else:
+            assert isinstance(num, int), "num must be integer"
+            return list(self.values())[num]
+
+    def sort_by(self, property):
+        pass
 
     def add_molecule(self, molecule, properties={}, copy=False):
         """
@@ -373,10 +347,8 @@ class ConformationalEnsemble(Ensemble):
             sorted_indices = list(np.argsort(energies))
             old_ensemble = old_ensemble[sorted_indices]
 
-
         # add molecules one by one
         new_ensemble = self.__init__()
-        print(type(new_ensemble))
         first_molecule = old_ensemble[0]
         first_molecule_properties = old_ensemble[first_molecule]
         new_ensemble.add_molecule(first_molecule, first_molecule_properties)

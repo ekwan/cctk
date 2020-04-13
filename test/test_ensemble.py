@@ -30,6 +30,13 @@ class TestEnsemble(unittest.TestCase):
         mols[[mols[1],mols[2]],"energy"] = [100, 101]
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 100, 101])
 
+        new_ensemble = mols[[1,2]]
+        self.assertEqual(len(new_ensemble), 2)
+
+        index_ndarray = np.array([1,2])
+        new_ensemble = mols[index_ndarray]
+        self.assertEqual(len(new_ensemble), 2)
+
         for (m, p) in mols:
             self.assertTrue(isinstance(m, cctk.Molecule))
             self.assertTrue(isinstance(p, dict))

@@ -123,5 +123,9 @@ class TestMolecule(unittest.TestCase):
         self.assertEqual(m3.charge, 1)
         self.assertEqual(m3.multiplicity, 1)
 
+    def test_volume(self):
+        mol = self.load_molecule()
+        self.assertEqual(mol.volume(), 80.42662712363737)
+
 if __name__ == '__main__':
     unittest.main()

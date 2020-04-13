@@ -35,7 +35,7 @@ class TestAlign(unittest.TestCase):
         #    for k,v in properties.items():
         #        print(k,v)
         #    print
-        #ensemble2 = aligned_ensemble.eliminate_redundant()
+        ensemble2 = aligned_ensemble.eliminate_redundant()
 
         #for i,molecule in enumerate(aligned_ensemble):
         #    filename = f"test/static/phenylpropane_{i+1}.gjf"

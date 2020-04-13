@@ -1,8 +1,7 @@
 import sys, re, math
 import numpy as np
 import networkx as nx
-
-from functools import lru_cache
+import scipy
 
 from cctk import OneIndexedArray
 from cctk.helper_functions import (
@@ -1120,3 +1119,10 @@ class Molecule:
         multiplicity = (s1+s2) * 2 + 1
 
         return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
+
+    def volume(self):
+        """
+        Returns volume calculated from ``scipy.spatial.ConvexHull``. Not a perfect approximation (assumes all atoms are points).
+        """
+        hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
+        return hull.volume
