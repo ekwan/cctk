@@ -24,6 +24,7 @@ class Ensemble:
         _items (dict):
             keys: ``Molecule`` objects
             values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
+            molecules: special object that accesses the keys
     """
 
     def __init__(self, name=None):
@@ -35,6 +36,7 @@ class Ensemble:
         """
         self.name = name
         self._items = {}
+        self.molecules = self._MoleculeIndexer(self)
 
     def __str__(self):
         name = "None" if self.name is None else self.name
@@ -131,11 +133,46 @@ class Ensemble:
         """
         return self._items.items()
 
-    def molecules(self):
-        """
-        Returns a list of the constituent molecules.
-        """
-        return list(self.keys())
+    #def molecules(self):
+    #    """
+    #    Returns a list of the constituent molecules.
+    #    """
+    #    return list(self.keys())
+
+    class _MoleculeIndexer():
+        def __init__(self, ensemble):
+            self.ensemble = ensemble
+
+        def __getitem__(self, key):
+            items_list = list(self.ensemble._items.keys())
+            n_items = len(items_list)
+            if isinstance(key, int):
+                return items_list[key]
+            elif isinstance(key, list):
+                return_list = []
+                for k in key:
+                    assert isinstance(key, (int, np.integer)), f"key {k} is not an integer"
+                    assert 0 <= k < n_items, f"key {k} is out of range...must be between 0 and {n_items-1}"
+                    return_list.append(items_list[k])
+                return return_list
+            elif isinstance(key, slice):
+                start, stop, step = key.indices(n_items)
+                return [ items_list[i] for i in range(start, stop, step) ]
+            else:
+                raise ValueError(f"cannot index with type {str(type(key))}")
+
+        def __setitem__(self, key, item={}):
+            assert isinstance(item, dict), f"expected item to be a dict but got {str(type(item))}"
+            items_list = list(self.ensemble._items.keys())
+            n_items = len(items_list)
+            if isinstance(key, int):
+                m = items_list[key]
+                self.ensemble._items[m] = item
+            elif isinstance(key, Molecule):
+                assert key in self.ensemble, "molecule not in ensemble"
+                self.ensemble._items[key] = item
+            else:
+                raise ValueError(f"not a valid type for setting an item: {type(key)}")
 
     def properties(self):
         """
