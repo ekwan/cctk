@@ -379,12 +379,13 @@ class ConformationalEnsemble(Ensemble):
         for i in sorted_indices:
             candidate_molecule = old_ensemble[i]
             candidate_molecule_properties = old_ensemble[candidate_molecule]
-            max_rmsd = 0.0
+            ok_to_add = True
             for existing_molecule in new_ensemble.molecules():
                 candidate_rmsd = cctk.helper_functions.compute_RMSD(candidate_molecule, existing_molecule, comparison_atoms, checks=False)
-                if candidate_rmsd > max_rmsd:
-                    max_rmsd = candidate_rmsd
-            if len(new_ensemble) == 0 or max_rmsd > RMSD_cutoff:
+                if candidate_rmsd < RMSD_cutoff:
+                    ok_to_add = False
+                    break
+            if ok_to_add:
                 new_ensemble.add_molecule(candidate_molecule, candidate_molecule_properties)
         return new_ensemble
 
