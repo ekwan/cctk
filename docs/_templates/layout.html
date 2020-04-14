@@ -1,0 +1,22 @@
+{% extends "!layout.html" %}
+{%- block footer %}
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+    </p>
+    <p>
+    {% trans copyright=copyright|e %}&#169; Copyright {{ copyright }}.{% endtrans %}
+    {%- if show_sphinx %}
+      {% trans sphinx_version=sphinx_version|e %}Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
+    {%- endif %}
+    {% if theme_source_link_position == "footer" %}
+      {%- if show_source and has_source and sourcename %}
+        <a href="{{ pathto('_sources/' + sourcename, true)|e }}"
+            rel="nofollow">{{ _('Show Source') }}</a>.
+      {%- endif %}
+    {% endif %}
+    </p>
+  </div>
+</footer>
+{%- endblock %}

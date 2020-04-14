@@ -18,8 +18,8 @@ master_doc = 'index'
 # -- Project information -----------------------------------------------------
 
 project = 'cctk'
-copyright = '2020, Eugene Kwan and Corin Wagen'
-author = 'Eugene Kwan and Corin Wagen'
+copyright = '2020, Corin Wagen and Eugene Kwan'
+author = 'Corin Wagen and Eugene Kwan'
 
 
 # -- General configuration ---------------------------------------------------
@@ -62,6 +62,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+def setup(app):
+    app.add_stylesheet("style.css") # also can be a full URL
+
 # -- Extension configuration -------------------------------------------------
 
 # -- Options for todo extension ----------------------------------------------
@@ -72,3 +75,63 @@ todo_include_todos = True
 html_theme = 'bootstrap'
 import sphinx_bootstrap_theme
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme_options = {
+    # Navigation bar title. (Default: ``project`` value)
+#    'navbar_title': "Demo",
+
+    # Tab name for entire site. (Default: "Site")
+    'navbar_site_name': "Site",
+
+    # A list of tuples containing pages or urls to link to.
+    # Valid tuples should be in the following forms:
+    #    (name, page)                 # a link to a page
+    #    (name, "/aa/bb", 1)          # a link to an arbitrary relative url
+    #    (name, "http://example.com", True) # arbitrary absolute url
+    # Note the "1" or "True" value above as the third argument to indicate
+    # an arbitrary url.
+    'navbar_links': [
+        ("Overview", "overview"),
+        ("Tutorials", "tutorials"),
+        ("API", "api"),
+    ],
+
+    # Render the next and previous page links in navbar. (Default: true)
+    'navbar_sidebarrel': False,
+
+    # Render the current pages TOC in the navbar. (Default: true)
+    'navbar_pagenav': True,
+
+    # Tab name for the current pages TOC. (Default: "Page")
+    'navbar_pagenav_name': "Page",
+
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': 2,
+
+    # Include hidden TOCs in Site navbar?
+    #
+    # Note: If this is "false", you cannot have mixed ``:hidden:`` and
+    # non-hidden ``toctree`` directives in the same page, or else the build
+    # will break.
+    #
+    # Values: "true" (default) or "false"
+    'globaltoc_includehidden': "true",
+
+    # HTML navbar class (Default: "navbar") to attach to <div> element.
+    # For black navbar, do "navbar navbar-inverse"
+    'navbar_class': "navbar",
+
+    # Fix navigation bar to top of page?
+    # Values: "true" (default) or "false"
+    'navbar_fixed_top': "true",
+
+    # Location of link to source.
+    # Options are "nav" (default), "footer" or anything else to exclude.
+    'source_link_position': "none",
+
+    'bootswatch_theme': "paper",
+
+    # Choose Bootstrap version.
+    # Values: "3" (default) or "2" (in quotes)
+    'bootstrap_version': "3",
+}
