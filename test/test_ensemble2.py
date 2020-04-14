@@ -12,10 +12,10 @@ class TestEnsemble2(unittest.TestCase):
         conformational_ensemble = cctk.ConformationalEnsemble()
         for filename in sorted(glob.glob(path)):
             gaussian_file = cctk.GaussianFile.read_file(filename)
-            e = gaussian_file.ensemble
-            m = e.molecules[-1]
-            p = e[m].properties_list()[0]
-            conformational_ensemble.add_molecule(m,p)
+            ensemble = gaussian_file.ensemble
+            molecule = ensemble.molecules[-1]
+            property_dict = ensemble.get_property_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,property_dict)
         m1 = conformational_ensemble.molecules[0]
         self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
         l1 = conformational_ensemble.molecules[0:2]

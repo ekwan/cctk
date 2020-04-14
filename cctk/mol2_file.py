@@ -14,7 +14,7 @@ class MOL2File(File):
 
     Attributes:
         name (str): name of file
-        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
+        ensemble (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
     """
 
     def __init__(self, name=None):
@@ -40,12 +40,12 @@ class MOL2File(File):
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
 
         if conformers == True:
-            file.molecules = ConformationalEnsemble()
+            file.ensemble = ConformationalEnsemble()
         else:
-            file.molecules = Ensemble()
+            file.ensemble = Ensemble()
 
         for geom in geometries:
-            file.molecules.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
+            file.ensemble.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
 
         return file
 
@@ -261,7 +261,7 @@ class MOL2File(File):
         """
         Returns the last molecule from the ensemble.
 
-        If ``num`` is specified, returns ``self.molecules[num]``
+        If ``num`` is specified, returns ``self.ensemble.molecules[num]``
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -270,7 +270,7 @@ class MOL2File(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        return self.molecules[num]
+        return self.ensemble.molecules[num]
 
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, title=None):
@@ -298,17 +298,16 @@ class MOL2File(File):
 
         super().write_file(filename, text)
 
-    def write_file(self, filename, molecule=None, **kwargs):
+    def write_file(self, filename, molecule=-1, **kwargs):
         """
         Write a ``.mol2`` file, using object attributes.
 
         Args:
             filename (str): path to the new file
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
-                Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                Default is -1 (e.g. the last molecule), but positive integers will select from self.ensemble.molecules (0-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
         """
-        if not isinstance(molecule, Molecule):
-            molecule = self.get_molecule(molecule)
-
+        if molecule is None or isinstance(molecule, (np.integer, int)):
+            molecule = self.ensemble.molecules[molecule]
         self.write_molecule_to_file(filename, molecule, **kwargs)

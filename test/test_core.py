@@ -35,11 +35,11 @@ class TestMOL2(unittest.TestCase):
         file = cctk.MOL2File.read_file(path)
         self.assertTrue(isinstance(file, cctk.MOL2File))
 
-        ensemble = file.molecules
+        ensemble = file.ensemble
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
         self.assertEqual(len(ensemble), 1)
 
-        mol = ensemble[0]
+        mol = ensemble.molecules[0]
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(len(mol.atomic_numbers), 38)
         self.assertEqual(len(mol.geometry), 38)
@@ -50,10 +50,10 @@ class TestMOL2(unittest.TestCase):
         file = cctk.MOL2File.read_file(path)
         self.assertTrue(isinstance(file, cctk.MOL2File))
 
-        ensemble = file.molecules
+        ensemble = file.ensemble
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
         self.assertEqual(len(ensemble), 597)
-        for mol in ensemble.molecules():
+        for mol in ensemble.molecules:
             self.assertEqual(len(mol.atomic_numbers), 38)
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
@@ -82,10 +82,10 @@ class TestMAE(unittest.TestCase):
         self.assertEqual(len(pnames), 597)
         self.assertEqual(len(pvals), 597)
 
-        ensemble = file.molecules
+        ensemble = file.ensemble
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
         self.assertEqual(len(ensemble), 597)
-        for mol in ensemble.molecules():
+        for mol in ensemble.molecules:
             self.assertEqual(len(mol.atomic_numbers), 38)
             self.assertEqual(len(mol.geometry), 38)
             self.assertEqual(mol.get_bond_order(1,2), 1)
@@ -112,7 +112,7 @@ class TestXYZ(unittest.TestCase):
         ensemble = cctk.ConformationalEnsemble()
         ensemble.add_molecule(file.molecule)
 
-        orca_file = cctk.OrcaFile(molecules=ensemble, header=header)
+        orca_file = cctk.OrcaFile(ensemble=ensemble, header=header)
         orca_file.write_file(new_path)
 
         with open(path) as old:
@@ -128,7 +128,7 @@ class TestPDB(unittest.TestCase):
     def test_write_traj(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
-        mols = file.molecules
+        mols = file.ensemble
         self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
 
         old_path = "test/static/traj.pdb"

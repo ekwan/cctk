@@ -146,11 +146,30 @@ class Ensemble:
                 else:
                     result.append(None)
         if len(ensemble) == 1:
+            if result[0] is None:
+                raise ValueError(f"ensemble did not contain property '{prop}' for key '{idx}'")
             return result[0]
         else:
-            return result
+            found_something = False
+            for x in result:
+                if x is not None:
+                    found_something = True
+                    break
+            if found_something:
+                return result
+            raise ValueError(f"ensemble did not contain property '{prop}' for any of keys '{idx}'")
 
     def get_property_dict(self, idx):
+        """
+            Returns the dictionary of molecule properties for the specified molecule.
+
+            Args:
+                idx (int or cctk.Molecule): a molecule belonging to this ensemble, either
+                                            0-indexed or given explicitly as a Molecule
+
+            Returns:
+                the property dict corresponding to this Molecule
+        """
         assert isinstance(idx, (int, np.integer, cctk.Molecule)), "index must be int or Molecule"
         ensemble = self[idx]
         assert len(ensemble) == 1, "idx returned too many ensembles"
@@ -203,6 +222,9 @@ class Ensemble:
 
         def _check_key(self, key, n_items):
             assert -n_items <= key < n_items, f"key {key} is out of range...must be between {-n_items} and {n_items-1} inclusive"
+
+        def __iter__(self):
+            return iter(self.ensemble.molecule_list())
 
     def properties(self):
         """
@@ -317,7 +339,7 @@ class ConformationalEnsemble(Ensemble):
 
         for ensemble in ensembles:
             for mol, prop in ensemble.items():
-                    new_ensemble.add_molecule(mol, prop, copy)
+                new_ensemble.add_molecule(mol, prop, copy)
 
         return new_ensemble
 
@@ -345,13 +367,13 @@ class ConformationalEnsemble(Ensemble):
         """
         # check inputs
         self._check_molecule_number(to_geometry)
-        n_atoms = self[0].num_atoms()
+        n_atoms = self.molecules[0].num_atoms()
 
         if isinstance(comparison_atoms, str):
             if comparison_atoms == "all":
                 comparison_atoms = np.arange(1, n_atoms + 1)
             elif comparison_atoms == "heavy":
-                comparison_atoms = self[0].get_heavy_atoms()
+                comparison_atoms = self.molecules[0].get_heavy_atoms()
         assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
         for a in comparison_atoms:
             assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
@@ -369,7 +391,7 @@ class ConformationalEnsemble(Ensemble):
             translation_vector = -partial_geometry.mean(axis=0)
             molecule.translate_molecule(translation_vector)
 
-        full_template_geometry = new_ensemble[to_geometry].geometry
+        full_template_geometry = new_ensemble.molecules[to_geometry].geometry
         partial_template_geometry = full_template_geometry[comparison_atoms]
         before_RMSDs = []
         after_RMSDs = []
@@ -384,7 +406,7 @@ class ConformationalEnsemble(Ensemble):
             new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
             molecule.geometry = new_geometry
             if compute_RMSD:
-                after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble[to_geometry], new_ensemble[i], comparison_atoms)
+                after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble.molecules[to_geometry], new_ensemble.molecules[i], comparison_atoms)
                 after_RMSDs.append(after_RMSD)
             assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
@@ -411,12 +433,12 @@ class ConformationalEnsemble(Ensemble):
             new ```ConformationalEnsemble```, RMSDs to the reference geometry
         """
         # check inputs
-        n_atoms = self[0].num_atoms()
+        n_atoms = self.molecules[0].num_atoms()
         if isinstance(comparison_atoms, str):
             if comparison_atoms == "all":
                 comparison_atoms = np.arange(1, n_atoms + 1)
             elif comparison_atoms == "heavy":
-                comparison_atoms = self[0].get_heavy_atoms()
+                comparison_atoms = self.molecules[0].get_heavy_atoms()
         assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
         for a in comparison_atoms:
             assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
@@ -445,10 +467,10 @@ class ConformationalEnsemble(Ensemble):
         # add molecules one by one
         new_ensemble = ConformationalEnsemble()
         for i in sorted_indices:
-            candidate_molecule = old_ensemble[i]
-            candidate_molecule_properties = old_ensemble[candidate_molecule]
+            candidate_molecule = old_ensemble.molecules[i]
+            candidate_molecule_properties = old_ensemble.get_property_dict(candidate_molecule)
             ok_to_add = True
-            for existing_molecule in new_ensemble.molecules():
+            for existing_molecule in new_ensemble.molecules:
                 candidate_rmsd = cctk.helper_functions.compute_RMSD(candidate_molecule, existing_molecule, comparison_atoms, checks=False)
                 if candidate_rmsd < RMSD_cutoff:
                     ok_to_add = False

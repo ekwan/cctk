@@ -54,7 +54,7 @@ class PDBFile(File):
             filename (str): where to write the file
             ensemble (Ensemble): ``Ensemble`` object to write
         """
-        for idx, molecule in enumerate(ensemble.molecules()):
+        for idx, molecule in enumerate(ensemble.molecules):
             if idx == 0:
                 cls.write_molecule_to_file(filename, molecule, num=idx+1, append=False)
             else:
