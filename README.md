@@ -3,7 +3,7 @@
 
 *a Python-based computational chemistry toolkit*
 
-*cctk* simplifies the computational modeling of organic reactions by automating routine interactions with quantum chemistry software packages:
+*cctk* simplifies the computational modeling of organic reactions and small molecule structures by automating routine interactions with quantum chemistry software packages:
 
  - **input file creation**: conformer enumeration, job keyword manipulations, constrained potential energy surface creation
  - **method screening**: creating jobs that screen grids of DFT methods and basis sets

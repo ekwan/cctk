@@ -1,10 +1,11 @@
-.. _intro:
+.. _overview:
 
 ============
-Introduction
+cctk - computational chemistry toolkit
 ============
 
-contents put the TOC in here
+== overview
+
 
 Overview
 ========

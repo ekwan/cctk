@@ -1,10 +1,10 @@
-.. _intro:
+.. _quick-start:
 
 ============
 Introduction
 ============
 
-contents put the TOC in here
+quick-start
 
 Overview
 ========
