@@ -1,7 +1,5 @@
-.. cctk documentation master file, created by
-   sphinx-quickstart on Wed Oct 23 16:02:25 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. This is the main landing page for the cctk documentation.
+   It should contain the root `toctree` directive.
 
 ====
 cctk
@@ -18,14 +16,16 @@ For more information, please see the
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: index:
 
-   intro
+   overview
+   quick-start
    molecule
    ensemble
    file_io
    groups
    tutorials
+   modules
 
 
 Indices and tables

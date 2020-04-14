@@ -79,7 +79,7 @@ import sphinx_bootstrap_theme
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
-#    'navbar_title': "Demo",
+    #    'navbar_title': "Demo",
 
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "",
