@@ -93,7 +93,7 @@ html_theme_options = {
     # an arbitrary url.
     'navbar_links': [
         ("Overview", "overview"),
-        ("Quick Start", "quick-start"),
+        ("Quick Recipes", "quick-recipes"),
         ("Tutorials", "tutorials"),
         ("API", "py-modindex"),
     ],

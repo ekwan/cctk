@@ -19,7 +19,7 @@ For more information, please see the
    :caption: index:
 
    overview
-   quick-start
+   quick-recipes
    molecule
    ensemble
    file_io
