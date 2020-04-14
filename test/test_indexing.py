@@ -2,6 +2,7 @@ import unittest, sys, os, io, copy
 import numpy as np
 import cctk
 
+#### tests indexing for the OneIndexedArray object
 class TestOneIndexedArray(unittest.TestCase):
     def test_indexing(self):
         array = [1,2,3,4,5]

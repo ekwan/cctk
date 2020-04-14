@@ -15,9 +15,13 @@ class Ensemble:
     Ensembles are composed of molecules and properties. Molecules are ``Molecule`` objects, whereas properties are ``dict`` objects containing calculation-specific information.
 
     There are various shortcuts for handling ``Ensemble`` objects:
-    - ``Ensemble`` can be treated like a list of ``Molecule`` objects, so ``ensemble[0]`` will return the first molecule, ``len(ensemble)`` the number of molecules, and so forth.
-    - ``Ensemble`` can also return the corresponding properties, when passed a molecule: so ``ensemble[molecule]`` will return the corresponding properties dictionary.
-    - ``Ensemble`` can also take tuples, allowing for dataframe-like behavior: so ``ensemble[1:3, "energy"]`` will return the energies of molecules 2-4.
+    - ``ensemble[molecule]`` or ``ensemble[0]`` will return new ``Ensemble`` objects with only the specified molecules.
+        Lists or slices can also be used: so ``ensemble[0:10:2]`` or ``ensemble[[molecule1, molecule2, molecule3]]`` will also return new ``Ensemble`` objects.
+    - Individual properties can be read through tuple indexing: ``ensemble[0,"energy"]`` will return the energy of the first molecule, 
+        while ``ensemble[:,"energy"]`` will return a list of all the energies.
+    - To access ``Molecule`` objects, use ``ensemble.molecule``: ``ensemble.molecule[0]`` will return the first object, whereas ``ensemble.molecule[1:3]`` will return a list.
+    - ``ensemble.items()`` will return a list of (molecule, property) pairs.
+    - ``ensemble.molecule_list()`` and ``ensemble.properties_list()`` return lists of molecules and properties, respectively.
 
     Attributes:
         name (str): name, for identification
