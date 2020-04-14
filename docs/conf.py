@@ -80,7 +80,7 @@ html_theme_options = {
 #    'navbar_title': "Demo",
 
     # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "Site",
+    'navbar_site_name': "",
 
     # A list of tuples containing pages or urls to link to.
     # Valid tuples should be in the following forms:
@@ -99,7 +99,7 @@ html_theme_options = {
     'navbar_sidebarrel': False,
 
     # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': True,
+    'navbar_pagenav': False,
 
     # Tab name for the current pages TOC. (Default: "Page")
     'navbar_pagenav_name': "Page",
@@ -135,3 +135,5 @@ html_theme_options = {
     # Values: "3" (default) or "2" (in quotes)
     'bootstrap_version': "3",
 }
+
+

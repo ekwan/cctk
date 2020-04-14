@@ -10,7 +10,7 @@ cctk
 computational chemistry toolkit
 ===============================
 
-*cctk* is an open-source Python 3 package designed to automate generation and analysis of computational chemistry files. 
+*cctk* is an open-source Python package designed to automate generation and analysis of computational chemistry files. 
 For more information, please see the :ref:`intro`.
 
 
