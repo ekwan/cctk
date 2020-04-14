@@ -1,87 +1,92 @@
 
 # cctk
-## computational chemistry toolkit
 
-*A Python 3-based library for working with computational chemistry data*.
+*a Python-based computational chemistry toolkit*
+
+*cctk* simplifies the computational modeling of organic reactions by automating routine interactions with quantum chemistry software packages:
+
+ - **input file creation**: conformer enumeration, job keyword manipulations, constrained potential energy surface creation
+ - **method screening**: creating jobs that screen grids of DFT methods and basis sets
+ - **job monitoring**: identification of job status, progress of optimizations, and resubmission of failed jobs
+ - **data extraction**: geometries, energies, molecular properties (e.g. charges or NMR shieldings), or geometric parameters (distances, angles, dihedrals) from output files
+ - **data analysis**: easy export to [pandas](https://pandas.pydata.org/) for statistical analysis or visualization
+
+A quick-start guide is [available]().  More documentation is [here](https://cctk.readthedocs.io/).
+ 
+*cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com).  Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca]() `.inp`).
+
+## Installation
 
 [![PyPI version](https://badge.fury.io/py/cctk.svg)](https://badge.fury.io/py/cctk)
 [![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
 
-## Contents: 
- - [Overview](#overview) 
- - [Installation](#installation)
- - [Contents](#contents)
- - [Documentation](#documentation)
- - [Technical Details](#technical-details)
- - [Authors](#authors)
- - [How to Cite](#how-to-cite)
- - [License](#license)
+### First Time
 
-## Overview:
+*cctk* is easy to install!  It should work on any system where Python works.
 
-*cctk* is an open-source Python package designed to automate generation and analysis of computational chemistry files. 
-
-Potential uses for *cctk* include: 
- - Monitoring one or many geometry optimizations. 
- - Extracting geometry from output files, changing geometric parameters, and creating new input files. 
- - Calculating molecular properties (e.g. NICS) along a reaction coordinate. 
- - Screening different functionals and basis sets. 
- - Generating potential energy surfaces in one or more dimensions (e.g. More O'Ferrall-Jencks plots). 
- 
- For examples of how *cctk* can be used, 
- refer to the [tutorials](https://github.com/ekwan/cctk/tree/master/tutorial). 
- 
-### Compatible File Types:
- - Gaussian 16 `.out` (read) and `.gjf` (read/write).
- - `.xyz` (read/write
- - `.mol2` (read)
- - `.mae` (read)
- - Orca `.inp` (write)
-
-## Installation:
-
-*cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
-A full list of requirements can be found in `env.yml`.
-
-#### Installing with a working Python 3.7+ environment:
-
-Simply run: 
-```
-$ pip install cctk
-```
-
-#### Installing without a working Python 3.7+ environment:
-
-If you have a different version of Python (e.g. Python 2.7), 
-you can use a `conda` environment to run *cctk* without breaking existing packages.
-
-1. Install [`conda`](https://docs.conda.io/en/latest/)/[`miniconda`](https://docs.conda.io/en/latest/miniconda.html).
-
-2. Use `env.yml` to create a Conda environment called `cctk` and install *cctk*:
+With Python 3.7 or later, type:
 
 ```
-$ cd cctk
-$ conda env create -f env.yml
+pip install cctk
 ```
 
-Now, run `conda activate cctk` to enter the *cctk* Python environment (and `conda deactivate` to leave).
-(More complete guides to `conda` usage can be found elsewhere.)
+If you don't have [pip](https://pypi.org/project/pip/) or virtual environments available on your system, then we recommend installing Anaconda first:
 
-#### Upgrading *cctk*
+1. Go to [https://www.anaconda.com/distribution/](https://www.anaconda.com/distribution/).  Download the Python 3 installer appropraite to your system and run it.
 
-To get the latest release of *cctk*, navigate to the correct `conda` environment and run:
+2. Create a virtual environment to use with *cctk*:
+
+ ```
+ conda create --name cctk python=3.8
+ ```
+
+3. Now activate the virtual environment:
+
+ ```
+ conda activate cctk
+ ```
+
+To use *cctk*, you will need to place this command at the beginning of your Python scripts:
 
 ```
-$ pip install --upgrade cctk
+import cctk
 ```
 
-To install the development version (may be unstable!), run:
+The [documentation](https://cctk.readthedocs.io/) contains many examples of how to write *cctk* scripts.
+
+### Upgrading
+
+*cctk* is undergoing active development.  To upgrade to the latest stable release:
+
+```
+pip install --upgrade cctk
+```
+
+To install the development version, which may be unstable, run:
 
 ```
 $ pip install --upgrade git+git@github.com:ekwan/cctk.git@master 
 ```
 
-## Contents: 
+Alternatively, clone the repository.  Then, from within the repository folder, run:
+
+```
+pip install --upgrade .
+```
+
+### Building Documentation
+
+If you want to read the *cctk* documentation locally, you can build it by going to the `docs` folder and typing:
+
+```
+make html
+```
+
+This command will require the `sphinx` and `sphinx-bootstrap-theme` packages to be installed first.  Once generated, the documentation will be available locally at: `docs/_build/html/index.html`.
+
+## Fine Print
+
+### Package Details 
 
 - `cctk/` contains the Python modules for *cctk* and the accompanying static data files.  
 - `docs/` contains the code needed to generate the documentation.  
@@ -89,15 +94,13 @@ $ pip install --upgrade git+git@github.com:ekwan/cctk.git@master
 - `test/` contains code to test *cctk* and accompanying files.  
 - `tutorial/` contains detailed tutorials on how to use *cctk* on complex, real-world problems.  
 
-## Documentation:
-
-The documentation for *cctk* can be found on [Read the Docs](https://cctk.readthedocs.io). 
-
-## Technical Details: 
+*cctk* requires Python 3.7+, [`numpy`](https://numpy.org/), and [`networkx`](https://networkx.github.io/).
+A full list of requirements can be found in `env.yml`. 
 
 ### External Data:
 
-*cctk* depends on some external data, stored in `cctk/data/`:
+*cctk* depends on some external data (`cctk/data/`):
+
 - Atomic weights are taken from the 
 [NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some) 
 and stored in `cctk/data/isotopes.csv`.
@@ -106,17 +109,17 @@ and stored in `cctk/data/isotopes.csv`.
 and stored in `cctk/data/covalent_radii.csv`.
 (When multiple atomic types were specified, the one with longer bond distances was adopted for simplicity).
 
-## Authors:
+### Authors:
 
-*cctk* was written by Corin Wagen and Eugene Kwan at the Department of Chemistry and Chemical Biology at Harvard University. 
-Please email `cwagen@g.harvard.edu` with any questions or bug reports; we will do our best!
+*cctk* was written by Corin Wagen (Harvard University) and Eugene Kwan.
+Please email `cwagen@g.harvard.edu` or `ekwan16@gmail.com` with any questions or bug reports; we will do our best!  We also welcome contributors!
 
-## How to Cite:
+### How to Cite:
 
 Wagen, C.C.; Kwan, E.E. *cctk* **2020**, [www.github.com/ekwan/cctk](https://www.github.com/ekwan/cctk).
 
-## License:
+### License:
 
-This project is licensed under the Apache License, Version 2.0: see `LICENSE` for full terms and conditions. 
+This project is licensed under the Apache License, Version 2.0.  Please see `LICENSE` for full terms and conditions. 
 
 *Copyright 2020 by Corin Wagen and Eugene Kwan*
