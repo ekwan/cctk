@@ -8,9 +8,9 @@ class TestAlign(unittest.TestCase):
     def test_RMSD(self):
         path = "test/static/gaussian_file.out"
         gaussian_file = cctk.GaussianFile.read_file(path)
-        conformational_ensemble = gaussian_file.molecules
-        m1 = conformational_ensemble[0]
-        m2 = conformational_ensemble[-1]
+        ensemble = gaussian_file.ensemble
+        m1 = ensemble.molecules[0]
+        m2 = ensemble.molecules[-1]
         RMSD = cctk.helper_functions.compute_RMSD(m1,m2)
         delta = abs(0.0006419131435567976 - RMSD)
         self.assertLess(delta, 0.0001)
@@ -20,10 +20,10 @@ class TestAlign(unittest.TestCase):
         conformational_ensemble = cctk.ConformationalEnsemble()
         for filename in sorted(glob.glob(path)):
             gaussian_file = cctk.GaussianFile.read_file(filename)
-            e = gaussian_file.molecules
-            m = e[-1]
-            p = e[m]
-            conformational_ensemble.add_molecule(m,p)
+            ensemble = gaussian_file.ensemble
+            molecule = ensemble.molecules[-1]
+            property_dict = ensemble.get_property_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,property_dict)
 
         comparison_atoms = [1,2,3,4,5,6]
         # added np.int64 here to check that the to_geometry parameter will take any int
@@ -41,13 +41,6 @@ class TestAlign(unittest.TestCase):
         ensemble3 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms=comparison_atoms)
         self.assertEqual(len(ensemble3), 1)
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned3.gjf", ensemble3, "#p")
-
-        #for i,molecule in enumerate(aligned_ensemble):
-        #    filename = f"test/static/phenylpropane_{i+1}.gjf"
-        #    route_card = "#"
-        #    cctk.GaussianFile.write_molecule_to_file(filename, molecule, route_card)
-        #    rmsd = cctk.helper_functions.compute_RMSD(m0,molecule,comparison_atoms)
-        #    #print("after:",rmsd)
 
 if __name__ == '__main__':
     unittest.main()

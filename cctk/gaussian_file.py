@@ -85,7 +85,7 @@ class GaussianFile(File):
             if not all(isinstance(job, JobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
 
-        self.molecules = ConformationalEnsemble()
+        self.ensemble = ConformationalEnsemble()
         self.route_card = route_card
         self.link0 = link0
         self.footer = footer
@@ -94,7 +94,7 @@ class GaussianFile(File):
         self.success = success
 
     def __str__(self):
-        return f"GaussianFile (title=\"{str(self.title)}\", {len(self.molecules)} entries in Ensemble)"
+        return f"GaussianFile (title=\"{str(self.title)}\", {len(self.ensemble)} entries in Ensemble)"
 
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False):
@@ -156,7 +156,7 @@ class GaussianFile(File):
         Args:
             filename (str): path to the new file
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
-                Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                Default is -1 (e.g. the last molecule), but positive integers will select from self.ensemble(1-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
             route_card (str): route card for new file
             link0 (dict): dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16}
@@ -318,7 +318,7 @@ class GaussianFile(File):
                 pass
 
             for mol, prop in zip(molecules, properties):
-                f.molecules.add_molecule(mol, properties=prop)
+                f.ensemble.add_molecule(mol, properties=prop)
 
             f.check_has_properties()
             files.append(f)
@@ -414,7 +414,7 @@ class GaussianFile(File):
         job_types = cls._assign_job_types(header)
 
         f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, title=title)
-        f.molecules.add_molecule(Molecule(atomic_numbers, geometry, charge=charge, multiplicity=multip))
+        f.ensemble.add_molecule(Molecule(atomic_numbers, geometry, charge=charge, multiplicity=multip))
         if return_lines:
             return f, lines
         else:
@@ -424,7 +424,7 @@ class GaussianFile(File):
         """
         Returns the last molecule (from an optimization job) or the only molecule (from other jobs).
 
-        If ``num`` is specified, returns ``self.molecules[num]``
+        If ``num`` is specified, returns ``self.ensemble.molecule_list()[num]``
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -433,7 +433,7 @@ class GaussianFile(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        return self.molecules[num]
+        return self.ensemble.molecule_list()[num]
 
     @classmethod
     def _assign_job_types(cls, header):
@@ -460,11 +460,11 @@ class GaussianFile(File):
         """
         Checks that the file has all the appropriate properties for its job types, and raises ValueError if not.
 
-        This only checks the last molecule in ``self.molecules``, for now.
+        This only checks the last molecule in ``self.ensemble``, for now.
         """
         for job_type in self.job_types:
             for prop in EXPECTED_PROPERTIES[job_type.value]:
-                if not self.molecules.has_property(-1, prop):
+                if not self.ensemble.has_property(-1, prop):
                     raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
 
     @classmethod

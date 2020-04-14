@@ -14,7 +14,7 @@ class MAEFile(File):
 
     Attributes:
         name (str): name of file
-        molecules (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
+        ensemble (Ensemble): ``Ensemble`` or ``ConformationalEnsemble`` object
     """
 
     def __init__(self, name=None):
@@ -42,12 +42,12 @@ class MAEFile(File):
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
 
         if conformers == True:
-            file.molecules = ConformationalEnsemble()
+            file.ensemble = ConformationalEnsemble()
         else:
-            file.molecules = Ensemble()
+            file.ensemble = Ensemble()
 
         for geom in geometries:
-            file.molecules.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
+            file.ensemble.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
 
         return file, p_names, p_vals
 
@@ -268,7 +268,7 @@ class MAEFile(File):
         """
         Returns the last molecule from the ensemble.
 
-        If ``num`` is specified, returns ``self.molecules[num]``
+        If ``num`` is specified, returns ``self.ensemble.molecules[num]``
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -277,4 +277,4 @@ class MAEFile(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        return self.molecules[num]
+        return self.ensemble.molecules[num]

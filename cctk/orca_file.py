@@ -13,13 +13,13 @@ class OrcaFile(File):
 
     Attributes:
         title (str): the title from the file
-        molecules (ConformationalEnsemble): `ConformationalEnsemble` instance
+        ensemble (ConformationalEnsemble): `ConformationalEnsemble` instance
         header (str): file header
     """
 
-    def __init__(self, molecules, title=None, header=None):
-        if molecules and isinstance(molecules, ConformationalEnsemble):
-            self.molecules = molecules
+    def __init__(self, ensemble, title=None, header=None):
+        if ensemble and isinstance(ensemble, ConformationalEnsemble):
+            self.ensemble = ensemble
         if title and (isinstance(title, str)):
             self.title = title
         if header and (isinstance(header, str)):
@@ -36,12 +36,14 @@ class OrcaFile(File):
         Args:
             filename (str): path to the new file
             molecule (int): which molecule to use -- passed to ``self.get_molecule()``.
-                Default is -1 (e.g. the last molecule), but positive integers will select from self.molecules (1-indexed).
+                Default is -1 (e.g. the last molecule), but positive integers will select from self.ensemble.molecules (0-indexed).
                 A ``Molecule`` object can also be passed, in which case that molecule will be written to the file.
             header (str): header for new file
         """
+        if molecule is None:
+            molecule = -1
         if not isinstance(molecule, Molecule):
-            molecule = self.get_molecule(molecule)
+            molecule = self.ensemble.molecules[molecule]
 
         if header is None:
             header = self.header
@@ -79,6 +81,8 @@ class OrcaFile(File):
 
     def get_molecule(self, num=None):
         """
+        TODO: check indexing here
+
         Returns the last molecule (from an optimization job or other multi-molecule jobs) or the only molecule (from other jobs).
 
         If ``num`` is specified, returns that job (1-indexed for positive numbers). So ``job.get_molecule(3)`` will return the 3rd element of ``job.molecules``, not the 4th.
@@ -94,4 +98,4 @@ class OrcaFile(File):
         if num > 0:
             num += -1
 
-        return self.molecules[num]
+        return self.ensemble.molecules[num]

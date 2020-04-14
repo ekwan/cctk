@@ -1,25 +1,77 @@
 import unittest, sys, os, io, copy
 import numpy as np
 import cctk
+import glob as glob
 
+# tests ensemble.molecules indexing
+#
+# python -m unittest test.test_ensemble2.TestEnsemble2
 class TestEnsemble(unittest.TestCase):
-    def test_indexing(self):
+    def test_ensemble(self):
+        path = "test/static/phenylpropane*.out"
+        conformational_ensemble = cctk.ConformationalEnsemble()
+        for filename in sorted(glob.glob(path)):
+            gaussian_file = cctk.GaussianFile.read_file(filename)
+            ensemble = gaussian_file.ensemble
+            molecule = ensemble.molecules[-1]
+            property_dict = ensemble.get_property_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,property_dict)
+        m1 = conformational_ensemble.molecules[0]
+        self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
+        l1 = conformational_ensemble.molecules[0:2]
+        self.assertEqual(len(l1), 2)
+        m1 = l1[0]
+        m2 = l1[1]
+        self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
+        self.assertEqual(conformational_ensemble[m2,"filename"], 'test/static/phenylpropane_2.out')
+        l2 = conformational_ensemble.molecules[[0,2,3]]
+        l3 = conformational_ensemble[l2,"filename"]
+        self.assertListEqual(l3, ['test/static/phenylpropane_1.out', 'test/static/phenylpropane_3.out', 'test/static/phenylpropane_4.out'])
+        l4 = conformational_ensemble.molecules[0:4:2]
+        self.assertListEqual(conformational_ensemble[l4,"filename"], ['test/static/phenylpropane_1.out', 'test/static/phenylpropane_3.out'])
+        m3 = conformational_ensemble.molecules[-1]
+        self.assertEqual(conformational_ensemble[m3,"filename"], 'test/static/phenylpropane_6.out')
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[-10]
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[10]
+        with self.assertRaises(AssertionError):
+            m4 = conformational_ensemble.molecules[[1,7]]
+        with self.assertRaises(ValueError):
+            m4 = conformational_ensemble.molecules["abc"]
+
+    def test_ensemble_indexing(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path)
-        mols = file.molecules
+        mols = file.ensemble
         self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
 
         self.assertEqual(len(mols), 3)
-        self.assertTrue(isinstance(mols[0], cctk.Molecule))
-        self.assertEqual(len(mols[0:10]), 3)
-        self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertTrue(isinstance(mols[0], cctk.ConformationalEnsemble))
 
-        with self.assertRaises(KeyError):
-            mols[0:10,"enthalpy"]
+        self.assertListEqual(mols.get_property(None, "energy"), [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertListEqual(mols.get_property(None, "enthalpy"), [None, None, -1159.314817])
+
+        self.assertListEqual(mols[:,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertListEqual(mols[:,"enthalpy"], [None, None, -1159.314817])
+
+        self.assertEqual(mols[-1,"energy"], -1159.56782622)
+        self.assertEqual(mols[-1,"enthalpy"], -1159.314817)
+        self.assertEqual(mols[2, "energy"], -1159.56782622)
+        self.assertEqual(mols[2, "enthalpy"], -1159.314817)
+
+        mols[2, "potato"] = "russet"
+        self.assertEqual(mols[2, "potato"], "russet")
+        self.assertEqual(mols[-1, "potato"], "russet")
+        mols[:, "oil_type"] = "grapeseed"
+        self.assertEqual(mols[:, "oil_type"], ["grapeseed"] * 3) # nut allergies are no joke
+        mols[1, ["colonel", "condiment"]] = "mustard"
+        self.assertEqual(mols[1, "condiment"], "mustard")
+        self.assertEqual(mols[1, "colonel"], "mustard") # cf. Clue (1985)
 
         self.assertListEqual(list(mols.keys()), list(mols._items.keys()))
 
-        mols[mols[1],"energy"] = 300
+        mols[1,"energy"] = 300
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 300, -1159.56782622])
         mols[1,"energy"] = 200
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, -1159.56782622])
@@ -27,7 +79,7 @@ class TestEnsemble(unittest.TestCase):
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 200, 201])
         mols[1:3,"energy"] = [203, 204]
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 203, 204])
-        mols[[mols[1],mols[2]],"energy"] = [100, 101]
+        mols[[1,2],"energy"] = [100, 101]
         self.assertListEqual(mols[0:10,"energy"], [-1159.56782625, 100, 101])
 
         new_ensemble = mols[[1,2]]
@@ -40,68 +92,6 @@ class TestEnsemble(unittest.TestCase):
         for (m, p) in mols:
             self.assertTrue(isinstance(m, cctk.Molecule))
             self.assertTrue(isinstance(p, dict))
-
-    def generate_test_ensemble(self):
-        path = "test/static/test_peptide.xyz"
-        file = cctk.XYZFile.read_file(path)
-        mol = file.molecule
-
-        e1 = np.array([1, 0, 0])
-        e2 = np.array([0, 1, 0])
-        e3 = np.array([0, 0, 1])
-
-        ensemble = cctk.ConformationalEnsemble()
-        ensemble.add_molecule(mol)
-        self.assertEqual(len(ensemble), 1)
-
-        mol_rot = copy.deepcopy(ensemble[0]).rotate_molecule(e1, 90)
-        ensemble.add_molecule(mol_rot)
-        self.assertEqual(len(ensemble), 2)
-
-        mol_trans = copy.deepcopy(ensemble[0]).translate_molecule(e2)
-        ensemble.add_molecule(mol_trans)
-        self.assertEqual(len(ensemble), 3)
-
-        mol_trans_rot = copy.deepcopy(ensemble[1].translate_molecule(e2))
-        ensemble.add_molecule(mol_trans_rot)
-        self.assertEqual(len(ensemble), 4)
-
-        mol_rot_trans = copy.deepcopy(ensemble[2].rotate_molecule(e1, 90))
-        ensemble.add_molecule(mol_rot_trans)
-        self.assertEqual(len(ensemble), 5)
-
-        ensemble.add_molecule(copy.deepcopy(ensemble[4].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[5].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[6].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[7].rotate_molecule(e3, 20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[4].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[5].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[6].rotate_molecule(e3, -20)))
-        ensemble.add_molecule(copy.deepcopy(ensemble[7].rotate_molecule(e3, -20)))
-        return ensemble
-
-    def test_align(self):
-        #### since all the molecules are identical, every way we do this should be totally fine
-        ensemble = self.generate_test_ensemble()
-        ensemble = ensemble.align()
-        template = ensemble[0].geometry
-        for molecule in ensemble.molecules():
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
-
-        ensemble2 = self.generate_test_ensemble()
-        ensemble2 = ensemble2.align(comparison_atoms="heavy")
-        template = ensemble2[0].geometry
-        for molecule in ensemble2.molecules():
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
-
-        ensemble3 = self.generate_test_ensemble()
-        ensemble3 = ensemble3.align(comparison_atoms=[13, 4, 27, 6, 9, 14])
-        template = ensemble3[0].geometry
-        for molecule in ensemble3.molecules():
-            for i in range(1,len(template)+1):
-                self.assertTrue(cctk.helper_functions.compute_distance_between(molecule.geometry[i],template[i]) < 0.0001)
 
 if __name__ == '__main__':
     unittest.main()
