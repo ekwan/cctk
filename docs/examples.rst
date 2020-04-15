@@ -1,15 +1,15 @@
-.. _tutorials:
+.. _examples:
 
 ==========
-Tutorials
+Examples
 ==========
 
-The following tutorials have been provided to demonstrate how *cctk* can be used for real-world problems. 
+The following examples have been provided to demonstrate how *cctk* can be used for real-world problems. 
 Supplemental files and all scripts can be found on Github (``tutorials/``). 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Tutorials:
+   :maxdepth: 1
+   :caption: Examples:
 
    tutorial_01
    tutorial_02

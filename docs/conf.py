@@ -61,7 +61,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_extra_path = ['_static/google6fef05cdc530cf4e.html']
+#html_extra_path = ['_static/google6fef05cdc530cf4e.html']
 html_add_permalinks = ""
 html_favicon = '_static/favicon.png'
 
@@ -93,10 +93,11 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     'navbar_links': [
+        ("Installation", "installation"),
         ("Quick Start", "quick-start"),
         ("Overview", "overview"),
-        ("Tutorials", "tutorials"),
         ("Recipes", "recipes"),
+        ("Examples", "examples"),
         ("API", "cctk"),
         ("About", "about"),
         ("Contact", "contact")

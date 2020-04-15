@@ -146,7 +146,7 @@ Use these three main classes to interact with external quantum chemistry program
         first_link = gaussian_file[0]
         second_link = gaussian_file[1]
 
-    *cctk* will also interpret common job types via the ``GaussianJob.JobType`` enum::
+    *cctk* will also interpret common job types via the ``cctk.JobType`` enum::
 
         # first_link.job_types = [JobType.OPT, JobType.FREQ, JobType.SP]
 

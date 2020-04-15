@@ -23,14 +23,16 @@ Table of Contents
 """""""""""""""""
 
 .. toctree::
-   :maxdepth: 2
-
-   molecule
-   ensemble
-   file_io
-   groups
-   tutorials
-   modules
+    :maxdepth: 1
+    
+    installation
+    quick-start
+    overview
+    recipes
+    examples 
+    cctk
+    about
+    contact
 
 * :ref:`genindex`
 * :ref:`modindex`

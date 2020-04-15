@@ -14,9 +14,9 @@
 About
 =====
 
-*cctk* simplifies routine tasks in quantum computational chemistry such as:
+*cctk* simplifies routine tasks in computational quantum chemistry such as:
 
-- file parsing and conversion (Gaussian, Orca, mol2, xyz, pdb, mae) 
+- file parsing and conversion (Gaussian ``.gjf`` and ``.out``, Orca ``.inp``, ``.mol2``, ``.xyz``, ``.pdb``, ``.mae``) 
 
 - generating input files:
     - screening of methods and basis sets
@@ -34,4 +34,8 @@ About
 
 *cctk* was written in Python 3 by Corin Wagen and Eugene Kwan to replace
 an endless number of *ad hoc* scripts.
+
+**How to cite:**
+
+Wagen, C.C.; Kwan, E.E. *cctk* **2020**, `www.github.com/ekwan/cctk <www.github.com/ekwan/cctk>`_.
 
