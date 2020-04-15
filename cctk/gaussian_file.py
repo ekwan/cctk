@@ -208,7 +208,7 @@ class GaussianFile(File):
             ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
             (optional) the lines of the file (or list of lines of file for Link1 files)
         """
-        if re.search("gjf$", filename):
+        if re.search("gjf$", filename) or re.search("com$", filename):
             return cls._read_gjf_file(filename, return_lines)
 
         link1_lines = parse.split_link1(super().read_file(filename))
@@ -337,7 +337,7 @@ class GaussianFile(File):
     @classmethod
     def _read_gjf_file(cls, filename, return_lines=False):
         """
-        Reads a Gaussian ``.gjf`` file and populates the attributes accordingly.
+        Reads a Gaussian ``.gjf`` or ``.com`` file and populates the attributes accordingly.
 
         Args:
             filename (str): path to the out file

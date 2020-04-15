@@ -41,3 +41,7 @@ h6 {
 blockquote {
   border-left: 0px;
 }
+
+.full-width-table {
+  width: 95%;
+}
