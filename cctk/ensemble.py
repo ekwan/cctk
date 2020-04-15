@@ -57,7 +57,7 @@ class Ensemble:
         elif isinstance(key, Molecule):
             idx = self.molecule_list().index(key)
             return self[idx]
-        elif isinstance(key, list):
+        elif isinstance(key, (list, np.ndarray)):
             new_list = [self[k] for k in key]
             return self.join_ensembles(new_list, name=self.name)
         elif isinstance(key, slice):
@@ -164,7 +164,7 @@ class Ensemble:
                 return result
             raise ValueError(f"ensemble did not contain property '{prop}' for any of keys '{idx}'")
 
-    def get_property_dict(self, idx):
+    def get_properties_dict(self, idx):
         """
             Returns the dictionary of molecule properties for the specified molecule.
 
@@ -475,12 +475,12 @@ class ConformationalEnsemble(Ensemble):
         if energies_available:
             energies = old_ensemble[:,"energy"]
             sorted_indices = list(np.argsort(energies))
- 
+
         # add molecules one by one
         new_ensemble = ConformationalEnsemble()
         for i in sorted_indices:
             candidate_molecule = old_ensemble.molecules[i]
-            candidate_molecule_properties = old_ensemble.get_property_dict(candidate_molecule)
+            candidate_molecule_properties = old_ensemble.get_properties_dict(candidate_molecule)
             ok_to_add = True
             for existing_molecule in new_ensemble.molecules:
                 candidate_rmsd = cctk.helper_functions.compute_RMSD(candidate_molecule, existing_molecule, comparison_atoms, checks=False)

@@ -12,11 +12,11 @@ class TestNMR(unittest.TestCase):
         gaussian_file = cctk.GaussianFile.read_file("test/static/methane.out")
         ensemble = gaussian_file.ensemble
         molecule = ensemble.molecules[-1]
-        properties = ensemble.get_property_dict(molecule)
-        energy = properties["energy"]
+        properties_dict = ensemble.get_properties_dict(molecule)
+        energy = properties_dict["energy"]
         self.assertEqual(energy, -40.5169484082)
         self.assertEqual(ensemble[-1,"energy"], -40.5169484082)
-        shieldings = properties["isotropic_shielding"]
+        shieldings = properties_dict["isotropic_shielding"]
         self.assertListEqual(list(shieldings), [198.2259, 32.6869, 32.6869, 32.6869, 32.6869])
         shieldings = ensemble[:,"isotropic_shielding"]
         self.assertListEqual(list(shieldings), [198.2259, 32.6869, 32.6869, 32.6869, 32.6869])

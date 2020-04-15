@@ -22,8 +22,8 @@ class TestAlign(unittest.TestCase):
             gaussian_file = cctk.GaussianFile.read_file(filename)
             ensemble = gaussian_file.ensemble
             molecule = ensemble.molecules[-1]
-            property_dict = ensemble.get_property_dict(molecule)
-            conformational_ensemble.add_molecule(molecule,property_dict)
+            properties_dict = ensemble.get_properties_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,properties_dict)
 
         comparison_atoms = [1,2,3,4,5,6]
         # added np.int64 here to check that the to_geometry parameter will take any int

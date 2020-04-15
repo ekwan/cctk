@@ -14,9 +14,8 @@ class TestPentane(unittest.TestCase):
             gaussian_file = cctk.GaussianFile.read_file(filename)
             ensemble = gaussian_file.ensemble
             molecule = ensemble.molecules[-1]
-            property_dict = ensemble.get_property_dict(molecule)
-            print(property_dict)
-            conformational_ensemble.add_molecule(molecule,property_dict)
+            properties_dict = ensemble.get_properties_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,properties_dict)
         property_names = ["filename", "energy"]
         conformational_energies = conformational_ensemble[:,property_names]
         df = DataFrame(conformational_energies, columns=property_names)
