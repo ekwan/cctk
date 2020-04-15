@@ -1,17 +1,14 @@
-.. _quick-recipes:
+:orphan:
 
-=============
-Quick Recipes
-=============
+.. _quick-start:
 
-------------------------
-Conformations of Pentane
-------------------------
+===========
+Quick Start
+===========
 
-*How to determine the lowest energy structure from a set of Gaussian output files.*
-
-Here is a simple script for reading in some conformations of pentane.  First, we will
-make a few imports::
+Here, we will extract the relative energies from some pentane conformer optimizations.
+You can find the code in ``test/test_pentane.py``.  Here are the necessary import
+statements::
 
     import numpy as np
     import cctk
@@ -19,12 +16,13 @@ make a few imports::
     import pandas as pd
     from pandas import DataFrame
 
-Next, we'll figure out which files we want to open::
+Next, we gather the relevant filenames with the standard ``glob`` package::
 
     path = "test/static/pentane_conformation*.out"
     filenames = sorted(glob.glob(path))
     
-Let's read these files into a ``ConformationalEnsemble``::
+Now, we read these files.  The molecules and their properties are stored in a
+collection called a ``ConformationalEnsemble``::
 
     conformational_ensemble = cctk.ConformationalEnsemble()
     for filename in filenames:
@@ -34,12 +32,13 @@ Let's read these files into a ``ConformationalEnsemble``::
         property_dict = ensemble.get_property_dict(molecule)
         conformational_ensemble.add_molecule(molecule,property_dict)
 
-These are geometry optimization jobs, so each ``GaussianFile`` contains
-an ``Ensemble`` with each geometry step.  Calling `ensemble.molecules[-1]`
-provides the last geometry.  Each ``Molecule`` is associated with a property
-dictionary::
+Note that because these are geometry optimization job, each ``GaussianFile``
+contains an ``Ensemble`` containing the geometries at each step.  Calling
+`ensemble.molecules[-1]` provides the last geometry.
 
-    {
+Each ``Molecule`` is associated with a property dictionary::
+
+    property_dict = {
      'energy': -0.0552410743198,
      'scf_iterations': 2,
      'link1_idx': 0,
@@ -52,10 +51,10 @@ dictionary::
      'mulliken_charges': OneIndexedArray([-0.271682, 0.090648, 0.090012, 0.090649, -0.18851, 0.095355, 0.09536, -0.200782, 0.098551, 0.098567, -0.18851, 0.095364, 0.095351, -0.271682, 0.090649, 0.090012,  0.090649])
      }
 
-Therefore, we are taking the last geometry and molecular properties from each file
+Overall, we are taking the last geometry and molecular properties from each file
 and combining them into a ``ConformationalEnsemble``.
 
-Now, let's extract out just the filename and energies using standard slicing syntax::
+To extract the filenames and energies::
 
     property_names = ["filename", "energy"]
     conformational_energies = conformational_ensemble[:,property_names]
@@ -73,7 +72,4 @@ The output is::
     1  test/static/pentane_conformation_2.out -0.054881    0.226124
     2  test/static/pentane_conformation_3.out -0.054171    0.671446
     3  test/static/pentane_conformation_4.out -0.053083    1.354009
-
-That's it!  You can find this code as a unit test (``test/test_pentane.py``).  For further
-recipes and documentation, please read on!
 

@@ -42,7 +42,7 @@ class GaussianFile(File):
     Class for Gaussian files. Composes ``ConformationalEnsemble``.
 
     Attributes:
-        molecules (Ensemble): ``ConformationalEnsemble`` instance
+        ensemble (Ensemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type` instances
         route_card (str): optional, route card of .gjf file
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
@@ -57,14 +57,14 @@ class GaussianFile(File):
         """
         Create new GaussianFile object.
 
-		Args:
+	Args:
             job_types (list): list of ``job_type`` instances
             route_card (str): optional, route card of ``.gjf`` file
             link0 (dict): optional, Link 0 commands of ``.gjf`` file
             footer (str): optional, footer of ``.gjf`` file
             title (str): optional, title of ``.gjf`` file
             success (int): num successful terminations
-		"""
+	"""
 
         if route_card and not isinstance(route_card, str):
             raise TypeError("route card needs to be a string")
