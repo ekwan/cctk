@@ -26,48 +26,56 @@ involves:
 
 Use these four main classes to interact with external quantum chemistry programs:
 
-- ``Molecule``
+""""""""""""""""
+1.  ``Molecule``
+""""""""""""""""
+    A single molecular geometry.
 
-	A single molecular geometry.
+    ``molecule.atomic_numbers``: the element for each atom (1-indexed, see below)
+    ``molecule.geometry``: the xyz coordinates (also 1-indexed)
 
-	``molecule.atomic_numbers``: the element for each atom (1-indexed, see below)
-	``molecule.geometry``: the xyz coordinates (also 1-indexed)
+""""""""""""""""
+2.  ``Ensemble``
+""""""""""""""""
+    A collection of Molecules. To access:
 
-- ``Ensemble``
+    =================================   ===========================================
+    Syntax                              Result
+    =================================   ===========================================
+    ``ensemble.molecules[i]``           the *i*-th molecule (0-indexed)
+    ``ensemble.molecules[1:3]``         the second and third molecules as a list
+    ``ensemble.molecules[-1]``          the last molecule
+    ``for m in ensemble.molecules:``    to iterate
+    =================================   ===========================================
 
-	A collection of Molecules.  To access:
+    Each ``Molecule`` in the ``Ensemble`` is associated with a dictionary of properties (filenames, energies, NMR shieldings, etc.):
 
-	``ensemble.molecules[i]``: the *i*-th molecule (0-indexed)
-	``ensemble.molecules[1:3]``: the second and third molecules as a list
-	``ensemble.molecules[-1]``: the last molecule
-	``for m in ensemble.molecules:``: to iterate
+    ``ensemble.get_property_dict(molecule)``
 
-	Each ``Molecule`` in the ``Ensemble`` is associated with a dictionary of properties (filenames, energies, NMR shieldings, etc.):
+    Alternatively, we can iterate:
 
-	``ensemble.get_property_dict(molecule)``
+    ``for molecule,property_dict in ensemble.items():``
+    
+    A convenient tuple syntax to obtain properties:
 
-	Alternatively, we can iterate:
-
-	``for molecule,property_dict in ensemble.items():``
-
-	A convenient tuple syntax to obtain properties:
-
-	``ensemble[:,"filename"]``: all filenames as a list
+    ``ensemble[:,"filename"]``: all filenames as a list
     ``ensemble[:,["filename","energy"]]``: two-dimensional array, with ``None`` as a placeholder for any missing data
 
-	Ensembles can be indexed or sliced to return smaller Ensembles:
+    Ensembles can be indexed or sliced to return smaller Ensembles:
 
     ``ensemble[0]``: an ``Ensemble`` containing only the first molecule and its properties
     ``ensemble[0:2]``: an ``Ensemble`` containing the first and second molecules and their properties
 
     Note that while all such sub-Ensembles are new ``Ensemble`` objectes, they are essentially views of the original ``Ensemble``, rather than deep copies.
 
-- ``ConformationalEnsemble``
-
+"""""""""""""""""""""""""""""
+3. ``ConformationalEnsemble``
+"""""""""""""""""""""""""""""
     An ``Ensemble`` where each structure corresponds to the same molecule.  Methods are provided for structural alignment and redundant conformer elimination (see tutorials).
 
-- ``GaussianFile``
-
+"""""""""""""""""""
+4. ``GaussianFile``
+"""""""""""""""""""
     The results of a Gaussian job or the contents of an input file.  To create:
 
     ``cctk.GaussianFile.read_file(filename)``
@@ -78,8 +86,9 @@ Use these four main classes to interact with external quantum chemistry programs
 
     Note that this class can also read and write Gaussian input files.  Some limited support for other file formats is available (see tutorials).
 
+--------
 Indexing
-========
+--------
 
 The general rule in *cctk* is that atoms are 1-indexed and everything else is 0-indexed.
 1-indexed arrays are implemented via ``cctk.OneIndexedArray``.  These work just like
@@ -93,8 +102,9 @@ will return the coordinates of the first atom.  However::
 
 is needed to get the first molecule.
 
+-------
 Example
-=======
+-------
 
 Here is a simple script for reading in some conformations of pentane.  First, we will
 make a few imports::
@@ -125,7 +135,8 @@ an ``Ensemble`` with each geometry step.  Calling `ensemble.molecules[-1]`
 provides the last geometry.  Each ``Molecule`` is associated with a property
 dictionary::
 
-    {'energy': -0.0552410743198,
+    {
+     'energy': -0.0552410743198,
      'scf_iterations': 2,
      'link1_idx': 0,
      'filename': 'test/static/pentane_conformation_1.out',
@@ -134,10 +145,11 @@ dictionary::
      'enthalpy': 0.106416,
      'gibbs_free_energy': 0.068028,
      'frequencies': [101.5041, 117.3291, 192.5335, 201.8222, 231.7895, 463.1763, 465.449, 717.7345, 778.6405, 876.373, 915.2653, 972.8192, 974.4666, 1071.7653, 1118.4824, 1118.5532, 1118.7997, 1121.9397, 1138.5283, 1145.0836, 1154.1222, 1224.0252, 1280.9892, 1286.3355, 1293.7174, 1304.3843, 1304.4249, 1307.1626, 1307.7894, 1333.8135, 1352.5493, 1402.936, 1463.1459, 2886.2576, 2897.014, 2897.5548, 2898.0773, 2904.9758, 2906.6594, 3022.3193, 3022.3517, 3029.3245, 3029.3492, 3037.506, 3037.5529],
-     'mulliken_charges': OneIndexedArray([-0.271682, 0.090648, 0.090012, 0.090649, -0.18851, 0.095355, 0.09536, -0.200782, 0.098551, 0.098567, -0.18851, 0.095364, 0.095351, -0.271682, 0.090649, 0.090012,  0.090649])}
+     'mulliken_charges': OneIndexedArray([-0.271682, 0.090648, 0.090012, 0.090649, -0.18851, 0.095355, 0.09536, -0.200782, 0.098551, 0.098567, -0.18851, 0.095364, 0.095351, -0.271682, 0.090649, 0.090012,  0.090649])
+     }
 
 Therefore, we are taking the last geometry and molecular properties from each file
-and combining them into a ``ConformaitonalEnsemble``.
+and combining them into a ``ConformationalEnsemble``.
 
 Now, let's extract out just the filename and energies using standard slicing syntax::
 
@@ -152,11 +164,11 @@ We can then determine the lowest energy and display the results in a `pandas` da
 
 The output is::
 
-									 filename    energy  rel_energy
-	0  test/static/pentane_conformation_1.out -0.055241    0.000000
-	1  test/static/pentane_conformation_2.out -0.054881    0.226124
-	2  test/static/pentane_conformation_3.out -0.054171    0.671446
-	3  test/static/pentane_conformation_4.out -0.053083    1.354009
+                                     filename    energy  rel_energy
+    0  test/static/pentane_conformation_1.out -0.055241    0.000000
+    1  test/static/pentane_conformation_2.out -0.054881    0.226124
+    2  test/static/pentane_conformation_3.out -0.054171    0.671446
+    3  test/static/pentane_conformation_4.out -0.053083    1.354009
 
 That's it!  You can find this code as a unit test (``test/test_pentane.py``).  For further
 recipes and documentation, please read on!
