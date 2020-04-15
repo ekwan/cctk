@@ -6,41 +6,58 @@
 Installation
 ============
 
-*cctk* requires `Python 3.7+ <python.org>`_, `numpy <numpy.org>`_, and `networkx <networkx.github.io>`_. 
-A full list of requirements can be found in ``env.yml`` (`link <https://github.com/ekwan/cctk/blob/master/env.yml>`_.
+----------
+First Time
+----------
 
---------------------------------------------------
-Installing with a working Python 3.7+ environment:
---------------------------------------------------
+*cctk* is easy to install! It should work on any system where Python works.
 
-Simply run::
+With Python 3.7 or later, type::
 
-    $ pip install cctk
+    pip install cctk
 
------------------------------------------------------
-Installing without a working Python 3.7+ environment:
------------------------------------------------------
+If you don't have ``pip`` or virtual environments available on your system, then we recommend installing Anaconda first:
 
-If you have a different version of Python (e.g. Python 2.7), you can use a `conda <https://docs.conda.io/en/latest/>`_ environment to run *cctk* without breaking existing packages.
+1. Go to https://www.anaconda.com/distribution/. Download the Python 3 installer appropriate to your system and run it.
 
-- Install ``conda``/``miniconda``.
-- Use ``env.yml`` to create a ``conda`` environment called ``cctk`` and install *cctk*::
+2. Create a virtual environment to use with *cctk*::
 
-    $ conda env create -f env.yml
+    conda create --name cctk python=3.8
 
-Now, run ``conda activate cctk`` to enter the *cctk* Python environment (and ``conda deactivate`` to leave). (More complete guides to ``conda`` usage can be found elsewhere.)
+3. Now activate the virtual environment::
 
----------------
-Upgrading cctk
----------------
+    conda activate cctk
 
-To get the latest release of cctk, navigate to the correct ``conda`` environment and run::
+To use *cctk*, you will need to place this command at the beginning of your Python scripts::
 
-    $ pip install --upgrade cctk
+    import cctk
 
-To install the development version (may be unstable!), run::
+The documentation contains many examples of how to write *cctk* scripts.
 
-    $ pip install --upgrade git+git@github.com:ekwan/cctk.git@master 
+---------
+Upgrading
+---------
 
+*cctk* is undergoing active development. To upgrade to the latest stable release::
 
+    pip install --upgrade cctk
+
+To install the development version, which may be unstable, run::
+
+    pip install --upgrade git+git@github.com:ekwan/cctk.git@master
+
+Alternatively, clone the repository. Then, from within the repository folder, run::
+
+    pip install --upgrade .
+
+----------------------
+Building Documentation
+----------------------
+
+If you want to read the *cctk* documentation locally, you can build it by going to the docs folder and typing::
+
+    make html
+
+This command will require the ``sphinx`` and ``sphinx-bootstrap-theme`` packages to be installed first. 
+Once generated, the documentation will be available locally at: ``docs/_build/html/index.html.``
 
