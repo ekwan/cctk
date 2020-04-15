@@ -50,10 +50,10 @@ class Group(Molecule):
         super().translate_molecule(-adj_v)
 
     @abstractmethod
-    def add_group_to_molecule(molecule, group, add_to):
+    def add_group_to_molecule(molecule, group, add_to, optimize=True):
         """
         Adds a `Group` object to a `Molecule` at the specified atom, and returns a new `Molecule` object (generated using `copy.deepcopy()`).
-        Automatically attempts to detect clashes by rotating group until no clashes are found
+        Automatically attempts to prevent clashes by minimizing pairwise atomic distances.
 
         The atom in `group` that replaces `add_to` in `molecule` will inherit the number of `add_to` - however, the other atoms in `group` will be appended to the atom list.
 
@@ -61,6 +61,7 @@ class Group(Molecule):
             molecule (Molecule): the molecule to change
             group (Group): the group to affix
             add_to (int): the 1-indexed atom number on `molecule` to add `group` to
+            optimize (bool): whether or not to perform automated dihedral optimization
         """
         #### this code can be a bit complex: for an example, let's imagine converting benzene to toluene by adding methane (Group) to benzene (Molecule)
         ####     add_to would be the benzene H (atom on Molecule you replace with the new group)
@@ -87,7 +88,7 @@ class Group(Molecule):
 
         attach_to = group.attach_to
         other_indices = np.ones_like(group.atomic_numbers).astype(bool)
-        other_indices[attach_to] = False 
+        other_indices[attach_to] = False
         other_indices[group.adjacent] = False
 
         #### we need to change the bond length somewhat to prevent strange behavior
@@ -129,9 +130,8 @@ class Group(Molecule):
             molecule.geometry
         ), f"molecule has {len(molecule.atomic_numbers)} atoms but {len(molecule.geometry)} geometry elements!"
 
-
         #### now we want to find the "lowest" energy conformation, defined as the rotamer which minimizes the RMS distance between all atoms
-        if group.num_atoms() > 3:
+        if group.num_atoms() > 3 and optimize:
             adjacent_on_old_molecule = molecule.get_adjacent_atoms(adjacent_atom)[0]
             adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
             molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
