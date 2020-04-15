@@ -1,45 +1,38 @@
 .. This is the main landing page for the cctk documentation.
    It should contain the root `toctree` directive.
 
-====
-cctk
-====
+.. _index:
+.. |br| raw:: html
 
-index root page
+  <br/>
 
-computational chemistry toolkit
-===============================
+.. |nbsp| raw:: html
 
-*cctk* is an open-source Python package designed to automate generation and analysis of computational chemistry files. 
-For more information, please see the 
+   &nbsp;
 
+===========================================================================================
+`cctk <https://www.github.com/ekwan/cctk>`_: a Python-based computational chemistry toolkit
+===========================================================================================
+
+This is the main documentation page for *cctk*.  Try the `quick start <quick-start.html>`_ guide
+to get going right away or peruse the `overview <overview.html>`_ to learn more details.  For the
+nitty-gritty, please see below:
+
+"""""""""""""""""
+Table of Contents
+"""""""""""""""""
 
 .. toctree::
    :maxdepth: 2
 
-   overview
-   quick-recipes
+   molecule
+   ensemble
+   file_io
+   groups
    tutorials
    modules
-
-
-Indices and tables
-==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-Authors
-=======
-*cctk* was written by Corin Wagen and Eugene Kwan at the Department of Chemistry and Chemical Biology at Harvard University. 
-Please email ``cwagen@g.harvard.edu`` with any questions or bug reports; we will do our best!
-
-How to Cite
-===========
-Wagen, C.C.; Kwan, E.E. *cctk* **2020**, www.github.com/ekwan/cctk.
-
-License
-=======
-This project is licensed under the Apache License, Version 2.0.
 

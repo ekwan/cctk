@@ -93,10 +93,13 @@ html_theme_options = {
     # Note the "1" or "True" value above as the third argument to indicate
     # an arbitrary url.
     'navbar_links': [
+        ("Quick Start", "quick-start"),
         ("Overview", "overview"),
-        ("Quick Recipes", "quick-recipes"),
         ("Tutorials", "tutorials"),
+        ("Recipes", "recipes"),
         ("API", "cctk"),
+        ("About", "about"),
+        ("Contact", "contact")
     ],
 
     # Render the next and previous page links in navbar. (Default: true)
