@@ -16,14 +16,9 @@ For more information, please see the
 
 .. toctree::
    :maxdepth: 2
-   :caption: index:
 
    overview
    quick-recipes
-   molecule
-   ensemble
-   file_io
-   groups
    tutorials
    modules
 

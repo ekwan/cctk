@@ -96,7 +96,7 @@ html_theme_options = {
         ("Overview", "overview"),
         ("Quick Recipes", "quick-recipes"),
         ("Tutorials", "tutorials"),
-        ("API", "py-modindex"),
+        ("API", "cctk"),
     ],
 
     # Render the next and previous page links in navbar. (Default: true)

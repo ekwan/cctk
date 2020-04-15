@@ -11,8 +11,6 @@
 Overview
 ========
 
-`cctk <https://www.github.com/ekwan/cctk>`_: a Python-based computational chemistry toolkit.
-
 *cctk* simplifies routine tasks in computational chemistry: preparing input files with scripts,
 checking whether jobs ran successfully, extracting energies and geometries, etc. All *cctk*
 operations are carried out using Python scripts.  The prototypical workflow involves:
@@ -36,7 +34,7 @@ Use these three main classes to interact with external quantum chemistry program
 """"""""""""""""
     A single molecular geometry.
 
-.. rst-class:: full-width-table
+.. rst-class:: full-width-table align-default
 
     =================================   ===========================================
     Field                               Description
@@ -76,7 +74,7 @@ Use these three main classes to interact with external quantum chemistry program
  
     To access ensemble information, use the following syntax:
     
-.. rst-class:: full-width-table
+.. rst-class:: full-width-table align-default
     
     ==========================================      ==============================================================================
     Syntax                                          Result
@@ -148,7 +146,7 @@ Use these three main classes to interact with external quantum chemistry program
     If a Gaussian input file is read, no properties will be available, and
     therefore any properties dictionaries in ``gaussian_file.ensemble`` will be empty.
 
-.. rst-class:: full-width-table
+.. rst-class:: full-width-table align-default
 
     =================================   ===========================================
     Field                               Description
