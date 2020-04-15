@@ -186,10 +186,14 @@ class GaussianFile(File):
         """
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
-        if JobType.FREQ in self.job_types:
-            return list(map(int, np.array(self.properties["frequencies"])[np.array(self.properties["frequencies"]) < 0]))
+        if (JobType.FREQ in self.job_types) and (self.ensemble[-1:,"frequencies"] is not None):
+            freqs = self.ensemble[-1:,"frequencies"]
+            if not isinstance(freqs, list) or len(freqs) == 0:
+                return list()
+            else:
+                return list(map(int, np.array(freqs)[np.array(freqs) < 0]))
         else:
-            raise TypeError("not a frequency job! can't get # imaginary frequencies!")
+            return list()
 
     @classmethod
     def read_file(cls, filename, return_lines=False):
@@ -462,10 +466,11 @@ class GaussianFile(File):
 
         This only checks the last molecule in ``self.ensemble``, for now.
         """
-        for job_type in self.job_types:
-            for prop in EXPECTED_PROPERTIES[job_type.value]:
-                if not self.ensemble.has_property(-1, prop):
-                    raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
+        return True
+#        for job_type in self.job_types:
+#            for prop in EXPECTED_PROPERTIES[job_type.value]:
+#                if not self.ensemble.has_property(-1, prop):
+#                    raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
 
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", print_symbol=False):

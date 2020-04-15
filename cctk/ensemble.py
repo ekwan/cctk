@@ -289,7 +289,7 @@ class Ensemble:
             assert isinstance(ensemble, Ensemble), "can't join an object that isn't an Ensemble!"
 
         for ensemble in ensembles:
-            new_ensemble._items.update(ensemble.items)
+            new_ensemble._items.update(ensemble.items())
 
         return new_ensemble
 
