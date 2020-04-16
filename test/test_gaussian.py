@@ -103,6 +103,7 @@ class TestGaussian(unittest.TestCase):
 
         path = "test/static/diiron_complex.out"
         file = cctk.GaussianFile.read_file(path)
+        self.assertEqual(file.get_molecule().multiplicity, 11)
 
     def test_dipole(self):
         path = "test/static/dcm_force.out"

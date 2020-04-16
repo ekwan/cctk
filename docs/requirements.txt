@@ -1,4 +1,5 @@
 numpy
+scipy
 networkx
 importlib_resources
 sphinx_bootstrap_theme
