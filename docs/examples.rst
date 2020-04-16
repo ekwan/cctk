@@ -1,11 +1,11 @@
 .. _examples:
 
-==========
+========
 Examples
-==========
+========
 
 The following examples have been provided to demonstrate how *cctk* can be used for real-world problems. 
-Supplemental files and all scripts can be found on Github (``tutorials/``). 
+Supplemental files and all scripts can be found on Github (``tutorials/``).  Please compute responsibly.
 
 .. toctree::
    :maxdepth: 1
