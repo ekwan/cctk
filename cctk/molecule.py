@@ -131,13 +131,13 @@ class Molecule:
 
         return self
 
-    def check_for_conflicts(self, min_buffer=-1, group1=None, group2=None):
+    def check_for_conflicts(self, min_buffer=1, group1=None, group2=None):
         """
         Automatically checks for conflicts based on covalent radii. If two atoms are closer than the sum of their covalent radii + buffer, then they are considered clashing.
         If `group1` and `group2` are selected, then conflicts will only be evaluated between these two groups of atoms.
 
         Args:
-            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing. -1.0 A is default, for no particular reason.
+            min_buffer (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered clashing. 1.0 A is default, empirically.
             group1 (list): atoms to evaluate against `group2` (if `None`, defaults to all atoms)
             group2 (list): atoms to evaluate against `group1` (if `None`, defaults to all atoms)
 
@@ -164,7 +164,7 @@ class Molecule:
                 r_j = get_covalent_radius(self.get_atomic_number(j))
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
-                if distance < (r_i + r_j + min_buffer):
+                if distance < (r_i + r_j - min_buffer):
                     raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
 
         return True
@@ -258,9 +258,7 @@ class Molecule:
 
             return formula
 
-    #### very fast but causes errors sometimes... so i'm commenting this out until further consultation.
-    #    @lru_cache(maxsize=32)
-    def _get_bond_fragments(self, atom1, atom2, bond_order=1):
+    def _get_bond_fragments(self, atom1, atom2):
         """
         Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
         Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.
@@ -268,7 +266,6 @@ class Molecule:
         Args:
             atom1 (int): the number of the first atom
             atom2 (int): the number of the second atom
-            bond_order (int): bond order of bond between atom1 and atom2
 
         Returns:
             fragment1: the list of atoms in fragment 1 (containing atom1)
@@ -279,9 +276,7 @@ class Molecule:
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
-        if (not isinstance(bond_order, int)) or (bond_order < 0):
-            raise ValueError("invalid bond order!")
-
+        bond_order = self.get_bond_order(atom1, atom2)
         if self.bonds.has_edge(atom1, atom2):
             self.bonds.remove_edge(atom1, atom2)
 
