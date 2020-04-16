@@ -16,5 +16,5 @@ Here are code snippets that demonstrate the features of *cctk*.  Please bake res
    recipe_03
    recipe_04
    recipe_05
-
+   recipe_06
 

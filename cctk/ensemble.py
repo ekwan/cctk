@@ -429,8 +429,7 @@ class ConformationalEnsemble(Ensemble):
 
     def eliminate_redundant(self, RMSD_cutoff=0.5, comparison_atoms="heavy"):
         """
-        Aligns every geometry in this ensemble to the specified geometry,
-        and then creates a new ensemble that contains only the non-redundant conformers.
+        Aligns every geometry in this ensemble and then creates a new ensemble that contains only the non-redundant conformers.
         If energies are available, the lowest energy conformer will be kept for every redundancy.
         The current ensemble will not be modified.
 

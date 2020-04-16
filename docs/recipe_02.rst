@@ -1,8 +1,8 @@
 .. _recipe_02:
 
-===============================
-Extracting Molecular Properties
-===============================
+======================================================================
+Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
+======================================================================
 
 - ``import cctk`` is assumed.
 - This is a routine optimization using ``opt freq``.

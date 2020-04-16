@@ -311,3 +311,31 @@ class MOL2File(File):
         if molecule is None or isinstance(molecule, (np.integer, int)):
             molecule = self.ensemble.molecules[molecule]
         self.write_molecule_to_file(filename, molecule, **kwargs)
+
+    @classmethod
+    def write_ensemble_to_file(cls, filename, ensemble):
+        """
+        Write each structure in the specified ensemble to a single mol2 file.
+
+        Args:
+            filename (str): where to write the file
+            ensemble (Ensemble): ``Ensemble`` object to write
+        """
+        text = ""
+        for molecule in ensemble.molecules:
+            text += f"# {ensemble.name}\n#\n#\n\n#\n#\n\n"
+            text += f"@<TRIPOS>MOLECULE\nMolecule Name\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"
+            text += "@<TRIPOS>ATOM\n"
+            for idx, z in enumerate(molecule.atomic_numbers, start=1):
+                v = molecule.get_vector(idx)
+                text += f"{idx} {get_symbol(z)}{idx}    {v[0]: .4f}    {v[1]: .4f}    {v[2]: .4f} {get_symbol(z)}\n"
+            text += "@<TRIPOS>BOND\n"
+            count = 1
+            for atom1, atom2, weight in molecule.bonds.edges.data("weight", default=1):
+                text += f"{count} {atom1} {atom2} {weight}\n"
+                count += 1
+
+        super().write_file(filename, text)
+
+
+

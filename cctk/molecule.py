@@ -142,7 +142,8 @@ class Molecule:
             group2 (list): atoms to evaluate against `group1` (if `None`, defaults to all atoms)
 
         Returns:
-            True if there are no conflicts, False (+ error) if there are
+            True if there are no conflicts
+            ValueError if there is a conflict
         """
 
         if group1 is None:
@@ -165,7 +166,6 @@ class Molecule:
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + min_buffer):
                     raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
-                    return False
 
         return True
 

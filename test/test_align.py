@@ -41,6 +41,8 @@ class TestAlign(unittest.TestCase):
         ensemble3 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms=comparison_atoms)
         self.assertEqual(len(ensemble3), 1)
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned3.gjf", ensemble3, "#p")
+        cctk.MOL2File.write_ensemble_to_file("test/static/phenylpropane_aligned.mol2", aligned_ensemble)
+
 
 if __name__ == '__main__':
     unittest.main()

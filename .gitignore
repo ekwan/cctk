@@ -23,3 +23,4 @@ MANIFEST
 __pycache__/
 *.py[cod]
 test/static/phenylpropane*.gjf
+test/static/phenylpropane*.mol2
