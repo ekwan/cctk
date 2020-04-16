@@ -126,7 +126,7 @@ class Ensemble:
         """
         Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
         """
-        if prop in self.properties_list()[idx]:
+        if prop in self[idx].properties_list()[0]:
             return True
         else:
             return False

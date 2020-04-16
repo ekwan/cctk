@@ -218,7 +218,7 @@ def read_bonds(lines):
         return None
 
 
-def find_parameter(lines, parameter, expected_length, which_field):
+def find_parameter(lines, parameter, expected_length, which_field, split_on=None):
     """
     Helper method to search through the output file and find key forces and displacements.
 
@@ -227,6 +227,7 @@ def find_parameter(lines, parameter, expected_length, which_field):
         parameter (string): test to search for
         expected_length (int): how many fields there should be
         which_field (int): which field the parameter is (zero-indexed)
+        split_on (str): additional non-space field to split
     Returns:
         a list of all the extracted values
     """
@@ -249,6 +250,11 @@ def find_parameter(lines, parameter, expected_length, which_field):
         for line in lines:
             if pattern.search(line):
                 fields = re.split(" +", line)
+                if split_on:
+                    fields2 = []
+                    for field in fields:
+                        fields2 = fields2 + field.split(split_on)
+                    fields = fields2
                 fields = list(filter(None, fields))
 
                 if len(fields) == expected_length:

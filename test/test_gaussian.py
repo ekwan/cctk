@@ -101,6 +101,9 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(ense[-1, "hirshfeld_charges"][1], -0.312885)
         self.assertEqual(ense[-1, "hirshfeld_spins"][1], 0)
 
+        path = "test/static/diiron_complex.out"
+        file = cctk.GaussianFile.read_file(path)
+
     def test_dipole(self):
         path = "test/static/dcm_force.out"
         file = cctk.GaussianFile.read_file(path)

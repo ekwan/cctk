@@ -248,8 +248,8 @@ class GaussianFile(File):
                 footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
             bonds = parse.read_bonds(lines)
-            charge = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=2)[0]
-            multip = parse.find_parameter(lines, "Multiplicity", expected_length=6, which_field=5)[0]
+            charge = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
+            multip = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
 
             f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success)
 
