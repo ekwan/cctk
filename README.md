@@ -11,9 +11,9 @@
  - **data extraction**: geometries, energies, molecular properties (e.g. charges or NMR shieldings), or geometric parameters (distances, angles, dihedrals) from output files
  - **data analysis**: easy export to [pandas](https://pandas.pydata.org/) for statistical analysis or visualization
 
-A quick-start guide is [available]().  More documentation is [here](https://cctk.readthedocs.io/).
+A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-start.html). More documentation is [here](https://cctk.readthedocs.io/).
  
-*cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com).  Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca]() `.inp`).
+*cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com). Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca]() `.inp`).
 
 ## Installation
 
@@ -22,7 +22,7 @@ A quick-start guide is [available]().  More documentation is [here](https://cctk
 
 ### First Time
 
-*cctk* is easy to install!  It should work on any system where Python works.
+*cctk* is easy to install! It should work on any system where Python works.
 
 With Python 3.7 or later, type:
 
@@ -32,7 +32,7 @@ pip install cctk
 
 If you don't have [pip](https://pypi.org/project/pip/) or virtual environments available on your system, then we recommend installing Anaconda first:
 
-1. Go to [https://www.anaconda.com/distribution/](https://www.anaconda.com/distribution/).  Download the Python 3 installer appropraite to your system and run it.
+1. Go to [https://www.anaconda.com/distribution/](https://www.anaconda.com/distribution/). Download the Python 3 installer appropriate to your system and run it.
 
 2. Create a virtual environment to use with *cctk*:
 
@@ -56,7 +56,7 @@ The [documentation](https://cctk.readthedocs.io/) contains many examples of how 
 
 ### Upgrading
 
-*cctk* is undergoing active development.  To upgrade to the latest stable release:
+*cctk* is undergoing active development. To upgrade to the latest stable release:
 
 ```
 pip install --upgrade cctk
@@ -68,7 +68,7 @@ To install the development version, which may be unstable, run:
 $ pip install --upgrade git+git@github.com:ekwan/cctk.git@master 
 ```
 
-Alternatively, clone the repository.  Then, from within the repository folder, run:
+Alternatively, clone the repository. Then, from within the repository folder, run:
 
 ```
 pip install --upgrade .
@@ -82,7 +82,7 @@ If you want to read the *cctk* documentation locally, you can build it by going 
 make html
 ```
 
-This command will require the `sphinx` and `sphinx-bootstrap-theme` packages to be installed first.  Once generated, the documentation will be available locally at: `docs/_build/html/index.html`.
+This command will require the `sphinx` and `sphinx-bootstrap-theme` packages to be installed first. Once generated, the documentation will be available locally at: `docs/_build/html/index.html`.
 
 ## Fine Print
 
@@ -112,7 +112,7 @@ and stored in `cctk/data/covalent_radii.csv`.
 ### Authors:
 
 *cctk* was written by Corin Wagen (Harvard University) and Eugene Kwan.
-Please email `cwagen@g.harvard.edu` or `ekwan16@gmail.com` with any questions or bug reports; we will do our best!  We also welcome contributors!
+Please email `cwagen@g.harvard.edu` or `ekwan16@gmail.com` with any questions or bug reports; we will do our best! We also welcome contributors!
 
 ### How to Cite:
 
