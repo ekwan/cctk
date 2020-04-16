@@ -152,7 +152,8 @@ class Ensemble:
                     result.append(None)
         if len(ensemble) == 1:
             if result[0] is None:
-                raise ValueError(f"ensemble did not contain property '{prop}' for key '{idx}'")
+#                raise ValueError(f"ensemble did not contain property '{prop}' for key '{idx}'")
+                return None
             return result[0]
         else:
             found_something = False
