@@ -11,7 +11,9 @@ Bond Connectivity
 """""""""""""""""
 
 - `cctk` keeps track of bonded atoms in a `networkx <https://https://networkx.github.io/>`_ graph.
-- Bond orders are not tracked (yet).
+- This graph is stored as ``molecule.bonds``.
+- In principle, bond orders are supported by calling ``bonds[atom1][atom2]["weight"]``.
+  However, the existing parsers assume a bond order of 1, regardless of what is actually in the file.
 - If connectivity information is not available, it can be automatically assigned based on atomic radii.
 
 ::
@@ -25,26 +27,43 @@ Bond Connectivity
 
     # xyz files have no connectivity, so automatically assign
     molecule.assign_connectivity()
-    molecule.bonds.edges() = [(1, 2), (1, 3), (1, 26), (3, 4), (3, 5), (3, 6), (5, 7), (5, 24), (5, 25), (6, 8), (6, 9), (9, 10), (9, 11), (11, 12), (11, 13), (11, 14), (13, 15), (13, 22), (13, 23), (14, 16), (14, 17), (17, 18), (18, 19), (18, 20), (18, 21), (26, 27), (26, 28), (28, 29), (28, 30), (28, 31)]
+    molecule.bonds.edges() == [(1, 2), (1, 3), (1, 26), (3, 4), (3, 5), (3, 6), (5, 7), (5, 24), (5, 25), (6, 8), (6, 9), (9, 10), (9, 11), (11, 12), (11, 13), (11, 14), (13, 15), (13, 22), (13, 23), (14, 16), (14, 17), (17, 18), (18, 19), (18, 20), (18, 21), (26, 27), (26, 28), (28, 29), (28, 30), (28, 31)]
 
 
 """""""""""""""""""
 Molecular Fragments
 """""""""""""""""""
 
+- In specialized scenarios, like constructing molecules or checking for clashes,
+  it might be useful to get the atom numbers corresponding to all atoms in a
+  molecule or functional group.
+
 ::
 
-        (frag1, frag2) = mol._get_bond_fragments(3, 5)
-        self.assertEqual(len(frag1), 27)
-        self.assertEqual(len(frag2), 4)
+    # need a molecule
+    assert isinstance(molecule, cctk.Molecule)
 
-        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
-        mol.remove_bond(3,5)
-        self.assertEqual(len(mol._get_fragment_containing(5)), 4)
-        self.assertFalse(mol.are_connected(3,5))
-        mol.add_bond(3,5)
-        self.assertEqual(len(mol._get_fragment_containing(5)), 31)
-        self.assertTrue(mol.are_connected(3,5))
+    # get the atom numbers of all atoms connected to atom number 3
+    # and atom number 5 by breaking the bond
+    #
+    # result is returned as a 2-tuple of atom number lists
+    #
+    # 
+    frag1, frag2 = mol._get_bond_fragments(3, 5)
+
+    self.assertEqual(len(mol._get_fragment_containing(5)), 31)
+    mol.remove_bond(3,5)
+    self.assertEqual(len(mol._get_fragment_containing(5)), 4)
+    self.assertFalse(mol.are_connected(3,5))
+    mol.add_bond(3,5)
+    self.assertEqual(len(mol._get_fragment_containing(5)), 31)
+    self.assertTrue(mol.are_connected(3,5))
+
+"""""""""""""""
+Modifying Bonds
+"""""""""""""""
+
+
 
 """"""""""""
 Adding Atoms
@@ -113,22 +132,3 @@ Combining Molecules
         self.assertEqual(m3.charge, 1)
         self.assertEqual(m3.multiplicity, 1)
 
-
-""""""""""""""""
-Molecular Volume
-""""""""""""""""
-
-::
-
-        mol = self.load_molecule()
-        self.assertEqual(mol.volume(), 80.42662712363737)
-    
-""""""""""""
-Mass Spectra
-""""""""""""
-
-::
-
-        mol = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]])
-        masses, weights = mol.calculate_mass_spectrum()
-        self.assertListEqual(list(masses), [23.])
