@@ -1,8 +1,8 @@
 .. _recipe_04:
 
-==========
-NMR Shifts
-==========
+=======================================================
+Aligning Structures and Redundant Conformer Elimination
+=======================================================
 
 recipe 
 

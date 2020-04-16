@@ -4,13 +4,15 @@
 Reading and Writing Gaussian Files
 ==================================
 
-Here is how to read and write Gaussian files.  ``import cctk`` is assumed.
-Statements like ``file.title == "title"`` indicate what you would see if you
-printed the fields.
+- ``import cctk`` is assumed.
+- Statements like ``file.title == "title"`` or ``assert molecule.num_atoms() == 31``
+  indicate what you would see if you printed the fields.
 
 """""""""""""""""""""""""""""
 Reading a Gaussian Input File
 """""""""""""""""""""""""""""
+
+- ``file.get_molecule()`` is equivalent to ``file.ensemble.molecules[-1]``.
 
 ::
 
@@ -38,6 +40,9 @@ Reading a Gaussian Input File
 Reading a Gaussian Output File
 """"""""""""""""""""""""""""""
 
+- **Important: only files specifying verbose output with** ``#p`` **in the route card
+  will be parsed correctly.**
+
 ::
 
     # read the output file
@@ -61,9 +66,12 @@ Reading a Gaussian Output File
     properties_dict["filename"] == path
     properties_dict["energy"] == -1159.56782622
 
-"""""""""""""""""""""""""""""
-Writing a Gaussian Input File
-"""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""
+Writing One Molecule to a Gaussian Input File
+"""""""""""""""""""""""""""""""""""""""""""""
+
+- Only route cards specifying verbose output (``#p``) are allowed to
+  ensure compatibility with *cctk*.
 
 ::
 
@@ -83,6 +91,9 @@ Writing a Gaussian Input File
 Multiple Link1 Sections
 """""""""""""""""""""""
 
+- Each link will be parsed into a separate `GaussianFile`.
+- The `properties_dict` key `link1_idx1` identifies which ``Link1`` the geometry came from.
+
 ::
 
     # read a file with multiple link1 directives
@@ -90,15 +101,32 @@ Multiple Link1 Sections
     files = cctk.GaussianFile.read_file(path)
 
     # get back a list of file objects
-    self.assertEqual(len(files), 3)
-    self.assertTrue(all(isinstance(file, cctk.GaussianFile) for file in f))
+    len(files) == 3
+    for file in files:
+        assert isinstance(file, cctk.GaussianFile)
 
-    # different files have different types and route_cards
-    self.assertListEqual(f[0].job_types, [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP])
-    self.assertListEqual(f[1].job_types, [cctk.JobType.NMR, cctk.JobType.SP])
-    self.assertListEqual(f[2].job_types, [cctk.JobType.NMR, cctk.JobType.SP])
+    # different links can correspond to different types of jobs
+    files[0].job_types == [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP]
+    files[1].job_types == [cctk.JobType.NMR, cctk.JobType.SP]
+    files[2].job_types == [cctk.JobType.NMR, cctk.JobType.SP]
 
-    # we can also write multiple molecules to the same input file using link1
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+Writing Multiple Molecules to One Gaussian Input File
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+- The geometries will be combined into a single job using ``Link1``.
+- Here, a single route card is specified.  However, list-like inputs can be specified
+  for more complex jobs.  See the API documentation for details.
+- The ``footer`` specifies what goes after each geometry.  This can be useful for specifying
+  special basis sets.
+- The ``print_symbol`` flag specifies whether elements should be specified by atomic
+  number or symbol.
+
+::
+
     assert isinstance(ensemble, cctk.Ensemble)
-    cctk.GaussianFile.write_ensemble_to_file(new_path, ensemble, "#p opt freq=noraman b3lyp/6-31g(d)")
+    cctk.GaussianFile.write_ensemble_to_file(filename, ensemble, route_card = "#p opt freq=noraman b3lyp/6-31g(d)",
+                                             link0={"mem": "32GB", "nprocshared": 16}, footer=None,
+                                             title="title", print_symbol=False)
+
 

@@ -93,5 +93,25 @@ class TestEnsemble(unittest.TestCase):
             self.assertTrue(isinstance(m, cctk.Molecule))
             self.assertTrue(isinstance(p, dict))
 
+    def test_ensemble_properties(self):
+        filename = "test/static/gaussian_file.out"
+        gaussian_file = cctk.GaussianFile.read_file(filename)
+        #print(gaussian_file.route_card)
+        #print(gaussian_file.job_types)
+        ensemble = gaussian_file.ensemble
+        self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
+
+        self.assertEqual(len(ensemble), 3)
+        self.assertTrue(isinstance(ensemble[0], cctk.ConformationalEnsemble))
+
+        #for molecule,properties_dict in ensemble.items():
+        #    for property_name,value in properties_dict.items():
+        #        print(property_name, ":", value)
+        #    print()
+
+        self.assertEqual(ensemble[0,"energy"], -1159.56782625)
+        self.assertListEqual(ensemble[:,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
+        self.assertListEqual(ensemble[:,"enthalpy"], [None, None, -1159.314817])
+
 if __name__ == '__main__':
     unittest.main()

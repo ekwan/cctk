@@ -78,6 +78,7 @@ class TestNMR(unittest.TestCase):
                            45.4898,14.1014,26.7028,36.3779,29.4323,104.708,155.804,38.0661,109.579,22.7099]
         expected_shifts = np.asarray(expected_shifts)
         self.assertTrue((np.abs(scaled_shifts[0] - expected_shifts) <= 0.001).all())
+        #print(shift_labels)
 
 if __name__ == '__main__':
     unittest.main()

@@ -75,7 +75,7 @@ Use these three main classes to interact with external quantum chemistry program
              ... }
     
  
-    To access ensemble information, use the following syntax:
+    To access ``Ensemble`` information, use the following syntax:
     
 .. rst-class:: full-width-table
     
@@ -116,7 +116,7 @@ Use these three main classes to interact with external quantum chemistry program
     (``.gjf``/``.com``).
 
     **Important:** *cctk* assumes that all Gaussian jobs will be run in verbose mode (``#p``
-    in the route card).  **Parsing will not work correctly without ``#p``.**
+    in the route card).  **Parsing will not work correctly without** ``#p`` **.**
 
     As usual, molecules and their properties are stored in ``gaussian_file.ensemble``::
 
@@ -163,8 +163,9 @@ Use these three main classes to interact with external quantum chemistry program
     ``gaussian_file.title``             title of Gaussian file
     ``gaussian_file.footer``            footer (optional)
     =================================   ===========================================
-   
-|nbsp|
+
+    |nbsp|
+
     Limited support for other file formats is available (see Features section of documentation).
 
 ========

@@ -1,6 +1,8 @@
 cctk package
 ============
 
+This section describes the *cctk* API.  Please program responsibly.
+
 Subpackages
 -----------
 
