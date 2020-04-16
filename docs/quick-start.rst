@@ -7,8 +7,9 @@ Quick Start
 ===========
 
 Here, we will extract the relative energies from some pentane conformer optimizations.
-You can find the code in ``test/test_pentane.py``.  Here are the necessary import
-statements::
+You can find the code in ``test/test_pentane.py``.
+
+Import some libraries::
 
     import numpy as np
     import cctk
@@ -16,13 +17,13 @@ statements::
     import pandas as pd
     from pandas import DataFrame
 
-Next, we gather the relevant filenames with the standard ``glob`` package::
+Gather the relevant filenames with  ``glob``::
 
     path = "test/static/pentane_conformation*.out"
     filenames = sorted(glob.glob(path))
     
 Now, we read these files.  The molecules and their properties are stored in a
-collection called a ``ConformationalEnsemble``::
+``ConformationalEnsemble``::
 
     conformational_ensemble = cctk.ConformationalEnsemble()
     for filename in filenames:
@@ -32,9 +33,9 @@ collection called a ``ConformationalEnsemble``::
         property_dict = ensemble.get_property_dict(molecule)
         conformational_ensemble.add_molecule(molecule,property_dict)
 
-Note that because these are geometry optimization job, each ``GaussianFile``
+Because these are geometry optimization jobs, each ``GaussianFile``
 contains an ``Ensemble`` containing the geometries at each step.  Calling
-`ensemble.molecules[-1]` provides the last geometry.
+``ensemble.molecules[-1]`` provides the last geometry.
 
 Each ``Molecule`` is associated with a property dictionary::
 
@@ -59,7 +60,7 @@ To extract the filenames and energies::
     property_names = ["filename", "energy"]
     conformational_energies = conformational_ensemble[:,property_names]
 
-We can then determine the lowest energy and display the results in a `pandas` dataframe::
+We can then determine the lowest energy and display the results in a ``pandas`` dataframe::
 
     df = DataFrame(conformational_energies, columns=property_names)
     df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469

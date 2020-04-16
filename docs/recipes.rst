@@ -6,7 +6,7 @@
 Recipes
 =======
 
-Here are short code snippets that demonstrate the features of *cctk*.  Please bake responsibly.
+Here are code snippets that demonstrate the features of *cctk*.  Please bake responsibly.
 
 .. toctree::
    :maxdepth: 2
