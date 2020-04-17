@@ -74,7 +74,7 @@ class GaussianFile(File):
         route_card (str): optional, route card of .gjf file
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
-        success (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
+        successful_terminations (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
         title (str): optional, title of .gjf file
     """
 
@@ -118,7 +118,7 @@ class GaussianFile(File):
         self.footer = footer
         self.title = title
         self.job_types = job_types
-        self.success = success
+        self.successful_terminations = success
 
     def __str__(self):
         return f"GaussianFile (title=\"{str(self.title)}\", {len(self.ensemble)} entries in Ensemble)"
@@ -341,7 +341,7 @@ class GaussianFile(File):
                 properties[-1]["mulliken_charges"] = charges
             except:
                 pass
- 
+
             try:
                 dipole = parse.read_dipole_moment(lines)
                 properties[-1]["dipole_moment"] = dipole
@@ -493,11 +493,15 @@ class GaussianFile(File):
 
         This only checks the last molecule in ``self.ensemble``, for now.
         """
-        return True
-#        for job_type in self.job_types:
-#            for prop in EXPECTED_PROPERTIES[job_type.value]:
-#                if not self.ensemble.has_property(-1, prop):
-#                    raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
+        if self.successful_terminations:
+            if self.successful_terminations == 1 and ((JobType.OPT in self.job_types) and (JobType.FREQ in self.job_types)):
+                pass # opt freq jobs should have two terminations
+            for job_type in self.job_types:
+                for prop in EXPECTED_PROPERTIES[job_type.value]:
+                    if not self.ensemble.has_property(-1, prop):
+                        raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
+        else:
+            pass
 
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", print_symbol=False):
