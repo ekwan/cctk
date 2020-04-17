@@ -1,4 +1,5 @@
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
 
@@ -10,13 +11,13 @@ setup(
     packages=["cctk", "cctk.data", "cctk.groups"],
 #    include_package_data=True,
     package_data={"cctk.data": ["*"], "cctk.groups": ["*"],},
-    version="v0.1.5",
+    version="v0.2.0",
     license="Apache 2.O",
     description="computational chemistry toolkit",
     author="Corin Wagen and Eugene Kwan",
     author_email="corin.wagen@gmail.com",
     url="https://github.com/ekwan/cctk",
-    download_url="https://github.com/ekwan/cctk/archive/v0.1.5.tar.gz",
+    download_url="https://github.com/ekwan/cctk/archive/v0.2.0.tar.gz",
     install_requires=["numpy", "networkx", "importlib_resources"],
     long_description=long_description,
     long_description_content_type='text/markdown',

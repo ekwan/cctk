@@ -1,4 +1,4 @@
-.. _recipe_05:
+.. _recipe_08:
 
 ==========================
 Creating and Adding Groups
@@ -61,8 +61,8 @@ Name                                Synonyms
 Aligning Two Molecules
 """"""""""""""""""""""
 
-- We can create a new ``Group`` object from any molecule by specifying which atom to make the attachment point. 
-- As previously, the ``attach_to`` atom must only be making one bond; usually a hydrogen is a good choice.
+- We can create a new ``Group`` object from any molecule by specifying which atom to make the attachment point from. 
+- As before, the ``attach_to`` atom must only be making one bond; usually a hydrogen is a good choice.
 
 ::
 
