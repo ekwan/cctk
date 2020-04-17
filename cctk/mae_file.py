@@ -10,7 +10,7 @@ from cctk.helper_functions import get_symbol, get_number
 
 class MAEFile(File):
     """
-    Generic class for all ``.mae`` files.
+    Class representing Maestro ``.mae`` files.
 
     Attributes:
         name (str): name of file

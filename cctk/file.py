@@ -8,8 +8,7 @@ from abc import ABC, abstractmethod
 
 class File(ABC):
     """
-    Represents a text file for use as input or output to another program like Gaussian.
-    This class is abstract.
+    Abstract class representing text files.
     """
 
     @abstractmethod

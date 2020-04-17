@@ -29,10 +29,17 @@ author = 'Corin Wagen and Eugene Kwan'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'sphinx.ext.napoleon',
 ]
+
+# generate the API documentation when building
+autosummary_generate = True
+
+# autodoc options
+autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

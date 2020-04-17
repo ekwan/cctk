@@ -10,7 +10,7 @@ from cctk.helper_functions import get_symbol, compute_distance_between, compute_
 
 class XYZFile(File):
     """
-    Generic class for all xyz files.
+    Class representing plain ``.xyz`` files.
 
     Attributes:
         title (str): the title from the file

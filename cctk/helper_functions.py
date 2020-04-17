@@ -1,3 +1,7 @@
+"""
+Miscellaneous helper functions.
+"""
+
 import numpy as np
 import math
 import re

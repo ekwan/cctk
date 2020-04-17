@@ -10,7 +10,7 @@ from cctk.helper_functions import get_symbol, get_number
 
 class MOL2File(File):
     """
-    Generic class for all ``.mol2`` files.
+    Class representing SYBYL ``.mol2`` files.
 
     Attributes:
         name (str): name of file

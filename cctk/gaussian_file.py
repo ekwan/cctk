@@ -11,7 +11,7 @@ import cctk.parse_gaussian as parse
 
 class JobType(Enum):
     """
-    Class to contain allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
+    Class representing allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
 
     The value should be the Gaussian keyword, to permit automatic assignment.
 
@@ -39,7 +39,7 @@ EXPECTED_PROPERTIES = {
 
 class GaussianFile(File):
     """
-    Class for Gaussian files. Composes ``ConformationalEnsemble``.
+    Class representing Gaussian input/output files.
 
     Attributes:
         ensemble (Ensemble): ``ConformationalEnsemble`` instance

@@ -18,7 +18,7 @@ from cctk.helper_functions import (
 
 class Molecule:
     """
-    Class that represents a single molecule, abstractly.
+    Class representing a single molecular geometry.
 
     In contrast to typical Python behavior, ``atomic_numbers`` and ``geometry`` are indexed from one, to simplify interfacing with computational chemistry programs.
     This has been done by defining a custom wrapper for ``numpy.ndarray`` called ``cctk.OneIndexedArray``.

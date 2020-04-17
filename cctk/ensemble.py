@@ -10,7 +10,7 @@ from cctk.helper_functions import align_matrices
 
 class Ensemble:
     """
-    Class that represents a group of molecules. They do not all need to have the same atoms or bonds.
+    Class representing a collection of molecules. They do not all need to have the same atoms or bonds.
 
     Ensembles are composed of molecules and properties. Molecules are ``Molecule`` objects, whereas properties are ``dict`` objects containing calculation-specific information.
 
@@ -297,8 +297,7 @@ class Ensemble:
 
 class ConformationalEnsemble(Ensemble):
     """
-    Class that represents a group of conformers. All members must have the same atom types in the same order.
-
+    Class that representing a group of conformers. All members must have the same atom types in the same order.
     """
 
     def __str__(self):

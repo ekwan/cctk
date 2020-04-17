@@ -10,7 +10,7 @@ from cctk.helper_functions import get_covalent_radius, compute_angle_between, co
 
 class Group(Molecule):
     """
-    Represents a functional group within a molecule - for *in silico* group substitutions.
+    Class representing a functional group.
 
     Note that a Group instance does not need to be missing atoms. Rather, the atom given by `attach_to` will be replaced wholesale by another molecule, and the bond distances scaled automatically.
 
