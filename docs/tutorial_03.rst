@@ -49,7 +49,7 @@ We can fix this problem by simply discarding the values from the partially compl
 
 We can also print extra information for a successful job::
 
-    if output_file.success:
+    if output_file.succesful_terminations:
         print("Optimization converged!")
         print(f"{output_file.num_imaginaries()} imaginary frequencies")
 
@@ -128,7 +128,7 @@ The full script (``monitor.py``) is shown below::
             scf_iter = scf_iter[:len(rms_forces)-1]
             rms_displacements = rms_displacements[:len(rms_forces)-1]
 
-        if output_file.success:
+        if output_file.succesful_terminations:
             print("Optimization converged!")
             print(f"{output_file.num_imaginaries()} imaginary frequencies")
 
