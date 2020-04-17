@@ -15,26 +15,8 @@
 ===========================================================================================
 
 This is the main documentation page for *cctk*.  Try the `quick start <quick-start.html>`_ guide
-to get going right away or peruse the `overview <overview.html>`_ to learn more details.  For the
-nitty-gritty, please see below:
+to get going right away or peruse the `overview <overview.html>`_ to learn more details.
 
-"""""""""""""""""
-Table of Contents
-"""""""""""""""""
-
-.. toctree::
-    :maxdepth: 1
-    
-    installation
-    quick-start
-    overview
-    recipes
-    examples 
-    cctk
-    about
-    contact
-
-* :ref:`genindex`
-* :ref:`modindex`
+* :ref:`genindex` of all API members
 * :ref:`search`
 

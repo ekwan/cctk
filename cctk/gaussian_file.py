@@ -19,12 +19,39 @@ class JobType(Enum):
     """
 
     SP = "sp"
+    """
+    Single point energy calculation.
+    """
+
     OPT = "opt"
+    """
+    Geometry optimization.
+    """
+
     FREQ = "freq"
+    """
+    Hessian calculation.
+    """
+
     IRC = "irc"
+    """
+    Intrinsic reaction coordinate calculation.
+    """
+
     NMR = "nmr"
+    """
+    NMR shielding prediction.
+    """
+
     POP = "pop"
+    """
+    Population analysis.
+    """
+
     FORCE = "force"
+    """
+    Gradient calculation.
+    """
 
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
