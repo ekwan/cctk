@@ -165,7 +165,8 @@ class Molecule:
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j - min_buffer):
-                    raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
+#                    raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
+                    return False
 
         return True
 

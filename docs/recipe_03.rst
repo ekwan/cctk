@@ -68,11 +68,10 @@ Checking For Clashes
 
 - Checks for steric clashes based on covalent radii.
 - If two atoms are closer than the sum of their vdw radii + ``min_buffer``, they are said to be clashing.
-- ``group1`` and ``group2`` are two lists of atoms.
-- Returns ``True`` if there are no conflicts, or ``ValueError`` if there are.
+- Returns ``True`` if there are no conflicts, or ``False`` if there are.
 
 ::
 
-        no_clashes_present = molecule.check_for_conflicts(min_buffer, group1, group2)
+        no_clashes_present = molecule.check_for_conflicts()
         
 

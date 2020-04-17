@@ -44,11 +44,13 @@ Name                                Synonyms
 
 ::
 
+    from cctk.load_groups import load_group
+
     # load our starting molecule
     formic_acid = cctk.GaussianFile.read_file("formic_acid.out").get_molecule()
 
     # to load a predefined group, use the group's name
-    trifluoromethyl = cctk.load_groups.load_group("trifluoromethyl")
+    trifluoromethyl = load_group("trifluoromethyl")
     assert isinstance(trifluoromethyl, cctk.Group)
 
     # now we can create a new molecule by adding our group to an existing molecule 

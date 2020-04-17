@@ -18,7 +18,7 @@ class Ensemble:
 
     - ``ensemble[molecule]`` or ``ensemble[0]`` will return new ``Ensemble`` objects with only the specified molecules.
         Lists or slices can also be used: so ``ensemble[0:10:2]`` or ``ensemble[[molecule1, molecule2, molecule3]]`` will also return new ``Ensemble`` objects.
-    - Individual properties can be read through tuple indexing: ``ensemble[0,"energy"]`` will return the energy of the first molecule, 
+    - Individual properties can be read through tuple indexing: ``ensemble[0,"energy"]`` will return the energy of the first molecule,
         while ``ensemble[:,"energy"]`` will return a list of all the energies.
     - To access ``Molecule`` objects, use ``ensemble.molecule``: ``ensemble.molecule[0]`` will return the first object, whereas ``ensemble.molecule[1:3]`` will return a list.
     - ``ensemble.items()`` will return a list of (molecule, property) pairs.
@@ -152,7 +152,6 @@ class Ensemble:
                     result.append(None)
         if len(ensemble) == 1:
             if result[0] is None:
-#                raise ValueError(f"ensemble did not contain property '{prop}' for key '{idx}'")
                 return None
             return result[0]
         else:
@@ -163,8 +162,8 @@ class Ensemble:
                     break
             if found_something:
                 return result
-            raise ValueError(f"ensemble did not contain property '{prop}' for any of keys '{idx}'")
-
+            else:
+                return None
     def get_properties_dict(self, idx):
         """
             Returns the dictionary of molecule properties for the specified molecule.

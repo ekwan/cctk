@@ -71,7 +71,7 @@ class File(ABC):
             raise ValueError(f"{filename} does not exist")
 
     @staticmethod
-    def read_file(filename):
+    def read_file(filename, lazy=False):
         """
         Reads a file and parses into lines.
 
@@ -84,3 +84,4 @@ class File(ABC):
         with open(filename, "r") as filehandle:
             lines = filehandle.read().splitlines()
             return lines
+

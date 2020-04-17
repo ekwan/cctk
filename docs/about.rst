@@ -37,5 +37,5 @@ an endless number of *ad hoc* scripts.
 
 **How to cite:**
 
-Wagen, C.C.; Kwan, E.E. *cctk* **2020**, `www.github.com/ekwan/cctk <www.github.com/ekwan/cctk>`_.
+Wagen, C.C.; Kwan, E.E. *cctk* **2020**, `www.github.com/ekwan/cctk <https//www.github.com/ekwan/cctk>`_.
 

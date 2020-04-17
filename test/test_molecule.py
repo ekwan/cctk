@@ -30,7 +30,7 @@ class TestMolecule(unittest.TestCase):
 
         self.assertTrue(mol.check_for_conflicts())
         mol.set_distance(1, 2, 0.01)
-        self.assertRaises(ValueError, mol.check_for_conflicts)
+        self.assertFalse(mol.check_for_conflicts())
 
     def test_angle(self):
         mol = self.load_molecule()

@@ -242,7 +242,7 @@ class GaussianFile(File):
         if re.search("gjf$", filename) or re.search("com$", filename):
             return cls._read_gjf_file(filename, return_lines)
 
-        link1_lines = parse.split_link1(super().read_file(filename))
+        link1_lines = parse.split_link1(filename)
         files = []
         for link1idx, lines in enumerate(link1_lines):
             #### automatically assign job types based on header
@@ -341,7 +341,7 @@ class GaussianFile(File):
                 properties[-1]["mulliken_charges"] = charges
             except:
                 pass
-
+ 
             try:
                 dipole = parse.read_dipole_moment(lines)
                 properties[-1]["dipole_moment"] = dipole

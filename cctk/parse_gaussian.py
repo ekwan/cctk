@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from itertools import islice
 
 from cctk.helper_functions import get_symbol
 from cctk import OneIndexedArray
@@ -7,7 +8,36 @@ from cctk import OneIndexedArray
 """
 Functions to help with parsing Gaussian files
 """
+class LazyLineObject:
+    """
+    Instead of storing ``lines`` as an array, this object can be used.
+    It reduces the memory usage drastically! It looks up lines only when needed.
+    """
+    def __init__(self, file, start, end):
+       self.file = file
+       self.start = start
+       self.end = end
 
+    def __len__(self):
+        return self.end - self.start
+
+    def __str__(self):
+        return f"LazyLineObject for file {self.file}, lines {self.start}-{self.end}"
+
+    def __repr__(self):
+        return f"LazyLineObject for file {self.file}, lines {self.start}-{self.end}"
+
+    def __iter__(self):
+        with open(self.file, "r") as lines:
+            for line in islice(lines, self.start, self.end):
+                yield line.rstrip()
+
+    def __getitem__(self, key):
+        if key >= len(self):
+            raise KeyError("key too big")
+        with open(self.file, "r") as lines:
+            for line in islice(lines, self.start + key, self.start + key + 1):
+                return line.rstrip()
 
 def read_geometries_and_energies(lines):
     """
@@ -33,6 +63,10 @@ def read_geometries_and_energies(lines):
     this_energy = None
 
     i = 0
+
+    #### we'll read this into memory to speed this up
+    lines = list(lines)
+
     in_geometry_block = False
     while i < len(lines):
         # read the current line
@@ -119,7 +153,6 @@ def read_geometries_and_energies(lines):
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
 
-
 def search_for_block(lines, start, end, count=1, join=""):
     """
     Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
@@ -181,6 +214,10 @@ def read_bonds(lines):
 
     i = 0
     in_bonding_section = False
+
+    #### we'll read this into memory to speed this up
+    lines = list(lines)
+
     while i < len(lines):
         # read the current line
         line = lines[i].strip()
@@ -314,27 +351,26 @@ def read_nmr_shifts(lines, num_atoms):
     assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
     return np.asarray(shieldings)
 
-def split_link1(lines):
+def split_link1(filename):
     """
-    Splits ``lines`` list into blocks by searching for "Entering Link 1".
+    Splits ``filename`` into blocks by searching for "Entering Link 1".
 
     Args:
-        lines (list): list of lines in file
+        filename (str): path to file
 
     Returns:
         list of list of lines by Link1 section; so a file with one Link1 specification would return [lines1, lines2]
     """
     link1_blocks = []
-    current_block = []
 
-    for line in lines:
-        if re.search("Entering Link 1", line):
-            link1_blocks.append(current_block)
-            current_block = []
-        else:
-            current_block.append(line)
+    start_block = 0
+    with open(filename, "r") as lines:
+        for idx, line in enumerate(lines):
+            if re.search("Entering Link 1", line):
+                link1_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
+                start_block = idx
+    link1_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
 
-    link1_blocks.append(current_block)
     return link1_blocks[1:] #### the first block is just a few lines
 
 def extract_link0(lines):
@@ -348,11 +384,16 @@ def extract_link0(lines):
         dictionary of link 0 commands
     """
     output = {}
+
+    #### read first 200 lines of file to memory
+    lines = [x for _, x in zip(range(200), lines)]
+
     #### find where the header starts
     for idx, line in enumerate(lines):
         if re.match(" #p", line):
             break
     end_idx = idx - 1
+
 
     ##### then go back until the big header that says "GAUSSIAN 16"
     while not re.match(" \*\*\*\*\*\*\*\*", lines[idx]):
@@ -445,7 +486,7 @@ def read_dipole_moment(lines):
     Returns:
         dipole moment (magnitude only)
     """
-    dipole_block = search_for_block(lines, "Dipole moment \(field-independent basis, Debye\)", "Quadrupole moment \(field-independent basis, Debye-Ang\):", join="\n")
+    dipole_block = search_for_block(lines, " Electronic spatial extent", " Quadrupole moment", join="\n")
     for line in dipole_block.split("\n")[1:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
