@@ -1,5 +1,6 @@
 import sys, re, glob, cctk
 import numpy as np
+import pandas as pd
 
 #### This is a script to monitor the output of Gaussian files. 
 #### In contrast to ``monitor.py``, this script analyzes many files! 
@@ -28,21 +29,17 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
     results[output_file.get_molecule(), "iterations"] = len(output_file.ensemble)
     results[output_file.get_molecule(), "success"] = output_file.success
     results[output_file.get_molecule(), "num_imag"] = output_file.num_imaginaries()
-    for p in ["energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement"]:
-        x = output_file.ensemble[output_file.get_molecule(), p]
-        if x is not None:
-            try:
-                results[output_file.get_molecule(), p] = f"{float(results[output_file.get_molecule(), p]):.5f}"
-            except:
-                results[output_file.get_molecule(), p] = results[output_file.get_molecule(), p]
-        else:
-            results[output_file.get_molecule(), p] = ""
-
-print(f"\033[1m{'filename':50} {'iters':>5} {'E':>15} {'∆E':>11} {'G':>15} {'H':>15} {'force':>8} {'disp':>8} {'done?':>8} {'# imag':>8}\033[0m")
-min_energy = min([float(x) for x in results[:,"energy"]])
-for mol, row in results:
-    rel_energy = f"{(float(row['energy']) - min_energy) * 627.509:8.2f}"
-    print(f"{row['filename']:50} {row['iterations']:>5} {row['energy']:>15} {rel_energy:>11} {row['gibbs_free_energy']:>15} {row['enthalpy']:>15} {row['rms_force']:>8} {row['rms_displacement']:>8} {row['success']:>8} {row['num_imag']:>8}")
 
 if len(results) == 0:
     print("no jobs to analyze!")
+    exit()
+
+property_names = ["filename", "iterations", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "num_imag"]
+values = results[:, property_names]
+if not isinstance(values[0], list):
+    values = [values]
+
+df = pd.DataFrame(values, columns=property_names)
+df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
+print(df)
+
