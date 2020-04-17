@@ -1044,7 +1044,7 @@ class Molecule:
 
         return math.sqrt(distance) / self.num_atoms()
 
-    def optimize_dihedral(self, atom1, atom2, atom3, atom4):
+    def optimize_dihedral(self, atom1, atom2, atom3, atom4, step=10):
         """
         Minimizes the value of ``self.rms_distance_between_atoms`` for the given dihedral, in one-degree increments.
         A cheap alternative to geometry optimization using *ab initio* methods or density functional theory.
@@ -1054,6 +1054,7 @@ class Molecule:
             atom2 (int): atom number of the second atom in the dihedral
             atom3 (int): atom number of the third atom in the dihedral
             atom4 (int): atom number of the fourth atom in the dihedral
+            step (float): explore angles from 0 to 360 with this stepsize in degrees
 
         Returns:
             the final value of the angle
@@ -1066,7 +1067,7 @@ class Molecule:
         best_angle = 0
         best_dist = 0
 
-        for angle in range(0, 360):
+        for angle in range(0, 360, step):
             self.set_dihedral(atom1, atom2, atom3, atom4, angle)
             if self.rms_distance_between_atoms() > best_dist:
                 best_dist = self.rms_distance_between_atoms()

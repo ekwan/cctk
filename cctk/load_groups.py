@@ -70,7 +70,7 @@ def load_group(name):
     assert filename is not None, f"can't find name {name}!"
 
     with pkg_resources.path(groups, filename) as file:
-        mol = MOL2File.read_file(file).molecules[0]
+        mol = MOL2File.read_file(file).ensemble.molecules[0]
         mol.assign_connectivity()
 
         #### every molecule is set so you need to attach to atom 2

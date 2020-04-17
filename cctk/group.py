@@ -33,12 +33,13 @@ class Group(Molecule):
 
     def add_attachment_point(self, attach_to):
         """
-        Adds ``attach_to``and ``adjacent`` attributes to the instance.
+        Adds ``attach_to`` and ``adjacent`` attributes to the instance.
 
         Automatically centers atom ``adjacent`` on the origin, to simplify downstream mathematics.
         """
-        if len(super().get_adjacent_atoms(attach_to)) != 1:
-            raise ValueError(f"atom {attach_to} is making too many bonds!")
+        n_bonds = len(super().get_adjacent_atoms(attach_to))
+        if n_bonds != 1:
+            raise ValueError(f"atom {attach_to} is making {n_bonds} but must make 1 bond to be a valid attachment point")
 
         self.attach_to = attach_to
 
