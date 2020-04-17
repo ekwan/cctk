@@ -27,7 +27,7 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
 
     results.add_molecule(*list(output_file.ensemble.items())[-1])
     results[output_file.get_molecule(), "iterations"] = len(output_file.ensemble)
-    results[output_file.get_molecule(), "success"] = output_file.success
+    results[output_file.get_molecule(), "success"] = output_file.successful_terminations
     results[output_file.get_molecule(), "num_imag"] = output_file.num_imaginaries()
 
 if len(results) == 0:

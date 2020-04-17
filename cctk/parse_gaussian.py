@@ -29,7 +29,7 @@ class LazyLineObject:
 
     def __iter__(self):
         with open(self.file, "r") as lines:
-            for line in islice(lines, self.start, self.end):
+            for line in islice(lines, self.start, self.end + 1):
                 yield line.rstrip()
 
     def __getitem__(self, key):
