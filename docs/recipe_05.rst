@@ -88,7 +88,7 @@ Redundant Conformer Elimination
     # eliminate redundant conformers
     # RMSD_cutoff is in Angstroms
     # comparison_atoms is a list of atom numbers, "heavy" (default), or "all"
-    unique_conformers = conformational_ensemble.eliminated_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy")
+    unique_conformers = conformational_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy")
 
     # how many conformers are left
     len(unique_conformers)
