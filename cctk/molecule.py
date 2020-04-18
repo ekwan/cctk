@@ -318,7 +318,7 @@ class Molecule:
                 return list(fragment)
                 break
 
-    def set_distance(self, atom1, atom2, distance, move="group"):
+    def set_distance(self, atom1=None, atom2=None, distance=None, move="group", atoms=None):
         """
         Adjusts the ``atom1`` -- ``atom2`` bond length to be a fixed distance by moving atom2.
 
@@ -331,10 +331,19 @@ class Molecule:
             atom2 (int): the number of the second atom
             distance (float): distance in Angstroms of the final bond
             move (str): determines how fragment moving is handled
+            atoms (list): 2-element list of atom numbers
 
         Returns:
             the Molecule object
         """
+
+        if (atom1 is None) and (atom2 is None):
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 2, "need 2 atom numbers to set distance"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+
+        assert isinstance(distance, (float, int)), "need distance to set distance"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -379,7 +388,7 @@ class Molecule:
 
         return self
 
-    def set_angle(self, atom1, atom2, atom3, angle, move="group"):
+    def set_angle(self, atom1=None, atom2=None, atom3=None, angle=None, move="group", atoms=None):
         """
         Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``.
 
@@ -393,10 +402,20 @@ class Molecule:
             atom3 (int): the number of the third atom
             angle (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` angle
             move (str): determines how fragment moving is handled
+            atoms (list): 3-element list of atom numbers
 
         Returns:
             the Molecule object
         """
+
+        if (atom1 is None) and (atom2 is None) and (atom3 is None) :
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 3, "need 3 atom numbers to set angle"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+            atom3 = atoms[2]
+
+        assert isinstance(angle, (float, int)), "need angle to set angle"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -471,7 +490,7 @@ class Molecule:
 
         return self
 
-    def set_dihedral(self, atom1, atom2, atom3, atom4, dihedral, move="group34", check_result=True):
+    def set_dihedral(self, atom1=None, atom2=None, atom3=None, atom4=None, dihedral=None, move="group34", check_result=True, atoms=None):
         """
         Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4.
 
@@ -489,10 +508,21 @@ class Molecule:
             dihedral (float): final value in degrees of the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` angle
             move (str): determines how fragment moving is handled
             check_result (Bool): whether the final answer should be checked for correctness
+            atoms (list): 4-element list of atomic numbers
 
         Returns:
             the Molecule object
         """
+
+        if (atom1 is None) and (atom2 is None) and (atom3 is None) and (atom4 is None):
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 4, "need 4 atom numbers to set dihedral"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+            atom3 = atoms[2]
+            atom4 = atoms[3]
+
+        assert isinstance(dihedral, (float, int)), "need angle to set dihedral angle"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -834,7 +864,7 @@ class Molecule:
         else:
             return self.geometry[atom].view(np.ndarray)
 
-    def get_distance(self, atom1, atom2, check=True, _dist=compute_distance_between):
+    def get_distance(self, atom1=None, atom2=None, check=True, _dist=compute_distance_between, atoms=None):
         """
         Wrapper to compute distance between two atoms.
 
@@ -845,10 +875,17 @@ class Molecule:
             atom2 (int): number of the second atom
             check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
             _dist (function): function usd to compute distance
+            atoms (list): list of atomic numbers
 
         Returns:
             the distance, in Angstroms
         """
+        if (atom1 is None) and (atom2 is None):
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 2, "need 2 atom numbers to get distance"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+
         if check:
             try:
                 atom1 = int(atom1)
@@ -885,7 +922,7 @@ class Molecule:
 
         return np.sum(np.square(self.get_vector(atom1, atom2, check=False)))
 
-    def get_angle(self, atom1, atom2, atom3, check=True, _angle=compute_angle_between):
+    def get_angle(self, atom1=None, atom2=None, atom3=None, check=True, _angle=compute_angle_between, atoms=None):
         """
         Wrapper to compute angle between three atoms.
 
@@ -897,10 +934,18 @@ class Molecule:
             atom3 (int): number of the third atom
             check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
             _angle (function): function usd to compute angle
+            atoms (list): list of atom numbers
 
         Returns:
             the angle, in degrees
         """
+        if (atom1 is None) and (atom2 is None) and (atom3 is None):
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 3, "need 3 atom numbers to get angle"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+            atom3 = atoms[2]
+
         if check:
             try:
                 atom1 = int(atom1)
@@ -919,7 +964,7 @@ class Molecule:
 
         return _angle(v1 - v2, v3 - v2)
 
-    def get_dihedral(self, atom1, atom2, atom3, atom4, check=True, _dihedral=compute_dihedral_between):
+    def get_dihedral(self, atom1=None, atom2=None, atom3=None, atom4=None, check=True, _dihedral=compute_dihedral_between, atoms=None):
         """
         Wrapper to compute dihedral angle between four atoms.
 
@@ -932,10 +977,19 @@ class Molecule:
             atom4 (int): number of the fourth atom
             check (Bool): whether to validate input data (can be overridden to prevent slow double-checking)
             _dihedral (function): function used to compute dihedral
+            atoms (list): list of atom numbers
 
         Returns:
             the dihedral angle, in degrees
         """
+        if (atom1 is None) and (atom2 is None) and (atom3 is None) and (atom4 is None):
+            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert len(atoms) == 4, "need 4 atom numbers to get dihedral angle"
+            atom1 = atoms[0]
+            atom2 = atoms[1]
+            atom3 = atoms[2]
+            atom4 = atoms[3]
+
         if check:
             try:
                 atom1 = int(atom1)

@@ -25,12 +25,17 @@ class TestMolecule(unittest.TestCase):
         mol.set_distance(1, 2, 2.00)
 
         self.assertEqual(int(round(mol.get_distance(1,2)*10)), 20)
+        self.assertEqual(int(round(mol.get_distance(atoms=[1,2])*10)), 20)
         self.assertEqual(int(round(mol.get_distance(1,3)*10)), 14)
         self.assertEqual(int(round(mol.get_distance(1,9)*10)), 38)
 
         self.assertTrue(mol.check_for_conflicts())
         mol.set_distance(1, 2, 0.01)
         self.assertFalse(mol.check_for_conflicts())
+
+        mol.set_distance(distance=2.00, atoms=[1,2])
+
+        self.assertEqual(int(round(mol.get_distance(1,2)*10)), 20)
 
     def test_angle(self):
         mol = self.load_molecule()
@@ -43,6 +48,11 @@ class TestMolecule(unittest.TestCase):
         mol.set_angle(1, 3, 5, 120)
 
         self.assertEqual(int(round(mol.get_angle(1,3,5))), 120)
+
+        mol.set_angle(angle=112, atoms=[1,3,5])
+
+        self.assertEqual(int(round(mol.get_angle(1,3,5))), 112)
+        self.assertEqual(int(round(mol.get_angle(atoms=[1,3,5]))), 112)
 
     def test_dihedral(self):
         mol = self.load_molecule()
@@ -57,6 +67,12 @@ class TestMolecule(unittest.TestCase):
 
         atom_list = list(atom_tuple)
         mol.set_dihedral(*atom_list, 120)
+        self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 120)
+
+        atom_list = list(atom_tuple)
+        mol.set_dihedral(dihedral=110, atoms=atom_list)
+        self.assertEqual(int(round(mol.get_dihedral(1,3,5,7))), 110)
+        self.assertEqual(int(round(mol.get_dihedral(atoms=atom_list))), 110)
 
         theta = [1, 20, 89, 66, 180, 215, 333]
         for t in theta:
