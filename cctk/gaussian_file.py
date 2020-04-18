@@ -75,11 +75,12 @@ class GaussianFile(File):
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
         successful_terminations (int): number of successful terminations (should be 1 for an opt, 2 for opt and then freq, 1 for a single point energy, etc)
+        elapsed_time (float): total time for job in seconds
         title (str): optional, title of .gjf file
     """
 
     def __init__(
-        self, job_types, route_card=None, link0=None, footer=None, title="title", success=0
+        self, job_types, route_card=None, link0=None, footer=None, title="title", success=0, elapsed_time=0.0
     ):
         """
         Create new GaussianFile object.
@@ -91,6 +92,7 @@ class GaussianFile(File):
             footer (str): optional, footer of ``.gjf`` file
             title (str): optional, title of ``.gjf`` file
             success (int): num successful terminations
+            elapsed_time (float): total time for job in seconds
 	"""
 
         if route_card and not isinstance(route_card, str):
@@ -108,6 +110,9 @@ class GaussianFile(File):
         if success and not isinstance(success, int):
             raise TypeError("success needs to be an integer")
 
+        if not isinstance(elapsed_time, float) or elapsed_time < 0.0:
+            raise TypeError(f"elapsed_time invalid: {elapsed_time}")
+
         if job_types is not None:
             if not all(isinstance(job, JobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
@@ -119,6 +124,7 @@ class GaussianFile(File):
         self.title = title
         self.job_types = job_types
         self.successful_terminations = success
+        self.elapsed_time = elapsed_time
 
     def __str__(self):
         return f"GaussianFile (title=\"{str(self.title)}\", {len(self.ensemble)} entries in Ensemble)"
@@ -255,9 +261,19 @@ class GaussianFile(File):
 
             #### extract parameters
             success = 0
+            elapsed_time = 0.0  # in seconds
             for line in lines:
                 if line.strip().startswith("Normal termination"):
                     success += 1
+                elif line.startswith(" Elapsed time:"):
+                    # Elapsed time:       0 days  0 hours  0 minutes  0.6 seconds.
+                    fields = line.split()
+                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
+                    days = float(fields[2])
+                    hours = float(fields[4])
+                    minutes = float(fields[6])
+                    seconds = float(fields[8])
+                    elapsed_time += days * 86400 + hours * 3600 + minutes * 60 + seconds
 
             (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
             atomic_numbers = []
@@ -278,7 +294,7 @@ class GaussianFile(File):
             charge = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
             multip = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
 
-            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success)
+            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time)
 
             molecules = [None] * len(geometries)
             properties = [{} for _ in range(len(geometries))]
