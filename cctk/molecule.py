@@ -524,10 +524,20 @@ class Molecule:
 
         assert isinstance(dihedral, (float, int)), "need angle to set dihedral angle"
 
+        # check atom numbers
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
         self._check_atom_number(atom3)
         self._check_atom_number(atom4)
+
+        # check there is bond connectivity information
+        assert len(self.bonds) > 0, "no bond connectivity information"
+
+        # check for collinearity
+        angle = self.get_angle(atom1, atom2, atom3, check=False)
+        assert 0.0001 < angle < 179.9999, f"1/2/3 atoms {atom1}-{atom2}-{atom3} are collinear (angle={angle:.8f})"
+        angle = self.get_angle(atom2, atom3, atom4, check=False)
+        assert 0.0001 < angle < 179.9999, f"2/3/4 atoms {atom2}-{atom3}-{atom4} are collinear (angle={angle:.8f})"
 
         for x in [atom1, atom2, atom3, atom4]:
             for y in [atom1, atom2, atom3, atom4]:
