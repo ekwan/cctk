@@ -51,7 +51,7 @@ class Group(Molecule):
         super().translate_molecule(-adj_v)
 
     @abstractmethod
-    def add_group_to_molecule(molecule, group, add_to, optimize=True):
+    def add_group_to_molecule(molecule, group, add_to, optimize=True, return_mapping=False):
         """
         Adds a `Group` object to a `Molecule` at the specified atom, and returns a new `Molecule` object (generated using `copy.deepcopy()`).
         Automatically attempts to prevent clashes by minimizing pairwise atomic distances.
@@ -63,6 +63,13 @@ class Group(Molecule):
             group (Group): the group to affix
             add_to (int): the 1-indexed atom number on `molecule` to add `group` to
             optimize (bool): whether or not to perform automated dihedral optimization
+            return_mapping (bool): whether or not to return dictionaries mapping atom numbers from starting materials to products
+
+        Returns:
+            new Molecule object
+
+            (optional) molecule_to_new dictionary mapping atom numbers from starting molecule (key) to new atom numbers (val)
+            (optional) group_to_new dictionary mapping atom numbers from starting group (key) to new atom numbers (val)
         """
         #### this code can be a bit complex: for an example, let's imagine converting benzene to toluene by adding methane (Group) to benzene (Molecule)
         ####     add_to would be the benzene H (atom on Molecule you replace with the new group)
@@ -79,6 +86,7 @@ class Group(Molecule):
 
         molecule = copy.deepcopy(molecule)
         molecule._check_atom_number(add_to)
+        original_num_atoms = molecule.num_atoms()
 
         adjacent_atom = molecule.get_adjacent_atoms(add_to)
         assert (
@@ -106,6 +114,20 @@ class Group(Molecule):
         #### have to keep track of what all the new indices are, to carry over connectivity
         new_indices.insert(group.adjacent - 1, add_to)
         new_indices.insert(attach_to - 1, adjacent_atom)
+
+        #### track atom number mapping
+        molecule_to_new = {z : z for z in range(1, molecule.num_atoms() + 1)}
+        molecule_to_new[add_to] = None
+
+        group_to_new = {}
+        offset = 1
+        for z in range(1, group.num_atoms() + 1):
+            if other_indices[z]:
+                group_to_new[z] = original_num_atoms + offset
+                offset += 1
+            else:
+                group_to_new[z] = None
+        group_to_new[group.adjacent] = add_to
 
         #### adjust the bond length by moving add_to
         molecule.set_distance(adjacent_atom, add_to, molecule.get_distance(adjacent_atom, add_to) + delta_rad)
@@ -137,9 +159,11 @@ class Group(Molecule):
             adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
             molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
 
-        try:
-            molecule.check_for_conflicts()
-        except ValueError as error_msg:
-            raise ValueError(f"molecule contains conflicts: {str(error_msg)}!")
+        if molecule.check_for_conflicts():
+            if return_mapping:
+                return molecule, molecule_to_new, group_to_new
+            else:
+                return molecule
+        else:
+            raise ValueError(f"molecule contains conflicts!")
 
-        return molecule
