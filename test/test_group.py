@@ -32,5 +32,27 @@ class TestGroup(unittest.TestCase):
 
         os.remove(new_path)
 
+    def test_group_remove(self):
+        path = "test/static/14-butanedione.gjf"
+
+        file = cctk.GaussianFile.read_file(path)
+        mol = file.get_molecule().assign_connectivity()
+
+        mol2, group, map_m, map_g = cctk.Group.remove_group_from_molecule(mol, 2, 5, return_mapping=True)
+
+        self.assertTrue(isinstance(mol2, cctk.Molecule))
+        self.assertTrue(isinstance(group, cctk.Group))
+
+        for x in [mol2, group]:
+            self.assertEqual(x.num_atoms(), 7)
+
+        for z in range(1, mol.num_atoms()+1):
+            if z == 2 or z == 5:
+                continue
+            if z in map_m.keys() and map_m[z] is not None:
+                self.assertEqual(mol.atomic_numbers[z], mol2.atomic_numbers[map_m[z]])
+            if z in map_g.keys() and map_g[z] is not None:
+                self.assertEqual(mol.atomic_numbers[z], group.atomic_numbers[map_g[z]])
+
 if __name__ == '__main__':
     unittest.main()

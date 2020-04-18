@@ -44,6 +44,7 @@ class Molecule:
             raise ValueError("length of geometry and atomic_numbers does not match!")
 
         if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
+            print(atomic_numbers)
             raise ValueError("invalid atom list")
 
         if len(geometry) == 0:
@@ -771,14 +772,14 @@ class Molecule:
             the Molecule object
         """
 
-        if (not isinstance(coordinates, list)) or (len(coordinates) != 3):
+        if (not isinstance(coordinates, (list, np.ndarray)) or (len(coordinates) != 3)):
             raise TypeError("coordinates must be list with three elements")
 
         if not isinstance(symbol, str):
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atomic_numbers = np.append(self.atomic_numbers, [number]).view(OneIndexedArray)
+        self.atomic_numbers = np.append(self.atomic_numbers, [number]).astype(np.int8).view(OneIndexedArray)
         self.geometry = np.append(self.geometry, [coordinates], axis=0).view(OneIndexedArray)
         self.bonds.add_node(self.num_atoms())
 

@@ -4,6 +4,7 @@ import networkx as nx
 
 from abc import abstractmethod
 
+import cctk
 from cctk import Molecule, OneIndexedArray
 from cctk.helper_functions import get_covalent_radius, compute_angle_between, compute_rotation_matrix
 
@@ -167,3 +168,81 @@ class Group(Molecule):
         else:
             raise ValueError(f"molecule contains conflicts!")
 
+    @abstractmethod
+    def remove_group_from_molecule(molecule, atom1, atom2, return_mapping=False):
+        """
+        The microscopic reverse of ``add_group_to_molecule`` -- splits a ``Molecule`` along the ``atom1``–``atom2`` bond
+        and returns a new ``Molecule`` object (the ``atom1`` side) and a new ``Group`` (the ``atom2`` side).
+
+        The new objects will be capped with hydrogens; atom ordering will be preserved!
+
+        Args:
+            molecule (Molecule): the molecule to change
+            atom1 (int): the 1-indexed atom number on `molecule` to make part of the new ``Molecule`` object
+            atom2 (int): the 1-indexed atom number on `molecule` to make part of the new ``Group`` object
+            return_mapping (bool): whether or not to return dictionaries mapping atom numbers from starting materials to products
+
+        Returns:
+            new Molecule object
+            new Group object
+
+            (optional) molecule_to_molecule dictionary mapping atom numbers from starting molecule (key) to new molecule atom numbers (val)
+            (optional) molecule_to_group dictionary mapping atom numbers from starting molecule (key) to new group atom numbers (val)
+        """
+        try:
+            atom1 = int(atom1)
+            atom2 = int(atom2)
+        except:
+            raise TypeError("atom numbers not castable to int")
+
+        molecule = copy.deepcopy(molecule)
+        molecule._check_atom_number(atom1)
+        molecule._check_atom_number(atom2)
+
+        #### define mapping dicts
+        fragment1, fragment2 = molecule._get_bond_fragments(atom1, atom2)
+        molecule_to_molecule = {x: i+1 for i, x in enumerate(fragment1)}
+        molecule_to_group = {x: i+1 for i, x in enumerate(fragment2)}
+
+        #### create new molecules
+        new_mol = Molecule(molecule.atomic_numbers[fragment1], molecule.geometry[fragment1])
+        group = Molecule(molecule.atomic_numbers[fragment2], molecule.geometry[fragment2])
+
+        #### add capping H to new_mol
+        new_mol.add_atom("H", molecule.geometry[atom2])
+        molecule_to_molecule[atom2] = new_mol.num_atoms()
+        old_radius = get_covalent_radius(molecule.atomic_numbers[atom2])
+        H_radius = get_covalent_radius(1)
+        new_dist = new_mol.get_distance(molecule_to_molecule[atom1], molecule_to_molecule[atom2]) - old_radius + H_radius
+        new_mol.set_distance(molecule_to_molecule[atom1], molecule_to_molecule[atom2], new_dist)
+        new_mol.add_bond(molecule_to_molecule[atom1], molecule_to_molecule[atom2])
+
+        #### add capping H to new group
+        group.add_atom("H", molecule.geometry[atom1])
+        molecule_to_group[atom1] = group.num_atoms()
+        old_radius = get_covalent_radius(molecule.atomic_numbers[atom1])
+        new_dist = group.get_distance(molecule_to_group[atom2], molecule_to_group[atom1]) - old_radius + H_radius
+        group.set_distance(molecule_to_group[atom2], molecule_to_group[atom1], new_dist)
+        group.add_bond(molecule_to_group[atom2], molecule_to_group[atom1])
+
+        #### add bonds to nascent molecules
+        molecule.remove_bond(atom1, atom2)
+        for (a1, a2) in molecule.bonds.edges():
+            if a1 in fragment1:
+                assert a2 in fragment1, "somehow we have another bond between the two groups!"
+                assert molecule_to_molecule[a1] is not None, f"we don't have a mapping for atom {a1}"
+                assert molecule_to_molecule[a2] is not None, f"we don't have a mapping for atom {a2}"
+                new_mol.add_bond(molecule_to_molecule[a1], molecule_to_molecule[a2])
+            elif a2 in fragment2:
+                assert a2 in fragment2, "somehow we have another bond between the two groups!"
+                assert molecule_to_group[a1] is not None, f"we don't have a mapping for atom {a1}"
+                assert molecule_to_group[a2] is not None, f"we don't have a mapping for atom {a2}"
+                group.add_bond(molecule_to_group[a1], molecule_to_group[a2])
+
+        #### create Group object from group
+        group = cctk.Group.new_from_molecule(attach_to=molecule_to_group[atom1], molecule=group)
+
+        if return_mapping:
+            return new_mol, group, molecule_to_molecule, molecule_to_group
+        else:
+            return new_mol, group
