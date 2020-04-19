@@ -63,6 +63,8 @@ class TestMolecule(unittest.TestCase):
         self.assertEqual(int(round(mol.get_dihedral(16,14,17,18))), 11)
         self.assertEqual(int(round(mol.get_dihedral(31,28,1,2))), 148)
 
+        mol.set_dihedral(1, 3, 5, 7, 120)
+
         atom_tuple = (1, 3, 5, 7)
         mol.set_dihedral(*atom_tuple, 120)
 

@@ -4,33 +4,53 @@
 Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
 ======================================================================
 
+"""""""""""""""""""""
+Example: ``opt freq``
+"""""""""""""""""""""
+
 - ``import cctk`` is assumed.
 - This is a routine optimization using ``opt freq``.
-- An ``Ensemble`` is a collection of Molecules.
-- Here, the ``Ensemble`` contains the initial, intermediate, and final
-  geometries for the optimization process.
-- Each ``Molecule`` is mapped to a ``dict`` called ``properties_dict``,
-  where energies and other data are stored.
-- Note that there is no ``Link1`` directive here.  So ``read_file(filename)``
-  only produecs one ``GaussianFile`` and thus ``link1_idx`` is 0 for all geometries.
+- The route card job type are both parsed.
 
 ::
 
     # read the file
     filename = "test/static/gaussian_file.out"
     gaussian_file = cctk.GaussianFile.read_file(filename)
-    ensemble = gaussian_file.ensemble
-
+    
     # gaussian_file properties
     gaussian_file.route_card == "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)"
     gaussian_file.job_types == [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP]
 
+
+- An ``Ensemble`` is a collection of Molecules.
+- Here, the ``Ensemble`` contains the initial, intermediate, and final
+  geometries for the optimization process.
+
+::
+
     # ensemble properties
+    ensemble = gaussian_file.ensemble
     assert isinstance(ensemble, cctk.ConformationalEnsemble)
     len(ensemble) == 3
 
+    # getting a molecule
+    assert isinstance(ensemble.molecules[0], Molecule)
+
     # slicing an Ensemble returns an Ensemble
     assert isinstance(ensemble[0], cctk.ConformationalEnsemble)
+
+"""""""""""""""""""
+``properties_dict``
+"""""""""""""""""""
+
+- Each ``Molecule`` is mapped to a ``dict`` called ``properties_dict``,
+  where energies and other data are stored.
+- Aside: this was a simple ``opt freq`` job that contained only one ``Link1``.
+  So ``read_file(filename)`` only produecs one ``GaussianFile`` and thus
+  ``link1_idx`` is 0 for all geometries.
+
+::
 
     # contents of the ensemble
     for molecule,properties_dict in ensemble.items():
@@ -38,8 +58,11 @@ Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
             print(property_name, ":", value)
         print()
 
-    # the first molecule is the input geometry
-    # it has these properties:
+
+- The first geometry is the input geometry
+
+::
+
     '''
     energy : -1159.56782625
     scf_iterations : 13
@@ -49,9 +72,11 @@ Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
     rms_displacement : 0.000547
     '''
 
-    # the second molecule is an intermediate
-    # geometry in the optimization
-    # it has these properties:
+- The second geometry is an intermediate geometry during the optimization.
+- This optimization took only one intermediate step.
+
+::
+
     '''
     energy : -1159.56782622
     scf_iterations : 7
@@ -61,8 +86,11 @@ Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
     rms_displacement : 0.000489
     '''
 
-    # the third molecule is the final geometry
-    # it has these properties:
+- The third geometry is the final geometry.
+- It has many more properties
+
+::
+    
     '''
     energy : -1159.56782622
     scf_iterations : 1
@@ -81,14 +109,53 @@ Extracting Molecular Properties (Energies, Frequencies, Charges, etc.)
     dipole_moment : 4.8038
     '''
 
+- Ensemble properties can be indexed and sliced as if they were 2D arrays.
+- ``None`` is used for missing data.
+
+::
+
     # extracting one property value	
     ensemble[0,"energy"] == -1159.56782625
 
     # extracting all energies
     ensemble[:,"energy"] == [-1159.56782625, -1159.56782622, -1159.56782622]
 
-    # None is used for missing data
-    # here, enthalpy is only calculated for the final geometry of the optimization
+    # enthalpy is only calculated for the final geometry of the optimization
     ensemble[:,"enthalpy"] = [None, None, -1159.314817]
 
+"""""""""""""""""
+Sorting Ensembles
+"""""""""""""""""
+
+- Ensembles can be sorted by property values (e.g., energy).
+- The ordering in ``ensemble.molecules`` will be updated to reflect the new order.
+- Missing entries are not allowed.
+- Sorting incomparable types will result in an error.
+- The result is a new ``Ensemble``.  The underlying objects are not cloned.
+
+::
+
+    sorted_ensemble = ensemble.sort_by("energy", ascending=False)
+
+"""""""""""""""""""""""
+Lowest Energy Molecules
+"""""""""""""""""""""""
+
+- Use ``ensemble.lowest_molecules(property_name, num=1)`` to get ``num`` Molecules
+  that have the lowest value of ``property_name``.
+- If ``num`` is 1, the result is a Molecule.  If ``num`` is more than 1, the
+  result is a list.
+- Sorting by energy only makes sense for an `ConformationalEnsemble`, but is not
+  forbidden for an `Ensemble`.
+
+::
+
+    lowest_energy_molecules = ensemble.lowest_molecules("energy",2)
+    assert len(lowest_energy_molecules) == 2
+
+    lowest_energy_molecule = ensemble.lowest_molecules("energy")
+    assert isinstance(lowest_energy_molecule, cctk.Molecule)
+
+- For more complex operations, create a `pandas` ``DataFrame``, determine the indices
+  of interest, and index the ``Ensemble`` to create a sub-Ensemble.
 

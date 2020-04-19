@@ -26,10 +26,8 @@ class Ensemble:
 
     Attributes:
         name (str): name, for identification
-        _items (dict):
-            keys: ``Molecule`` objects
-            values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
-            molecules: special object that accesses the keys
+        _items (dict): keys: ``Molecule`` objects; values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
+        molecules (``MoleculeIndexer``): special object that accesses the keys
     """
 
     def __init__(self, name=None):
@@ -164,6 +162,7 @@ class Ensemble:
                 return result
             else:
                 return None
+
     def get_properties_dict(self, idx):
         """
             Returns the dictionary of molecule properties for the specified molecule.
@@ -241,8 +240,31 @@ class Ensemble:
             assert isinstance(num, int), "num must be integer"
             return list(self.values())[num]
 
-    def sort_by(self, property):
-        pass
+    def sort_by(self, property_name, ascending=True):
+        """
+        Sorts the ensemble by the specified property.
+        Throws an error if the property is missing for any entries.
+        Consistent, sort-compatible property values are assumed and not checked.
+
+        Args:
+            property_name (str): the name of the property to sort on (must be a string or number)
+            ascending (bool): whether the property should increase or decrease in value
+        Returns:
+            new Ensemble (current ensemble is not modified)
+        """
+        property_list = self[:,property_name]
+        if property_list is None:
+            raise ValueError(f"property '{property_name}' not found in ensemble")
+        property_list = np.asarray(property_list)
+        n_missing_entries = np.count_nonzero(property_list==None)
+        if n_missing_entries > 0:
+            error = "---sorting error---\n"
+            error += str(property_list)
+            raise ValueError(f"{error}\nproperty '{property_name}' has {n_missing_entries} missing entries and cannot be sorted")
+        new_indices = np.argsort(property_list)
+        if not ascending:
+            new_indices = np.flip(new_indices)
+        return self[[new_indices]]
 
     def add_molecule(self, molecule, properties={}, copy=False):
         """
@@ -293,6 +315,23 @@ class Ensemble:
 
         return new_ensemble
 
+    def lowest_molecules(self, property_name, num=1):
+        """
+        Retrieves the molecules with the lowest values of the specified property.
+
+        Args:
+            property_name (str): the name of the property to sort on
+            num (int): how many molecules to return
+        Returns:
+            lowest ``Molecule`` (if num==1)
+            ``list`` of ``Molecule`` (otherwise)
+        """
+        assert isinstance(num, (int, np.integer)), f"num must be an integer, got {type(num)}"
+        assert num > 0, f"num must be > 0, got {num}"
+        sorted_ensemble = self.sort_by(property_name)
+        if num > 1:
+            return sorted_ensemble.molecules[0:num]
+        return sorted_ensemble.molecules[0]
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -520,8 +559,4 @@ class ConformationalEnsemble(Ensemble):
 
         return output
 
-    def get_lowest_energy(self, num=10):
-        return self.molecules[np.argsort(self.energies)][0:10]
 
-    def get_within_cutoff(self, cutoff=5):
-        return self.molecules[self.energies <= (np.min(self.energies) + 5)]

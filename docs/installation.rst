@@ -61,3 +61,21 @@ If you want to read the *cctk* documentation locally, you can build it by going 
 This command will require the ``sphinx`` and ``sphinx-bootstrap-theme`` packages to be installed first. 
 Once generated, the documentation will be available locally at: ``docs/_build/html/index.html.``
 
+If there is a problem building, trying running ``make clean`` first.
+
+----------
+Unit Tests
+----------
+
+These operations should be run from the main *cctk* repo directory. Test code is stored in the ``test`` folder.
+To run a single unit test::
+
+    python -m unittest test.test_molecule.TestMolecule.test_dihedral
+
+To run all the tests::
+
+    pythom -m unittest discover
+
+
+
+
