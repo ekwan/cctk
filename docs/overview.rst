@@ -152,17 +152,18 @@ Use these three main classes to interact with external quantum chemistry program
 
 .. rst-class:: full-width-table
 
-    =================================   ===========================================
-    Field                               Description
-    =================================   ===========================================
-    ``gaussian_file.ensemble``          ``Ensemble`` containing intermediate geometries and molecular properties
-    ``gaussian_file.job_types``         list of what kind of jobs were run
-    ``gaussian_file.succesful_terminations``           number of successful terminations
-    ``gaussian_file.link0``             dictionary containing `Link0 <https://gaussian.com/link0/>`_ information (memory, processors, checkpoint filename, etc.)
-    ``gaussian_file.route_card``        route card (must start with ``#p``)
-    ``gaussian_file.title``             title of Gaussian file
-    ``gaussian_file.footer``            footer (optional)
-    =================================   ===========================================
+    =========================================   ===========================================
+    Field                                       Description
+    =========================================   ===========================================
+    ``gaussian_file.ensemble``                  ``Ensemble`` containing intermediate geometries and molecular properties
+    ``gaussian_file.job_types``                 list of what kind of jobs were run
+    ``gaussian_file.succesful_terminations``    number of successful terminations
+    ``gaussian_file.link0``                     dictionary containing `Link0 <https://gaussian.com/link0/>`_ information (memory, processors, checkpoint filename, etc.)
+    ``gaussian_file.route_card``                route card (must start with ``#p``)
+    ``gaussian_file.title``                     title of Gaussian file
+    ``gaussian_file.footer``                    footer (optional)
+    ``gaussian_file.elapsed_time``              how long this ``Link1`` took in seconds of wallclock time (``g16`` and beyond only)
+    =========================================   ===========================================
 
     |nbsp|
 

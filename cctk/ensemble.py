@@ -164,6 +164,7 @@ class Ensemble:
                 return result
             else:
                 return None
+
     def get_properties_dict(self, idx):
         """
             Returns the dictionary of molecule properties for the specified molecule.
@@ -241,8 +242,31 @@ class Ensemble:
             assert isinstance(num, int), "num must be integer"
             return list(self.values())[num]
 
-    def sort_by(self, property):
-        pass
+    def sort_by(self, property_name, drop_none=True, ascending=True):
+        """
+        Sorts the ensemble by the specified property.
+        Throws an error if the property is missing for any entries.
+        Consistent, sort-compatible property values are assumed and not checked.
+
+        Args:
+            property_name (str): the name of the property to sort on (must be a string or number)
+            ascending (bool): whether the property should increase or decrease in value
+        Returns:
+            new Ensemble (current ensemble is not modified)
+        """
+        property_list = self[:,property_name]
+        if property_list is None:
+            raise ValueError(f"property '{property_name}' not found in ensemble")
+        property_list = np.asarray(property_list)
+        n_missing_entries = np.count_nonzero(property_list==None)
+        if n_missing_entries > 0:
+            error = "---sorting error---\n"
+            error += str(property_list)
+            raise ValueError(f"{error}\nproperty '{property_name}' has {n_missing_entries} missing entries and cannot be sorted")
+        new_indices = np.argsort(property_list)
+        if not ascending:
+            new_indices = np.flip(new_indices)
+        return self[[new_indices]]
 
     def add_molecule(self, molecule, properties={}, copy=False):
         """

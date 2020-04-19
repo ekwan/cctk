@@ -113,5 +113,23 @@ class TestEnsemble(unittest.TestCase):
         self.assertListEqual(ensemble[:,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
         self.assertListEqual(ensemble[:,"enthalpy"], [None, None, -1159.314817])
 
+    def test_sort(self):
+        path = "test/static/phenylpropane*.out"
+        conformational_ensemble = cctk.ConformationalEnsemble()
+        for filename in sorted(glob.glob(path)):
+            gaussian_file = cctk.GaussianFile.read_file(filename)
+            ensemble = gaussian_file.ensemble
+            molecule = ensemble.molecules[-1]
+            properties_dict = ensemble.get_properties_dict(molecule)
+            conformational_ensemble.add_molecule(molecule,properties_dict)
+        original_order = conformational_ensemble[:,"energy"]
+        self.assertListEqual(original_order,[0.0140132996483, 0.0163679933924, 0.0213666533731, 0.0180903133947, 0.0547890926923, 0.0182782865186])
+        sorted_ensemble = conformational_ensemble.sort_by("energy", ascending=False)
+        sorted_order = sorted_ensemble[:,"energy"]
+        self.assertListEqual(sorted_order,[0.0547890926923, 0.0213666533731, 0.0182782865186, 0.0180903133947, 0.0163679933924, 0.0140132996483])
+        sorted_ensemble[2,"energy"]=None
+        with self.assertRaises(ValueError):
+            sorted_ensemble = conformational_ensemble.sort_by("energy", ascending=False)
+
 if __name__ == '__main__':
     unittest.main()
