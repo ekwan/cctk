@@ -54,5 +54,26 @@ class TestGroup(unittest.TestCase):
             if z in map_g.keys() and map_g[z] is not None:
                 self.assertEqual(mol.atomic_numbers[z], group.atomic_numbers[map_g[z]])
 
+    def test_epimerize(self):
+        path = "test/static/L-Ala.gjf"
+        new_path = "test/static/L-Ala2.gjf"
+
+        file = cctk.GaussianFile.read_file(path)
+        l_ala = file.get_molecule().assign_connectivity()
+
+        d_ala = l_ala.epimerize(1, 3, 11)
+        self.assertListEqual(list(l_ala.atomic_numbers), list(d_ala.atomic_numbers))
+
+        l_ala2 = d_ala.epimerize(1, 3, 11)
+        file.write_file(new_path, l_ala2)
+        with open(path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
+
 if __name__ == '__main__':
     unittest.main()

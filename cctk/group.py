@@ -149,6 +149,7 @@ class Group(Molecule):
         #### now we have to merge the new bonds
         for (atom1, atom2) in group.bonds.edges():
             molecule.add_bond(new_indices[atom1-1], new_indices[atom2-1])
+        assert molecule.get_bond_order(add_to, adjacent_atom), "we didn't add the bond we were supposed to form!"
 
         assert len(molecule.atomic_numbers) == len(
             molecule.geometry

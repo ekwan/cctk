@@ -1,5 +1,6 @@
 import unittest, sys, os, io, copy, math
 import numpy as np
+import networkx as nx
 import cctk
 
 class TestMolecule(unittest.TestCase):
@@ -148,6 +149,19 @@ class TestMolecule(unittest.TestCase):
     def test_volume(self):
         mol = self.load_molecule()
         self.assertEqual(mol.volume(), 80.42662712363737)
+
+    def test_renumber(self):
+        mol = self.load_molecule()
+        mol2 = mol.swap_atom_numbers(1, 2)
+        mol3 = mol2.swap_atom_numbers(2, 1)
+
+        self.assertFalse(np.allclose(mol.atomic_numbers, mol2.atomic_numbers))
+        self.assertFalse(np.allclose(mol.geometry, mol2.geometry))
+#        self.assertFalse(nx.is_isomorphic(mol.bonds, mol2.bonds))
+
+        self.assertTrue(np.allclose(mol.atomic_numbers, mol3.atomic_numbers))
+        self.assertTrue(np.allclose(mol.geometry, mol3.geometry))
+#        self.assertTrue(nx.is_isomorphic(mol.bonds, mol3.bonds))
 
 if __name__ == '__main__':
     unittest.main()

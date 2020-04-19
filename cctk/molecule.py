@@ -1,8 +1,8 @@
-import sys, re, math
+import sys, re, math, copy, scipy
 import numpy as np
 import networkx as nx
-import scipy
 
+import cctk
 from cctk import OneIndexedArray
 from cctk.helper_functions import (
     get_symbol,
@@ -1220,3 +1220,87 @@ class Molecule:
         """
         hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
         return hull.volume
+
+    def swap_atom_numbers(self, atom1, atom2):
+        """
+        Interchanges the numbers of ``atom1`` and ``atom2``.
+
+        Args:
+            atom1 (int): number of 1st atom
+            atom2 (int): number of 2nd atom
+
+        Returns
+            new ``Molecule`` object (does not modify in-place)
+        """
+        self._check_atom_number(atom1)
+        self._check_atom_number(atom2)
+        mol = copy.deepcopy(self)
+
+        z1 = mol.atomic_numbers[atom1]
+        z2 = mol.atomic_numbers[atom2]
+        g1 = copy.deepcopy(mol.geometry[atom1])
+        g2 = copy.deepcopy(mol.geometry[atom2])
+
+        mol.atomic_numbers[atom2] = z1
+        mol.atomic_numbers[atom1] = z2
+        mol.geometry[atom2] = g1
+        mol.geometry[atom1] = g2
+
+        mapping = {atom2: atom1, atom1: atom2}
+        mol.bonds = nx.relabel_nodes(mol.bonds, mapping, copy=True)
+
+        return mol
+
+    def epimerize(self, center_atom, substituent1, substituent2):
+        """
+        Epimerizes ``center_atom`` by exchanging the groups corresponding to ``substituent1`` and ``substituent2``.
+        Both substituents must be bonded to the center atom!
+
+        Args:
+            center_atom (int): number of middle atom
+            substituent1 (int): number of 1st atom
+            substituent1 (int): number of 2nd atom
+
+        Returns
+            new ``Molecule`` object (does not modify in-place)
+        """
+
+        self._check_atom_number(center_atom)
+        self._check_atom_number(substituent1)
+        self._check_atom_number(substituent2)
+
+        adj = self.get_adjacent_atoms(center_atom)
+        assert len(adj) == 4, "center atom must be making 4 bonds!"
+        assert substituent1 in adj, "1st substituent is not bonded to center atom!"
+        assert substituent2 in adj, "2nd substituent is not bonded to center atom!"
+
+        #### remove both substituents
+        mol, group1, mmap1, gmap1  = cctk.Group.remove_group_from_molecule(self, center_atom, substituent1, return_mapping=True)
+        mol, group2, mmap2, gmap2  = cctk.Group.remove_group_from_molecule(mol, mmap1[center_atom], mmap1[substituent2], return_mapping=True)
+
+        h1 = mol.num_atoms() - 1
+        h2 = mol.num_atoms()
+
+        #### add them back in the opposite fashion
+        mol, mmap3, gmap3 =  cctk.Group.add_group_to_molecule(mol, group2, h1, return_mapping=True)
+        mol = cctk.Group.add_group_to_molecule(mol, group1, mmap3[h2])
+
+        #### relabel new graph to match original molecule
+        return mol.renumber_to_match(self)
+
+    def renumber_to_match(self, model):
+        """
+        Renumbers atoms to match ``model`` (must have isomorphic bond graph). Returns a copy of ``self`` with renumbered atoms.
+        """
+        match = nx.algorithms.isomorphism.GraphMatcher(model.bonds, self.bonds)
+        assert match.is_isomorphic(), "can't renumber non-isomorphic graphs!"
+        new_ordering = [match.mapping[x] for x in range(1, self.num_atoms() + 1)]
+        inv_mapping = {v:k  for k,v in match.mapping.items()} # bit kludgy but works
+
+        mol = copy.deepcopy(self)
+        mol.atomic_numbers = self.atomic_numbers[new_ordering]
+        mol.geometry = self.geometry[new_ordering]
+        mol.bonds = nx.relabel_nodes(self.bonds, mapping=inv_mapping, copy=True)
+
+        return mol
+
