@@ -26,10 +26,8 @@ class Ensemble:
 
     Attributes:
         name (str): name, for identification
-        _items (dict):
-            keys: ``Molecule`` objects
-            values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
-            molecules: special object that accesses the keys
+        _items (dict): keys: ``Molecule`` objects; values: dictionaries containing properties from each molecule, variable. should always be one layer deep.
+        molecules (``MoleculeIndexer``): special object that accesses the keys
     """
 
     def __init__(self, name=None):
@@ -242,7 +240,7 @@ class Ensemble:
             assert isinstance(num, int), "num must be integer"
             return list(self.values())[num]
 
-    def sort_by(self, property_name, drop_none=True, ascending=True):
+    def sort_by(self, property_name, ascending=True):
         """
         Sorts the ensemble by the specified property.
         Throws an error if the property is missing for any entries.
@@ -317,6 +315,23 @@ class Ensemble:
 
         return new_ensemble
 
+    def lowest_molecules(self, property_name, num=1):
+        """
+        Retrieves the molecules with the lowest values of the specified property.
+
+        Args:
+            property_name (str): the name of the property to sort on
+            num (int): how many molecules to return
+        Returns:
+            lowest ``Molecule`` (if num==1)
+            ``list`` of ``Molecule`` (otherwise)
+        """
+        assert isinstance(num, (int, np.integer)), f"num must be an integer, got {type(num)}"
+        assert num > 0, f"num must be > 0, got {num}"
+        sorted_ensemble = self.sort_by(property_name)
+        if num > 1:
+            return sorted_ensemble.molecules[0:num]
+        return sorted_ensemble.molecules[0]
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -544,8 +559,4 @@ class ConformationalEnsemble(Ensemble):
 
         return output
 
-    def get_lowest_energy(self, num=10):
-        return self.molecules[np.argsort(self.energies)][0:10]
 
-    def get_within_cutoff(self, cutoff=5):
-        return self.molecules[self.energies <= (np.min(self.energies) + 5)]

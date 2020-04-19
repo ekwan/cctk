@@ -130,6 +130,17 @@ class TestEnsemble(unittest.TestCase):
         sorted_ensemble[2,"energy"]=None
         with self.assertRaises(ValueError):
             sorted_ensemble = conformational_ensemble.sort_by("energy", ascending=False)
+        sorted_ensemble[2,"energy"]=0.0182782865186
+        lowest_energy_molecules = conformational_ensemble.lowest_molecules("energy",2)
+        self.assertEqual(len(lowest_energy_molecules), 2)
+        energy0 = sorted_ensemble.get_property(lowest_energy_molecules[0], "energy")
+        self.assertEqual(energy0, 0.0140132996483)
+        energy1 = sorted_ensemble.get_property(lowest_energy_molecules[1], "energy")
+        self.assertEqual(energy1, 0.0163679933924)
+        lowest_molecule = conformational_ensemble.lowest_molecules("energy",1)
+        self.assertTrue(isinstance(lowest_molecule, cctk.Molecule))
+        energy0 = sorted_ensemble.get_property(lowest_molecule, "energy")
+        self.assertEqual(energy0, 0.0140132996483)
 
 if __name__ == '__main__':
     unittest.main()

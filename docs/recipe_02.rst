@@ -137,3 +137,25 @@ Sorting Ensembles
 
     sorted_ensemble = ensemble.sort_by("energy", ascending=False)
 
+"""""""""""""""""""""""
+Lowest Energy Molecules
+"""""""""""""""""""""""
+
+- Use ``ensemble.lowest_molecules(property_name, num=1)`` to get ``num`` Molecules
+  that have the lowest value of ``property_name``.
+- If ``num`` is 1, the result is a Molecule.  If ``num`` is more than 1, the
+  result is a list.
+- Sorting by energy only makes sense for an `ConformationalEnsemble`, but is not
+  forbidden for an `Ensemble`.
+
+::
+
+    lowest_energy_molecules = ensemble.lowest_molecules("energy",2)
+    assert len(lowest_energy_molecules) == 2
+
+    lowest_energy_molecule = ensemble.lowest_molecules("energy")
+    assert isinstance(lowest_energy_molecule, cctk.Molecule)
+
+- For more complex operations, create a `pandas` ``DataFrame``, determine the indices
+  of interest, and index the ``Ensemble`` to create a sub-Ensemble.
+
