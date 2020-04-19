@@ -509,7 +509,7 @@ class GaussianFile(File):
 
         This only checks the last molecule in ``self.ensemble``, for now.
         """
-        if self.successful_terminations:
+        if self.successful_terminations > 0:
             if self.successful_terminations == 1 and ((JobType.OPT in self.job_types) and (JobType.FREQ in self.job_types)):
                 pass # opt freq jobs should have two terminations
             for job_type in self.job_types:

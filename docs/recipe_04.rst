@@ -46,3 +46,16 @@ Atom Selection
     fluorine_atom_numbers == [22, 23, 24, 25]
 
 
+"""""""""""""""""""""
+Renumbering Molecules
+"""""""""""""""""""""
+- *networkx* can automatically renumber molecules with isomorphic bonding graphs to match each other.
+- If two different conformers/isomers (all possessing the same bonds between the same atoms) have differently numbered atoms, the numbering can be updated by ``renumber_to_match()``.
+
+::
+
+    assert isinstance(mol1, cctk.Molecule)
+    assert isinstance(mol2, cctk.Molecule)
+
+    mol2 = mol2.renumber_to_match(mol1)
+

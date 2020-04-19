@@ -26,6 +26,9 @@ Measuring Distances and Angles
     # measure dihedral angle between atoms 1, 2, 3, and 4 in degrees
     dihedral_angle = molecule.get_dihedral(1, 2, 3, 4)
 
+    # alternately, all get_ or set_ methods will also take a list of atom numbers
+    dihedral_angle = molecule.get_dihedral(atoms=[1, 2, 3, 4])
+
 """"""""""""""""""""""""""""
 Setting Distances and Angles
 """"""""""""""""""""""""""""
@@ -61,6 +64,9 @@ Setting Distances and Angles
     molecule2.set_dihedral(*atom_tuple, 157)
     atom_list = [1, 7, 2, 8]
     molecule2.set_dihedral(*atom_list, 157)
+
+    # or just pass the list directly!
+    molecule2.set_dihedral(atoms=atom_list)
 
 """"""""""""""""""""
 Checking For Clashes

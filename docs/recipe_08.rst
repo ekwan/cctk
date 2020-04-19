@@ -58,9 +58,12 @@ Name                                Synonyms
     trifluoroacetic_acid = cctk.Group.add_group_to_molecule(formic_acid, trifluoromethyl, 4)
     assert isinstance(trifluoroacetic_acid, cctk.Molecule)
 
+    # if we want to track old atom numbers in the new molecule, we can return a dictionary converting between old and new numberings
+    trifluoroacetic_acid, m_map, g_map = cctk.Group.add_group_to_molecule(formic_acid, trifluoromethyl, 4, return_mapping=True)
+    # now mmap[1] tells us the new number of atom #1 in formic acid and gmap[1] tells us the new number of atom #1 in the trifluoromethyl group
 
 """"""""""""""""""""""
-Aligning Two Molecules
+Creating a New Group
 """"""""""""""""""""""
 
 - We can create a new ``Group`` object from any molecule by specifying which atom to make the attachment point from. 
@@ -77,4 +80,18 @@ Aligning Two Molecules
     new_mol = cctk.Group.add_group_to_molecule(acetaldehyde, group, 5)
     file.write_file("1,4-butanedione.gjf", molecule=new_mol)
 
+    # we can also define a group by using the remove_group_from_molecule function
+    # this code will split the molecule along the C1–C7 bond -- the C1 fragment will become a molecule and the C7 fragment will become a group
+    alanine = cctk.GaussianFile.read_file("alanine.gjf").get_molecule().assign_connectivity()
+    molecule, carboxyl_group = cctk.Group.remove_group_from_molecule(alanine, 1, 7)
 
+""""""""""""""""
+Epimerization
+""""""""""""""""
+
+- *cctk* can automatically combine group addition/removal to epimerize stereogenic centers.
+
+::
+
+    # exchanges substituent atoms sub1 and sub2 (and attached groups) around atom center
+    enantiomer = molecule.epimerize(center, sub1, sub2)
