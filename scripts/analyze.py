@@ -25,10 +25,16 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
     if isinstance(output_file, list):
         output_file = output_file[-1]
 
-    results.add_molecule(*list(output_file.ensemble.items())[-1])
-    results[output_file.get_molecule(), "iterations"] = len(output_file.ensemble)
-    results[output_file.get_molecule(), "success"] = output_file.successful_terminations
-    results[output_file.get_molecule(), "num_imag"] = output_file.num_imaginaries()
+    molecule = None
+    if output_file.successful_terminations:
+        results.add_molecule(*list(output_file.ensemble.items())[-1])
+        molecule = output_file.ensemble.molecules[-1]
+    else:
+        results.add_molecule(*list(output_file.ensemble.items())[-2])
+        molecule = output_file.ensemble.molecules[-2]
+    results[molecule, "iterations"] = len(output_file.ensemble)
+    results[molecule, "success"] = output_file.successful_terminations
+    results[molecule, "num_imag"] = output_file.num_imaginaries()
 
 if len(results) == 0:
     print("no jobs to analyze!")
