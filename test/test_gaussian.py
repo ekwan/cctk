@@ -20,7 +20,7 @@ class TestGaussian(unittest.TestCase):
 
     def test_read_out_file(self):
         path = "test/static/gaussian_file.out"
-        file = cctk.GaussianFile.read_file(path)
+        file = cctk.GaussianFile.read_file(path, extended_opt_info=True)
         self.assertEqual(file.route_card, "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)")
         self.assertDictEqual(file.link0, {"mem": "32GB",  "nprocshared": "16"})
         self.assertListEqual(file.job_types, [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP])
@@ -41,6 +41,11 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(file.ensemble[0, "rms_force"], 0.000009)
         self.assertEqual(file.ensemble[0, "max_displacement"], 0.002266)
         self.assertEqual(file.ensemble[0, "rms_displacement"], 0.000547)
+        self.assertEqual(file.ensemble[0, "max_gradient"], 0.000048660)
+        self.assertEqual(file.ensemble[0, "rms_gradient"], 0.000012560)
+        self.assertEqual(file.ensemble[0, "max_internal_force"], 0.000033913)
+        self.assertEqual(file.ensemble[0, "rms_internal_force"], 0.000008756)
+        self.assertEqual(file.ensemble[0, "predicted_change_in_energy"], float("-5.572519e-08"))
 
         old_path = "test/static/gaussian_file.gjf"
         new_path = "test/static/new_gjf.gjf"

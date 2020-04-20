@@ -255,7 +255,7 @@ def read_bonds(lines):
         return None
 
 
-def find_parameter(lines, parameter, expected_length, which_field, split_on=None):
+def find_parameter(lines, parameter, expected_length, which_field, split_on=None, cast_to_float=True):
     """
     Helper method to search through the output file and find key forces and displacements.
 
@@ -265,6 +265,7 @@ def find_parameter(lines, parameter, expected_length, which_field, split_on=None
         expected_length (int): how many fields there should be
         which_field (int): which field the parameter is (zero-indexed)
         split_on (str): additional non-space field to split
+        cast_to_float (Bool): whether or not to cast extracted value to float
     Returns:
         a list of all the extracted values
     """
@@ -295,10 +296,13 @@ def find_parameter(lines, parameter, expected_length, which_field, split_on=None
                 fields = list(filter(None, fields))
 
                 if len(fields) == expected_length:
-                    try:
-                        matches.append(float(fields[which_field]))
-                    except:
-                        pass
+                    if cast_to_float:
+                        try:
+                            matches.append(float(fields[which_field]))
+                        except:
+                            pass
+                    else:
+                        matches.append(fields[which_field])
         return matches
 
 

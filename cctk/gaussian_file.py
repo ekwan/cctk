@@ -56,7 +56,7 @@ class JobType(Enum):
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
-    "opt": ["rms_displacement", "rms_force", "max_displacement", "max_force"],
+    "opt": ["rms_displacement", "rms_force",],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
     "nmr": ["isotropic_shielding",],
     "pop": [],
@@ -229,7 +229,7 @@ class GaussianFile(File):
             return list()
 
     @classmethod
-    def read_file(cls, filename, return_lines=False):
+    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
         Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
@@ -241,6 +241,8 @@ class GaussianFile(File):
         Args:
             filename (str): path to the out file
             return_lines (Bool): whether the lines of the file should be returned
+            extended_opt_info (Bool): if full parameters about each opt step should be collected
+                (by default, only ``rms_displacement`` and ``rms_force`` are collected)
         Returns:
             ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
             (optional) the lines of the file (or list of lines of file for Link1 files)
@@ -310,14 +312,29 @@ class GaussianFile(File):
             if JobType.OPT in job_types:
                 rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
                 rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
-                max_forces = parse.find_parameter(lines, "Maximum Force", expected_length=5, which_field=2)
-                max_displacements = parse.find_parameter(lines, "Maximum Displacement", expected_length=5, which_field=2)
+
+                if extended_opt_info:
+                    max_forces = parse.find_parameter(lines, "Maximum Force", expected_length=5, which_field=2)
+                    max_displacements = parse.find_parameter(lines, "Maximum Displacement", expected_length=5, which_field=2)
+                    max_gradients = parse.find_parameter(lines, "Cartesian Forces:", expected_length=6, which_field=3)
+                    rms_gradients = parse.find_parameter(lines, "Cartesian Forces:", expected_length=6, which_field=5)
+                    max_int_forces = parse.find_parameter(lines, "Internal  Forces:", expected_length=6, which_field=3)
+                    rms_int_forces = parse.find_parameter(lines, "Internal  Forces:", expected_length=6, which_field=5)
+                    delta_energy = parse.find_parameter(lines, "Predicted change in Energy", expected_length=4, which_field=3, cast_to_float=False)
 
                 for idx, force in enumerate(rms_forces):
                     properties[idx]["rms_force"] = force
                     properties[idx]["rms_displacement"] = rms_displacements[idx]
-                    properties[idx]["max_force"] = max_forces[idx]
-                    properties[idx]["max_displacement"] = max_displacements[idx]
+
+                    if extended_opt_info:
+                        properties[idx]["max_force"] = max_forces[idx]
+                        properties[idx]["max_displacement"] = max_displacements[idx]
+                        properties[idx]["max_gradient"] = max_gradients[idx]
+                        properties[idx]["rms_gradient"] = rms_gradients[idx]
+                        properties[idx]["max_internal_force"] = max_int_forces[idx]
+                        properties[idx]["rms_internal_force"] = rms_int_forces[idx]
+                        change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
+                        properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
 
             if JobType.FREQ in job_types:
                 enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
