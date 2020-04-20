@@ -37,6 +37,11 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(mol.charge, 0)
         self.assertEqual(mol.multiplicity, 1)
 
+        self.assertEqual(file.ensemble[0, "max_force"], 0.000034)
+        self.assertEqual(file.ensemble[0, "rms_force"], 0.000009)
+        self.assertEqual(file.ensemble[0, "max_displacement"], 0.002266)
+        self.assertEqual(file.ensemble[0, "rms_displacement"], 0.000547)
+
         old_path = "test/static/gaussian_file.gjf"
         new_path = "test/static/new_gjf.gjf"
 

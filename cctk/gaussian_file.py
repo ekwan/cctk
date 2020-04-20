@@ -56,7 +56,7 @@ class JobType(Enum):
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
-    "opt": ["rms_displacement", "rms_force", ],
+    "opt": ["rms_displacement", "rms_force", "max_displacement", "max_force"],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
     "nmr": ["isotropic_shielding",],
     "pop": [],
@@ -304,15 +304,20 @@ class GaussianFile(File):
                 properties[idx]["scf_iterations"] = scf_iterations[idx]
                 properties[idx]["link1_idx"] = link1idx
                 properties[idx]["filename"] = filename
+                properties[idx]["iteration"] = idx
 
             #### now for some job-type specific attributes
             if JobType.OPT in job_types:
                 rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
                 rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+                max_forces = parse.find_parameter(lines, "Maximum Force", expected_length=5, which_field=2)
+                max_displacements = parse.find_parameter(lines, "Maximum Displacement", expected_length=5, which_field=2)
 
                 for idx, force in enumerate(rms_forces):
                     properties[idx]["rms_force"] = force
                     properties[idx]["rms_displacement"] = rms_displacements[idx]
+                    properties[idx]["max_force"] = max_forces[idx]
+                    properties[idx]["max_displacement"] = max_displacements[idx]
 
             if JobType.FREQ in job_types:
                 enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
