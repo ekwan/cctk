@@ -120,4 +120,5 @@ class OneIndexedArray(np.ndarray):
         for idx in range(1,len(self)+1):
             yield self.__getitem__(idx)
 
-
+    def __hash__(self):
+        return hash(self.data.tobytes())

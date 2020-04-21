@@ -100,7 +100,7 @@ class TestEnsemble(unittest.TestCase):
         self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
 
         ensemble = cctk.ConformationalEnsemble()
-        for i,molecule in enumerate(mols.molecules):
+        for i, molecule in enumerate(mols.molecules):
             ensemble.add_molecule(molecule)
             ensemble[molecule,"test_property"]=i
 

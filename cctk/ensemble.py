@@ -1,7 +1,5 @@
-import sys
-import re
+import sys, re, copy
 import numpy as np
-import copy
 
 import cctk
 from cctk import Molecule
@@ -266,7 +264,7 @@ class Ensemble:
             new_indices = np.flip(new_indices)
         return self[[new_indices]]
 
-    def add_molecule(self, molecule, properties={}, copy=False):
+    def add_molecule(self, molecule, properties=None, copy=False):
         """
         Adds a molecule to the ensemble.
 
@@ -277,10 +275,17 @@ class Ensemble:
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
-        assert isinstance(properties, dict), f"properties must be a dict and not type {type(properties)}"
 
         if copy:
             molecule = copy.deepcopy(molecule)
+
+        if properties is None:
+            #### empty dicts all point to the same memory address by default, so need to prevent that behavior by initializing non-empty dict
+            properties = {"placeholder": 1}
+            del properties["placeholder"]
+
+        assert isinstance(properties, dict), f"properties must be a dict and not type {type(properties)}"
+
         self._items[molecule] = properties
 
     def _check_molecule_number(self, number):
@@ -348,7 +353,7 @@ class ConformationalEnsemble(Ensemble):
         else:
             return f"ConformationalEnsemble ({len(self._items)} molecules, {n_atoms} atoms)"
 
-    def add_molecule(self, molecule, properties={}, copy=False):
+    def add_molecule(self, molecule, properties=None, copy=False):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
