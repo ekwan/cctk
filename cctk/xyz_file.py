@@ -36,7 +36,6 @@ class XYZFile(File):
         except:
             raise ValueError("can't get the number of atoms from the first line!")
 
-        assert num_atoms == (len(lines) - 2), "wrong number of atoms!"
 
         title = lines[1]
 
@@ -44,15 +43,23 @@ class XYZFile(File):
         geometry = np.zeros(shape=(num_atoms, 3))
 
         for index, line in enumerate(lines[2:]):
+            # ignore blank lines
+            if len(line.strip()) == 0:
+                continue
+
             pieces = list(filter(None, line.split(" ")))
             try:
-                atomic_numbers[index] = int(get_number(pieces[0]))
+                if re.match("[0-9]", pieces[0]):
+                    atomic_numbers[index] = int(pieces[0])
+                else:
+                    atomic_numbers[index] = int(get_number(pieces[0]))
                 geometry[index][0] = float(pieces[1])
                 geometry[index][1] = float(pieces[2])
                 geometry[index][2] = float(pieces[3])
             except:
-                raise ValueError(f"can't parse line {index+2}!")
+                raise ValueError(f"can't parse line {index+2}: {line}")
 
+        assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
         molecule = Molecule(atomic_numbers, geometry)
         return XYZFile(molecule, title)
 

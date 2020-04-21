@@ -468,7 +468,7 @@ class ConformationalEnsemble(Ensemble):
         """
         Aligns every geometry in this ensemble and then creates a new ensemble that contains only the non-redundant conformers.
         If energies are available, the lowest energy conformer will be kept for every redundancy.
-        The current ensemble will not be modified.
+        The current ensemble will not be modified.  The resulting ensemble will be sorted by energy (if available).
 
         Args:
             RMSD_cutoff (float): remove conformers that are more similar than this threshold
