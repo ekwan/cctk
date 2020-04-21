@@ -93,6 +93,28 @@ class TestEnsemble(unittest.TestCase):
             self.assertTrue(isinstance(m, cctk.Molecule))
             self.assertTrue(isinstance(p, dict))
 
+    def test_ensemble_indexing2(self):
+        path = "test/static/gaussian_file.out"
+        file = cctk.GaussianFile.read_file(path)
+        mols = file.ensemble
+        self.assertTrue(isinstance(mols, cctk.ConformationalEnsemble))
+
+        ensemble = cctk.ConformationalEnsemble()
+        for i,molecule in enumerate(mols.molecules):
+            ensemble.add_molecule(molecule)
+            ensemble[molecule,"test_property"]=i
+
+        self.assertTrue(len(ensemble)==3)
+        self.assertListEqual(list(ensemble[:,"test_property"]), [0, 1, 2])
+
+        ensemble = cctk.Ensemble()
+        for i,molecule in enumerate(mols.molecules):
+            ensemble.add_molecule(molecule)
+            ensemble[molecule,"test_property"]=i
+
+        self.assertTrue(len(ensemble)==3)
+        self.assertListEqual(list(ensemble[:,"test_property"]), [0, 1, 2])
+
     def test_ensemble_properties(self):
         filename = "test/static/gaussian_file.out"
         gaussian_file = cctk.GaussianFile.read_file(filename)
