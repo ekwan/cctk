@@ -110,7 +110,7 @@ class Molecule:
     def __hash__(self):
         return hash(id(self))
 
-    def assign_connectivity(self, cutoff=0.5):
+    def assign_connectivity(self, cutoff=0.0):
         """
         Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded.
 
