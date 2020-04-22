@@ -37,7 +37,12 @@ class MOL2File(File):
         file = MOL2File(name=name)
 
         (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
-        atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
+        atomic_numbers = []
+        for symbol in symbols:
+            symbol = re.sub("[^a-zA-Z]", "", symbol)
+            atomic_number = get_number(symbol)
+            atomic_numbers.append(atomic_number)
+        atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
 
         if conformers == True:
             file.ensemble = ConformationalEnsemble()
