@@ -14,6 +14,7 @@ from cctk.helper_functions import (
     compute_unit_vector,
     get_covalent_radius,
     get_isotopic_distribution,
+    compute_chirality,
 )
 
 class Molecule:
@@ -44,7 +45,6 @@ class Molecule:
             raise ValueError("length of geometry and atomic_numbers does not match!")
 
         if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
-            print(atomic_numbers)
             raise ValueError("invalid atom list")
 
         if len(geometry) == 0:
@@ -281,6 +281,8 @@ class Molecule:
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+
         bond_order = self.get_bond_order(atom1, atom2)
         if self.bonds.has_edge(atom1, atom2):
             self.bonds.remove_edge(atom1, atom2)
@@ -315,6 +317,7 @@ class Molecule:
         """
 
         self._check_atom_number(atom)
+
         fragments = nx.connected_components(self.bonds)
 
         for fragment in fragments:
@@ -1272,6 +1275,8 @@ class Molecule:
         self._check_atom_number(substituent1)
         self._check_atom_number(substituent2)
 
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+
         adj = self.get_adjacent_atoms(center_atom)
         assert len(adj) == 4, "center atom must be making 4 bonds!"
         assert substituent1 in adj, "1st substituent is not bonded to center atom!"
@@ -1289,21 +1294,144 @@ class Molecule:
         mol = cctk.Group.add_group_to_molecule(mol, group1, mmap3[h2])
 
         #### relabel new graph to match original molecule
-        return mol.renumber_to_match(self)
+        which = self._get_stereogenic_centers().remove(center_atom)
+        return mol.renumber_to_match(self, check_chirality=which)
 
-    def renumber_to_match(self, model):
+    def renumber_to_match(self, model, check_chirality="all"):
         """
         Renumbers atoms to match ``model`` (must have isomorphic bond graph). Returns a copy of ``self`` with renumbered atoms.
+
+        Args:
+            model (cctk.Molecule): isomorphic molecule to renumber by
+            check_chirality (list of atomic numbers): atomic numbers to check, to prevent inversion due to graph isomorphism.
+                Alternatively ``None`` will prevent any checking and "all" will use ``self._get_stereogenic_centers()``.
+
+        Returns:
+            new ``Molecule`` object
         """
-        match = nx.algorithms.isomorphism.GraphMatcher(model.bonds, self.bonds)
+
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+
+        #### use networkx to generate mapping
+        #### you need the node matcher to distinguish between e.g. H, F, Cl
+        self._add_atomic_numbers_to_nodes()
+        model._add_atomic_numbers_to_nodes()
+        nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
+
+        match = nx.algorithms.isomorphism.GraphMatcher(model.bonds, self.bonds, node_match=nm)
         assert match.is_isomorphic(), "can't renumber non-isomorphic graphs!"
         new_ordering = [match.mapping[x] for x in range(1, self.num_atoms() + 1)]
         inv_mapping = {v:k  for k,v in match.mapping.items()} # bit kludgy but works
 
+        #### create renumbered molecule
         mol = copy.deepcopy(self)
         mol.atomic_numbers = self.atomic_numbers[new_ordering]
         mol.geometry = self.geometry[new_ordering]
         mol.bonds = nx.relabel_nodes(self.bonds, mapping=inv_mapping, copy=True)
 
+        if check_chirality == "all":
+            check_chirality = mol._get_stereogenic_centers()
+
+        #### diastereotopic protons get scrambled by the above code so we gotta go through and fix all of them
+        #### this happens because networkx doesn't store chirality - a known limitation of graph molecular encoding!
+        if isinstance(check_chirality, list):
+            #### find all the differences and exchange them
+            mol_report = mol.get_chirality_report(check_chirality)
+            model_report = model.get_chirality_report(check_chirality)
+            for center in check_chirality:
+                if mol_report[center] != model_report[center]:
+                    mol.exchange_identical_substituents(center)
+                    mol_report = mol.get_chirality_report(check_chirality)
+
+            #### check that we actually fixed all the problems
+            mol_report = mol.get_chirality_report(check_chirality)
+            for center in check_chirality:
+                assert mol_report[center] != model_report[center], f"chirality still doesn't match at atom {center}!!"
+
         return mol
 
+    def _get_stereogenic_centers(self):
+        """
+        Returns every atom making 4 or more bonds. A bit misleading, since diastereotopic protons/meso protons are also counted.
+        """
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        num_neighbors = np.array([len(list(self.bonds[x])) for x in range(1, self.num_atoms() + 1)])
+        return [int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)] # love me some off-by-one indexing errors
+
+    def get_chirality_report(self, centers=None):
+        """
+        Computes chirality at stereogenic centers.
+
+        Args:
+            centers (list): atomic numbers to check. defaults to all centers with 4+ substituents.
+
+        Returns:
+            dict with centers as keys and ±1 as values
+        """
+        if centers is None:
+            centers = self._get_stereogenic_centers()
+
+        assert isinstance(centers, list)
+
+        results = {}
+        for center in centers:
+            neighbors = list(self.bonds[center])
+            assert len(neighbors) >= 4, f"atom {center} has fewer than 4 neighbors!"
+            results[center] = compute_chirality(*[self.get_vector(n, center) for n in neighbors])
+
+        return results
+
+    def _get_stereogenic_centers(self):
+        """
+        Returns every atom making 4 or more bonds. A bit misleading, since diastereotopic protons/meso protons are also counted.
+        """
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        num_neighbors = np.array([len(list(self.bonds[x])) for x in range(1, self.num_atoms() + 1)])
+        return [int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)] # love me some off-by-one indexing errors
+
+    def get_chirality_report(self, centers=None):
+        """
+        Computes chirality at stereogenic centers.
+
+        Args:
+            centers (list): atomic numbers to check. defaults to all centers with 4+ substituents.
+
+        Returns:
+            dict with centers as keys and ±1 as values
+        """
+        if centers is None:
+            centers = self._get_stereogenic_centers()
+
+        assert isinstance(centers, list)
+
+        results = {}
+        for center in centers:
+            neighbors = list(self.bonds[center])
+            assert len(neighbors) >= 4, f"atom {center} has fewer than 4 neighbors!"
+            results[center] = compute_chirality(*[self.get_vector(n, center) for n in neighbors])
+
+        return results
+
+    def exchange_identical_substituents(self, center):
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        self._add_atomic_numbers_to_nodes()
+        neighbors = list(self.bonds[center])
+
+        for i in range(len(neighbors)):
+            for j in range(i+1, len(neighbors)):
+                _, frag1 = self._get_bond_fragments(center, neighbors[i])
+                _, frag2 = self._get_bond_fragments(center, neighbors[j])
+
+                graph1 = self.bonds.subgraph(frag1)
+                graph2 = self.bonds.subgraph(frag2)
+                nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
+                match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
+
+                if match.is_isomorphic():
+                    mol = copy.deepcopy(self)
+                    for k,v in match.mapping.items():
+                        mol.swap_atom_numbers(k, v)
+                    return mol
+
+    def _add_atomic_numbers_to_nodes(self):
+        nx.set_node_attributes(self.bonds, {z: {"atomic_number": self.atomic_numbers[z]} for z in range(1, self.num_atoms() +  1)})

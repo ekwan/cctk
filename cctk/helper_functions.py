@@ -484,3 +484,53 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
     scaled_shifts = np.array(all_scaled_shifts)
     shift_labels = np.array(all_shift_labels)
     return scaled_shifts, shift_labels
+
+def compute_chirality(v1, v2, v3, v4):
+    """
+    Given 4 bond vectors, returns 1 or -1 based on chirality.
+    For proper Cahn–Ingold–Prelog results, vectors should be passed from highest to lowest priority; however, any predictable order will give meaningful results.
+
+    Args:
+        v1 (np.ndarray): 3D bond vector
+        v2 (np.ndarray): 3D bond vector
+        v3 (np.ndarray): 3D bond vector
+        v4 (np.ndarray): 3D bond vector
+
+    Returns:
+        value of 1 (R by CIP) or -1 (S by CIP)
+    """
+    assert (isinstance(v1, np.ndarray) and len(v1) == 3), "v1 needs to be a 3-element np.ndarray!"
+    assert (isinstance(v2, np.ndarray) and len(v2) == 3), "v2 needs to be a 3-element np.ndarray!"
+    assert (isinstance(v3, np.ndarray) and len(v3) == 3), "v3 needs to be a 3-element np.ndarray!"
+    assert (isinstance(v4, np.ndarray) and len(v4) == 3), "v4 needs to be a 3-element np.ndarray!"
+
+    e1 = np.array([1, 0, 0])
+    e2 = np.array([0, 1, 0])
+    e3 = np.array([0, 0, 1])
+
+    # rotate v4 so that it's pointing back!
+    axis1 = np.cross(v4, e1)
+    theta1 = compute_angle_between(e1, v4)
+
+    R1 = compute_rotation_matrix(axis1, theta1)
+    v1 = R1 @ v1
+    v2 = R1 @ v2
+    v3 = R1 @ v3
+    v4 = R1 @ v4
+
+    assert 1.0 > compute_angle_between(v4, e1), "rotating v4 failed"
+
+    # rotate v1 so that it's pointing up!
+    axis2 = v4
+    theta2 = compute_angle_between(e3, np.array([0, 0, v1[2]])) # projection of v1 onto e3
+
+    R2 = compute_rotation_matrix(axis2, -theta2)
+    v1 = R2 @ v1
+    v2 = R2 @ v2
+    v3 = R2 @ v3
+    v4 = R2 @ v4
+
+    assert 1.0 > compute_angle_between(v4, e1), "rotating v1 failed"
+    assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), "rotating v1 failed"
+
+    return np.sign(v2[1])

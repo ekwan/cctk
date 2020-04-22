@@ -159,11 +159,15 @@ class TestMolecule(unittest.TestCase):
 
         self.assertFalse(np.allclose(mol.atomic_numbers, mol2.atomic_numbers))
         self.assertFalse(np.allclose(mol.geometry, mol2.geometry))
-#        self.assertFalse(nx.is_isomorphic(mol.bonds, mol2.bonds))
 
         self.assertTrue(np.allclose(mol.atomic_numbers, mol3.atomic_numbers))
         self.assertTrue(np.allclose(mol.geometry, mol3.geometry))
-#        self.assertTrue(nx.is_isomorphic(mol.bonds, mol3.bonds))
+
+    def test_chirality(self):
+        mol = self.load_molecule().assign_connectivity()
+        self.assertListEqual(mol._get_stereogenic_centers(), [3, 5, 11, 13, 18, 28])
+
+        mol.get_chirality_report()
 
 if __name__ == '__main__':
     unittest.main()
