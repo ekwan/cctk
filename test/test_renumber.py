@@ -14,7 +14,7 @@ class TestRenumber(unittest.TestCase):
             filename = f"test/static/renumber_{i}.gjf"
             gaussian_file = cctk.GaussianFile.read_file(filename)
             molecule = gaussian_file.get_molecule()
-            molecule.assign_connectivity(cutoff=0.0)
+            molecule.assign_connectivity(cutoff=0.1)
             original_molecules[i] = molecule
 
         # function for checking if two molecules have the same numbering
@@ -50,7 +50,7 @@ class TestRenumber(unittest.TestCase):
                 positions_a1, positions_a2 = geometry[a1].copy(), geometry[a2].copy()
                 geometry[a1] = positions_a2
                 geometry[a2] = positions_a1
-            molecule2.assign_connectivity(cutoff=0.0)
+            molecule2.assign_connectivity(cutoff=0.1)
             return molecule2
 
         # check original molecules
@@ -68,8 +68,9 @@ class TestRenumber(unittest.TestCase):
             original_molecule = original_molecules[i]
             for j in range(n_permutations_per_molecule):
                 permuted_molecule = permute(original_molecule)
+                renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
                 try:
-                    renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
+#                    renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
                     check_numbering(original_molecule, renumbered_molecule, f"mol. {i} vs. permuted")
                 except Exception as e:
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_1_template.gjf", template_molecule, "#p")
