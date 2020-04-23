@@ -123,6 +123,32 @@ Example: ``opt freq``
     # enthalpy is only calculated for the final geometry of the optimization
     ensemble[:,"enthalpy"] = [None, None, -1159.314817]
 
+""""""""""""""""""""""""
+Correcting Free Energies
+""""""""""""""""""""""""
+
+- Low frequencies are generally unreliable.
+- Cramer and Truhlar have proposed moving all the frequencies below 100 cm-1 up to 100 cm-1.
+- This function calculates this corrected "quasiharmonic" free energy.
+- Acknowledgement: Colin Lam
+
+::
+
+    # get data
+    file = cctk.GaussianFile.read_file("test/static/diiron_complex.out")
+    ensemble = file.ensemble
+    molecule = ensemble.molecules[-1]
+    properties_dict = ensemble.get_properties_dict(molecule)
+    free_energy = properties_dict["gibbs_free_energy"]
+    frequencies = properties_dict["frequencies"]  # cm-1
+    free_energy == -1975.998622  # hartree
+
+    # calculate corrected free energy
+    corrected_free_energy = cctk.helper_functions.get_corrected_free_energy(free_energy, frequencies,
+                                                                            frequency_cutoff=100.0,
+                                                                            temperature=298.15)
+    corrected_free_energy == -1975.9949313424277  # hartree
+
 """""""""""""""""
 Sorting Ensembles
 """""""""""""""""
