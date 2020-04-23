@@ -4,7 +4,9 @@ import numpy as np
 from enum import Enum
 
 from cctk import File, Ensemble, Molecule, ConformationalEnsemble, OneIndexedArray
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
+from cctk.helper_functions import get_symbol, compute_distance_between, \
+                                  compute_angle_between, compute_dihedral_between, \
+                                  get_number, get_corrected_free_energy
 
 import cctk.parse_gaussian as parse
 
@@ -340,14 +342,14 @@ class GaussianFile(File):
                 enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
                 if len(enthalpies) == 1:
                     properties[-1]["enthalpy"] = enthalpies[0]
-                elif len(enthalpies) > 1:
-                    raise ValueError("too many enthalpies found!")
+                elif len(enthalpies) != 1:
+                    raise ValueError("unexpected # of enthalpies found!")
 
                 gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
                 if len(gibbs_vals) == 1:
                     properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
-                elif len(gibbs_vals) > 1:
-                    raise ValueError("too many gibbs free energies found!")
+                elif len(gibbs_vals) != 1:
+                    raise ValueError("unexpected # gibbs free energies found!")
 
                 frequencies = []
                 try:
@@ -357,6 +359,17 @@ class GaussianFile(File):
                     properties[-1]["frequencies"] = sorted(frequencies)
                 except:
                     raise ValueError("error finding frequencies")
+
+                #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
+                try:
+                    temperature = parse.find_parameter(lines, "Temperature", expected_length=6, which_field=1)
+                    properties[-1]["temperature"] = temperature[0]
+                    corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
+                                                                      frequency_cutoff=100.0, temperature=temperature[0])
+                    properties[-1]["quasiharmonic_gibbs_free_energy"] = corrected_free_energy
+                except Exception as e:
+                    print(e)
+                    raise ValueError("temperature not found")
 
             if JobType.NMR in job_types:
                 assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"

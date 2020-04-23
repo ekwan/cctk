@@ -534,3 +534,51 @@ def compute_chirality(v1, v2, v3, v4):
     assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), "rotating v1 failed"
 
     return np.sign(v2[1])
+
+# constants for calculating entropy
+ENTROPY_FACTOR_1 = 1.43877695998381562 # 2.99792458E10 * 6.62606957E-34 / 1.3806488E-23
+ENTROPY_FACTOR_2 = 1.9872041348        # 8.3144621 / 4.184
+
+def get_entropy(frequencies, temperature):
+    """
+        Computes the total entropy of a given set of frequencies.
+
+        Args:
+            frequencies (list): in cm-1
+            temperature (float): in K
+
+        Returns:
+            entropy (float): in hartree
+    """
+    factor0 = ENTROPY_FACTOR_1 / temperature
+    entropy = 0.0
+    for frequency in frequencies:
+        factor = factor0 * frequency
+        temp = factor * 1.0/(math.exp(factor)-1.0) - math.log(1.0-math.exp(-factor))
+        temp = temp * ENTROPY_FACTOR_2
+        entropy += temp
+    return entropy / 627.509469
+
+def get_corrected_free_energy(free_energy, frequencies, frequency_cutoff=100.0, temperature=298.15):
+    """
+        Computes the free energy by moving all positive frequencies below ``frequency_cutoff``
+        to the cutoff.  See Cramer/Truhlar, J. Phys. Chem. B, 2011, 115, 14556.
+
+        Args:
+            free_energy (float): in hartree
+            frequencies (list): in cm-1
+            frequency_cutoff (float): in cm-1
+            temperature (float): in K
+
+        Returns:
+            corrected_free_energy (float): in hartree
+    """
+    low_frequencies = []
+    for frequency in frequencies:
+        if frequency > 0 and frequency < frequency_cutoff:
+            low_frequencies.append(frequency)
+    entropy_uncorrected = get_entropy(low_frequencies, temperature)
+    entropy_corrected = get_entropy([frequency_cutoff], temperature) * len(low_frequencies)
+    entropy_correction = (entropy_uncorrected - entropy_corrected)*temperature/1000.0
+    corrected_free_energy = free_energy + entropy_correction
+    return corrected_free_energy
