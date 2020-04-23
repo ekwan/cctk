@@ -29,12 +29,15 @@ class TestHelper(unittest.TestCase):
         ensemble = file.ensemble
         molecule = ensemble.molecules[-1]
         properties_dict = ensemble.get_properties_dict(molecule)
+        #print(properties_dict)
         free_energy = properties_dict["gibbs_free_energy"]
+        corrected_free_energy = properties_dict["quasiharmonic_gibbs_free_energy"]
         frequencies = properties_dict["frequencies"]
         self.assertLess(abs(free_energy+1975.998622), 0.00001)
+        self.assertLess(abs(corrected_free_energy+1975.9949313424), 0.00001)
         corrected_free_energy = cctk.helper_functions.get_corrected_free_energy(free_energy, frequencies,
-                                                                                frequency_cutoff=100.0, temperature=298.15)
-        self.assertLess(abs(corrected_free_energy+1975.9949313424277), 0.00001)
+                                                                                frequency_cutoff=50.0, temperature=298.15)
+        self.assertLess(abs(corrected_free_energy+1975.997664138452), 0.00001)
         #delta = (-free_energy+corrected_free_energy)*627.509469
         #print(delta)
 

@@ -127,9 +127,14 @@ Example: ``opt freq``
 Correcting Free Energies
 """"""""""""""""""""""""
 
-- Low frequencies are generally unreliable.
-- Cramer and Truhlar have proposed moving all the frequencies below 100 cm-1 up to 100 cm-1.
-- This function calculates this corrected "quasiharmonic" free energy.
+- Low frequencies are generally unreliable.  Since these frequencies contribute most to the entropy,
+  they can be a significant source of error.
+- Cramer and Truhlar have proposed moving all the frequencies below a cutoff of 100 cm-1 up to 100 cm-1.
+- ``cctk.helper_functions.get_corrected_free_energy`` calculates this corrected "quasiharmonic" free energy.
+- The quasiharmonic free energy is automatically calculated with a cutoff of 100 cm-1 and the temperature
+  that is set in the calculation.
+- You can also calculate the energy manually as shown below.  The correction algorithm assumes the same
+  temperature as in Gaussian, so custom temperatures require re-running the Gaussian job.
 - Acknowledgement: Colin Lam
 
 ::
@@ -140,14 +145,19 @@ Correcting Free Energies
     molecule = ensemble.molecules[-1]
     properties_dict = ensemble.get_properties_dict(molecule)
     free_energy = properties_dict["gibbs_free_energy"]
+    quasiharmonic_free_energy = properties_dict["quasiharmonic_gibbs_free_energy"]
     frequencies = properties_dict["frequencies"]  # cm-1
-    free_energy == -1975.998622  # hartree
+    
+    # results
+    free_energy == -1975.998622                     # hartree
+    quasiharmonic_free_energy == -1975.9949313424   # hartree
 
-    # calculate corrected free energy
+    # calculate corrected free energy with a different cutoff or temperature
     corrected_free_energy = cctk.helper_functions.get_corrected_free_energy(free_energy, frequencies,
-                                                                            frequency_cutoff=100.0,
+                                                                            frequency_cutoff=50.0,
                                                                             temperature=298.15)
-    corrected_free_energy == -1975.9949313424277  # hartree
+    corrected_free_energy == -1975.997664  # hartree
+
 
 """""""""""""""""
 Sorting Ensembles
