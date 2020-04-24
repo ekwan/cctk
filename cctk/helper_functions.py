@@ -522,18 +522,22 @@ def compute_chirality(v1, v2, v3, v4):
 
     # rotate v1 so that it's pointing up!
     axis2 = v4
-    theta2 = compute_angle_between(e3, np.array([0, 0, v1[2]])) # projection of v1 onto e3
+    theta2 = compute_angle_between(np.array([0, v1[1], v1[2]]), e3) # projection of v1 onto e2•e3 plane
 
-    R2 = compute_rotation_matrix(axis2, -theta2)
+    R2 = compute_rotation_matrix(axis2, np.sign(v1[1]) * theta2)
     v1 = R2 @ v1
     v2 = R2 @ v2
     v3 = R2 @ v3
     v4 = R2 @ v4
 
-    assert 1.0 > compute_angle_between(v4, e1), "rotating v1 failed"
-    assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), "rotating v1 failed"
+    theta2 = compute_angle_between(np.array([0, 0, v1[2]]), e3) # projection of v1 onto e3
 
-    return np.sign(v2[1])
+    assert 1.0 > compute_angle_between(v4, e1), f"rotating v4 failed - 1.0 ≤ {compute_angle_between(v4, e1)}"
+    assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), f"rotating v1 failed, - 1.0 ≤ {compute_angle_between(e3, np.array([0, 0, v1[2]]))}"
+
+    answer = np.sign(v2[1])
+    assert np.sign(v3[1]) != answer, "at this point our two substituents are on the same side of the plane that's supposed to divide them"
+    return answer
 
 # constants for calculating entropy
 ENTROPY_FACTOR_1 = 1.43877695998381562 # 2.99792458E10 * 6.62606957E-34 / 1.3806488E-23

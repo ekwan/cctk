@@ -79,5 +79,28 @@ class TestRenumber(unittest.TestCase):
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_4_renumbered.gjf", renumbered_molecule, "#p")
                     self.assertTrue(False, f"error trying to renumber:\n{e}")
 
+    def test_diastereotopicity(self):
+        mol1 = cctk.GaussianFile.read_file("test/static/chiral_fluorine.gjf").get_molecule().assign_connectivity()
+        mol2 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_2.gjf").get_molecule().assign_connectivity() # two protons switched (10 & 11)
+
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol2.atomic_numbers))
+        self.assertFalse(np.array_equal(mol1.geometry, mol2.geometry))
+
+        mol2 = mol2.renumber_to_match(mol1)
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol2.atomic_numbers))
+        self.assertTrue(np.array_equal(mol1.geometry, mol2.geometry))
+
+        mol3 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_3.gjf").get_molecule().assign_connectivity() # just a bond rotation
+        self.assertListEqual(list(mol1.get_chirality_report().values()), list(mol3.get_chirality_report().values()))
+
+        mol4 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_4.gjf").get_molecule().assign_connectivity() # two protons switched (24 & 25)
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol4.atomic_numbers))
+        self.assertFalse(np.array_equal(mol1.geometry, mol4.geometry))
+
+        mol4 = mol4.renumber_to_match(mol1)
+        print(type(mol4))
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol4.atomic_numbers))
+        self.assertTrue(np.array_equal(mol1.geometry, mol4.geometry))
+
 if __name__ == '__main__':
     unittest.main()
