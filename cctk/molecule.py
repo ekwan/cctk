@@ -1515,16 +1515,16 @@ class Molecule:
                         for k,v in match.mapping.items():
                             mol = mol.swap_atom_numbers(k, v)
 
-                    #### read all the bonds we ablated
-                    if len(cycle) == 1:
-                        mol.add_bond(frag1[-1], frag2[-1], self.get_bond_order(frag1[-1], frag2[-1]))
-                    elif len(cycle) == 2:
-                        mol.add_bond(frag1[-1], cycle[-1], self.get_bond_order(frag1[-1], cycle[-1]))
-                        mol.add_bond(frag2[-1], cycle[-1], self.get_bond_order(frag2[-1], cycle[-1]))
-                    mol.add_bond(frag1[0], cycle[0], self.get_bond_order(frag1[0], cycle[0]))
-                    mol.add_bond(frag2[0], cycle[0], self.get_bond_order(frag2[0], cycle[0]))
+                        #### redo all the bonds we ablated
+                        if len(cycle) == 1:
+                            mol.add_bond(frag1[-1], frag2[-1], self.get_bond_order(frag1[-1], frag2[-1]))
+                        elif len(cycle) == 2:
+                            mol.add_bond(frag1[-1], cycle[-1], self.get_bond_order(frag1[-1], cycle[-1]))
+                            mol.add_bond(frag2[-1], cycle[-1], self.get_bond_order(frag2[-1], cycle[-1]))
+                        mol.add_bond(frag1[0], cycle[0], self.get_bond_order(frag1[0], cycle[0]))
+                        mol.add_bond(frag2[0], cycle[0], self.get_bond_order(frag2[0], cycle[0]))
 
-                    new_returns.append(mol)
+                        new_returns.append(mol)
                 returns = returns + new_returns
         return returns
 
