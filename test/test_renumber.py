@@ -68,15 +68,15 @@ class TestRenumber(unittest.TestCase):
             original_molecule = original_molecules[i]
             for j in range(n_permutations_per_molecule):
                 permuted_molecule = permute(original_molecule)
-                renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
                 try:
-#                    renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
+                    renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
+                    cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_4_renumbered.gjf", renumbered_molecule, "#p")
                     check_numbering(original_molecule, renumbered_molecule, f"mol. {i} vs. permuted")
                 except Exception as e:
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_1_template.gjf", template_molecule, "#p")
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_2_original.gjf", original_molecule, "#p")
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_3_permuted.gjf", permuted_molecule, "#p")
-                    cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_4_renumbered.gjf", renumbered_molecule, "#p")
+#                    cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_4_renumbered.gjf", renumbered_molecule, "#p")
                     self.assertTrue(False, f"error trying to renumber:\n{e}")
 
     def test_diastereotopicity(self):
@@ -98,9 +98,34 @@ class TestRenumber(unittest.TestCase):
         self.assertFalse(np.array_equal(mol1.geometry, mol4.geometry))
 
         mol4 = mol4.renumber_to_match(mol1)
-        print(type(mol4))
         self.assertTrue(np.array_equal(mol1.atomic_numbers, mol4.atomic_numbers))
         self.assertTrue(np.array_equal(mol1.geometry, mol4.geometry))
+
+        mol5 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_5.gjf").get_molecule().assign_connectivity() # two carbons switched (16 & 17)
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol5.atomic_numbers))
+        self.assertFalse(np.array_equal(mol1.geometry, mol5.geometry))
+
+        mol5 = mol5.renumber_to_match(mol1)
+        self.assertTrue(np.array_equal(mol1.atomic_numbers, mol5.atomic_numbers))
+        self.assertTrue(np.array_equal(mol1.geometry, mol5.geometry))
+
+        mol6 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_6.gjf").get_molecule().assign_connectivity()
+        mol7 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_7.gjf").get_molecule().assign_connectivity() # switched gem-dimethyls
+        self.assertTrue(np.array_equal(mol6.atomic_numbers, mol7.atomic_numbers))
+        self.assertFalse(np.array_equal(mol6.geometry, mol7.geometry))
+
+        mol6 = mol6.renumber_to_match(mol7)
+        self.assertTrue(np.array_equal(mol6.atomic_numbers, mol7.atomic_numbers))
+        self.assertTrue(np.array_equal(mol6.geometry, mol7.geometry))
+
+        mol8 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_8.gjf").get_molecule().assign_connectivity() # meso cyclohexane ring added
+        mol9 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_9.gjf").get_molecule().assign_connectivity() # reorgnized
+        self.assertTrue(np.array_equal(mol8.atomic_numbers, mol9.atomic_numbers))
+        self.assertFalse(np.array_equal(mol8.geometry, mol9.geometry))
+
+        mol8 = mol8.renumber_to_match(mol9)
+        self.assertTrue(np.array_equal(mol8.atomic_numbers, mol9.atomic_numbers))
+        self.assertTrue(np.array_equal(mol8.geometry, mol9.geometry))
 
 if __name__ == '__main__':
     unittest.main()

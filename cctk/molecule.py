@@ -1346,23 +1346,26 @@ class Molecule:
             candidates = mol.flip_meso_rings(atoms=check_chirality)
 
             #### for each, try flipping configuration of all centers
-            for center in check_chirality:
-                if model_report[center] != mol_report[center]:
-                    candidates = mol.exchange_identical_substituents(center, self_permutations=candidates)
+            for candidate in candidates:
+                for center in check_chirality:
+                    if model_report[center] != candidate.get_chirality_report(check_chirality)[center]:
+                        try:
+                            candidate = candidate.exchange_identical_substituents(center)
+                        except ValueError as e:
+                            break
 
-            #### check that we actually fixed all the problems
-            for mol in candidates:
-                mol_report = mol.get_chirality_report(check_chirality)
-
-                all_ok = True
+                #### check that we actually fixed all the problems
+                mol_report = candidate.get_chirality_report(check_chirality)
+                all_good = True
                 for center in check_chirality:
                     if mol_report[center] != model_report[center]:
-                        all_ok = False
+                        all_good = False
+                        break
+                #### if we did, then return
+                if all_good:
+                    return candidate
 
-                if all_ok:
-                    return mol
-            else:
-                raise ValueError("none of these permutations gave us the right chirality!")
+        raise ValueError("can't get a proper renumbering")
 
     def _get_stereogenic_centers(self):
         """
@@ -1399,16 +1402,14 @@ class Molecule:
         """
         Replace homotopic/enantiotopic/diastereotopic substituents about a single atom.
 
-        Will return a list of ``Molecule`` objects with all permutations of acceptable swaps.
-
-        If a list of permuted ``Molecule`` objects is passed (as ``self_permutations``), then this code will apply this to each member.
+        If a list of permuted ``Molecule`` objects is passed (as ``self_permutations``), then this code will apply this to each member and return a list.
 
         Args:
             center (integer): atomic number of atom to swap substituents around
             self_permutations (list of Molecules): optional list of starting ``Molecule`` objects
 
         Returns:
-            list of ``Molecule`` objects
+            ``Molecule`` object (or list if ``self_permutations`` is not ``None``)
         """
         assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
         self._add_atomic_numbers_to_nodes()
@@ -1418,7 +1419,6 @@ class Molecule:
         if self_permutations is not None:
             returns = self_permutations
 
-        #### acyclic substituents first (pretty easy)
         for i in range(len(neighbors)):
             for j in range(i+1, len(neighbors)):
                 try:
@@ -1434,15 +1434,21 @@ class Molecule:
                     if match.is_isomorphic():
                         new_returns = []
                         for mol in returns:
-                            new_returns.append(copy.deepcopy(mol))
+                            new_mol = copy.deepcopy(mol)
                             for k,v in match.mapping.items():
-                                new_returns[-1] = new_returns[-1].swap_atom_numbers(k, v)
-                        returns = returns + new_returns
+                                new_mol = new_mol.swap_atom_numbers(k, v)
+                            if self_permutations is None:
+                                return new_mol
 
-                except ValueError:
+                        returns.append(new_mol)
+
+                except ValueError as e:
                     pass # probably indicates a cycle
 
-        return returns
+        if self_permutations is None:
+            raise ValueError("could not find substituents to switch")
+        else:
+            return returns
 
     def _add_atomic_numbers_to_nodes(self):
         """
@@ -1459,6 +1465,15 @@ class Molecule:
         return False
 
     def flip_meso_rings(self, atoms):
+        """
+        Returns a list of permuted molecules with various ``meso`` rings renumbered.
+
+        Args:
+            atoms (list): atomic numbers of potential atoms to consider
+
+        Returns:
+            list of ``Molecule`` objects
+        """
         #### get all rings in graph
         returns = [copy.deepcopy(self)]
         for center in atoms:
