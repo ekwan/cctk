@@ -38,8 +38,11 @@ class MOL2File(File):
 
         (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
         atomic_numbers = []
-        for symbol in symbols:
-            symbol = re.sub("[^a-zA-Z]", "", symbol)
+        for atom_type in atom_types:
+            fields = atom_type.split(".")
+            symbol = fields[0]
+        #for symbol in symbols:
+            symbol = re.sub("[^A-Za-z]","",symbol)
             atomic_number = get_number(symbol)
             atomic_numbers.append(atomic_number)
         atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
