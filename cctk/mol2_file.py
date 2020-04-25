@@ -269,7 +269,7 @@ class MOL2File(File):
                         print(f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds).")
             else:
                 n_atoms = len(all_geometries)
-                n_bonds = all_bonds.number_of_edges()
+                n_bonds = all_bonds[0].number_of_edges()
                 if print_status_messages:
                     print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
 
