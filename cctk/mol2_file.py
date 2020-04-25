@@ -36,24 +36,43 @@ class MOL2File(File):
 
         file = MOL2File(name=name)
 
-        (geometries, symbols, atom_types, bonds, conformers) = cls._read_mol2(filename, **kwargs)
-        atomic_numbers = []
-        for atom_type in atom_types:
-            fields = atom_type.split(".")
-            symbol = fields[0]
-        #for symbol in symbols:
-            symbol = re.sub("[^A-Za-z]","",symbol)
-            atomic_number = get_number(symbol)
-            atomic_numbers.append(atomic_number)
-        atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
+        (geometries, all_clean_symbols, all_symbols, all_bonds, conformers) = cls._read_mol2(filename, **kwargs)
+        assert len(all_bonds) == len(geometries)
+        for bonds in all_bonds:
+            assert isinstance(bonds, nx.Graph)
+            assert len(bonds) == len(geometries[0])
 
-        if conformers == True:
+        if conformers:
+            # convert atom types to atomic numbers
+            atomic_numbers = []
+            for atom_type in all_symbols[0]:
+                assert isinstance(atom_type,str), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
+                fields = atom_type.split(".")
+                symbol = fields[0]
+                symbol = re.sub("[^A-Za-z]","",symbol)
+                atomic_number = get_number(symbol)
+                atomic_numbers.append(atomic_number)
+            atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
+
+            # create ensemble
             file.ensemble = ConformationalEnsemble()
+            for geometry in geometries:
+                molecule = Molecule(atomic_numbers, geometry, bonds=all_bonds[0].edges, checks=False)
+                file.ensemble.add_molecule(molecule, checks=False)
         else:
             file.ensemble = Ensemble()
-
-        for geom in geometries:
-            file.ensemble.add_molecule(Molecule(atomic_numbers, geom, bonds=bonds.edges))
+            for this_symbols,geometry in zip(all_symbols,geometries):
+                atomic_numbers=[]
+                for atom_type in this_symbols:
+                    assert isinstance(atom_type,str), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
+                    fields = atom_type.split(".")
+                    symbol = fields[0]
+                    symbol = re.sub("[^A-Za-z]","",symbol)
+                    atomic_number = get_number(symbol)
+                    atomic_numbers.append(atomic_number)
+                atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
+                molecule = Molecule(atomic_numbers, geometry, bonds=bonds.edges)
+                file.ensemble.add_molecule(molecule)
 
         return file
 
@@ -74,12 +93,6 @@ class MOL2File(File):
                                                 conformers (True) or not (False).  This
                                                 latter option increases performance,
                                                 particularly for large files.
-
-            save_memory_for_conformers (bool): if True, the first dimension (geometry number) will be
-                                            dropped from the symbols and bonds to prevent
-                                            the storage of redundant information.  Thus,
-                                            symbols will be a one-dimensional ``np.ndarray`` of
-                                            ``str`` and bonds will be a single ``nx.Graph``.
 
             print_status_messages (bool): if True, update the progerss of the parsing operation to stdout.
 
@@ -125,6 +138,9 @@ class MOL2File(File):
                 in_bond_block = False
                 i += 1
                 line = lines[i]
+                if contains_conformers == True and len(all_symbols) > 0:
+                    this_symbols = all_symbols[0]
+                    this_clean_symbols = all_clean_symbols[0]
             elif line.startswith("@<TRIPOS>BOND"):
                 # update status
                 in_geometry_block = False
@@ -138,12 +154,15 @@ class MOL2File(File):
                 # initialize connectivity graph
                 if len(this_geometry) == 0:
                     raise ValueError("got to bond table without a geometry")
-                this_bonds = nx.Graph()
-                this_bonds.add_nodes_from(range(1, len(this_geometry) + 1))
+                if contains_conformers == True and len(all_bonds) > 0:
+                    this_bonds = all_bonds[0]
+                else:
+                    this_bonds = nx.Graph()
+                    this_bonds.add_nodes_from(range(1, len(this_geometry) + 1))
 
             # parse geometry if appropriate
             if in_geometry_block:
-                fields = re.split(" +", line.strip())
+                fields = line.split()
                 if len(fields) < 6:
                     print("Error parsing file:")
                     print("Line = '%s'" % line.strip())
@@ -151,13 +170,14 @@ class MOL2File(File):
                     break
                 x, y, z = float(fields[2]), float(fields[3]), float(fields[4])
                 this_geometry.append([x, y, z])
-                symbol = fields[5]
-                clean_symbol = fields[1]
-                this_symbols.append(symbol)
-                this_clean_symbols.append(clean_symbol)
+                if contains_conformers != True or len(all_symbols)==0:
+                    symbol = fields[5]
+                    clean_symbol = fields[1]
+                    this_symbols.append(symbol)
+                    this_clean_symbols.append(clean_symbol)
             elif in_bond_block:
-                fields = re.split(" +", line.strip())
-                if len(fields) == 4:
+                fields = line.split()
+                if len(fields) == 4 and (len(all_bonds)==0 or contains_conformers != True):
                     # parse bonds, checking that the bonds are increasing
                     try:
                         this_bond_number = int(fields[0])
@@ -221,19 +241,13 @@ class MOL2File(File):
         else:
             raise ValueError("contains_conformers must be 'check' or boolean")
 
-        # if requested, just store one copy of all_symbols and all_bonds
-        if save_memory_for_conformers and contains_conformers:
-            all_symbols = all_symbols[0]
-            all_clean_symbols = all_clean_symbols[0]
-            all_bonds = all_bonds[0]
-
         # return result
         n_geometries = len(all_geometries)
         if print_status_messages:
             if n_geometries > 1:
                 if contains_conformers:
                     n_atoms = len(all_geometries[0])
-                    n_bonds = all_bonds.number_of_edges()
+                    n_bonds = all_bonds[0].number_of_edges()
                     if print_status_messages:
                         print(f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds).")
                 else:

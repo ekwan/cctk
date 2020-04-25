@@ -353,7 +353,7 @@ class ConformationalEnsemble(Ensemble):
         else:
             return f"ConformationalEnsemble ({len(self._items)} molecules, {n_atoms} atoms)"
 
-    def add_molecule(self, molecule, properties=None, copy=False):
+    def add_molecule(self, molecule, properties=None, copy=False, checks=True):
         """
         Checks that the molecule contains the same atom types in the same order as existing molecules, and that the molecule has the same charge/multiplicity.
         """
@@ -368,7 +368,7 @@ class ConformationalEnsemble(Ensemble):
             if molecule.multiplicity != initial_mol.multiplicity:
                 raise ValueError("wrong spin multiplicity for this ensemble")
 
-            if not np.array_equal(molecule.atomic_numbers, initial_mol.atomic_numbers):
+            if checks and not np.array_equal(molecule.atomic_numbers, initial_mol.atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
             #### only save one copy to save space

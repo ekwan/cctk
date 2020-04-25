@@ -64,6 +64,16 @@ MOL2 Files
     # write multiple structures
     cctk.MOL2File.write_ensemble_to_file(filename2, ensemble)
 
+- Setting ``print_status_messages`` to ``True`` will print progress to stdout.
+- For large files that contain only conformers, set ``contains_conformers`` to ``True``.
+- This will skip many consistency checks and avoid the redundant copying of many
+  data structures.  This speeds up performance by over 10x.
+
+::
+
+    # faster reading of MOL2 files with conformers
+    file = cctk.MOL2File.read_file(path, print_status_messages=False, contains_conformers=True)
+
 """""""""""""
 Maestro Files
 """""""""""""

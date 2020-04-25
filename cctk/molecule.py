@@ -30,76 +30,84 @@ class Molecule:
         name (str): for identification, optional
         atomic_numbers (cctk.OneIndexedArray, dtype=np.int8): list of atomic numbers
         geometry (cctk.OneIndexedArray): list of 3-tuples of xyz coordinates - same ordering as ``atomic_numbers``
-        bonds (nx.Graph): Graph object containing connectivity information (1-indexed)
+        bonds (nx.Graph or list of tuples): connectivity graph or list of 2-tuples, with each element representing the 1-indexed atom number of a bonded pair
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
+        checks (bool): whether to check that the constructor parameters are valid
     """
 
-    def __init__(self, atomic_numbers, geometry, name=None, bonds=None, charge=0, multiplicity=1):
+    def __init__(self, atomic_numbers, geometry, name=None, bonds=None, charge=0, multiplicity=1, checks=True):
         """
         Create new Molecule object, and assign connectivity if needed.
 
         ``bonds`` must be a list of edges (i.e. an n x 2 ``numpy`` array).
         """
-        if len(atomic_numbers) != len(geometry):
-            raise ValueError("length of geometry and atomic_numbers does not match!")
+        if checks:
+            if len(atomic_numbers) != len(geometry):
+                raise ValueError("length of geometry and atomic_numbers does not match!")
 
-        if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
-            raise ValueError("invalid atom list")
+            if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
+                raise ValueError("invalid atom list")
 
-        if len(geometry) == 0:
-            raise ValueError("invalid geometry list")
+            if len(geometry) == 0:
+                raise ValueError("invalid geometry list")
 
-        try:
-            geometry = np.array(geometry)
-            geometry = geometry.astype(float)
-        except:
-            raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
-
-        if not all(all(isinstance(y, float) for y in x) for x in geometry):
-            raise TypeError("each element of self.geometry must be a 3-tuple")
-
-        if name and not isinstance(name, str):
-            raise TypeError("name must be a string!")
-
-        for atom in atomic_numbers:
             try:
-                get_symbol(atom)
-            except ValueError:
-                raise ValueError(f"unknwon atomic number {atom}")
-
-        if not isinstance(charge, int):
-            try:
-                charge = int(charge)
+                geometry = np.array(geometry)
+                geometry = geometry.astype(float)
             except:
-                raise TypeError("charge must be integer or castable to integer!")
+                raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
 
-        if not isinstance(multiplicity, int):
-            try:
-                multiplicity = int(multiplicity)
-            except:
-                raise TypeError("multiplicity must be positive integer or castable to positive integer")
-        assert multiplicity > 0, "multiplicity must be positive"
+            if not all(all(isinstance(y, float) for y in x) for x in geometry):
+                raise TypeError("each element of self.geometry must be a 3-tuple")
+
+            if name and not isinstance(name, str):
+                raise TypeError("name must be a string!")
+
+            for atom in atomic_numbers:
+                try:
+                    get_symbol(atom)
+                except ValueError:
+                    raise ValueError(f"unknwon atomic number {atom}")
+
+            if not isinstance(charge, int):
+                try:
+                    charge = int(charge)
+                except:
+                    raise TypeError("charge must be integer or castable to integer!")
+
+            if not isinstance(multiplicity, int):
+                try:
+                    multiplicity = int(multiplicity)
+                except:
+                    raise TypeError("multiplicity must be positive integer or castable to positive integer")
+            assert multiplicity > 0, "multiplicity must be positive"
 
         self.atomic_numbers = atomic_numbers.view(OneIndexedArray)
         self.geometry = geometry.view(OneIndexedArray)
-
-        if bonds:
-            for bond in bonds:
-                if len(bond) != 2:
-                    raise ValueError("while 3-center bonding is possible, it's a no-go in cctk")
-                self._check_atom_number(bond[0])
-                self._check_atom_number(bond[1])
 
         self.name = name
         self.multiplicity = multiplicity
         self.charge = charge
 
-        self.bonds = nx.Graph()
-        self.bonds.add_nodes_from(range(1, len(atomic_numbers) + 1))
-        if bonds:
+        if isinstance(bonds, nx.Graph):
+            self.bonds = bonds
+        elif isinstance(bonds, (list,np.ndarray,nx.classes.reportviews.EdgeView)):
+            if checks:
+                for bond in bonds:
+                    assert isinstance(bond, (tuple,list,np.ndarray)), f"expected a 2-iterable for bond, got {type(bond)}"
+                    assert len(bond)==2, f"unexpected number of atoms in bond, expected 2, got {len(bond)}"
+                    self._check_atom_number(bond[0])
+                    self._check_atom_number(bond[1])
+            self.bonds = nx.Graph()
+            self.bonds.add_nodes_from(range(1, len(atomic_numbers) + 1))
             for bond in bonds:
                 self.add_bond(bond[0], bond[1])
+        elif bonds is None:
+            self.bonds = nx.Graph()
+            self.bonds.add_nodes_from(range(1, len(atomic_numbers)+1))
+        else:
+            raise ValueError(f"unexpected type for bonds: {type(bonds)}")
 
     def __str__(self):
         if self.name is not None:
