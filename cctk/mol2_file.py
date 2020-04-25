@@ -273,11 +273,7 @@ class MOL2File(File):
                 if print_status_messages:
                     print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
 
-        #### sometimes these labels switch? so gotta check
-        if len(all_clean_symbols[0]) < len(all_symbols[0]):
-            return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
-        else:
-            return (all_geometries, all_symbols, all_clean_symbols, all_bonds, contains_conformers)
+        return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
 
     def get_molecule(self, num=None):
         """
