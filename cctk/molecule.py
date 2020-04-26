@@ -1304,7 +1304,8 @@ class Molecule:
         mol = cctk.Group.add_group_to_molecule(mol, group1, mmap3[h2])
 
         #### relabel new graph to match original molecule
-        which = self._get_stereogenic_centers().remove(center_atom)
+        which = self._get_stereogenic_centers()
+        which.remove(center_atom)
         return mol.renumber_to_match(self, check_chirality=which)
 
     def renumber_to_match(self, model, check_chirality="all"):
@@ -1314,7 +1315,7 @@ class Molecule:
         Args:
             model (cctk.Molecule): isomorphic molecule to renumber by
             check_chirality (list of atomic numbers): atomic numbers to check, to prevent inversion due to graph isomorphism.
-                Alternatively ``None`` will prevent any checking and "all" will use ``self._get_stereogenic_centers()``.
+                Alternatively ``None`` will prevent any checking and "all" will use ``self._get_exchangable_centers()``.
 
         Returns:
             new ``Molecule`` object
@@ -1340,8 +1341,7 @@ class Molecule:
         mol.bonds = nx.relabel_nodes(self.bonds, mapping=inv_mapping, copy=True)
 
         if check_chirality == "all":
-            check_chirality = mol._get_stereogenic_centers()
-        assert set(mol._get_stereogenic_centers()) == set(model._get_stereogenic_centers()), "something is deeply wrong here"
+            check_chirality = mol._get_exchangeable_centers()
 
         #### diastereotopic protons get scrambled by the above code so we gotta go through and fix all of them
         #### this happens because networkx doesn't store chirality - a known limitation of graph molecular encoding!
@@ -1373,7 +1373,7 @@ class Molecule:
                 if all_good:
                     return candidate
 
-        raise ValueError("can't get a proper renumbering")
+        raise ValueError("can't get a proper renumbering: are you *sure* these two molecules can have the same chirality?")
 
     def _get_stereogenic_centers(self):
         """
@@ -1382,6 +1382,26 @@ class Molecule:
         assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
         num_neighbors = np.array([len(list(self.bonds[x])) for x in range(1, self.num_atoms() + 1)])
         return [int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)] # love me some off-by-one indexing errors
+
+    def _get_exchangeable_centers(self):
+        """
+        Returns all atoms making 4 or more bonds that have two isomorphic substituents, i.e. where renumbering could be broken.
+        """
+        centers = self._get_stereogenic_centers()
+        exchangeable_centers = []
+        for center in centers:
+            try:
+                mol = self.exchange_identical_substituents(center)
+                exchangeable_centers.append(center)
+                continue
+            except:
+                pass
+
+            mols = self.flip_meso_rings(atoms=[center])
+            if len(mols) > 1:
+                exchangeable_centers.append(center)
+
+        return exchangeable_centers
 
     def get_chirality_report(self, centers=None):
         """

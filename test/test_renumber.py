@@ -70,6 +70,7 @@ class TestRenumber(unittest.TestCase):
                 permuted_molecule = permute(original_molecule)
                 try:
                     renumbered_molecule = permuted_molecule.renumber_to_match(template_molecule)
+#                    renumbered_molecule = permuted_molecule.renumber_to_match(original_molecule)
                     cctk.GaussianFile.write_molecule_to_file("test/static/renumber_error_4_renumbered.gjf", renumbered_molecule, "#p")
                     check_numbering(original_molecule, renumbered_molecule, f"mol. {i} vs. permuted")
                 except Exception as e:
