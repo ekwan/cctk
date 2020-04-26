@@ -186,7 +186,10 @@ class MOL2File(File):
                         n_atoms = len(this_geometry)
                         if not 1 <= atom1 <= n_atoms or not 1 <= atom2 <= n_atoms:
                             raise ValueError(f"atom number out of range: {line}")
-                        bond_order = int(fields[3])
+                        if fields[3] == "ar":
+                            bond_order = 1
+                        else:
+                            bond_order = int(fields[3])
                         if bond_order <= 0:
                             raise ValueError(f"zero or negative bond order: {line}")
                         if this_bond_number != bond_number + 1:
