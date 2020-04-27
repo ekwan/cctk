@@ -20,27 +20,28 @@ This code populates ELEMENT_DICTIONARY and ISOTOPE_DICTIONARY from a static data
 """
 ELEMENT_DICTIONARY = {}
 ISOTOPE_DICTIONARY = {}
-isotope_file = pkg_resources.open_text(data, "isotopes.csv")
-prev_number = 1
-current_dict = {}
-for line in isotope_file:
-    symbol, number, mass, abundance = line.split(",")
-    if symbol == "Symbol":
-        continue
 
-    ELEMENT_DICTIONARY[number] = symbol
+with pkg_resources.open_text(data, "isotopes.csv") as isotope_file:
+    prev_number = 1
+    current_dict = {}
+    for line in isotope_file:
+        symbol, number, mass, abundance = line.split(",")
+        if symbol == "Symbol":
+            continue
 
-    if number == prev_number:
-        current_dict[float(mass)] = float(abundance.rstrip())
-    else:
-        ISOTOPE_DICTIONARY[prev_number] = current_dict
-        current_dict = {}
-        current_dict[float(mass)] = float(abundance.rstrip())
+        ELEMENT_DICTIONARY[number] = symbol
 
-    prev_number = number
+        if number == prev_number:
+            current_dict[float(mass)] = float(abundance.rstrip())
+        else:
+            ISOTOPE_DICTIONARY[prev_number] = current_dict
+            current_dict = {}
+            current_dict[float(mass)] = float(abundance.rstrip())
 
-ISOTOPE_DICTIONARY[prev_number] = current_dict
-ELEMENT_DICTIONARY["0"] = "Bq"
+        prev_number = number
+
+    ISOTOPE_DICTIONARY[prev_number] = current_dict
+    ELEMENT_DICTIONARY["0"] = "Bq"
 
 INV_ELEMENT_DICTIONARY = {v: int(k) for k, v in ELEMENT_DICTIONARY.items()}
 
@@ -82,15 +83,14 @@ def get_number(atomic_symbol):
 This code populates COVALENT_RADII_DICTIONARY from a static datafile.
 """
 COVALENT_RADII_DICTIONARY = {}
-covalent_radii = pkg_resources.open_text(data, "covalent_radii.csv")
-for line in covalent_radii:
-    line_fragments = line.split(",")
+with pkg_resources.open_text(data, "covalent_radii.csv") as covalent_radii:
+    for line in covalent_radii:
+        line_fragments = line.split(",")
 
-    #### There's a variable number from line to line, but the first three are always number, symbol, radius
-    if line_fragments[1] == "Symbol":
-        continue
-    COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
-
+        #### There's a variable number from line to line, but the first three are always number, symbol, radius
+        if line_fragments[1] == "Symbol":
+            continue
+        COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
 
 def get_covalent_radius(atomic_number):
     """
