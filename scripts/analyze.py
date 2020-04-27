@@ -1,6 +1,7 @@
 import sys, re, glob, cctk
 import numpy as np
 import pandas as pd
+from tabulate import tabulate
 
 #### This is a script to monitor the output of Gaussian files. 
 #### In contrast to ``monitor.py``, this script analyzes many files! 
@@ -35,7 +36,7 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
     else:
         results.add_molecule(*list(output_file.ensemble.items())[-1])
         molecule = output_file.ensemble.molecules[-1]
-    results[molecule, "iterations"] = len(output_file.ensemble)
+    results[molecule, "iters"] = len(output_file.ensemble)
     results[molecule, "success"] = output_file.successful_terminations
     results[molecule, "imaginary"] = output_file.imaginaries()
 
@@ -43,12 +44,12 @@ if len(results) == 0:
     print("no jobs to analyze!")
     exit()
 
-property_names = ["filename", "iterations", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+property_names = ["filename", "iters", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
 values = results[:, property_names]
 if not isinstance(values[0], list):
     values = [values]
 
 df = pd.DataFrame(values, columns=property_names)
 df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
-print(df)
+print(tabulate(df, headers="keys", tablefmt="presto", floatfmt=".5f"))
 

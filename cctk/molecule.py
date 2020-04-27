@@ -619,7 +619,7 @@ class Molecule:
         delta = (dihedral - current_dihedral) % 360
 
         if np.abs(delta) < 0.001:
-            return
+            return self
 
         #### now the real work begins...
         #### move everything to place atom2 at the origin

@@ -305,8 +305,10 @@ class GaussianFile(File):
             properties = [{} for _ in range(len(geometries))]
             for idx, geom in enumerate(geometries):
                 molecules[idx] = Molecule(atomic_numbers, geom, charge=charge, multiplicity=multip, bonds=bonds)
-                properties[idx]["energy"] = energies[idx]
-                properties[idx]["scf_iterations"] = scf_iterations[idx]
+                if idx < len(energies):
+                    properties[idx]["energy"] = energies[idx]
+                if idx < len(scf_iterations):
+                    properties[idx]["scf_iterations"] = scf_iterations[idx]
                 properties[idx]["link1_idx"] = link1idx
                 properties[idx]["filename"] = filename
                 properties[idx]["iteration"] = idx
