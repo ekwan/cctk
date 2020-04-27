@@ -291,8 +291,9 @@ class GaussianFile(File):
             footer = None
             if re.search("modredundant", str(header)):
                 footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
-                footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
-                footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
+                if footer is not None:
+                    footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
+                    footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
             bonds = parse.read_bonds(lines)
             charge = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
@@ -342,14 +343,14 @@ class GaussianFile(File):
                 enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
                 if len(enthalpies) == 1:
                     properties[-1]["enthalpy"] = enthalpies[0]
-                elif len(enthalpies) != 1:
-                    raise ValueError("unexpected # of enthalpies found!")
+                elif len(enthalpies) > 1:
+                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
 
                 gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
                 if len(gibbs_vals) == 1:
                     properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
-                elif len(gibbs_vals) != 1:
-                    raise ValueError("unexpected # gibbs free energies found!")
+                elif len(gibbs_vals) > 1:
+                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
 
                 frequencies = []
                 try:
@@ -361,15 +362,13 @@ class GaussianFile(File):
                     raise ValueError("error finding frequencies")
 
                 #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
-                try:
-                    temperature = parse.find_parameter(lines, "Temperature", expected_length=6, which_field=1)
+                temperature = parse.find_parameter(lines, "Temperature", expected_length=6, which_field=1)
+                if len(temperature) == 1:
                     properties[-1]["temperature"] = temperature[0]
                     corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
                                                                       frequency_cutoff=100.0, temperature=temperature[0])
                     properties[-1]["quasiharmonic_gibbs_free_energy"] = corrected_free_energy
-                except Exception as e:
-                    print(e)
-                    raise ValueError("temperature not found")
+
 
             if JobType.NMR in job_types:
                 assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"

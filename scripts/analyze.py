@@ -29,18 +29,21 @@ for filename in sorted(glob.glob(filenames, recursive=True)):
     if output_file.successful_terminations:
         results.add_molecule(*list(output_file.ensemble.items())[-1])
         molecule = output_file.ensemble.molecules[-1]
-    else:
+    elif len(output_file.ensemble) > 1:
         results.add_molecule(*list(output_file.ensemble.items())[-2])
         molecule = output_file.ensemble.molecules[-2]
+    else:
+        results.add_molecule(*list(output_file.ensemble.items())[-1])
+        molecule = output_file.ensemble.molecules[-1]
     results[molecule, "iterations"] = len(output_file.ensemble)
     results[molecule, "success"] = output_file.successful_terminations
-    results[molecule, "num_imag"] = output_file.num_imaginaries()
+    results[molecule, "imaginary"] = output_file.imaginaries()
 
 if len(results) == 0:
     print("no jobs to analyze!")
     exit()
 
-property_names = ["filename", "iterations", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "num_imag"]
+property_names = ["filename", "iterations", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
 values = results[:, property_names]
 if not isinstance(values[0], list):
     values = [values]

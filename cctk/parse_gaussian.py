@@ -153,7 +153,7 @@ def read_geometries_and_energies(lines):
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
 
-def search_for_block(lines, start, end, count=1, join=" "):
+def search_for_block(lines, start, end, count=1, join=" ", max_len=20):
     """
     Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 
@@ -163,14 +163,17 @@ def search_for_block(lines, start, end, count=1, join=" "):
         end (str): a pattern that matches the end of the block (can contain special characters)
         count (int): how many matches to search for
         join (str): spacer between lines
+        max_len (int): maximum length of matches (to prevent overflow)
 
     Returns:
         a single match (str) if count == 1 or a list of matches (str) if count > 1.
     """
     assert isinstance(count, int), "count needs to be an integer"
+    assert isinstance(max_len, int), "count needs to be an integer"
     assert isinstance(join, str), "join needs to be a string"
 
     current_match = ""
+    current_len = 0
     match = [None] * count
 
     start_pattern = re.compile(start)
@@ -179,18 +182,21 @@ def search_for_block(lines, start, end, count=1, join=" "):
     index = 0
     for line in lines:
         if current_match:
-            if end_pattern.search(line):
+            if end_pattern.search(line) or current_len > max_len:
                 match[index] = current_match
                 current_match = None
                 index += 1
+                current_len = 0
 
                 if index == count:
                     break
             else:
                 current_match = current_match + join + line.lstrip()
+                current_len += 1
         else:
             if start_pattern.search(line):
                 current_match = line.lstrip()
+                current_len = 1
 
     if count == 1:
         return match[0]
