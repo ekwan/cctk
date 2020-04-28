@@ -369,7 +369,7 @@ class GaussianFile(File):
                     properties[-1]["temperature"] = temperature[0]
                     corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
                                                                       frequency_cutoff=100.0, temperature=temperature[0])
-                    properties[-1]["quasiharmonic_gibbs_free_energy"] = corrected_free_energy
+                    properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
 
 
             if JobType.NMR in job_types:
@@ -547,13 +547,13 @@ class GaussianFile(File):
         """
         if self.successful_terminations > 0:
             if self.successful_terminations == 1 and ((JobType.OPT in self.job_types) and (JobType.FREQ in self.job_types)):
-                pass # opt freq jobs should have two terminations
+                return # opt freq jobs should have two terminations
             for job_type in self.job_types:
                 for prop in EXPECTED_PROPERTIES[job_type.value]:
                     if not self.ensemble.has_property(-1, prop):
                         raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
         else:
-            pass
+            return
 
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", print_symbol=False):

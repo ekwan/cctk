@@ -80,7 +80,7 @@ class XYZFile(File):
 
         for index, Z in enumerate(molecule.atomic_numbers, start=1):
             line = molecule.get_vector(index)
-            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(Z), line[0], line[1], line[2])
+            text += f"{get_symbol(Z):>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
         super().write_file(filename, text)
 

@@ -51,7 +51,7 @@ class OrcaFile(File):
         self.write_molecule_to_file(filename, molecule, header)
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header):
+    def write_molecule_to_file(cls, filename, molecule, header, print_symbol=False):
         """
         Write a ``.inp``file using the given molecule.
 
@@ -59,6 +59,7 @@ class OrcaFile(File):
             filename (str): path to the new file
             molecule (Molecule): which molecule to use -- a``Molecule`` object.
             header (str): header for new file
+            print_symbol (Bool): if atomic symbols should be printed instead of atomic numbers
         """
         if not isinstance(molecule, Molecule):
             raise TypeError("need a valid molecule to write a file!")
@@ -71,7 +72,11 @@ class OrcaFile(File):
         text += f"* xyz {int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, Z in enumerate(molecule.atomic_numbers, start=1):
             line = molecule.get_vector(index)
-            text += f"{Z:2d}     {line[0]:.8f}      {line[1]:.8f}      {line[2]:.8f}\n"
+            if print_symbol:
+                Z = get_symbol(Z)
+                text += f"{Z:>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
+            else:
+                text += f"{Z:2d}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
         text += "*\n"
         text += "\n"
