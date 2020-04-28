@@ -6,13 +6,9 @@ from tabulate import tabulate
 from asciichartpy import plot
 
 #### This is a script to monitor the output of Gaussian files. 
-#### In contrast to ``monitor.py``, this script analyzes many files! 
-#### If the file has not successfully achieved SCF convergence at least once, that file will not display any information. 
+#### In contrast to ``analyze.py``, this script analyzes only one file! 
 
-#### Usage: ``python analyze.py "path/to/output/*.out"``
-#### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
-
-#### NOTE: This file will reject any file that contains the string "slurm."
+#### Usage: ``python monitor.py path/to/output.out``
 
 #### Corin Wagen and Eugene Kwan, 2019
 
