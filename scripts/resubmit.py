@@ -35,7 +35,7 @@ for filename in glob.iglob(args["filename"], recursive=True):
         output_file = GaussianFile.read_file(filename)
         if args["perturb"]:
             output_file.get_molecule().perturb()
-        success = output_file.success
+        success = output_file.successful_terminations
 
         if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
             newfile = filename.rsplit('/',1)[-1]

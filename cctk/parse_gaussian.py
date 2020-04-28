@@ -3,42 +3,11 @@ import re
 from itertools import islice
 
 from cctk.helper_functions import get_symbol
-from cctk import OneIndexedArray
+from cctk import OneIndexedArray, LazyLineObject
 
 """
 Functions to help with parsing Gaussian files
 """
-class LazyLineObject:
-    """
-    Instead of storing ``lines`` as an array, this object can be used.
-    It reduces the memory usage drastically! It looks up lines only when needed.
-    """
-    def __init__(self, file, start, end):
-       self.file = file
-       self.start = start
-       self.end = end
-
-    def __len__(self):
-        return self.end - self.start
-
-    def __str__(self):
-        return f"LazyLineObject for file {self.file}, lines {self.start}-{self.end}"
-
-    def __repr__(self):
-        return f"LazyLineObject for file {self.file}, lines {self.start}-{self.end}"
-
-    def __iter__(self):
-        with open(self.file, "r") as lines:
-            for line in islice(lines, self.start, self.end + 1):
-                yield line.rstrip()
-
-    def __getitem__(self, key):
-        if key >= len(self):
-            raise KeyError("key too big")
-        with open(self.file, "r") as lines:
-            for line in islice(lines, self.start + key, self.start + key + 1):
-                return line.rstrip()
-
 def read_geometries_and_energies(lines):
     """
     A large and unwieldy method - reads geometries, symbol lists, and energies from the file.
@@ -153,57 +122,6 @@ def read_geometries_and_energies(lines):
         (geometry, symbol_list) = extract_initial_geometry(lines)
         return [geometry], symbol_list, [], []
 
-def search_for_block(lines, start, end, count=1, join=" ", max_len=20):
-    """
-    Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
-
-    Args:
-        lines (list): a list of the lines in the file
-        start (str): a pattern that matches the start of the block (can contain special characters)
-        end (str): a pattern that matches the end of the block (can contain special characters)
-        count (int): how many matches to search for
-        join (str): spacer between lines
-        max_len (int): maximum length of matches (to prevent overflow)
-
-    Returns:
-        a single match (str) if count == 1 or a list of matches (str) if count > 1.
-    """
-    assert isinstance(count, int), "count needs to be an integer"
-    assert isinstance(max_len, int), "count needs to be an integer"
-    assert isinstance(join, str), "join needs to be a string"
-
-    current_match = ""
-    current_len = 0
-    match = [None] * count
-
-    start_pattern = re.compile(start)
-    end_pattern = re.compile(end)
-
-    index = 0
-    for line in lines:
-        if current_match:
-            if end_pattern.search(line) or current_len > max_len:
-                match[index] = current_match
-                current_match = None
-                index += 1
-                current_len = 0
-
-                if index == count:
-                    break
-            else:
-                current_match = current_match + join + line.lstrip()
-                current_len += 1
-        else:
-            if start_pattern.search(line):
-                current_match = line.lstrip()
-                current_len = 1
-
-    if count == 1:
-        return match[0]
-    else:
-        return match
-
-
 def read_bonds(lines):
     """
     Reads bonding information from the output file.
@@ -260,58 +178,6 @@ def read_bonds(lines):
     else:
         return None
 
-
-def find_parameter(lines, parameter, expected_length, which_field, split_on=None, cast_to_float=True):
-    """
-    Helper method to search through the output file and find key forces and displacements.
-
-    Args:
-        lines (list): list of lines in file
-        parameter (string): test to search for
-        expected_length (int): how many fields there should be
-        which_field (int): which field the parameter is (zero-indexed)
-        split_on (str): additional non-space field to split
-        cast_to_float (Bool): whether or not to cast extracted value to float
-    Returns:
-        a list of all the extracted values
-    """
-
-    if (not isinstance(expected_length, int)) or (not isinstance(which_field, int)):
-        raise TypeError("expected_length and which_field must be type int!")
-
-    if which_field >= expected_length:
-        raise ValueError("can't expect a field after the last field!")
-
-    matches = []
-    pattern = False
-
-    try:
-        pattern = re.compile(parameter)
-    except:
-        raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
-
-    if pattern:
-        for line in lines:
-            if pattern.search(line):
-                fields = re.split(" +", line)
-                if split_on:
-                    fields2 = []
-                    for field in fields:
-                        fields2 = fields2 + field.split(split_on)
-                    fields = fields2
-                fields = list(filter(None, fields))
-
-                if len(fields) == expected_length:
-                    if cast_to_float:
-                        try:
-                            matches.append(float(fields[which_field]))
-                        except:
-                            pass
-                    else:
-                        matches.append(fields[which_field])
-        return matches
-
-
 def extract_initial_geometry(lines):
     """
     Helper method to search through the output file and find the initial geometry/symbol list, in cases where no SCF iterations finished.
@@ -323,7 +189,7 @@ def extract_initial_geometry(lines):
         initial geometry (list)
         symbol list (list)
     """
-    initial_geom_block = search_for_block(lines, "Symbolic Z-matrix:", "^ $", join="\n")
+    initial_geom_block = lines.search_for_block("Symbolic Z-matrix:", "^ $", join="\n")
     atom_lines = initial_geom_block.split("\n")[2:]
     geometry = [None] * len(atom_lines)
     symbols = [None] * len(atom_lines)
@@ -431,7 +297,7 @@ def read_forces(lines):
         (n x 3) ``cctk.OneIndexedArray`` of forces
     """
     forces = []
-    force_block = search_for_block(lines, "Forces \(Hartrees/Bohr\)", "Cartesian Forces", join="\n")
+    force_block = lines.search_for_block("Forces \(Hartrees/Bohr\)", "Cartesian Forces", join="\n")
     for line in force_block.split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
@@ -452,7 +318,7 @@ def read_mulliken_charges(lines):
         ``cctk.OneIndexedArray`` of charges
     """
     charges = []
-    charge_block = search_for_block(lines, " Mulliken charges:", " Sum of Mulliken charges", join="\n")
+    charge_block = lines.search_for_block(" Mulliken charges:", " Sum of Mulliken charges", join="\n")
     if charge_block is not None:
         for line in charge_block.split("\n")[2:]:
             fields = re.split(" +", line)
@@ -476,7 +342,7 @@ def read_hirshfeld_charges(lines):
     """
     charges = []
     spins = []
-    charge_block = search_for_block(lines, "Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", join="\n")
+    charge_block = lines.search_for_block("Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", join="\n")
     for line in charge_block.split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
@@ -497,7 +363,7 @@ def read_dipole_moment(lines):
     Returns:
         dipole moment (magnitude only)
     """
-    dipole_block = search_for_block(lines, " Electronic spatial extent", " Quadrupole moment", join="\n")
+    dipole_block = lines.search_for_block(" Electronic spatial extent", " Quadrupole moment", join="\n")
     for line in dipole_block.split("\n")[1:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))

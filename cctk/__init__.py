@@ -1,4 +1,5 @@
 from .file import File
+from .lines import LazyLineObject
 from .array import OneIndexedArray
 from .molecule import Molecule
 from .ensemble import Ensemble, ConformationalEnsemble
