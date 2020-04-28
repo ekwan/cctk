@@ -453,12 +453,13 @@ def read_mulliken_charges(lines):
     """
     charges = []
     charge_block = search_for_block(lines, " Mulliken charges:", " Sum of Mulliken charges", join="\n")
-    for line in charge_block.split("\n")[2:]:
-        fields = re.split(" +", line)
-        fields = list(filter(None, fields))
+    if charge_block is not None:
+        for line in charge_block.split("\n")[2:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
 
-        if len(fields) == 3:
-            charges.append(float(fields[2]))
+            if len(fields) == 3:
+                charges.append(float(fields[2]))
 
     return OneIndexedArray(charges)
 
