@@ -6,6 +6,7 @@ from abc import abstractmethod
 from cctk import File, Molecule, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
 
+import cctk.parse_orca as parse
 
 class OrcaFile(File):
     """
@@ -43,7 +44,19 @@ class OrcaFile(File):
 
     @classmethod
     def read_file(cls, filename):
-        pass
+        if re.search("inp$", filename):
+            return cls._read_inp_file(filename)
+
+        multiple_lines = parse.split_multiple_inputs(filename)
+        files = []
+
+        for lines in multiple_lines:
+            energies = parse.read_energies()
+
+    @classmethod
+    def _read_inp_file(cls, filename):
+        print("reading ``.inp`` files is not currently supported :(")
+        return None
 
     def write_file(self, filename, molecule=None, header=None, variables=None, blocks=None):
         """

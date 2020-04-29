@@ -1,6 +1,5 @@
 import numpy as np
 import re
-from itertools import islice
 
 from cctk.helper_functions import get_symbol
 from cctk import OneIndexedArray, LazyLineObject
@@ -8,6 +7,7 @@ from cctk import OneIndexedArray, LazyLineObject
 """
 Functions to help with parsing Gaussian files
 """
+
 def read_geometries_and_energies(lines):
     """
     A large and unwieldy method - reads geometries, symbol lists, and energies from the file.
