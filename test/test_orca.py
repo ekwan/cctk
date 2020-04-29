@@ -6,7 +6,7 @@ if __name__ == '__main__':
     unittest.main()
 
 class TestOrca(unittest.TestCase):
-    def test_writefile(self):
+    def test_write(self):
         read_path = "test/static/test_peptide.xyz"
         path = "test/static/test_peptide.inp"
         new_path = "test/static/test_peptide_copy.inp"
@@ -44,4 +44,19 @@ class TestOrca(unittest.TestCase):
 
         os.remove(new_path)
 
+    def test_read(self):
+        path = "test/static/MsOH_ccsdt.out"
+        file = cctk.OrcaFile.read_file(path)
 
+        mol = file.get_molecule()
+        self.assertTrue(isinstance(mol, cctk.Molecule))
+        self.assertEqual(mol.num_atoms(), 9)
+        self.assertEqual(file.ensemble[mol,"energy"], -663.663569902734)
+
+        path = "test/static/AcOH_orca.out"
+        file = cctk.OrcaFile.read_file(path)
+
+        mol = file.get_molecule()
+        self.assertTrue(isinstance(mol, cctk.Molecule))
+        self.assertEqual(mol.num_atoms(), 8)
+        self.assertEqual(file.ensemble[mol,"energy"], -229.120816332194)

@@ -96,7 +96,7 @@ class LazyLineObject:
             parameter (string): test to search for
             expected_length (int): how many fields there should be
             which_field (int): which field the parameter is (zero-indexed)
-            split_on (str): additional non-space field to split
+            split_on (str): additional non-space field on which to split
             cast_to_float (Bool): whether or not to cast extracted value to float
         Returns:
             a list of all the extracted values

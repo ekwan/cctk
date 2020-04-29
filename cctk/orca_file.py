@@ -13,7 +13,6 @@ class OrcaFile(File):
     Generic class for all Orca `.inp` and `.out` files.
 
     Attributes:
-        title (str): the title from the file
         ensemble (ConformationalEnsemble): `ConformationalEnsemble` instance
         header (str): keyword line or lines
         variables (dict): list of variables to specify (e.g. ``{"maxcore": 2000}``).
@@ -22,13 +21,16 @@ class OrcaFile(File):
             For instance, configuring a time-dependent DFT job might look like ``{"tddft": ["maxdim 5", "nroots 50"]}``
     """
 
-    def __init__(self, ensemble, title=None, header=None, variables=None, blocks=None):
+    def __init__(self, ensemble=None,  header=None, variables=None, blocks=None):
         if ensemble and isinstance(ensemble, ConformationalEnsemble):
             self.ensemble = ensemble
-        if title and isinstance(title, str):
-            self.title = title
+        else:
+            self.ensemble = ConformationalEnsemble()
+
         if header and isinstance(header, str):
             self.header = header
+        else:
+            self.header = None
 
         if blocks and isinstance(blocks, dict):
             for lines in list(blocks.values()):
@@ -51,7 +53,32 @@ class OrcaFile(File):
         files = []
 
         for lines in multiple_lines:
-            energies = parse.read_energies()
+            energies = parse.read_energies(lines)
+            atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
+
+            charge = lines.find_parameter("xyz", 6, 4)[0]
+            multip = lines.find_parameter("xyz", 6, 5)[0]
+
+            f = OrcaFile(header=None, variables=None, blocks=None)
+
+            molecules = [None] * len(geometries)
+            properties = [{} for _ in range(len(geometries))]
+            for idx, geom in enumerate(geometries):
+                molecules[idx] = Molecule(atomic_numbers, geom, charge=charge, multiplicity=multip, bonds=None)
+                if idx < len(energies):
+                    properties[idx]["energy"] = energies[idx]
+                properties[idx]["filename"] = filename
+                properties[idx]["iteration"] = idx
+
+            for mol, prop in zip(molecules, properties):
+                f.ensemble.add_molecule(mol, properties=prop)
+
+            files.append(f)
+
+        if len(files) == 1:
+            return files[0]
+        else:
+            return files
 
     @classmethod
     def _read_inp_file(cls, filename):
