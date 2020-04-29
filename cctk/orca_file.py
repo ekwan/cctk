@@ -14,22 +14,38 @@ class OrcaFile(File):
     Attributes:
         title (str): the title from the file
         ensemble (ConformationalEnsemble): `ConformationalEnsemble` instance
-        header (str): file header
+        header (str): keyword line or lines
+        variables (dict): list of variables to specify (e.g. ``{"maxcore": 2000}``).
+        blocks (dict): list of blocks to change specific settings
+            In general, the key should be the block name and the value should be a list of desired lines.
+            For instance, configuring a time-dependent DFT job might look like ``{"tddft": ["maxdim 5", "nroots 50"]}``
     """
 
-    def __init__(self, ensemble, title=None, header=None):
+    def __init__(self, ensemble, title=None, header=None, variables=None, blocks=None):
         if ensemble and isinstance(ensemble, ConformationalEnsemble):
             self.ensemble = ensemble
-        if title and (isinstance(title, str)):
+        if title and isinstance(title, str):
             self.title = title
-        if header and (isinstance(header, str)):
+        if header and isinstance(header, str):
             self.header = header
+
+        if blocks and isinstance(blocks, dict):
+            for lines in list(blocks.values()):
+                assert isinstance(lines, list)
+            self.blocks = blocks
+        else:
+            self.blocks = {}
+
+        if variables and isinstance(variables, dict):
+            self.variables = variables
+        else:
+            self.variables = {}
 
     @classmethod
     def read_file(cls, filename):
         pass
 
-    def write_file(self, filename, molecule=None, header=None):
+    def write_file(self, filename, molecule=None, header=None, variables=None, blocks=None):
         """
         Write a ``.inp`` file, using object attributes. If no header is specified, the object's header will be used.
 
@@ -48,10 +64,16 @@ class OrcaFile(File):
         if header is None:
             header = self.header
 
-        self.write_molecule_to_file(filename, molecule, header)
+        if variables is None:
+            variables = self.variables
+
+        if blocks is None:
+            blocks = self.blocks
+
+        self.write_molecule_to_file(filename, molecule, header, variables, blocks)
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, print_symbol=False):
+    def write_molecule_to_file(cls, filename, molecule, header, variables=None, blocks=None, print_symbol=False):
         """
         Write a ``.inp``file using the given molecule.
 
@@ -61,13 +83,25 @@ class OrcaFile(File):
             header (str): header for new file
             print_symbol (Bool): if atomic symbols should be printed instead of atomic numbers
         """
-        if not isinstance(molecule, Molecule):
-            raise TypeError("need a valid molecule to write a file!")
+        assert isinstance(molecule, Molecule), "need a valid molecule to write a file!"
+        assert isinstance(header, str), "can't write a file without a header"
 
-        if (header is None) or (not isinstance(header, str)):
-            raise ValueError("can't write a file without a header")
+        text = f"{header.strip()}\n"
 
-        text = f"{header.strip()}\n\n"
+        if variables is not None:
+            assert isinstance(variables, dict), "blocks must be a dictionary"
+            for k, v in variables.items():
+                text += f"%{k} {v}\n"
+
+        if blocks is not None:
+            assert isinstance(blocks, dict), "blocks must be a dictionary"
+            for k, v in blocks.items():
+                text += f"%{k}\n"
+                for line in v:
+                    text += f"\t{line}\n"
+                text += "end\n"
+
+        text +="\n"
 
         text += f"* xyz {int(molecule.charge)} {int(molecule.multiplicity)}\n"
         for index, Z in enumerate(molecule.atomic_numbers, start=1):
