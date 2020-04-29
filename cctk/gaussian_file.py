@@ -256,7 +256,7 @@ class GaussianFile(File):
         files = []
         for link1idx, lines in enumerate(link1_lines):
             #### automatically assign job types based on header
-            header = parse.search_for_block(lines, "#p", "----")
+            header = lines.search_for_block("#p", "----", format_line=lambda x: x.lstrip(), join="")
             if header is None:
                 raise ValueError("can't find route card! (perhaps '#p' wasn't employed?)")
             job_types = cls._assign_job_types(header)
@@ -290,14 +290,14 @@ class GaussianFile(File):
 
             footer = None
             if re.search("modredundant", str(header)):
-                footer = parse.search_for_block(lines, "^ The following ModRedundant input section", "^ $", count=1, join="\n")
+                footer = lines.search_for_block("^ The following ModRedundant input section", "^ $", count=1, join="\n")
                 if footer is not None:
                     footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
                     footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
             bonds = parse.read_bonds(lines)
-            charge = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
-            multip = parse.find_parameter(lines, "Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
+            charge = lines.find_parameter("Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
+            multip = lines.find_parameter("Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
 
             f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time)
 
@@ -315,17 +315,17 @@ class GaussianFile(File):
 
             #### now for some job-type specific attributes
             if JobType.OPT in job_types:
-                rms_forces = parse.find_parameter(lines, "RMS\s+Force", expected_length=5, which_field=2)
-                rms_displacements = parse.find_parameter(lines, "RMS\s+Displacement", expected_length=5, which_field=2)
+                rms_forces = lines.find_parameter("RMS\s+Force", expected_length=5, which_field=2)
+                rms_displacements = lines.find_parameter("RMS\s+Displacement", expected_length=5, which_field=2)
 
                 if extended_opt_info:
-                    max_forces = parse.find_parameter(lines, "Maximum Force", expected_length=5, which_field=2)
-                    max_displacements = parse.find_parameter(lines, "Maximum Displacement", expected_length=5, which_field=2)
-                    max_gradients = parse.find_parameter(lines, "Cartesian Forces:", expected_length=6, which_field=3)
-                    rms_gradients = parse.find_parameter(lines, "Cartesian Forces:", expected_length=6, which_field=5)
-                    max_int_forces = parse.find_parameter(lines, "Internal  Forces:", expected_length=6, which_field=3)
-                    rms_int_forces = parse.find_parameter(lines, "Internal  Forces:", expected_length=6, which_field=5)
-                    delta_energy = parse.find_parameter(lines, "Predicted change in Energy", expected_length=4, which_field=3, cast_to_float=False)
+                    max_forces = lines.find_parameter("Maximum Force", expected_length=5, which_field=2)
+                    max_displacements = lines.find_parameter("Maximum Displacement", expected_length=5, which_field=2)
+                    max_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=3)
+                    rms_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=5)
+                    max_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=3)
+                    rms_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=5)
+                    delta_energy = lines.find_parameter("Predicted change in Energy", expected_length=4, which_field=3, cast_to_float=False)
 
                 for idx, force in enumerate(rms_forces):
                     properties[idx]["rms_force"] = force
@@ -342,13 +342,13 @@ class GaussianFile(File):
                         properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
 
             if JobType.FREQ in job_types:
-                enthalpies = parse.find_parameter(lines, "thermal Enthalpies", expected_length=7, which_field=6)
+                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
                 if len(enthalpies) == 1:
                     properties[-1]["enthalpy"] = enthalpies[0]
                 elif len(enthalpies) > 1:
                     raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
 
-                gibbs_vals = parse.find_parameter(lines, "thermal Free Energies", expected_length=8, which_field=7)
+                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
                 if len(gibbs_vals) == 1:
                     properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
                 elif len(gibbs_vals) > 1:
@@ -356,15 +356,15 @@ class GaussianFile(File):
 
                 frequencies = []
                 try:
-                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=2)
-                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=3)
-                    frequencies += parse.find_parameter(lines, "Frequencies", expected_length=5, which_field=4)
+                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=2)
+                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=3)
+                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=4)
                     properties[-1]["frequencies"] = sorted(frequencies)
                 except:
                     raise ValueError("error finding frequencies")
 
                 #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
-                temperature = parse.find_parameter(lines, "Temperature", expected_length=6, which_field=1)
+                temperature = lines.find_parameter("Temperature", expected_length=6, which_field=1)
                 if len(temperature) == 1:
                     properties[-1]["temperature"] = temperature[0]
                     corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,

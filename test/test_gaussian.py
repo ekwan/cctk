@@ -61,6 +61,10 @@ class TestGaussian(unittest.TestCase):
 
         os.remove(new_path)
 
+        file = cctk.GaussianFile.read_file("test/static/eliminationTS.out")
+        self.assertEqual(file.route_card, "#p opt=modredundant freq=noraman b3lyp/6-31g(d) empiricaldispersion=gd3bj")
+        self.assertEqual(file.footer, "B 48 50 F\nB 2 48 F")
+
     def test_link1_out_file(self):
         path = "test/static/ethane.out"
         f, lines = cctk.GaussianFile.read_file(path, return_lines=True)
@@ -120,6 +124,7 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         ense = file.ensemble
         self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
+
 
 if __name__ == '__main__':
     unittest.main()

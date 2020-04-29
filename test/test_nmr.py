@@ -77,7 +77,6 @@ class TestNMR(unittest.TestCase):
         self.assertEqual(gaussian_file.successful_terminations,1)
         ensemble = gaussian_file.ensemble
         shieldings = ensemble[:,"isotropic_shielding"]
-        #print(shieldings)
         scaled_shifts, shift_labels = cctk.helper_functions.scale_nmr_shifts(ensemble,
                                       symmetrical_atom_numbers=[[37,38,39],[32,33,34]], scaling_factors="default")
         expected_shifts = [6.52352,6.6285,6.51045,6.53005,6.22303,2.11021,2.7025,2.73022,2.38541,2.35172,3.1467,5.82979,
