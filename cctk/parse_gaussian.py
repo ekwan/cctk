@@ -370,3 +370,4 @@ def read_dipole_moment(lines):
 
         if len(fields) == 8:
             return float(fields[7])
+

@@ -67,5 +67,83 @@ def split_multiple_inputs(filename):
 
     return output_blocks
 
+def read_mulliken_charges(lines):
+    """
+    Reads charges.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        ``cctk.OneIndexedArray`` of charges
+    """
+    charges = []
+    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", join="\n")
+    for line in charge_block.split("\n")[2:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 4:
+            charges.append(float(fields[3]))
+
+    return OneIndexedArray(charges)
 
 
+def read_loewdin_charges(lines):
+    """
+    Reads charges.
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        ``cctk.OneIndexedArray`` of charges
+    """
+    charges = []
+    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", join="\n")
+    for line in charge_block.split("\n")[2:]:
+        fields = re.split(" +", line)
+        fields = list(filter(None, fields))
+
+        if len(fields) == 4:
+            charges.append(float(fields[3]))
+
+    return OneIndexedArray(charges)
+
+def read_header(lines):
+    for line in lines:
+        if re.match("!", line):
+            return line
+
+def read_blocks_and_variables(lines):
+    blocks = {}
+    variables = {}
+
+    current_key = None
+    current_val = []
+    for line in lines:
+        if current_key is not None:
+            if re.match("end", line):
+                blocks[current_key] = current_val
+                current_key = None
+                current_val = []
+            else:
+                current_val.append(line)
+                continue
+        if re.match("%", line):
+            fields = re.split(" +", line.lstrip("%"))
+            if len(fields) == 1:
+                current_key = fields[0]
+            else:
+                variables[fields[0]] = " ".join(fields[1:])
+
+    return variables, blocks
+
+def extract_input_file(lines):
+    input_block = lines.search_for_block("INPUT FILE", "\*\*\*\*END OF INPUT\*\*\*\*", join="\n")
+    input_lines = []
+    for line in input_block.split("\n")[3:]:
+        [_, line] = line.split(">")
+        line = line.lstrip()
+        input_lines.append(line)
+    return input_lines

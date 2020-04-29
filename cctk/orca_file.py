@@ -19,6 +19,8 @@ class OrcaFile(File):
         blocks (dict): list of blocks to change specific settings
             In general, the key should be the block name and the value should be a list of desired lines.
             For instance, configuring a time-dependent DFT job might look like ``{"tddft": ["maxdim 5", "nroots 50"]}``
+        successful_terminations (int): number of successful terminations
+        elapsed_time (float): total time for job in seconds
     """
 
     def __init__(self, ensemble=None,  header=None, variables=None, blocks=None):
@@ -53,13 +55,36 @@ class OrcaFile(File):
         files = []
 
         for lines in multiple_lines:
+            input_lines = parse.extract_input_file(lines)
+            header = parse.read_header(input_lines)
+            variables, blocks = parse.read_blocks_and_variables(input_lines)
+
+            success = 0
+            elapsed_time = 0
+            for line in lines:
+                if line.strip().startswith("****ORCA TERMINATED NORMALLY****"):
+                    success += 1
+                elif line.startswith("TOTAL RUN TIME"):
+                    fields = line.split()
+                    assert len(fields) == 13, f"unexpected number of fields on elapsed time line:\n{line}"
+                    days = float(fields[3])
+                    hours = float(fields[5])
+                    minutes = float(fields[7])
+                    seconds = float(fields[9])
+                    elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
+
             energies = parse.read_energies(lines)
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
 
             charge = lines.find_parameter("xyz", 6, 4)[0]
             multip = lines.find_parameter("xyz", 6, 5)[0]
 
-            f = OrcaFile(header=None, variables=None, blocks=None)
+            #### TODO
+            # detect Mayer bond orders
+
+            f = OrcaFile(header=header, variables=variables, blocks=blocks)
+            f.elapsed_time = elapsed_time
+            f.successful_terminations = success
 
             molecules = [None] * len(geometries)
             properties = [{} for _ in range(len(geometries))]
@@ -69,6 +94,26 @@ class OrcaFile(File):
                     properties[idx]["energy"] = energies[idx]
                 properties[idx]["filename"] = filename
                 properties[idx]["iteration"] = idx
+
+            try:
+                charges = parse.read_mulliken_charges(lines)
+                assert len(charges) == len(atomic_numbers)
+                properties[-1]["mulliken_charges"] = charges
+            except:
+                pass
+
+            try:
+                charges = parse.read_loewdin_charges(lines)
+                assert len(charges) == len(atomic_numbers)
+                properties[-1]["lowdin_charges"] = charges
+            except:
+                pass
+
+            try:
+                dipole = lines.find_parameter("Magnitude \(Debye\)", 4, 3)
+                properties[-1]["dipole_moment"] = dipole[0]
+            except:
+                pass
 
             for mol, prop in zip(molecules, properties):
                 f.ensemble.add_molecule(mol, properties=prop)

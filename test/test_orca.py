@@ -47,6 +47,11 @@ class TestOrca(unittest.TestCase):
     def test_read(self):
         path = "test/static/MsOH_ccsdt.out"
         file = cctk.OrcaFile.read_file(path)
+        self.assertEqual(file.successful_terminations, 1)
+        self.assertEqual(file.elapsed_time, 8575)
+        self.assertEqual(file.header, "! aug-cc-pVQZ aug-cc-pVQZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint")
+        self.assertEqual(file.variables["maxcore"], "50000")
+        self.assertListEqual(file.blocks["mdci"], ["density none"])
 
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
@@ -60,3 +65,7 @@ class TestOrca(unittest.TestCase):
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 8)
         self.assertEqual(file.ensemble[mol,"energy"], -229.120816332194)
+        self.assertEqual(file.ensemble[mol, "dipole_moment"], 1.76241)
+
+        self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.333851)
+        self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.515118)
