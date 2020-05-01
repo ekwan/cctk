@@ -18,6 +18,12 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(mol.charge, 0)
         self.assertEqual(mol.multiplicity, 1)
 
+    def test_title(self):
+        path = "test/static/title.out"
+        file = cctk.GaussianFile.read_file(path)
+        title = file.title
+        self.assertEqual(title, " H4,H5:5.280@C1:53.700")
+
     def test_read_out_file(self):
         path = "test/static/gaussian_file.out"
         file = cctk.GaussianFile.read_file(path, extended_opt_info=True)
