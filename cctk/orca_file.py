@@ -74,6 +74,9 @@ class OrcaFile(File):
                     elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
 
             energies = parse.read_energies(lines)
+            if len(energies) == 0:
+                return None
+
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
 
             charge = lines.find_parameter("xyz", 6, 4)[0]
@@ -223,3 +226,15 @@ class OrcaFile(File):
             num += -1
 
         return self.ensemble.molecules[num]
+
+    def num_imaginaries(self):
+        """
+        Returns the number of imaginary frequencies.
+        """
+        return len(self.imaginaries())
+
+    def imaginaries(self):
+        """
+        Returns the imaginary frequencies, rounded to the nearest integer.
+        """
+        return list()

@@ -11,7 +11,7 @@ def read_geometries(lines, num_to_find):
     atomic_numbers = []
     geometries = []
 
-    geom_blocks = lines.search_for_block("CARTESIAN COORDINATES \(ANGSTROEM\)", "CARTESIAN COORDINATES (A.U.)", join="\n", count=num_to_find)
+    geom_blocks = lines.search_for_block("CARTESIAN COORDINATES \(ANGSTROEM\)", "CARTESIAN COORDINATES", join="\n", count=num_to_find, max_len=1000)
     if num_to_find == 1:
         geom_blocks = [geom_blocks]
 

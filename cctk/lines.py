@@ -52,6 +52,9 @@ class LazyLineObject:
         assert isinstance(max_len, int), "count needs to be an integer"
         assert isinstance(join, str), "join needs to be a string"
 
+        if count is 0:
+            return None
+
         current_match = ""
         current_len = 0
         match = [None] * count
