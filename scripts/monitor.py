@@ -29,7 +29,10 @@ print("\n\033[3manalysis:\033[0m")
 print(f"{len(output_file.ensemble)} iterations completed")
 property_names = ["scf_iters", "energy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "rms_gradient"]
 
-df = pd.DataFrame(output_file.ensemble[:,property_names], columns=property_names).fillna("")
+properties = output_file.ensemble[:,property_names]
+if len(output_file.ensemble) == 1:
+    properties = [properties]
+df = pd.DataFrame(properties, columns=property_names).fillna(0)
 df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
 
 print("\n\033[1mENERGY (kcal/mol):\033[0m")

@@ -144,16 +144,19 @@ class OrcaFile(File):
                 properties[idx]["scf_iterations"] = iters[idx]
 
             if OrcaJobType.OPT in job_types:
-                rms_grad = lines.find_parameter("RMS gradient", expected_length=5, which_field=2)
-                max_grad = lines.find_parameter("MAX gradient", expected_length=5, which_field=2)
-                rms_step = lines.find_parameter("RMS step", expected_length=5, which_field=2)
-                max_step = lines.find_parameter("MAX step", expected_length=5, which_field=2)
+                rms_grad, max_grad, rms_step, max_step = parse.read_gradients(lines, len(properties))
+                for idx in range(len(rms_grad)):
+                    if idx < len(rms_grad):
+                        properties[idx]["rms_gradient"] = rms_grad[idx]
 
-                for idx, force in enumerate(rms_grad):
-                    properties[idx]["rms_gradient"] = float(rms_grad[idx])
-                    properties[idx]["max_gradient"] = float(max_grad[idx])
-                    properties[idx]["rms_step"] = float(rms_step[idx])
-                    properties[idx]["max_step"] = float(max_step[idx])
+                    if idx < len(max_grad):
+                        properties[idx]["max_gradient"] = max_grad[idx]
+
+                    if idx < len(rms_step):
+                        properties[idx]["rms_step"] = rms_step[idx]
+
+                    if idx < len(max_step):
+                        properties[idx]["max_step"] = max_step[idx]
 
             if OrcaJobType.FREQ in job_types:
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
@@ -172,7 +175,7 @@ class OrcaFile(File):
 
                 #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
                 temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
-                if len(temperature) == 1:
+                if len(temperature) == 1 and len(gibbs) > 0:
                     properties[-1]["temperature"] = temperature[0]
                     corrected_free_energy = get_corrected_free_energy(gibbs[0], properties[-1]["frequencies"],
                                                                       frequency_cutoff=100.0, temperature=temperature[0])

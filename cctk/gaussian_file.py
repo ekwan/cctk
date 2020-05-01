@@ -338,14 +338,40 @@ class GaussianFile(File):
                     properties[idx]["rms_displacement"] = rms_displacements[idx]
 
                     if extended_opt_info:
-                        properties[idx]["max_force"] = max_forces[idx]
-                        properties[idx]["max_displacement"] = max_displacements[idx]
-                        properties[idx]["max_gradient"] = max_gradients[idx]
-                        properties[idx]["rms_gradient"] = rms_gradients[idx]
-                        properties[idx]["max_internal_force"] = max_int_forces[idx]
-                        properties[idx]["rms_internal_force"] = rms_int_forces[idx]
-                        change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
-                        properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
+                        if idx < len(max_forces):
+                            properties[idx]["max_force"] = max_forces[idx]
+
+                        if idx < len(max_displacements):
+                            properties[idx]["max_displacement"] = max_displacements[idx]
+
+                        if idx < len(max_gradients):
+                            properties[idx]["max_gradient"] = max_gradients[idx]
+
+                        if idx < len(rms_gradients):
+                            properties[idx]["rms_gradient"] = rms_gradients[idx]
+
+                        if idx < len(max_int_forces):
+                            properties[idx]["max_internal_force"] = max_int_forces[idx]
+
+                        if idx < len(rms_int_forces):
+                            properties[idx]["rms_internal_force"] = rms_int_forces[idx]
+
+                        if idx < len(delta_energy):
+                            change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
+                            properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
+
+            if GaussianJobType.FREQ in job_types:
+                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
+                if len(enthalpies) == 1:
+                    properties[-1]["enthalpy"] = enthalpies[0]
+                elif len(enthalpies) > 1:
+                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+
+                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
+                if len(gibbs_vals) == 1:
+                    properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
+                elif len(gibbs_vals) > 1:
+                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
 
             if GaussianJobType.FREQ in job_types:
                 enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)

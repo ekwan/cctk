@@ -1,7 +1,7 @@
 import unittest, sys, os, io, copy, math
 import numpy as np
 import cctk
-from cctk.gaussian_file import JobType
+from cctk.gaussian_file import GaussianJobType as JobType
 
 # run from cctk root with
 # python -m unittest test.test_nmr.TestNMR

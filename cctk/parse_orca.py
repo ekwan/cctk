@@ -151,6 +151,8 @@ def extract_input_file(lines):
 
 def read_freqs(lines):
     freq_block = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", join="\n", max_len=1000)
+    if freq_block is None:
+        return []
     freqs = []
     for line in freq_block.split("\n"):
         fields = re.split(" +", line.strip())
@@ -158,3 +160,29 @@ def read_freqs(lines):
             if fields[2] == "cm**-1" and float(fields[1]) > 0:
                 freqs.append(float(fields[1]))
     return freqs
+
+def read_gradients(lines, num_to_find):
+    grad_blocks = lines.search_for_block("Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find)
+    if grad_blocks is None:
+        return
+
+    rms_grad = []
+    max_grad = []
+    rms_step = []
+    max_step = []
+    for grad_block in grad_blocks:
+        if grad_block is None:
+            continue
+        for line in grad_block.split("\n"):
+            fields = re.split(" +", line.strip())
+            if len(fields) == 5:
+                if fields[0] == "RMS" and fields[1] == "gradient":
+                    rms_grad.append(float(fields[2]))
+                if fields[0] == "MAX" and fields[1] == "gradient":
+                    max_grad.append(float(fields[2]))
+                if fields[0] == "RMS" and fields[1] == "step":
+                    rms_step.append(float(fields[2]))
+                if fields[0] == "MAX" and fields[1] == "step":
+                    max_step.append(float(fields[2]))
+
+    return rms_grad, max_grad, rms_step, max_step

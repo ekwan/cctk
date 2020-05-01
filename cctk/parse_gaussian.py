@@ -8,7 +8,7 @@ from cctk import OneIndexedArray, LazyLineObject
 Functions to help with parsing Gaussian files
 """
 
-def read_geometries_and_energies(lines):
+def read_geometries_and_energies(lines_obj):
     """
     A large and unwieldy method - reads geometries, symbol lists, and energies from the file.
 
@@ -34,7 +34,7 @@ def read_geometries_and_energies(lines):
     i = 0
 
     #### we'll read this into memory to speed this up
-    lines = list(lines)
+    lines = list(lines_obj)
 
     in_geometry_block = False
     while i < len(lines):
@@ -119,7 +119,7 @@ def read_geometries_and_energies(lines):
     if len(file_symbol_lists) > 0:
         return file_geometries, file_symbol_lists[0], file_energies, file_scf_iterations
     else:
-        (geometry, symbol_list) = extract_initial_geometry(lines)
+        (geometry, symbol_list) = extract_initial_geometry(lines_obj)
         return [geometry], symbol_list, [], []
 
 def read_bonds(lines):
@@ -189,14 +189,14 @@ def extract_initial_geometry(lines):
         initial geometry (list)
         symbol list (list)
     """
-    initial_geom_block = lines.search_for_block("Symbolic Z-matrix:", "^ $", join="\n")
+    initial_geom_block = lines.search_for_block("Symbolic Z-matrix:", "^ $", join="\n", max_len=1000)
     atom_lines = initial_geom_block.split("\n")[2:]
     geometry = [None] * len(atom_lines)
     symbols = [None] * len(atom_lines)
 
     for idx, line in enumerate(atom_lines):
         frags = line.split()
-        assert len(frags) == 4, f"too many fragments (more than 4) on line {line}"
+        assert len(frags) == 4, f"wrong number of fragments on line {line}"
         geometry[idx] = frags[1:]
         symbols[idx] = frags[0]
     return geometry, symbols
