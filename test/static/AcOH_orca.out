@@ -130,20 +130,20 @@ INFO   : the flag for use of LIBINT has been found!
                                        INPUT FILE
 ================================================================================
 NAME = AcOH.inp
-|  1> ! wB97X-D3 def2-TZVP def2/J RIJCOSX xyzfile Opt
+|  1> ! wB97X-D3 def2-TZVP def2/J RIJCOSX xyzfile Opt Freq
 |  2> %base "optimization"
 |  3> %pal nproc 16 end
 |  4> %maxcore 4000
 |  5> 
 |  6> * xyz 0 1
-|  7>  6     0.09239300      0.12569400      0.00000600
-|  8>  8     0.64612800      1.20164500      -0.00000900
-|  9>  6     -1.39691800      -0.10917100      -0.00001000
-| 10>  1     -1.68362200      -0.69139400      -0.88181500
-| 11>  1     -1.68372600      -0.69056100      0.88232600
-| 12>  1     -1.91625600      0.84916300      -0.00040900
-| 13>  8     0.77741300      -1.04700200      -0.00001800
-| 14>  1     1.72241800      -0.80349100      0.00013500
+|  7>  6          0.09239300    0.12569400    0.00000600
+|  8>  8          0.64612800    1.20164500   -0.00000900
+|  9>  6         -1.39691800   -0.10917100   -0.00001000
+| 10>  1         -1.68362200   -0.69139400   -0.88181500
+| 11>  1         -1.68372600   -0.69056100    0.88232600
+| 12>  1         -1.91625600    0.84916300   -0.00040900
+| 13>  8          0.77741300   -1.04700200   -0.00001800
+| 14>  1          1.72241800   -0.80349100    0.00013500
 | 15> *
 | 16> 
 | 17> 
@@ -341,18 +341,18 @@ Integral package used                  ... LIBINT
  Ordering of the shell pairs             ... done (   0.000 sec) 1797 of 1830 pairs
  Determination of significant pairs      ... done (   0.000 sec)
  Creation of shell pair data             ... done (   0.000 sec)
- Storage of shell pair data              ... done (   0.111 sec)
- Shell pair data done in (   0.112 sec)
+ Storage of shell pair data              ... done (   0.027 sec)
+ Shell pair data done in (   0.028 sec)
  Computing two index integrals           ... done
  Cholesky decomposition of the V-matrix  ... done
 
 
 Timings:
- Total evaluation time                   ...   0.513 sec (  0.009 min)
- One electron matrix time                ...   0.101 sec (  0.002 min) = 19.6%
- Schwartz matrix evaluation time         ...   0.216 sec (  0.004 min) = 42.1%
- Two index repulsion integral time       ...   0.010 sec (  0.000 min) =  2.0%
- Cholesky decomposition of V             ...   0.025 sec (  0.000 min) =  4.9%
+ Total evaluation time                   ...   0.483 sec (  0.008 min)
+ One electron matrix time                ...   0.075 sec (  0.001 min) = 15.6%
+ Schwartz matrix evaluation time         ...   0.234 sec (  0.004 min) = 48.3%
+ Two index repulsion integral time       ...   0.007 sec (  0.000 min) =  1.5%
+ Cholesky decomposition of V             ...   0.099 sec (  0.002 min) = 20.4%
  Three index repulsion integral time     ...   0.000 sec (  0.000 min) =  0.0%
 
 
@@ -439,11 +439,11 @@ Convergence Tolerance:
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 4.448e-04
-Time for diagonalization                   ...    0.195 sec
+Time for diagonalization                   ...    0.119 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.077 sec
-Total time needed                          ...    0.272 sec
+Time for construction of square roots      ...    0.091 sec
+Total time needed                          ...    0.210 sec
 
 -------------------
 DFT GRID GENERATION
@@ -476,7 +476,7 @@ Average number of large basis fcns per batch ...   124.45 (95.33%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.72 au
 Average spatial batch extension              ...   0.13,  0.13,  0.13 au
 
-Time for grid setup =    0.257 sec
+Time for grid setup =    0.145 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -499,7 +499,7 @@ Diagonalizing the Hamiltonian                      ... done (   0.0 sec)
 Back transforming the eigenvectors                 ... done (   0.0 sec)
 Now organizing SCF variables                       ... done
                       ------------------
-                      INITIAL GUESS DONE (   0.6 sec)
+                      INITIAL GUESS DONE (   0.4 sec)
                       ------------------
 --------------------
 COSX GRID GENERATION
@@ -515,7 +515,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   3600 (   0.0 sec)
-# of grid points (after weights+screening)   ...   3485 (   0.1 sec)
+# of grid points (after weights+screening)   ...   3485 (   0.0 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -549,7 +549,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   4616 (   0.0 sec)
-# of grid points (after weights+screening)   ...   4463 (   0.0 sec)
+# of grid points (after weights+screening)   ...   4463 (   0.2 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -606,7 +606,7 @@ Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    0.776 sec
+Time for X-Grid setup             =    1.052 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -655,7 +655,7 @@ Grids for H and He will be reduced by one unit
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.2 sec
-Reduced shell lists constructed in    0.2 sec
+Reduced shell lists constructed in    0.3 sec
 
 Total number of grid points                  ...    36699
 Total number of batches                      ...      577
@@ -668,7 +668,7 @@ Average number of large basis fcns per batch ...   127.71 (92.74%)
 Maximum spatial batch extension              ...   2.91,  2.34,  3.77 au
 Average spatial batch extension              ...   0.09,  0.09,  0.09 au
 
-Final grid set up in    0.7 sec
+Final grid set up in    0.4 sec
 Final integration                            ... done (   0.3 sec)
 Change in XC energy                          ...    -0.000584065
 Integrated number of electrons               ...    31.999976346
@@ -677,7 +677,7 @@ Old exchange energy                            =     -8.978752771 Eh
 New exchange energy                            =     -8.978539239 Eh
 Exchange energy change after final integration =      0.000213532 Eh
 Total energy after final integration           =   -229.119695079 Eh
-Final COS-X integration done in                =     0.469 sec
+Final COS-X integration done in                =     0.532 sec
 
 ----------------
 TOTAL SCF ENERGY
@@ -1104,29 +1104,29 @@ B(  6-O ,  7-H ) :   0.8576
 TIMINGS
 -------
 
-Total SCF time: 0 days 0 hours 0 min 22 sec 
+Total SCF time: 0 days 0 hours 0 min 23 sec 
 
-Total time                  ....      22.146 sec
-Sum of individual times     ....      20.452 sec  ( 92.4%)
+Total time                  ....      23.304 sec
+Sum of individual times     ....      19.766 sec  ( 84.8%)
 
-Fock matrix formation       ....      17.012 sec  ( 76.8%)
-  Split-RI-J                ....       4.617 sec  ( 27.1% of F)
-  Chain of spheres X        ....       4.449 sec  ( 26.2% of F)
+Fock matrix formation       ....      15.772 sec  ( 67.7%)
+  Split-RI-J                ....       4.102 sec  ( 26.0% of F)
+  Chain of spheres X        ....       4.407 sec  ( 27.9% of F)
   COS-X 1 center corr.      ....       0.000 sec  (  0.0% of F)
-  XC integration            ....       3.957 sec  ( 23.3% of F)
-    Basis function eval.    ....       0.086 sec  (  2.2% of XC)
-    Density eval.           ....       0.222 sec  (  5.6% of XC)
-    XC-Functional eval.     ....       0.267 sec  (  6.8% of XC)
-    XC-Potential eval.      ....       0.122 sec  (  3.1% of XC)
-Diagonalization             ....       0.311 sec  (  1.4%)
-Density matrix formation    ....       0.318 sec  (  1.4%)
-Population analysis         ....       0.146 sec  (  0.7%)
-Initial guess               ....       0.321 sec  (  1.5%)
+  XC integration            ....       3.130 sec  ( 19.8% of F)
+    Basis function eval.    ....       0.075 sec  (  2.4% of XC)
+    Density eval.           ....       0.077 sec  (  2.5% of XC)
+    XC-Functional eval.     ....       0.129 sec  (  4.1% of XC)
+    XC-Potential eval.      ....       0.121 sec  (  3.9% of XC)
+Diagonalization             ....       0.437 sec  (  1.9%)
+Density matrix formation    ....       0.534 sec  (  2.3%)
+Population analysis         ....       0.192 sec  (  0.8%)
+Initial guess               ....       0.256 sec  (  1.1%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.340 sec  (  1.5%)
-SOSCF solution              ....       0.247 sec  (  1.1%)
-Grid generation             ....       1.758 sec  (  7.9%)
+DIIS solution               ....       0.297 sec  (  1.3%)
+SOSCF solution              ....       0.692 sec  (  3.0%)
+Grid generation             ....       1.586 sec  (  6.8%)
 
 
 -------------------------------------------------------------------------------
@@ -1216,13 +1216,13 @@ MAX gradient                       ...    0.0190979152
 TIMINGS
 -------
 
-Total SCF gradient time            ...        1.698 sec
+Total SCF gradient time            ...        2.152 sec
 
-One electron gradient       ....       0.014 sec  (  0.8%)
-Prescreening matrices       ....       0.052 sec  (  3.1%)
-RI-J Coulomb gradient       ....       0.312 sec  ( 18.4%)
-COSX gradient               ....       0.491 sec  ( 28.9%)
-XC gradient                 ....       0.249 sec  ( 14.6%)
+One electron gradient       ....       0.015 sec  (  0.7%)
+Prescreening matrices       ....       0.060 sec  (  2.8%)
+RI-J Coulomb gradient       ....       0.409 sec  ( 19.0%)
+COSX gradient               ....       0.588 sec  ( 27.3%)
+XC gradient                 ....       0.283 sec  ( 13.1%)
 ------------------------------------------------------------------------------
                          ORCA GEOMETRY RELAXATION STEP
 ------------------------------------------------------------------------------
@@ -1379,11 +1379,11 @@ INTERNAL COORDINATES (A.U.)
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 4.184e-04
-Time for diagonalization                   ...    0.009 sec
+Time for diagonalization                   ...    0.008 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.051 sec
-Total time needed                          ...    0.061 sec
+Time for construction of square roots      ...    0.022 sec
+Total time needed                          ...    0.030 sec
 
 -------------------
 DFT GRID GENERATION
@@ -1416,7 +1416,7 @@ Average number of large basis fcns per batch ...   124.55 (95.34%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.71 au
 Average spatial batch extension              ...   0.13,  0.13,  0.13 au
 
-Time for grid setup =    0.110 sec
+Time for grid setup =    0.096 sec
 
 --------------------
 COSX GRID GENERATION
@@ -1523,7 +1523,7 @@ Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    0.786 sec
+Time for X-Grid setup             =    0.874 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -1587,7 +1587,7 @@ Old exchange energy                            =     -8.985954690 Eh
 New exchange energy                            =     -8.985741038 Eh
 Exchange energy change after final integration =      0.000213652 Eh
 Total energy after final integration           =   -229.120192783 Eh
-Final COS-X integration done in                =     0.495 sec
+Final COS-X integration done in                =     0.471 sec
 Total Energy       :         -229.12019278 Eh           -6234.67741 eV
   Last Energy change         ...   -3.1674e-09  Tolerance :   1.0000e-08
   Last MAX-Density change    ...    6.1062e-16  Tolerance :   1.0000e-07
@@ -1663,13 +1663,13 @@ MAX gradient                       ...    0.0024481091
 TIMINGS
 -------
 
-Total SCF gradient time            ...        1.833 sec
+Total SCF gradient time            ...        1.874 sec
 
-One electron gradient       ....       0.023 sec  (  1.2%)
-Prescreening matrices       ....       0.065 sec  (  3.6%)
-RI-J Coulomb gradient       ....       0.356 sec  ( 19.4%)
-COSX gradient               ....       0.507 sec  ( 27.7%)
-XC gradient                 ....       0.209 sec  ( 11.4%)
+One electron gradient       ....       0.013 sec  (  0.7%)
+Prescreening matrices       ....       0.060 sec  (  3.2%)
+RI-J Coulomb gradient       ....       0.322 sec  ( 17.2%)
+COSX gradient               ....       0.560 sec  ( 29.9%)
+XC gradient                 ....       0.259 sec  ( 13.8%)
 ------------------------------------------------------------------------------
                          ORCA GEOMETRY RELAXATION STEP
 ------------------------------------------------------------------------------
@@ -1825,11 +1825,11 @@ INTERNAL COORDINATES (A.U.)
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 4.148e-04
-Time for diagonalization                   ...    0.007 sec
+Time for diagonalization                   ...    0.009 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.024 sec
-Total time needed                          ...    0.031 sec
+Time for construction of square roots      ...    0.031 sec
+Total time needed                          ...    0.040 sec
 
 -------------------
 DFT GRID GENERATION
@@ -1862,7 +1862,7 @@ Average number of large basis fcns per batch ...   124.64 (95.41%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.71 au
 Average spatial batch extension              ...   0.13,  0.13,  0.12 au
 
-Time for grid setup =    0.341 sec
+Time for grid setup =    0.115 sec
 
 --------------------
 COSX GRID GENERATION
@@ -1969,7 +1969,7 @@ Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    0.724 sec
+Time for X-Grid setup             =    0.579 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -2010,7 +2010,7 @@ Grids for H and He will be reduced by one unit
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.2 sec
-Reduced shell lists constructed in    0.2 sec
+Reduced shell lists constructed in    0.3 sec
 
 Total number of grid points                  ...    36674
 Total number of batches                      ...      576
@@ -2024,7 +2024,7 @@ Maximum spatial batch extension              ...   2.79,  2.33,  3.77 au
 Average spatial batch extension              ...   0.09,  0.09,  0.09 au
 
 Final grid set up in    0.4 sec
-Final integration                            ... done (   2.2 sec)
+Final integration                            ... done (   0.3 sec)
 Change in XC energy                          ...    -0.000564825
 Integrated number of electrons               ...    31.999972618
 Previous integrated no of electrons          ...    32.000517131
@@ -2032,14 +2032,14 @@ Old exchange energy                            =     -8.986658511 Eh
 New exchange energy                            =     -8.986443809 Eh
 Exchange energy change after final integration =      0.000214702 Eh
 Total energy after final integration           =   -229.120202821 Eh
-Final COS-X integration done in                =     0.430 sec
+Final COS-X integration done in                =     0.482 sec
 Total Energy       :         -229.12020282 Eh           -6234.67768 eV
   Last Energy change         ...   -5.2732e-09  Tolerance :   1.0000e-08
   Last MAX-Density change    ...    8.8818e-16  Tolerance :   1.0000e-07
              **** THE GBW FILE WAS UPDATED (optimization.gbw) ****
              **** DENSITY FILE WAS UPDATED (optimization.scfp.tmp) ****
              **** ENERGY FILE WAS UPDATED (optimization.en.tmp) ****
-Total SCF time: 0 days 0 hours 0 min 14 sec 
+Total SCF time: 0 days 0 hours 0 min 13 sec 
 
 
 -------------------------------------------------------------------------------
@@ -2108,13 +2108,13 @@ MAX gradient                       ...    0.0016289797
 TIMINGS
 -------
 
-Total SCF gradient time            ...        2.030 sec
+Total SCF gradient time            ...        2.151 sec
 
-One electron gradient       ....       0.012 sec  (  0.6%)
-Prescreening matrices       ....       0.059 sec  (  2.9%)
-RI-J Coulomb gradient       ....       0.354 sec  ( 17.5%)
-COSX gradient               ....       0.504 sec  ( 24.8%)
-XC gradient                 ....       0.241 sec  ( 11.9%)
+One electron gradient       ....       0.036 sec  (  1.7%)
+Prescreening matrices       ....       0.060 sec  (  2.8%)
+RI-J Coulomb gradient       ....       0.391 sec  ( 18.2%)
+COSX gradient               ....       0.497 sec  ( 23.1%)
+XC gradient                 ....       0.257 sec  ( 11.9%)
 ------------------------------------------------------------------------------
                          ORCA GEOMETRY RELAXATION STEP
 ------------------------------------------------------------------------------
@@ -2270,11 +2270,11 @@ INTERNAL COORDINATES (A.U.)
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 4.146e-04
-Time for diagonalization                   ...    0.012 sec
+Time for diagonalization                   ...    0.008 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.031 sec
-Total time needed                          ...    0.044 sec
+Time for construction of square roots      ...    0.033 sec
+Total time needed                          ...    0.041 sec
 
 -------------------
 DFT GRID GENERATION
@@ -2307,7 +2307,7 @@ Average number of large basis fcns per batch ...   124.64 (95.41%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.71 au
 Average spatial batch extension              ...   0.13,  0.13,  0.12 au
 
-Time for grid setup =    0.096 sec
+Time for grid setup =    0.117 sec
 
 --------------------
 COSX GRID GENERATION
@@ -2323,7 +2323,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   3600 (   0.0 sec)
-# of grid points (after weights+screening)   ...   3485 (   0.0 sec)
+# of grid points (after weights+screening)   ...   3485 (   0.9 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -2357,7 +2357,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   4616 (   0.0 sec)
-# of grid points (after weights+screening)   ...   4463 (   0.7 sec)
+# of grid points (after weights+screening)   ...   4463 (   0.0 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -2375,7 +2375,7 @@ Maximum spatial batch extension              ...   3.29,  2.90,  3.69 au
 Average spatial batch extension              ...   0.17,  0.16,  0.18 au
 
 Overlap Fitting                  UseSFitting ... on
-Constructing numerical overlap ... done (      0.0 sec)
+Constructing numerical overlap ... done (      0.1 sec)
 Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
@@ -2391,7 +2391,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   8452 (   0.0 sec)
-# of grid points (after weights+screening)   ...   8140 (   0.0 sec)
+# of grid points (after weights+screening)   ...   8140 (   0.2 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -2414,7 +2414,7 @@ Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    1.501 sec
+Time for X-Grid setup             =    2.013 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -2469,7 +2469,7 @@ Maximum spatial batch extension              ...   2.79,  2.33,  3.77 au
 Average spatial batch extension              ...   0.09,  0.09,  0.09 au
 
 Final grid set up in    0.4 sec
-Final integration                            ... done (   0.2 sec)
+Final integration                            ... done (   0.3 sec)
 Change in XC energy                          ...    -0.000565082
 Integrated number of electrons               ...    31.999972161
 Previous integrated no of electrons          ...    32.000522699
@@ -2477,7 +2477,7 @@ Old exchange energy                            =     -8.986734726 Eh
 New exchange energy                            =     -8.986519349 Eh
 Exchange energy change after final integration =      0.000215377 Eh
 Total energy after final integration           =   -229.120205646 Eh
-Final COS-X integration done in                =     0.492 sec
+Final COS-X integration done in                =     0.491 sec
 Total Energy       :         -229.12020565 Eh           -6234.67776 eV
   Last Energy change         ...    1.9159e-10  Tolerance :   1.0000e-08
   Last MAX-Density change    ...    9.9920e-16  Tolerance :   1.0000e-07
@@ -2553,13 +2553,13 @@ MAX gradient                       ...    0.0007917083
 TIMINGS
 -------
 
-Total SCF gradient time            ...        1.700 sec
+Total SCF gradient time            ...        1.798 sec
 
-One electron gradient       ....       0.014 sec  (  0.8%)
-Prescreening matrices       ....       0.074 sec  (  4.3%)
-RI-J Coulomb gradient       ....       0.334 sec  ( 19.6%)
-COSX gradient               ....       0.459 sec  ( 27.0%)
-XC gradient                 ....       0.184 sec  ( 10.8%)
+One electron gradient       ....       0.013 sec  (  0.7%)
+Prescreening matrices       ....       0.063 sec  (  3.5%)
+RI-J Coulomb gradient       ....       0.325 sec  ( 18.1%)
+COSX gradient               ....       0.490 sec  ( 27.3%)
+XC gradient                 ....       0.226 sec  ( 12.6%)
 ------------------------------------------------------------------------------
                          ORCA GEOMETRY RELAXATION STEP
 ------------------------------------------------------------------------------
@@ -2718,7 +2718,7 @@ Smallest eigenvalue                        ... 4.153e-04
 Time for diagonalization                   ...    0.007 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.023 sec
+Time for construction of square roots      ...    0.024 sec
 Total time needed                          ...    0.031 sec
 
 -------------------
@@ -2752,7 +2752,7 @@ Average number of large basis fcns per batch ...   124.55 (95.34%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.71 au
 Average spatial batch extension              ...   0.13,  0.13,  0.12 au
 
-Time for grid setup =    0.099 sec
+Time for grid setup =    0.096 sec
 
 --------------------
 COSX GRID GENERATION
@@ -2786,7 +2786,7 @@ Maximum spatial batch extension              ...   3.18,  2.99,  3.46 au
 Average spatial batch extension              ...   0.17,  0.16,  0.18 au
 
 Overlap Fitting                  UseSFitting ... on
-Constructing numerical overlap ... done (      0.1 sec)
+Constructing numerical overlap ... done (      0.0 sec)
 Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
@@ -2859,7 +2859,7 @@ Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
 Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    0.751 sec
+Time for X-Grid setup             =    0.744 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -2900,7 +2900,7 @@ Grids for H and He will be reduced by one unit
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.2 sec
-Reduced shell lists constructed in    0.3 sec
+Reduced shell lists constructed in    0.2 sec
 
 Total number of grid points                  ...    36679
 Total number of batches                      ...      578
@@ -2913,7 +2913,7 @@ Average number of large basis fcns per batch ...   128.16 (93.03%)
 Maximum spatial batch extension              ...   2.79,  2.33,  3.77 au
 Average spatial batch extension              ...   0.09,  0.09,  0.09 au
 
-Final grid set up in    0.4 sec
+Final grid set up in    0.3 sec
 Final integration                            ... done (   0.3 sec)
 Change in XC energy                          ...    -0.000565779
 Integrated number of electrons               ...    31.999971994
@@ -2922,7 +2922,7 @@ Old exchange energy                            =     -8.986688413 Eh
 New exchange energy                            =     -8.986472679 Eh
 Exchange energy change after final integration =      0.000215734 Eh
 Total energy after final integration           =   -229.120206200 Eh
-Final COS-X integration done in                =     0.491 sec
+Final COS-X integration done in                =     0.756 sec
 Total Energy       :         -229.12020620 Eh           -6234.67778 eV
   Last Energy change         ...   -1.4076e-09  Tolerance :   1.0000e-08
   Last MAX-Density change    ...    1.1102e-15  Tolerance :   1.0000e-07
@@ -2998,13 +2998,13 @@ MAX gradient                       ...    0.0004847498
 TIMINGS
 -------
 
-Total SCF gradient time            ...        1.952 sec
+Total SCF gradient time            ...        1.826 sec
 
-One electron gradient       ....       0.036 sec  (  1.8%)
-Prescreening matrices       ....       0.070 sec  (  3.6%)
-RI-J Coulomb gradient       ....       0.386 sec  ( 19.8%)
-COSX gradient               ....       0.509 sec  ( 26.1%)
-XC gradient                 ....       0.256 sec  ( 13.1%)
+One electron gradient       ....       0.012 sec  (  0.7%)
+Prescreening matrices       ....       0.060 sec  (  3.3%)
+RI-J Coulomb gradient       ....       0.379 sec  ( 20.8%)
+COSX gradient               ....       0.493 sec  ( 27.0%)
+XC gradient                 ....       0.196 sec  ( 10.7%)
 ------------------------------------------------------------------------------
                          ORCA GEOMETRY RELAXATION STEP
 ------------------------------------------------------------------------------
@@ -3219,18 +3219,18 @@ Integral package used                  ... LIBINT
  Ordering of the shell pairs             ... done (   0.000 sec) 1798 of 1830 pairs
  Determination of significant pairs      ... done (   0.000 sec)
  Creation of shell pair data             ... done (   0.000 sec)
- Storage of shell pair data              ... done (   0.016 sec)
- Shell pair data done in (   0.017 sec)
+ Storage of shell pair data              ... done (   0.018 sec)
+ Shell pair data done in (   0.019 sec)
  Computing two index integrals           ... done
  Cholesky decomposition of the V-matrix  ... done
 
 
 Timings:
- Total evaluation time                   ...   1.939 sec (  0.032 min)
- One electron matrix time                ...   1.567 sec (  0.026 min) = 80.8%
- Schwartz matrix evaluation time         ...   0.281 sec (  0.005 min) = 14.5%
- Two index repulsion integral time       ...   0.005 sec (  0.000 min) =  0.3%
- Cholesky decomposition of V             ...   0.014 sec (  0.000 min) =  0.7%
+ Total evaluation time                   ...   0.992 sec (  0.017 min)
+ One electron matrix time                ...   0.046 sec (  0.001 min) =  4.7%
+ Schwartz matrix evaluation time         ...   0.219 sec (  0.004 min) = 22.1%
+ Two index repulsion integral time       ...   0.006 sec (  0.000 min) =  0.6%
+ Cholesky decomposition of V             ...   0.664 sec (  0.011 min) = 67.0%
  Three index repulsion integral time     ...   0.000 sec (  0.000 min) =  0.0%
 
 
@@ -3317,11 +3317,11 @@ Convergence Tolerance:
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 4.156e-04
-Time for diagonalization                   ...    0.008 sec
+Time for diagonalization                   ...    0.009 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.015 sec
-Total time needed                          ...    0.023 sec
+Time for construction of square roots      ...    0.034 sec
+Total time needed                          ...    0.044 sec
 
 ---------------------
 INITIAL GUESS: MOREAD
@@ -3332,7 +3332,7 @@ Input basis set matches current basis set (good)
 MOs were renormalized
 MOs were reorthogonalized (Cholesky)
                       ------------------
-                      INITIAL GUESS DONE (   0.1 sec)
+                      INITIAL GUESS DONE (   0.0 sec)
                       ------------------
 -------------------
 DFT GRID GENERATION
@@ -3365,7 +3365,7 @@ Average number of large basis fcns per batch ...   124.55 (95.34%)
 Maximum spatial batch extension              ...   3.35,  2.85,  2.71 au
 Average spatial batch extension              ...   0.13,  0.13,  0.12 au
 
-Time for grid setup =    0.114 sec
+Time for grid setup =    0.095 sec
 
 --------------------
 COSX GRID GENERATION
@@ -3381,7 +3381,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   3600 (   0.0 sec)
-# of grid points (after weights+screening)   ...   3485 (   0.0 sec)
+# of grid points (after weights+screening)   ...   3485 (   0.1 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -3415,7 +3415,7 @@ Integration weight cutoff        WCut        ...    1.0000e-14
 Grids for H and He will be reduced by one unit
 
 # of grid points (after initial pruning)     ...   4616 (   0.0 sec)
-# of grid points (after weights+screening)   ...   4463 (   0.3 sec)
+# of grid points (after weights+screening)   ...   4463 (   0.1 sec)
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.0 sec
@@ -3467,12 +3467,12 @@ Maximum spatial batch extension              ...   3.41,  2.83,  2.76 au
 Average spatial batch extension              ...   0.14,  0.14,  0.14 au
 
 Overlap Fitting                  UseSFitting ... on
-Constructing numerical overlap ... done (      0.0 sec)
+Constructing numerical overlap ... done (      0.1 sec)
 Inverting numerical overlap    ... done (      0.0 sec)
 Obtaining analytic overlap     ... done (      0.0 sec)
-Final contraction and storage  ... done (      0.1 sec)
+Final contraction and storage  ... done (      0.0 sec)
 
-Time for X-Grid setup             =    1.095 sec
+Time for X-Grid setup             =    1.662 sec
 --------------
 SCF ITERATIONS
 --------------
@@ -3512,7 +3512,7 @@ Grids for H and He will be reduced by one unit
 nearest neighbour list constructed           ...    0.0 sec
 Grid point re-assignment to atoms done       ...    0.0 sec
 Grid point division into batches done        ...    0.2 sec
-Reduced shell lists constructed in    0.3 sec
+Reduced shell lists constructed in    0.2 sec
 
 Total number of grid points                  ...    36679
 Total number of batches                      ...      577
@@ -3525,8 +3525,8 @@ Average number of large basis fcns per batch ...   128.16 (93.05%)
 Maximum spatial batch extension              ...   2.79,  2.33,  3.77 au
 Average spatial batch extension              ...   0.09,  0.09,  0.09 au
 
-Final grid set up in    0.4 sec
-Final integration                            ... done (   0.2 sec)
+Final grid set up in    0.3 sec
+Final integration                            ... done (   0.9 sec)
 Change in XC energy                          ...    -0.000566083
 Integrated number of electrons               ...    31.999972032
 Previous integrated no of electrons          ...    32.000523988
@@ -3534,7 +3534,7 @@ Old exchange energy                            =     -8.986652433 Eh
 New exchange energy                            =     -8.986436691 Eh
 Exchange energy change after final integration =      0.000215742 Eh
 Total energy after final integration           =   -229.120207005 Eh
-Final COS-X integration done in                =     0.504 sec
+Final COS-X integration done in                =     0.468 sec
 
 ----------------
 TOTAL SCF ENERGY
@@ -3961,29 +3961,28 @@ B(  6-O ,  7-H ) :   0.8592
 TIMINGS
 -------
 
-Total SCF time: 0 days 0 hours 0 min 10 sec 
+Total SCF time: 0 days 0 hours 0 min 15 sec 
 
-Total time                  ....      10.674 sec
-Sum of individual times     ....       9.815 sec  ( 91.9%)
+Total time                  ....      15.742 sec
+Sum of individual times     ....      13.443 sec  ( 85.4%)
 
-Fock matrix formation       ....       7.591 sec  ( 71.1%)
-  Split-RI-J                ....       2.130 sec  ( 28.1% of F)
-  Chain of spheres X        ....       2.362 sec  ( 31.1% of F)
-  COS-X 1 center corr.      ....       0.000 sec  (  0.0% of F)
-  XC integration            ....       1.541 sec  ( 20.3% of F)
-    Basis function eval.    ....       0.045 sec  (  2.9% of XC)
-    Density eval.           ....       0.064 sec  (  4.1% of XC)
-    XC-Functional eval.     ....       0.083 sec  (  5.4% of XC)
-    XC-Potential eval.      ....       0.059 sec  (  3.9% of XC)
-Diagonalization             ....       0.022 sec  (  0.2%)
-Density matrix formation    ....       0.150 sec  (  1.4%)
-Population analysis         ....       0.179 sec  (  1.7%)
-Initial guess               ....       0.128 sec  (  1.2%)
+Fock matrix formation       ....       9.685 sec  ( 61.5%)
+  Split-RI-J                ....       2.040 sec  ( 21.1% of F)
+  Chain of spheres X        ....       2.152 sec  ( 22.2% of F)
+  XC integration            ....       2.733 sec  ( 28.2% of F)
+    Basis function eval.    ....       0.041 sec  (  1.5% of XC)
+    Density eval.           ....       0.055 sec  (  2.0% of XC)
+    XC-Functional eval.     ....       0.058 sec  (  2.1% of XC)
+    XC-Potential eval.      ....       0.059 sec  (  2.2% of XC)
+Diagonalization             ....       0.030 sec  (  0.2%)
+Density matrix formation    ....       0.877 sec  (  5.6%)
+Population analysis         ....       0.091 sec  (  0.6%)
+Initial guess               ....       0.026 sec  (  0.2%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
-Orbital Orthonormalization  ....       0.005 sec  (  0.0%)
+Orbital Orthonormalization  ....       0.009 sec  (  0.1%)
 DIIS solution               ....       0.001 sec  (  0.0%)
-SOSCF solution              ....       0.163 sec  (  1.5%)
-Grid generation             ....       1.580 sec  ( 14.8%)
+SOSCF solution              ....       0.655 sec  (  4.2%)
+Grid generation             ....       2.077 sec  ( 13.2%)
 
 
 -------------------------------------------------------------------------------
@@ -4072,12 +4071,378 @@ x,y,z [Debye]:    -0.795598    -1.572609     0.000009
 
  
 
+
+           ************************************************************
+           *        Program running with 16 parallel MPI-processes    *
+           *              working on a common directory               *
+           ************************************************************
+
+-------------------------------------------------------------------------------
+                               ORCA SCF HESSIAN
+-------------------------------------------------------------------------------
+
+Hessian of the Kohn-Sham DFT energy:
+Kohn-Sham wavefunction type                      ... RKS
+Hartree-Fock exchange scaling                    ...    0.196
+Number of operators                              ...    1
+Number of atoms                                  ...    8
+Basis set dimensions                             ...  148
+Integral neglect threshold                       ... 2.5e-11
+Integral primitive cutoff                        ... 2.5e-12
+
+Setting up DFT Hessian calculations              ... 
+Electron density on the grid                     ... found on disk
+Electron density on the final grid               ... found on disk
+Building xc-kernel on the grid                   ... done   (      0.4 sec)
+Building xc-kernel on the final grid             ... done   (      0.1 sec)
+                                                     done   (      0.8 sec)
+
+Nuclear repulsion Hessian                        ... done   (      0.0 sec)
+
+----------------------------------------------
+Forming right-hand sides of CP-SCF equations     ...
+----------------------------------------------
+One electron integral derivatives                ... done   (      0.2 sec)
+Transforming the overlap derivative matrices     ... done   (      0.0 sec)
+Making the Q(x) pseudodensities                  ... done   (      0.0 sec)
+Adding the E*S(x)*S(y) terms to the Hessian      ... done   (      0.0 sec)
+Calculating energy weighted overlap derivatives  ... done   (      0.1 sec)
+Two electron integral derivatives (RI)           ... done   (      5.3 sec)
+Exchange-correlation integral derivatives        ... done   (      2.0 sec)
+tr(F(y)Q(x)) contribution to the Hessian         ... done   (      0.0 sec)
+Response fock operator R(S(x)) (RIJCOSX)         ... done   (      1.7 sec)
+XC Response fock operator R(S(x))                ... done   (      0.7 sec)
+tr(F(y)S(x)) contribution to the Hessian         ... done   (      0.0 sec)
+Transforming and finalizing RHSs                 ... done   (      0.1 sec)
+
+----------------------------------------------
+Solving the CP-SCF equations (RIJCOSX)           ...
+----------------------------------------------
+     CP-SCF ITERATION   0: 
+     CP-SCF ITERATION   1:      0.003377920894
+     CP-SCF ITERATION   2:      0.000423169696
+     CP-SCF ITERATION   3:      0.000054735881
+     CP-SCF ITERATION   4:      0.000006338619
+     CP-SCF ITERATION   5:      0.000000603247
+     CP-SCF ITERATION   6:      0.000000028413
+     CP-SCF ITERATION   7:      0.000000007966
+
+                                                 ... done   (    118.6 sec)
+Forming perturbed density Hessian contributions  ... done   (      0.5 sec)
+2nd integral derivative contribs (RI)            ... done   (     33.8 sec)
+Exchange-correlation Hessian                     ... done   (      1.2 sec)
+Dispersion correction in the Hessian             ... done   (      0.4 sec)
+Dipol derivatives                                ... done   (      0.4 sec)
+
+Total SCF Hessian time: 0 days 0 hours 2 min 46 sec 
+
+Writing the Hessian file to the disk             ... done
+
+
+Maximum memory used throughout the entire calculation: 285.1 MB
+
+-----------------------
+VIBRATIONAL FREQUENCIES
+-----------------------
+
+Scaling factor for frequencies =  1.000000000  (already applied!)
+
+   0:         0.00 cm**-1
+   1:         0.00 cm**-1
+   2:         0.00 cm**-1
+   3:         0.00 cm**-1
+   4:         0.00 cm**-1
+   5:         0.00 cm**-1
+   6:       129.95 cm**-1
+   7:       432.62 cm**-1
+   8:       559.79 cm**-1
+   9:       596.64 cm**-1
+  10:       685.56 cm**-1
+  11:       889.02 cm**-1
+  12:      1013.51 cm**-1
+  13:      1078.76 cm**-1
+  14:      1231.89 cm**-1
+  15:      1360.09 cm**-1
+  16:      1436.34 cm**-1
+  17:      1479.01 cm**-1
+  18:      1483.85 cm**-1
+  19:      1861.21 cm**-1
+  20:      3087.48 cm**-1
+  21:      3161.79 cm**-1
+  22:      3203.31 cm**-1
+  23:      3813.96 cm**-1
+
+
+------------
+NORMAL MODES
+------------
+
+These modes are the Cartesian displacements weighted by the diagonal matrix
+M(i,i)=1/sqrt(m[i]) where m[i] is the mass of the displaced atom
+Thus, these vectors are normalized but *not* orthogonal
+
+                  0          1          2          3          4          5    
+      0       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      1       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      2       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      3       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      4       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      5       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      6       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      7       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      8       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+      9       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     10       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     11       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     12       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     13       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     14       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     15       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     16       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     17       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     18       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     19       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     20       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     21       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     22       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+     23       0.000000   0.000000   0.000000   0.000000   0.000000   0.000000
+                  6          7          8          9         10         11    
+      0      -0.000007  -0.011833   0.000066   0.138135  -0.000025  -0.119867
+      1       0.000048  -0.155465   0.000048  -0.003662   0.000058  -0.101554
+      2       0.011206  -0.000029  -0.207247   0.000172  -0.146973   0.000106
+      3       0.000068  -0.156696  -0.000137  -0.252422   0.000046  -0.066081
+      4       0.000039  -0.082796   0.000015   0.188785  -0.000089  -0.182266
+      5      -0.052490  -0.000070   0.056106   0.000004   0.068988  -0.000096
+      6       0.000005  -0.064063   0.000139   0.255499  -0.000031   0.309260
+      7      -0.000043   0.185963   0.000048   0.059050  -0.000015   0.034406
+      8       0.003587   0.000058   0.011482  -0.000007  -0.038407  -0.000003
+      9      -0.032562  -0.331212  -0.360199   0.197806  -0.263594   0.348815
+     10       0.499819   0.332593  -0.004951   0.089198  -0.044254   0.032370
+     11      -0.321199  -0.009964   0.135169   0.001700   0.080874  -0.003661
+     12       0.032795  -0.330370   0.360957   0.197626   0.263940   0.348696
+     13      -0.500643   0.331729   0.004957   0.089049   0.044204   0.032319
+     14      -0.320538   0.009548   0.135132  -0.001907   0.080806   0.003589
+     15      -0.000224   0.377003  -0.000212   0.374354  -0.000355   0.436182
+     16       0.000212   0.431262   0.000029   0.119957  -0.000071   0.088379
+     17       0.534991   0.000563   0.260457  -0.000024   0.130633  -0.000037
+     18      -0.000064   0.221798  -0.000043  -0.093347  -0.000010  -0.133831
+     19      -0.000001  -0.025033  -0.000068  -0.204026   0.000042   0.188716
+     20       0.048459   0.000046   0.009058  -0.000012   0.107672   0.000023
+     21      -0.000043   0.155625  -0.000130   0.027843   0.000118  -0.217426
+     22      -0.000044   0.252465  -0.000346  -0.716280   0.000348   0.544668
+     23      -0.005553  -0.000114   0.767616  -0.001612  -0.887343   0.000036
+                 12         13         14         15         16         17    
+      0       0.064113   0.000014  -0.110172   0.170822   0.159699   0.041148
+      1      -0.020963   0.000070   0.081635  -0.110781  -0.114203  -0.014861
+      2      -0.000087  -0.205907  -0.000025  -0.000032   0.000033  -0.000264
+      3       0.030447  -0.000041   0.044912  -0.012997  -0.006534  -0.014744
+      4       0.029010  -0.000058   0.085436   0.042677   0.044118  -0.012200
+      5       0.000023   0.042196   0.000041   0.000021   0.000010   0.000016
+      6      -0.007400   0.000027   0.036562   0.052036  -0.185723   0.006904
+      7      -0.165009   0.000039  -0.071965   0.038680   0.000590  -0.044793
+      8       0.000024   0.169577   0.000001  -0.000007   0.000107  -0.000509
+      9      -0.441087   0.577454  -0.044774  -0.380925   0.514468   0.089907
+     10       0.174708   0.177337   0.105429  -0.096272  -0.113315   0.500853
+     11      -0.081378  -0.154081  -0.084282   0.213694  -0.151346  -0.378279
+     12      -0.440191  -0.577761  -0.044508  -0.381128   0.515772   0.081548
+     13       0.174764  -0.177337   0.105613  -0.096560  -0.114322   0.508342
+     14       0.081168  -0.153688   0.084158  -0.213560   0.151255   0.378634
+     15       0.639984   0.000399   0.340236  -0.420510   0.348001  -0.358370
+     16       0.198885  -0.000152   0.096246  -0.218896   0.287980  -0.231311
+     17       0.000089  -0.385169   0.000067   0.000123  -0.001570   0.008043
+     18      -0.058560   0.000004   0.008115  -0.068708  -0.053783  -0.008487
+     19       0.089144  -0.000015  -0.165736   0.003368   0.017145   0.004623
+     20       0.000030   0.029830  -0.000028  -0.000010  -0.000010   0.000028
+     21       0.011732   0.000012  -0.215483  -0.176130  -0.110796  -0.016948
+     22      -0.207724  -0.000008   0.852018   0.540026   0.321058   0.053189
+     23       0.000023  -0.017371   0.000138   0.000039  -0.000004   0.000112
+                 18         19         20         21         22         23    
+      0       0.000274  -0.384549  -0.002399   0.000007   0.001043   0.003035
+      1      -0.000046  -0.591642   0.000450   0.000001   0.002569  -0.000457
+      2       0.026679  -0.000288  -0.000002  -0.000903   0.000001  -0.000000
+      3      -0.000145   0.209206  -0.000151  -0.000000  -0.000471  -0.000056
+      4      -0.000166   0.385854  -0.000332  -0.000001  -0.001065   0.000846
+      5      -0.002778   0.000205  -0.000000  -0.000148  -0.000000   0.000000
+      6       0.000271   0.064371   0.046883  -0.000109  -0.022929  -0.000613
+      7      -0.000442   0.039053   0.021894   0.000028   0.091433  -0.000423
+      8       0.049892   0.000016  -0.000154  -0.091863   0.000066   0.000000
+      9      -0.376150   0.091624  -0.156906   0.185698  -0.084129  -0.000377
+     10       0.322185   0.090445  -0.330677   0.384137  -0.157980   0.001322
+     11      -0.056454  -0.049489  -0.509466   0.560707  -0.259633   0.001161
+     12       0.376993   0.091289  -0.157458  -0.185439  -0.083597  -0.000375
+     13      -0.311087   0.090475  -0.331066  -0.382701  -0.156478   0.001322
+     14      -0.048090   0.049288   0.511641   0.560406   0.258245  -0.001166
+     15      -0.004315  -0.197956  -0.213657   0.000960   0.427651   0.000296
+     16      -0.003363  -0.139305   0.402448  -0.001777  -0.781415   0.000161
+     17      -0.712026   0.000055  -0.000320  -0.014670   0.000589  -0.000001
+     18      -0.000040   0.024365   0.000152   0.000000   0.000568   0.059717
+     19       0.000027   0.053733  -0.000003   0.000000  -0.000424   0.012998
+     20      -0.002690   0.000013   0.000000   0.000049  -0.000000   0.000012
+     21      -0.000084   0.122921  -0.002051  -0.000000  -0.000678  -0.975336
+     22       0.000300  -0.434289  -0.001636   0.000002  -0.000592  -0.212056
+     23      -0.009031  -0.000073  -0.000001   0.000505  -0.000002  -0.000193
+
+
+-----------
+IR SPECTRUM
+-----------
+
+ Mode    freq (cm**-1)   T**2         TX         TY         TZ
+-------------------------------------------------------------------
+   6:       129.95    0.165620  ( -0.000516  -0.001464  -0.406961)
+   7:       432.62    4.426197  ( -0.313707   2.080333  -0.000952)
+   8:       559.79   27.282899  (  0.002820  -0.001477   5.223302)
+   9:       596.64   42.614965  (  5.995540  -2.582326  -0.007222)
+  10:       685.56   98.894591  ( -0.001001   0.003681  -9.944575)
+  11:       889.02    3.138518  ( -1.133915  -1.361159   0.000044)
+  12:      1013.51   50.713211  (  4.559027  -5.470693  -0.002429)
+  13:      1078.76    9.033519  (  0.003361   0.003665  -3.005577)
+  14:      1231.89  212.464739  ( -9.139858  11.354635   0.001554)
+  15:      1360.09   29.724940  (  2.729598  -4.719558  -0.000797)
+  16:      1436.34   93.083585  (  8.369358  -4.799728  -0.006881)
+  17:      1479.01   16.307323  (  2.367211   3.271480   0.032430)
+  18:      1483.85   10.030807  (  0.014361   0.040663  -3.166851)
+  19:      1861.21  354.671812  ( -6.479083 -17.683135  -0.005054)
+  20:      3087.48    1.259678  (  0.951090   0.595905  -0.002087)
+  21:      3161.79    3.325110  ( -0.005177  -0.000986  -1.823481)
+  22:      3203.31    3.890483  ( -0.928480   1.740231   0.001857)
+  23:      3813.96   66.118572  ( -8.093877   0.779572  -0.001011)
+
+The first frequency considered to be a vibration is 6
+The total number of vibrations considered is 18
+
+
+--------------------------
+THERMOCHEMISTRY AT 298.15K
+--------------------------
+
+Temperature         ... 298.15 K
+Pressure            ... 1.00 atm
+Total Mass          ... 60.05 AMU
+
+Throughout the following assumptions are being made:
+  (1) The electronic state is orbitally nondegenerate
+  (2) There are no thermally accessible electronically excited states
+  (3) Hindered rotations indicated by low frequency modes are not
+      treated as such but are treated as vibrations and this may
+      cause some error
+  (4) All equations used are the standard statistical mechanics
+      equations for an ideal gas
+  (5) All vibrations are strictly harmonic
+
+freq.     129.95  E(vib)   ...       0.43 
+freq.     432.62  E(vib)   ...       0.18 
+freq.     559.79  E(vib)   ...       0.12 
+freq.     596.64  E(vib)   ...       0.10 
+freq.     685.56  E(vib)   ...       0.07 
+freq.     889.02  E(vib)   ...       0.04 
+freq.    1013.51  E(vib)   ...       0.02 
+freq.    1078.76  E(vib)   ...       0.02 
+freq.    1231.89  E(vib)   ...       0.01 
+freq.    1360.09  E(vib)   ...       0.01 
+freq.    1436.34  E(vib)   ...       0.00 
+freq.    1479.01  E(vib)   ...       0.00 
+freq.    1483.85  E(vib)   ...       0.00 
+freq.    1861.21  E(vib)   ...       0.00 
+freq.    3087.48  E(vib)   ...       0.00 
+freq.    3161.79  E(vib)   ...       0.00 
+freq.    3203.31  E(vib)   ...       0.00 
+freq.    3813.96  E(vib)   ...       0.00 
+
+------------
+INNER ENERGY
+------------
+
+The inner energy is: U= E(el) + E(ZPE) + E(vib) + E(rot) + E(trans)
+    E(el)   - is the total energy from the electronic structure calculation
+              = E(kin-el) + E(nuc-el) + E(el-el) + E(nuc-nuc)
+    E(ZPE)  - the the zero temperature vibrational energy from the frequency calculation
+    E(vib)  - the the finite temperature correction to E(ZPE) due to population
+              of excited vibrational states
+    E(rot)  - is the rotational thermal energy
+    E(trans)- is the translational thermal energy
+
+Summary of contributions to the inner energy U:
+Electronic energy                ...   -229.12132242 Eh
+Zero point energy                ...      0.06266052 Eh      39.32 kcal/mol
+Thermal vibrational correction   ...      0.00158178 Eh       0.99 kcal/mol
+Thermal rotational correction    ...      0.00141627 Eh       0.89 kcal/mol
+Thermal translational correction ...      0.00141627 Eh       0.89 kcal/mol
+-----------------------------------------------------------------------
+Total thermal energy                   -229.05424758 Eh
+
+
+Summary of corrections to the electronic energy:
+(perhaps to be used in another calculation)
+Total thermal correction                  0.00441433 Eh       2.77 kcal/mol
+Non-thermal (ZPE) correction              0.06266052 Eh      39.32 kcal/mol
+-----------------------------------------------------------------------
+Total correction                          0.06707484 Eh      42.09 kcal/mol
+
+
+--------
+ENTHALPY
+--------
+
+The enthalpy is H = U + kB*T
+                kB is Boltzmann's constant
+Total free energy                 ...   -229.05424758 Eh 
+Thermal Enthalpy correction       ...      0.00094421 Eh       0.59 kcal/mol
+-----------------------------------------------------------------------
+Total Enthalpy                    ...   -229.05330337 Eh
+
+
+Note: Rotational entropy computed according to Herzberg 
+Infrared and Raman Spectra, Chapter V,1, Van Nostrand Reinhold, 1945 
+Point Group:  C1, Symmetry Number:   1  
+Rotational constants in cm-1:     0.383283     0.317709     0.179454 
+
+Vibrational entropy computed according to the QRRHO of S. Grimme
+Chem.Eur.J. 2012 18 9955
+
+
+-------
+ENTROPY
+-------
+
+The entropy contributions are T*S = T*(S(el)+S(vib)+S(rot)+S(trans))
+     S(el)   - electronic entropy
+     S(vib)  - vibrational entropy
+     S(rot)  - rotational entropy
+     S(trans)- translational entropy
+The entropies will be listed as mutliplied by the temperature to get
+units of energy
+
+Electronic entropy                ...      0.00000000 Eh      0.00 kcal/mol
+Vibrational entropy               ...      0.00257313 Eh      1.61 kcal/mol
+Rotational entropy                ...      0.01131582 Eh      7.10 kcal/mol
+Translational entropy             ...      0.01814900 Eh     11.39 kcal/mol
+-----------------------------------------------------------------------
+Final entropy term                ...      0.03203795 Eh     20.10 kcal/mol
+
+
+-------------------
+GIBBS FREE ENTHALPY
+-------------------
+
+The Gibbs free enthalpy is G = H - T*S
+
+Total enthalpy                    ...   -229.05330337 Eh 
+Total entropy correction          ...     -0.03203795 Eh    -20.10 kcal/mol
+-----------------------------------------------------------------------
+Final Gibbs free enthalpy         ...   -229.08534132 Eh
+
+For completeness - the Gibbs free enthalpy minus the electronic energy
+G-E(el)                           ...      0.03598111 Eh     22.58 kcal/mol
+
+
 Timings for individual modules:
 
-Sum of individual times         ...      131.750 sec (=   2.196 min)
-GTO integral calculation        ...       16.178 sec (=   0.270 min)  12.3 %
-SCF iterations                  ...       96.606 sec (=   1.610 min)  73.3 %
-SCF Gradient evaluation         ...       12.716 sec (=   0.212 min)   9.7 %
-Geometry relaxation             ...        6.251 sec (=   0.104 min)   4.7 %
+Sum of individual times         ...      293.798 sec (=   4.897 min)
+GTO integral calculation        ...       10.642 sec (=   0.177 min)   3.6 %
+SCF iterations                  ...       96.973 sec (=   1.616 min)  33.0 %
+SCF Gradient evaluation         ...       13.548 sec (=   0.226 min)   4.6 %
+Geometry relaxation             ...        5.097 sec (=   0.085 min)   1.7 %
+Analytical frequency calculation...      167.538 sec (=   2.792 min)  57.0 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 2 minutes 16 seconds 510 msec
+TOTAL RUN TIME: 0 days 0 hours 4 minutes 58 seconds 452 msec

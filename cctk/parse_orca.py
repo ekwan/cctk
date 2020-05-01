@@ -36,10 +36,10 @@ def read_geometries(lines, num_to_find):
         atomic_numbers.append(OneIndexedArray(numbers, dtype=np.int8))
         geometries.append(OneIndexedArray(geometry))
 
-        assert len(atomic_numbers) == len(geometries)
-        for zs in atomic_numbers:
-            assert np.array_equiv(zs, atomic_numbers[0])
-        return atomic_numbers[0], geometries
+    assert len(atomic_numbers) == len(geometries)
+    for zs in atomic_numbers:
+        assert np.array_equiv(zs, atomic_numbers[0])
+    return atomic_numbers[0], geometries
 
 def read_energies(lines):
     energies = lines.find_parameter("FINAL SINGLE POINT ENERGY", 5, 4)
@@ -147,3 +147,13 @@ def extract_input_file(lines):
         line = line.lstrip()
         input_lines.append(line)
     return input_lines
+
+def read_freqs(lines):
+    freq_block = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", join="\n", max_len=1000)
+    freqs = []
+    for line in freq_block.split("\n"):
+        fields = re.split(" +", line.strip())
+        if len(fields) == 3:
+            if fields[2] == "cm**-1" and float(fields[1]) > 0:
+                freqs.append(float(fields[1]))
+    return freqs

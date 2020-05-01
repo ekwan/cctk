@@ -32,7 +32,7 @@ class TestOrca(unittest.TestCase):
         ensemble = cctk.ConformationalEnsemble()
         ensemble.add_molecule(file.molecule)
 
-        orca_file = cctk.OrcaFile(ensemble=ensemble, header=header, blocks=blocks, variables=variables)
+        orca_file = cctk.OrcaFile(job_types=[cctk.OrcaJobType.SP], ensemble=ensemble, header=header, blocks=blocks, variables=variables)
         orca_file.write_file(new_path)
 
         with open(path) as old:
@@ -64,8 +64,12 @@ class TestOrca(unittest.TestCase):
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 8)
-        self.assertEqual(file.ensemble[mol,"energy"], -229.120816332194)
+        self.assertEqual(file.ensemble[mol,"energy"], -229.12132242363)
         self.assertEqual(file.ensemble[mol, "dipole_moment"], 1.76241)
 
         self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.333851)
         self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.515118)
+
+        self.assertEqual(file.ensemble[mol, "temperature"], 298.15)
+        self.assertEqual(file.ensemble[mol, "enthalpy"], -229.05330337)
+        self.assertEqual(file.ensemble[mol, "gibbs_free_energy"], -229.08534132)

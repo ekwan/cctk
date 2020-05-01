@@ -11,7 +11,7 @@ from cctk.helper_functions import get_symbol, compute_distance_between, \
 import cctk.parse_gaussian as parse
 
 
-class JobType(Enum):
+class GaussianJobType(Enum):
     """
     Class representing allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
 
@@ -72,7 +72,7 @@ class GaussianFile(File):
 
     Attributes:
         ensemble (Ensemble): ``ConformationalEnsemble`` instance
-        job_types (list): list of `job_type` instances
+        job_types (list): list of `job_type`` instances
         route_card (str): optional, route card of .gjf file
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
         footer (str): optional, footer of .gjf file
@@ -116,7 +116,7 @@ class GaussianFile(File):
             raise TypeError(f"elapsed_time invalid: {elapsed_time}")
 
         if job_types is not None:
-            if not all(isinstance(job, JobType) for job in job_types):
+            if not all(isinstance(job, GaussianJobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
 
         self.ensemble = ConformationalEnsemble()
@@ -221,7 +221,7 @@ class GaussianFile(File):
         """
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
-        if (JobType.FREQ in self.job_types) and (self.ensemble[-1:,"frequencies"] is not None):
+        if (GaussianJobType.FREQ in self.job_types) and (self.ensemble[-1:,"frequencies"] is not None):
             freqs = self.ensemble[-1:,"frequencies"]
             if not isinstance(freqs, list) or len(freqs) == 0:
                 return list()
@@ -320,7 +320,7 @@ class GaussianFile(File):
                 properties[idx]["iteration"] = idx
 
             #### now for some job-type specific attributes
-            if JobType.OPT in job_types:
+            if GaussianJobType.OPT in job_types:
                 rms_forces = lines.find_parameter("RMS\s+Force", expected_length=5, which_field=2)
                 rms_displacements = lines.find_parameter("RMS\s+Displacement", expected_length=5, which_field=2)
 
@@ -347,7 +347,7 @@ class GaussianFile(File):
                         change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
                         properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
 
-            if JobType.FREQ in job_types:
+            if GaussianJobType.FREQ in job_types:
                 enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
                 if len(enthalpies) == 1:
                     properties[-1]["enthalpy"] = enthalpies[0]
@@ -378,17 +378,17 @@ class GaussianFile(File):
                     properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
 
 
-            if JobType.NMR in job_types:
+            if GaussianJobType.NMR in job_types:
                 assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
                 properties[0]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
 
-            if JobType.FORCE in job_types:
+            if GaussianJobType.FORCE in job_types:
                 assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
                 forces = parse.read_forces(lines)
                 properties[0]["forces"] = forces
 
-            if JobType.POP in job_types:
+            if GaussianJobType.POP in job_types:
                 if re.search("hirshfeld", f.route_card):
                     charges, spins = parse.read_hirshfeld_charges(lines)
                     properties[-1]["hirshfeld_charges"] = charges
@@ -527,22 +527,22 @@ class GaussianFile(File):
     @classmethod
     def _assign_job_types(cls, header):
         """
-        Assigns ``JobType`` objects from route card. ``Job.Type.SP`` is assigned by default.
+        Assigns ``GaussianJobType`` objects from route card. ``GaussianJobType.SP`` is assigned by default.
 
-        For instance, "#p opt freq=noraman" would give an output of ``[JobType.SP, JobType.OPT, JobType.FREQ]``.
+        For instance, "#p opt freq=noraman" would give an output of ``[GaussianJobType.SP, GaussianJobType.OPT, GaussianJobType.FREQ]``.
 
         Args:
             header (str): Gaussian route card
 
         Returns:
-            list of ``JobType`` objects
+            list of ``GaussianJobType`` objects
         """
         job_types = []
-        for name, member in JobType.__members__.items():
+        for name, member in GaussianJobType.__members__.items():
             if re.search(f" {member.value}", str(header), re.IGNORECASE):
                 job_types.append(member)
-        if JobType.SP not in job_types:
-            job_types.append(JobType.SP)
+        if GaussianJobType.SP not in job_types:
+            job_types.append(GaussianJobType.SP)
         return job_types
 
     def check_has_properties(self):
@@ -552,7 +552,7 @@ class GaussianFile(File):
         This only checks the last molecule in ``self.ensemble``, for now.
         """
         if self.successful_terminations > 0:
-            if self.successful_terminations == 1 and ((JobType.OPT in self.job_types) and (JobType.FREQ in self.job_types)):
+            if self.successful_terminations == 1 and ((GaussianJobType.OPT in self.job_types) and (GaussianJobType.FREQ in self.job_types)):
                 return # opt freq jobs should have two terminations
             for job_type in self.job_types:
                 for prop in EXPECTED_PROPERTIES[job_type.value]:

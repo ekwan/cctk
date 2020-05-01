@@ -1,12 +1,45 @@
 import sys, re
 import numpy as np
 
-from abc import abstractmethod
+from enum import Enum
+#from abc import abstractmethod
 
 from cctk import File, Molecule, ConformationalEnsemble
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
+from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number, get_corrected_free_energy
 
 import cctk.parse_orca as parse
+
+class OrcaJobType(Enum):
+    """
+    Class representing allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
+
+    The value should be the Gaussian keyword, to permit automatic assignment.
+
+    All jobs have type ``SP`` by default.
+    """
+
+    SP = "sp"
+    """
+    Single point energy calculation.
+    """
+
+    OPT = "opt"
+    """
+    Geometry optimization.
+    """
+
+    FREQ = "freq"
+    """
+    Hessian calculation.
+    """
+
+#### This static variable tells what properties are expected from each JobType.
+EXPECTED_PROPERTIES = {
+    "sp": ["energy", "scf_iterations",],
+    "opt": ["rms_displacement", "rms_force",],
+    "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
+}
+
 
 class OrcaFile(File):
     """
@@ -14,6 +47,7 @@ class OrcaFile(File):
 
     Attributes:
         ensemble (ConformationalEnsemble): `ConformationalEnsemble` instance
+        job_types (list): list of ``OrcaJobType`` instances
         header (str): keyword line or lines
         variables (dict): list of variables to specify (e.g. ``{"maxcore": 2000}``).
         blocks (dict): list of blocks to change specific settings
@@ -23,7 +57,11 @@ class OrcaFile(File):
         elapsed_time (float): total time for job in seconds
     """
 
-    def __init__(self, ensemble=None,  header=None, variables=None, blocks=None):
+    def __init__(self, job_types, ensemble=None,  header=None, variables=None, blocks=None):
+        if job_types is not None:
+            if not all(isinstance(job, OrcaJobType) for job in job_types):
+                raise TypeError(f"invalid job type {job}")
+
         if ensemble and isinstance(ensemble, ConformationalEnsemble):
             self.ensemble = ensemble
         else:
@@ -57,6 +95,7 @@ class OrcaFile(File):
         for lines in multiple_lines:
             input_lines = parse.extract_input_file(lines)
             header = parse.read_header(input_lines)
+            job_types = cls._assign_job_types(header)
             variables, blocks = parse.read_blocks_and_variables(input_lines)
 
             success = 0
@@ -78,6 +117,7 @@ class OrcaFile(File):
                 return None
 
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
+            assert len(geometries) >= len(energies), "can't have an energy without a geometry (cf. pigeonhole principle)"
 
             charge = lines.find_parameter("xyz", 6, 4)[0]
             multip = lines.find_parameter("xyz", 6, 5)[0]
@@ -85,7 +125,7 @@ class OrcaFile(File):
             #### TODO
             # detect Mayer bond orders
 
-            f = OrcaFile(header=header, variables=variables, blocks=blocks)
+            f = OrcaFile(job_types, header=header, variables=variables, blocks=blocks)
             f.elapsed_time = elapsed_time
             f.successful_terminations = success
 
@@ -97,6 +137,41 @@ class OrcaFile(File):
                     properties[idx]["energy"] = energies[idx]
                 properties[idx]["filename"] = filename
                 properties[idx]["iteration"] = idx
+
+            if OrcaJobType.OPT in job_types:
+                rms_grad = lines.find_parameter("RMS gradient", expected_length=5, which_field=2)
+                max_grad = lines.find_parameter("MAX gradient", expected_length=5, which_field=2)
+                rms_step = lines.find_parameter("RMS step", expected_length=5, which_field=2)
+                max_step = lines.find_parameter("MAX step", expected_length=5, which_field=2)
+
+                for idx, force in enumerate(rms_grad):
+                    properties[idx]["rms_gradient"] = rms_grad[idx]
+                    properties[idx]["max_gradient"] = max_grad[idx]
+                    properties[idx]["rms_step"] = rms_step[idx]
+                    properties[idx]["max_step"] = max_step[idx]
+
+            if OrcaJobType.FREQ in job_types:
+                properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
+
+                enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
+                if len(enthalpies) == 1:
+                    properties[-1]["enthalpy"] = enthalpies[0]
+                elif len(enthalpies) > 1:
+                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+
+                gibbs = lines.find_parameter("Final Gibbs free enthalpy", expected_length=7, which_field=5)
+                if len(gibbs) == 1:
+                    properties[-1]["gibbs_free_energy"] = gibbs[0]
+                elif len(gibbs) > 1:
+                    raise ValueError(f"unexpected # of gibbs free energies found!\ngibbs free energies = {enthalpies}")
+
+                #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
+                temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
+                if len(temperature) == 1:
+                    properties[-1]["temperature"] = temperature[0]
+                    corrected_free_energy = get_corrected_free_energy(gibbs[0], properties[-1]["frequencies"],
+                                                                      frequency_cutoff=100.0, temperature=temperature[0])
+                    properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
 
             try:
                 charges = parse.read_mulliken_charges(lines)
@@ -208,8 +283,6 @@ class OrcaFile(File):
 
     def get_molecule(self, num=None):
         """
-        TODO: check indexing here
-
         Returns the last molecule (from an optimization job or other multi-molecule jobs) or the only molecule (from other jobs).
 
         If ``num`` is specified, returns that job (1-indexed for positive numbers). So ``job.get_molecule(3)`` will return the 3rd element of ``job.molecules``, not the 4th.
@@ -221,11 +294,7 @@ class OrcaFile(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        #### enforce 1-indexing for positive numbers
-        if num > 0:
-            num += -1
-
-        return self.ensemble.molecules[num]
+        return self.ensemble.molecule_list()[num]
 
     def num_imaginaries(self):
         """
@@ -237,4 +306,33 @@ class OrcaFile(File):
         """
         Returns the imaginary frequencies, rounded to the nearest integer.
         """
-        return list()
+        if (OrcaJobType.FREQ in self.job_types) and (self.ensemble[-1:,"frequencies"] is not None):
+            freqs = self.ensemble[-1:,"frequencies"]
+            if not isinstance(freqs, list) or len(freqs) == 0:
+                return list()
+            else:
+                return list(map(int, np.array(freqs)[np.array(freqs) < 0]))
+        else:
+            return list()
+
+
+    @classmethod
+    def _assign_job_types(cls, header):
+        """
+        Assigns ``OrcaJobType`` objects from route card. ``GaussianJobType.SP`` is assigned by default.
+
+        Args:
+            header (str): Orca header
+
+        Returns:
+            list of ``OrcaJobType`` objects
+        """
+        job_types = []
+        for name, member in OrcaJobType.__members__.items():
+            if re.search(f" {member.value}", str(header), re.IGNORECASE):
+                job_types.append(member)
+        if OrcaJobType.SP not in job_types:
+            job_types.append(OrcaJobType.SP)
+        return job_types
+
+
