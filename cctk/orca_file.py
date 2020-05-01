@@ -36,8 +36,9 @@ class OrcaJobType(Enum):
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
-    "opt": ["rms_displacement", "rms_force",],
-    "freq": ["gibbs_free_energy", "enthalpy", "frequencies",],
+#    "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
+    "opt": [],
+    "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
 }
 
 
@@ -61,6 +62,9 @@ class OrcaFile(File):
         if job_types is not None:
             if not all(isinstance(job, OrcaJobType) for job in job_types):
                 raise TypeError(f"invalid job type {job}")
+            self.job_types = job_types
+        else:
+            raise ValueError("need job types for new Orca file")
 
         if ensemble and isinstance(ensemble, ConformationalEnsemble):
             self.ensemble = ensemble
@@ -112,7 +116,7 @@ class OrcaFile(File):
                     seconds = float(fields[9])
                     elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
 
-            energies = parse.read_energies(lines)
+            energies, iters = parse.read_energies(lines)
             if len(energies) == 0:
                 return None
 
@@ -137,6 +141,7 @@ class OrcaFile(File):
                     properties[idx]["energy"] = energies[idx]
                 properties[idx]["filename"] = filename
                 properties[idx]["iteration"] = idx
+                properties[idx]["scf_iterations"] = iters[idx]
 
             if OrcaJobType.OPT in job_types:
                 rms_grad = lines.find_parameter("RMS gradient", expected_length=5, which_field=2)
@@ -145,10 +150,10 @@ class OrcaFile(File):
                 max_step = lines.find_parameter("MAX step", expected_length=5, which_field=2)
 
                 for idx, force in enumerate(rms_grad):
-                    properties[idx]["rms_gradient"] = rms_grad[idx]
-                    properties[idx]["max_gradient"] = max_grad[idx]
-                    properties[idx]["rms_step"] = rms_step[idx]
-                    properties[idx]["max_step"] = max_step[idx]
+                    properties[idx]["rms_gradient"] = float(rms_grad[idx])
+                    properties[idx]["max_gradient"] = float(max_grad[idx])
+                    properties[idx]["rms_step"] = float(rms_step[idx])
+                    properties[idx]["max_step"] = float(max_step[idx])
 
             if OrcaJobType.FREQ in job_types:
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
@@ -196,6 +201,7 @@ class OrcaFile(File):
             for mol, prop in zip(molecules, properties):
                 f.ensemble.add_molecule(mol, properties=prop)
 
+            f.check_has_properties()
             files.append(f)
 
         if len(files) == 1:
@@ -334,5 +340,19 @@ class OrcaFile(File):
         if OrcaJobType.SP not in job_types:
             job_types.append(OrcaJobType.SP)
         return job_types
+
+    def check_has_properties(self):
+        """
+        Checks that the file has all the appropriate properties for its job types, and raises ``ValueError`` if not.
+
+        This only checks the last molecule in ``self.ensemble``, for now.
+        """
+        if self.successful_terminations > 0:
+            for job_type in self.job_types:
+                for prop in EXPECTED_PROPERTIES[job_type.value]:
+                    if not self.ensemble.has_property(-1, prop):
+                        raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
+        else:
+            return
 
 

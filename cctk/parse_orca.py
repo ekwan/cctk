@@ -43,7 +43,8 @@ def read_geometries(lines, num_to_find):
 
 def read_energies(lines):
     energies = lines.find_parameter("FINAL SINGLE POINT ENERGY", 5, 4)
-    return energies
+    iters = lines.find_parameter("SCF CONVERGED AFTER", 7, 4)
+    return energies, iters
 
 def split_multiple_inputs(filename):
     """
