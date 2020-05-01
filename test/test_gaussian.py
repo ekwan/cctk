@@ -22,7 +22,7 @@ class TestGaussian(unittest.TestCase):
         path = "test/static/title.out"
         file = cctk.GaussianFile.read_file(path)
         title = file.title
-        self.assertEqual(title, " H4,H5:5.280@C1:53.700")
+        self.assertEqual(title, "H4,H5:5.280@C1:53.700")
 
     def test_read_out_file(self):
         path = "test/static/gaussian_file.out"

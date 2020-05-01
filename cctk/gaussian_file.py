@@ -87,7 +87,7 @@ class GaussianFile(File):
         """
         Create new GaussianFile object.
 
-	Args:
+        Args:
             job_types (list): list of ``job_type`` instances
             route_card (str): optional, route card of ``.gjf`` file
             link0 (dict): optional, Link 0 commands of ``.gjf`` file
@@ -95,7 +95,7 @@ class GaussianFile(File):
             title (str): optional, title of ``.gjf`` file
             success (int): num successful terminations
             elapsed_time (float): total time for job in seconds
-	"""
+        """
 
         if route_card and not isinstance(route_card, str):
             raise TypeError("route card needs to be a string")
@@ -263,6 +263,12 @@ class GaussianFile(File):
 
             link0 = parse.extract_link0(lines)
 
+            title = ""
+            title_block = lines.search_for_block("l101.exe", "Symbolic Z-matrix", join="\n")
+            for line in title_block.split("\n")[1:]:
+                if not re.search("-----", line):
+                    title += line
+
             #### extract parameters
             success = 0
             elapsed_time = 0.0  # in seconds
@@ -299,7 +305,7 @@ class GaussianFile(File):
             charge = lines.find_parameter("Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
             multip = lines.find_parameter("Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
 
-            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time)
+            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
 
             molecules = [None] * len(geometries)
             properties = [{} for _ in range(len(geometries))]
