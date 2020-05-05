@@ -27,7 +27,7 @@ if output_file.num_imaginaries():
 
 print("\n\033[3manalysis:\033[0m")
 print(f"{len(output_file.ensemble)} iterations completed")
-property_names = ["scf_iterations", "energy", "rms_step", "rms_gradient"]
+property_names = ["scf_iterations", "energy", "rms_step", "rms_gradient", "S**2"]
 
 properties = output_file.ensemble[:,property_names]
 if len(output_file.ensemble) == 1:
@@ -43,4 +43,8 @@ print(plot(df["rms_gradient"], {"height": 12, "format": " {:8.6f} "}))
 
 print("\n\033[1mRMS STEP:\033[0m")
 print(plot(df["rms_step"], {"height": 12, "format": " {:8.6f} "}))
+
+if df["S**2"][0] is not None:
+    print("\n\033[1mSPIN EXPECTATION VALUE:\033[0m")
+    print(plot(df["S**2"], {"height": 12, "format": " {:8.6f} "}))
 

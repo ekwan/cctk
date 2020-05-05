@@ -143,6 +143,11 @@ class OrcaFile(File):
                 properties[idx]["iteration"] = idx
                 properties[idx]["scf_iterations"] = iters[idx]
 
+            if multip > 1:
+                s2 = lines.find_parameter("Expectation value of", 6, 5)
+                for idx, spin_contam in enumerate(s2):
+                    properties[idx]["S**2"] = spin_contam
+
             if OrcaJobType.OPT in job_types:
                 rms_grad, max_grad, rms_step, max_step = parse.read_gradients(lines, len(properties))
                 for idx in range(len(rms_grad)):

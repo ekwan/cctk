@@ -34,7 +34,7 @@ class PDBFile(File):
 
         for idx, Z in enumerate(molecule.atomic_numbers, start=1):
             line = molecule.get_vector(idx)
-            symb = get_symbol(Z)
+            symb = get_symbol(Z).upper()
             text += f"HETATM {idx:>4}  {symb:<2}    *     0     {line[0]:7.3f} {line[1]:7.3f} {line[2]:7.3f}  1.00  0.00           {symb:<2}\n"
 
         text += f"ENDMDL\n"

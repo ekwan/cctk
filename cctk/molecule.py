@@ -380,6 +380,9 @@ class Molecule:
         else:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
 
+        if (atom1 in atoms_to_move and atom2 in atoms_to_move) and move == "group":
+            raise ValueError('both our atoms are connected which will preclude any movement with ``move`` set to "group"')
+
         current_distance = self.get_distance(atom1, atom2)
 
         v1 = self.get_vector(atom1)

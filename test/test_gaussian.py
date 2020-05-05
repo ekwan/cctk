@@ -131,6 +131,5 @@ class TestGaussian(unittest.TestCase):
         ense = file.ensemble
         self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
 
-
 if __name__ == '__main__':
     unittest.main()

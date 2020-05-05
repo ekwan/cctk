@@ -135,7 +135,7 @@ class LazyLineObject:
                             try:
                                 matches.append(float(fields[which_field]))
                             except:
-                                pass
+                                matches.append(0)
                         else:
                             matches.append(fields[which_field])
             return matches

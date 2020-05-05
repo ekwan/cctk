@@ -73,3 +73,4 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(file.ensemble[mol, "temperature"], 298.15)
         self.assertEqual(file.ensemble[mol, "enthalpy"], -229.05330337)
         self.assertEqual(file.ensemble[mol, "gibbs_free_energy"], -229.08534132)
+
