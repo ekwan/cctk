@@ -11,9 +11,9 @@ import cctk.parse_orca as parse
 
 class OrcaJobType(Enum):
     """
-    Class representing allowed Gaussian job types. Not an exhaustive list, but should be fairly comprehensive.
+    Class representing allowed Orca job types. Not an exhaustive list, but should be fairly comprehensive.
 
-    The value should be the Gaussian keyword, to permit automatic assignment.
+    The value should be the Orca keyword, to permit automatic assignment.
 
     All jobs have type ``SP`` by default.
     """
@@ -333,7 +333,7 @@ class OrcaFile(File):
     @classmethod
     def _assign_job_types(cls, header):
         """
-        Assigns ``OrcaJobType`` objects from route card. ``GaussianJobType.SP`` is assigned by default.
+        Assigns ``OrcaJobType`` objects from route card. ``OrcaJobType.SP`` is assigned by default.
 
         Args:
             header (str): Orca header

@@ -122,3 +122,6 @@ class OneIndexedArray(np.ndarray):
 
     def __hash__(self):
         return hash(self.data.tobytes())
+
+    def __str__(self):
+        return self.view(np.ndarray).__str__()

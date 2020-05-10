@@ -294,7 +294,7 @@ class MOL2File(File):
         return self.ensemble.molecules[num]
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, title=None):
+    def write_molecule_to_file(cls, filename, molecule, title=None, append=False):
         """
         Write a ``.gjf`` file using the given molecule.
 
@@ -302,6 +302,7 @@ class MOL2File(File):
             filename (str): path to the new file
             molecule (Molecule): which molecule to use -- a``Molecule`` object.
             title (str): title of the file
+            append (Bool): whether to write to file normally or append
         """
         assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
 
@@ -310,14 +311,17 @@ class MOL2File(File):
         text += "@<TRIPOS>ATOM\n"
         for idx, z in enumerate(molecule.atomic_numbers, start=1):
             v = molecule.get_vector(idx)
-            text += f"{idx} {get_symbol(z)}{idx}    {v[0]: .4f}    {v[1]: .4f}    {v[2]: .4f} {get_symbol(z)}\n"
+            text += f"{idx} {get_symbol(z)}{idx}    {v[0]: .4f}    {v[1]: .4f}    {v[2]: .4f} {get_symbol(z)} 0\n"
         text += "@<TRIPOS>BOND\n"
         count = 1
         for atom1, atom2, weight in molecule.bonds.edges.data("weight", default=1):
             text += f"{count} {atom1} {atom2} {weight}\n"
             count += 1
 
-        super().write_file(filename, text)
+        if append:
+            super().append_to_file(filename, text)
+        else:
+            super().write_file(filename, text)
 
     def write_file(self, filename, molecule=-1, **kwargs):
         """
@@ -342,21 +346,8 @@ class MOL2File(File):
             filename (str): where to write the file
             ensemble (Ensemble): ``Ensemble`` object to write
         """
-        text = ""
-        for molecule in ensemble.molecules:
-            text += f"# {ensemble.name}\n#\n#\n\n#\n#\n\n"
-            text += f"@<TRIPOS>MOLECULE\nMolecule Name\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"
-            text += "@<TRIPOS>ATOM\n"
-            for idx, z in enumerate(molecule.atomic_numbers, start=1):
-                v = molecule.get_vector(idx)
-                text += f"{idx} {get_symbol(z)}{idx}    {v[0]: .4f}    {v[1]: .4f}    {v[2]: .4f} {get_symbol(z)}\n"
-            text += "@<TRIPOS>BOND\n"
-            count = 1
-            for atom1, atom2, weight in molecule.bonds.edges.data("weight", default=1):
-                text += f"{count} {atom1} {atom2} {weight}\n"
-                count += 1
-
-        super().write_file(filename, text)
-
-
-
+        for idx, molecule in enumerate(ensemble.molecules):
+            if idx == 0:
+                cls.write_molecule_to_file(filename, molecule, append=False)
+            else:
+                cls.write_molecule_to_file(filename, molecule, append=True)
