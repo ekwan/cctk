@@ -415,7 +415,7 @@ class GaussianFile(File):
                 properties[0]["forces"] = forces
 
             if GaussianJobType.POP in job_types:
-                if re.search("hirshfeld", f.route_card):
+                if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
                     charges, spins = parse.read_hirshfeld_charges(lines)
                     properties[-1]["hirshfeld_charges"] = charges
                     properties[-1]["hirshfeld_spins"] = spins
