@@ -190,16 +190,36 @@ def extract_initial_geometry(lines):
         symbol list (list)
     """
     initial_geom_block = lines.search_for_block("Symbolic Z-matrix:", "^ $", join="\n", max_len=1000)
-    atom_lines = initial_geom_block.split("\n")[2:]
-    geometry = [None] * len(atom_lines)
-    symbols = [None] * len(atom_lines)
 
-    for idx, line in enumerate(atom_lines):
-        frags = line.split()
-        assert len(frags) == 4, f"wrong number of fragments on line {line}"
-        geometry[idx] = frags[1:]
-        symbols[idx] = frags[0]
-    return geometry, symbols
+    if initial_geom_block is not None:
+        atom_lines = initial_geom_block.split("\n")[2:]
+        geometry = [None] * len(atom_lines)
+        symbols = [None] * len(atom_lines)
+
+        for idx, line in enumerate(atom_lines):
+            frags = line.split()
+            assert len(frags) == 4, f"too many fragments (more than 4) on line {line}"
+            geometry[idx] = frags[1:]
+            symbols[idx] = frags[0]
+        return geometry, symbols
+
+    else:
+        initial_geom_block = lines.search_for_block("Standard orientation:", "Rotational", join="\n", max_len=1000)
+
+        if initial_geom_block is None:
+            raise ValueError("can't find valid geometry")
+
+        atom_lines = initial_geom_block.split("\n")[5:-1]
+        geometry = [None] * len(atom_lines)
+        symbols = [None] * len(atom_lines)
+
+        for idx, line in enumerate(atom_lines):
+            frags = line.split()
+            assert len(frags) == 6, f"too many fragments (more than 6) on line {line}"
+            geometry[idx] = frags[3:]
+            symbols[idx] = frags[1]
+
+            return geometry, [get_symbol(z) for z in symbols]
 
 def read_nmr_shifts(lines, num_atoms):
     """
@@ -297,7 +317,7 @@ def read_forces(lines):
         (n x 3) ``cctk.OneIndexedArray`` of forces
     """
     forces = []
-    force_block = lines.search_for_block("Forces \(Hartrees/Bohr\)", "Cartesian Forces", join="\n")
+    force_block = lines.search_for_block("Forces \(Hartrees/Bohr\)", "Cartesian Forces", join="\n", max_len=1000)
     for line in force_block.split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
