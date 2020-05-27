@@ -666,16 +666,18 @@ class GaussianFile(File):
                 else:
                     cls.write_molecule_to_file(filename, molecule, route_card[idx], link0[idx], footer=footer[idx], title=title[idx], print_symbol=print_symbol[idx], append=True)
 
-    def add_custom_basis_set(self, name, add_all_elements=False):
+    def add_custom_basis_set(self, name, add_all_elements=False, return_string=False):
         """
         Appends custom basis sets (from Basis Set Exchange) to ``self.footer``. Should be used in combination with the ``gen`` keyword.
 
         Args:
             name (str): name of basis set (look it up on Basis Set Exchange)
             add_all_elements (bool): whether the complete basis set should be added or just the elements of interest
+            return_string (bool): if the basis set should be appended to the footer or returned as a string (no change to ``self``)
 
         Returns:
-            nothing
+            nothing (if return_string is ``False``)
+            string of basis set definition (if return string is ``True``)
         """
         assert isinstance(name, str), "need basis set name to be a string, for starters"
 

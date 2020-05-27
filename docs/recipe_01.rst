@@ -129,4 +129,23 @@ Writing Multiple Molecules to One Gaussian Input File
                                              link0={"mem": "32GB", "nprocshared": 16}, footer=None,
                                              title="title", print_symbol=False)
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""
+Using Custom Basis Sets from the Basis Set Exchange
+""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+- Bespoke basis sets can be downloaded automatically from the `Basis Set Exchange <https://www.basissetexchange.org/>`.
+- By default, the ``add_custom_basis_set`` method appends the basis set to the footer. However, 
+  passing the ``return_string`` option allows for increased control over formatting (e.g. for combination with ``opt=modredundant``).
+- The ``gen`` keyword should be used in combination with these basis sets.
+
+::
+
+    assert isinstance(file, cctk.GaussianFile)
+    file.route_card = "#p opt wB97XD/gen"
+    file.add_custom_basis_set("pcseg-2")
+
+    assert isinstance(file2, cctk.GaussianFile)
+    file2.route_card = "#p opt=modredundant wB97XD/gen"
+    basis = file2.add_custom_basis_set("pcseg-2", return_string=True)
+    file2.footer = f"B 1 10 F\n\n{basis}"
 

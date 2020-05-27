@@ -69,7 +69,7 @@ else:
 
 df.rename(columns={"rms_displacement": "rms_disp", "quasiharmonic_gibbs_free_energy": "GFE (corrected)"}, inplace=True)
 df["filename"] = df["filename"].apply(lambda x: x[-60:])
-df["GFE (corrected)"] = df["GFE (corrected)"].apply(lambda x: f"{x:.5f}")
+#df["GFE (corrected)"] = df["GFE (corrected)"].apply(lambda x: f"{x:.5f}")
 df["rms_force"] = df["rms_force"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.0001 else f"\033[93m{x}\033[0m")
 df["rms_disp"] = df["rms_disp"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.003 else f"\033[93m{x}\033[0m")
 df["success"] = df["success"].apply(lambda x: f"\033[92m{x}\033[0m" if x else f"\033[93m{x}\033[0m")
