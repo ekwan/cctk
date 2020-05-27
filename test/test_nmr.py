@@ -86,5 +86,12 @@ class TestNMR(unittest.TestCase):
         self.assertTrue((np.abs(scaled_shifts[0] - expected_shifts) <= 0.001).all())
         #print(shift_labels)
 
+    def test_nmr5(self):
+        # tests reading J-couplings for acetone
+        gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings.out")
+        #ensemble = gaussian_file[1].ensemble
+        #shieldings = ensemble[:,"isotropic_shielding"]
+        #print(shieldings)
+
 if __name__ == '__main__':
     unittest.main()

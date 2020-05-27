@@ -406,7 +406,7 @@ class GaussianFile(File):
 
 
             if GaussianJobType.NMR in job_types:
-                assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"
+                #assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
                 properties[0]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
 
