@@ -407,13 +407,14 @@ class GaussianFile(File):
 
 
             if GaussianJobType.NMR in job_types:
-                #assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
-                properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
+                if nmr_shifts is not None:
+                    properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
 
                 if re.search("nmr=mixed", f.route_card) or re.search("nmr=spinspin", f.route_card):
-                    couplings = parse.read_j_couplings(lines)
-                    properties[-1]["j_couplings"] = couplings.view(OneIndexedArray)
+                    couplings = parse.read_j_couplings(lines, molecules[0].num_atoms())
+                    if couplings is not None:
+                        properties[-1]["j_couplings"] = couplings
 
             if GaussianJobType.FORCE in job_types:
                 assert len(molecules) == 1, "force jobs should not be combined with optimizations!"

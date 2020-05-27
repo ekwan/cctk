@@ -391,20 +391,76 @@ def read_dipole_moment(lines):
         if len(fields) == 8:
             return float(fields[7])
 
-def read_j_couplings(lines):
+def read_j_couplings(lines, n_atoms):
     """
     Helper method to search through output file and read J couplings
 
     Args:
         lines (list): list of lines in file
+	n_atoms (int): how many atoms are in the molecule
 
     Returns:
-        J couplings
+        ``couplings`` symmetric 2D np.array of couplings (in Hz) with zero-indexed atoms on both axes
+        or None if no couplings were found
     """
-    couplings = []
-    for line in lines:
-        fields = line.split()
-    print("definitely reading j couplings, no placeholder code here... no way!")
-    return np.asarray(couplings)
+    couplings = np.zeros((n_atoms,n_atoms))
+    n_full_blocks, lines_in_partial_block = divmod(n_atoms,5)
+    n_lines = 5 * (n_full_blocks * (n_full_blocks+1)) + n_full_blocks + 1
+    if lines_in_partial_block > 0:
+        n_lines += 1 + lines_in_partial_block
+    lines = lines.search_for_block("Total nuclear spin-spin coupling J (Hz):", None, max_len=n_lines)
+    if lines == None:
+        return None
+    assert n_lines == len(lines), f"found {len(lines)} lines but expected {n_lines} lines!"
+    i = 0
+    read_column_indices = False
+    read_row = False
+    this_column_indices = []
+    while i < n_lines:
+        # get current line
+        line = lines[i]
 
+        # if this is the header, we should be reading the column indices next
+        if "Total nuclear spin-spin coupling J (Hz):" in line:
+            i += 1
+            read_column_indices = True
+            continue
+
+        # this is not the header, so split the fields
+        fields = line.split()
+
+        # read the column indices
+        if read_column_indices:
+            this_n_columns = len(fields)
+            this_column_indices = [ int(j)-1 for j in fields ]
+            i += 1
+            read_column_indices = False
+            read_row = True
+            continue
+        elif read_row:
+            row = int(fields[0])-1
+            for j,value in enumerate(fields[1:]):
+                column = this_column_indices[j]
+                value = value.replace("D","E")
+                value = float(value)
+                couplings[row,column] = value
+                couplings[column,row] = value
+
+            # check if this is the end of the current block
+            if row == n_atoms - 1:
+                read_column_indices = True
+                read_row = False
+                i += 1
+                continue
+            # check if we have read the entire matrix
+            elif row == n_atoms-1 and column == n_atoms-1:
+                break
+
+            read_row = True
+            i += 1
+            continue
+        else:
+            raise ValueError("impossible")
+
+    return couplings
 

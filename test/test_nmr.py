@@ -87,7 +87,7 @@ class TestNMR(unittest.TestCase):
         #print(shift_labels)
 
     def test_nmr5(self):
-        # tests reading J-couplings for acetone
+        # ensure all acetone files can be read
         for idx in range(1,7):
             if idx==3:
                 #### this file is horrible, it should not be read correctly
@@ -95,9 +95,15 @@ class TestNMR(unittest.TestCase):
                     gaussian_file = cctk.GaussianFile.read_file(f"test/static/acetone-couplings{idx}.out")
             else:
                 gaussian_file = cctk.GaussianFile.read_file(f"test/static/acetone-couplings{idx}.out")
-        #ensemble = gaussian_file[1].ensemble
-        #shieldings = ensemble[:,"isotropic_shielding"]
-        #print(shieldings)
+
+    def test_nmr6(self):
+        gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings1.out")
+        ensemble = gaussian_file.ensemble
+        print(ensemble)
+        shieldings = ensemble[-1,"isotropic_shielding"]
+        print(shieldings)
+        couplings = ensemble[-1,"j_couplings"]
+        print(couplings)
 
 if __name__ == '__main__':
     unittest.main()
