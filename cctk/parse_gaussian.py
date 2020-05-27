@@ -397,7 +397,7 @@ def read_j_couplings(lines, n_atoms):
 
     Args:
         lines (list): list of lines in file
-	n_atoms (int): how many atoms are in the molecule
+        n_atoms (int): how many atoms are in the molecule
 
     Returns:
         ``couplings`` symmetric 2D np.array of couplings (in Hz) with zero-indexed atoms on both axes
@@ -408,10 +408,14 @@ def read_j_couplings(lines, n_atoms):
     n_lines = 5 * (n_full_blocks * (n_full_blocks+1)) + n_full_blocks + 1
     if lines_in_partial_block > 0:
         n_lines += 1 + lines_in_partial_block
-    lines = lines.search_for_block("Total nuclear spin-spin coupling J (Hz):", None, max_len=n_lines)
+
+    lines = lines.search_for_block("Total nuclear spin-spin coupling J \(Hz\):", None, max_len=n_lines, join="\n")
     if lines == None:
         return None
+
+    lines = lines.split("\n")[1:]
     assert n_lines == len(lines), f"found {len(lines)} lines but expected {n_lines} lines!"
+
     i = 0
     read_column_indices = False
     read_row = False
