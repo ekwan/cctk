@@ -333,7 +333,7 @@ DEFAULT_NMR_SCALING_FACTORS = {
         "N" : (0.9776, 244.5626)
 }
 
-def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="default"):
+def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="default", property_name="isotropic_shielding"):
     """
     Apply linear scaling to isotropic shieldings to get chemical shifts.
     Shifts are calculated as (intercept-shielding)/slope.
@@ -350,6 +350,8 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
         scaling_factors: "default" to use DEFAULT_NMR_SCALING_FACTORS or a dict
                          (atomic symbol --> (slope,intercept)).  Elements for
                          which scaling factors are not provided will be ignored.
+        property_name:   the key in properties_dict to use to locate the predicted
+                         isotropic shieldings (default="isotropic_shielding")
 
     Returns:
         scaled_shifts: np.array (matching the shape of the original shieldings minus symmetry averaging)
@@ -368,12 +370,13 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
     else:
         assert isinstance(scaling_factors, dict)
         assert len(scaling_factors) > 0, "must provide scaling factors"
+    assert isinstance(property_name, str) and len(property_name)>0, f"property_name {property_name} is invalid"
 
     # get shieldings and scale
     all_scaled_shifts = []
     all_shift_labels = []
     for i,(molecule,properties) in enumerate(ensemble.items()):
-        if "isotropic_shielding" in properties:
+        if property_name in properties:
             # get atom numbers and atomic elements as OneIndexedArrays
             atomic_numbers = molecule.atomic_numbers
             n_atoms = len(atomic_numbers)
@@ -411,7 +414,7 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
                 symmetrical_groups_dict2[symmetrical_symbol].extend(symmetrical_group)
 
             # get shieldings
-            all_shieldings = properties["isotropic_shielding"]
+            all_shieldings = properties[property_name]
 
             # iterate through requested elements
             molecule_shifts = []
