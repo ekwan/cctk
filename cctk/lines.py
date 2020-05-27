@@ -69,7 +69,7 @@ class LazyLineObject:
         index = 0
         for line in self:
             if current_match:
-                if end_pattern.search(line) or current_len > max_len:
+                if end_pattern.search(line) or current_len >= max_len:
                     match[index] = current_match
                     current_match = None
                     index += 1

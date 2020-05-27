@@ -99,11 +99,80 @@ class TestNMR(unittest.TestCase):
     def test_nmr6(self):
         gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings1.out")
         ensemble = gaussian_file.ensemble
-        print(ensemble)
         shieldings = ensemble[-1,"isotropic_shielding"]
-        print(shieldings)
+        expected_shieldings = [165.8515, 30.794, 30.93, 30.9302, -21.4514, -375.1462, 159.4249, 30.6991, 30.6993, 30.8559]
+        self.assertTrue((np.abs(shieldings - expected_shieldings) <= 0.0001).all())
+
+        expected_couplings = np.array(\
+        [[  0. ,124.1,134.7,134.7, 34.8, -0.8, 15.5, -0.4, -0.4,  4.9],
+        [124.1,  0. ,-14.4,-14.4, -3.7, -2.1,  0.6,  0.4,  0.4,  0.7],
+        [134.7,-14.4,  0. ,-20.4, -6.9, -1.3,  1.1, -0.6, -1.3, -0.1],
+        [134.7,-14.4,-20.4,  0. , -6.9, -1.3,  1.1, -1.2, -0.6, -0.1],
+        [ 34.8, -3.7, -6.9, -6.9,  0. , 43.7, 35. , -5.7, -5.6, -6.4],
+        [ -0.8, -2.1, -1.3, -1.3, 43.7,  0. , -1.1, -1.9, -1.9, -0.8],
+        [ 15.5,  0.6,  1.1,  1.1, 35. , -1.1,  0. ,127.2,127.2,137.5],
+        [ -0.4,  0.4, -0.6, -1.2, -5.7, -1.9,127.2,  0. ,-19.1,-14.6],
+        [ -0.4,  0.4, -1.3, -0.6, -5.6, -1.9,127.2,-19.1,  0. ,-14.6],
+        [  4.9,  0.7, -0.1, -0.1, -6.4, -0.8,137.5,-14.6,-14.6,  0. ]])
         couplings = ensemble[-1,"j_couplings"]
-        print(couplings)
+        self.assertTrue(np.any(expected_couplings-couplings < 0.1))
+
+        gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings2.out")
+        ensemble = gaussian_file.ensemble
+        shieldings = ensemble[-1,"isotropic_shielding"]
+        self.assertTrue(shieldings is not None)
+        couplings = ensemble[-1,"j_couplings"]
+        expected_couplings = np.array(\
+        [[  0. ,122.1,132.3,132.3, 39.1,  0.8, 11.6, -0.4, -0.4,  3.5],
+        [122.1,  0. ,-14.5,-14.5, -1.8, -0.6,  0.3,  0.4,  0.4,  0.6],
+        [132.3,-14.5,  0. ,-19.7, -5.4, -1.5,  0.8, -0.6, -1.1, -0.2],
+        [132.3,-14.5,-19.7,  0. , -5.4, -1.5,  0.8, -1.1, -0.6, -0.2],
+        [ 39.1, -1.8, -5.4, -5.4,  0. , 42.4, 40.1, -3.6, -3.6, -5.2],
+        [  0.8, -0.6, -1.5, -1.5, 42.4,  0. ,  0.3, -1.8, -1.7, -0.1],
+        [ 11.6,  0.3,  0.8,  0.8, 40.1,  0.3,  0. ,125.6,125.6,135.2],
+        [ -0.4,  0.4, -0.6, -1.1, -3.6, -1.8,125.6,  0. ,-18.6,-14.8],
+        [ -0.4,  0.4, -1.1, -0.6, -3.6, -1.7,125.6,-18.6,  0. ,-14.8],
+        [  3.5,  0.6, -0.2, -0.2, -5.2, -0.1,135.2,-14.8,-14.8,  0. ]])
+        self.assertTrue(np.any(expected_couplings-couplings < 0.1))
+
+        gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings5.out")
+        ensemble = gaussian_file[1].ensemble
+        shieldings = ensemble[-1,"isotropic_shielding"]
+        self.assertTrue(shieldings is not None)
+        couplings = ensemble[-1,"j_couplings"]
+        expected_couplings = np.array(\
+        [[  0. ,126.5,129.7,129.7, 42.3,  0.2, 13.5, -0.4, -0.4,  4.5],
+        [126.5,  0. ,-14.4,-14.4, -0. , -0.9,  0.2,  0.5,  0.5,  0.8],
+        [129.7,-14.4,  0. ,-21.2, -4.7, -1.4,  0.9, -0. , -1. , -0. ],
+        [129.7,-14.4,-21.2,  0. , -4.7, -1.4,  0.9, -1. , -0. , -0. ],
+        [ 42.3, -0. , -4.7, -4.7,  0. , 37.4, 44.1, -2.6, -2.6, -4.8],
+        [  0.2, -0.9, -1.4, -1.4, 37.4,  0. , -0.2, -1.7, -1.7, -0.3],
+        [ 13.5,  0.2,  0.9,  0.9, 44.1, -0.2,  0. ,125.6,125.6,135.6],
+        [ -0.4,  0.5, -0. , -1. , -2.6, -1.7,125.6,  0. ,-20.6,-14.3],
+        [ -0.4,  0.5, -1. , -0. , -2.6, -1.7,125.6,-20.6,  0. ,-14.3],
+        [  4.5,  0.8, -0. , -0. , -4.8, -0.3,135.6,-14.3,-14.3,  0. ]])
+        self.assertTrue(np.any(expected_couplings-couplings < 0.1))
+
+        gaussian_file = cctk.GaussianFile.read_file("test/static/acetone-couplings6.out")
+        ensemble = gaussian_file[1].ensemble
+        shieldings = ensemble[-1,"isotropic_shielding"]
+        self.assertTrue(shieldings is not None)
+        couplings = ensemble[-1,"j_couplings"]
+        expected_couplings = np.array(\
+        [[  0. ,130.6,130.7,130.8, 38.4, -1.6, 19.1, -0.4, -0.4,  6. ],
+        [130.6,  0. ,-14.2,-14.2, -1.6, -2.5,  0.5,  0.4,  0.4,  1. ],
+        [130.7,-14.2,  0. ,-22. , -6.3, -1.2,  1.2,  0. , -1. ,  0.1],
+        [130.8,-14.2,-22. ,  0. , -6.3, -1.2,  1.2, -1.1,  0. ,  0.1],
+        [ 38.4, -1.6, -6.3, -6.3,  0. , 33.8, 39.1, -4.8, -4.8, -5.9],
+        [ -1.6, -2.5, -1.2, -1.2, 33.8,  0. , -1.8, -1.9, -1.9, -1. ],
+        [ 19.1,  0.5,  1.2,  1.2, 39.1, -1.8,  0. ,126.6,126.6,138.3],
+        [ -0.4,  0.4,  0. , -1.1, -4.8, -1.9,126.6,  0. ,-21.3,-14. ],
+        [ -0.4,  0.4, -1. ,  0. , -4.8, -1.9,126.6,-21.3,  0. ,-14. ],
+        [  6. ,  1. ,  0.1,  0.1, -5.9, -1. ,138.3,-14. ,-14. ,  0. ]])
+        self.assertTrue(np.any(expected_couplings-couplings < 0.1))
+
+        #with np.printoptions(precision=1, suppress=True):
+        #    print(np.array2string(couplings, separator=","))
 
 if __name__ == '__main__':
     unittest.main()

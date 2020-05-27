@@ -36,7 +36,7 @@ Files
     :toctree: _autosummary 
 
     File <file.File>
-    JobType <gaussian_file.JobType>
+    GaussianJobType <gaussian_file.GaussianJobType>
     GaussianFile <gaussian_file.GaussianFile>
     MAEFile <mae_file.MAEFile>
     MOL2File <mol2_file.MOL2File>

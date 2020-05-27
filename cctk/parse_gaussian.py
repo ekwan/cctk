@@ -405,15 +405,15 @@ def read_j_couplings(lines, n_atoms):
     """
     couplings = np.zeros((n_atoms,n_atoms))
     n_full_blocks, lines_in_partial_block = divmod(n_atoms,5)
-    n_lines = 5 * (n_full_blocks * (n_full_blocks+1)) + n_full_blocks + 1
+    n_lines = 5 * (n_full_blocks * (n_full_blocks+1) / 2) + n_full_blocks + 1
     if lines_in_partial_block > 0:
         n_lines += 1 + lines_in_partial_block
-
+    n_lines = int(n_lines)
     lines = lines.search_for_block("Total nuclear spin-spin coupling J \(Hz\):", None, max_len=n_lines, join="\n")
     if lines == None:
         return None
 
-    lines = lines.split("\n")[1:]
+    lines = lines.split("\n")
     assert n_lines == len(lines), f"found {len(lines)} lines but expected {n_lines} lines!"
 
     i = 0

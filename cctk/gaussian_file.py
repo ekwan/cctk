@@ -411,7 +411,7 @@ class GaussianFile(File):
                 if nmr_shifts is not None:
                     properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
 
-                if re.search("nmr=mixed", f.route_card) or re.search("nmr=spinspin", f.route_card):
+                if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search("nmr=spinspin", f.route_card,flags=re.IGNORECASE):
                     couplings = parse.read_j_couplings(lines, molecules[0].num_atoms())
                     if couplings is not None:
                         properties[-1]["j_couplings"] = couplings
