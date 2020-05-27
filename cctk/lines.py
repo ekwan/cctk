@@ -39,7 +39,7 @@ class LazyLineObject:
 
         Args:
             start (str): a pattern that matches the start of the block (can contain special characters)
-            end (str): a pattern that matches the end of the block (can contain special characters)
+            end (str): a pattern that matches the end of the block (can contain special characters) - ``None`` removes this (so a selection of ``max_lines`` is guaranteed)
             count (int): how many matches to search for
             join (str): spacer between lines
             max_len (int): maximum length of matches (to prevent overflow)
@@ -58,6 +58,10 @@ class LazyLineObject:
         current_match = ""
         current_len = 0
         match = [None] * count
+
+        #### we want a regex that will never match anything - and quickly - so trying to match something before the start of the line works
+        if end is None:
+            end = "a^"
 
         start_pattern = re.compile(start)
         end_pattern = re.compile(end)
