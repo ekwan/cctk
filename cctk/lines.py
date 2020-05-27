@@ -33,7 +33,7 @@ class LazyLineObject:
             for line in islice(lines, self.start + key, self.start + key + 1):
                 return line.rstrip()
 
-    def search_for_block(self, start, end, count=1, join=" ", max_len=20, format_line=None):
+    def search_for_block(self, start, end, count=1, join=" ", max_len=1000, format_line=None):
         """
         Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 

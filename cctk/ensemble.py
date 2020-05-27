@@ -123,10 +123,21 @@ class Ensemble:
         """
         Returns ``True`` if property is defined for index ``idx`` and ``False`` otherwise.
         """
-        if prop in self[idx].properties_list()[0]:
+        combined = self.combined_properties()
+        if prop in combined:
             return True
         else:
             return False
+
+    def combined_properties(self):
+        """
+        Returns a dictionary containing the most up-to-date version of each property.
+        """
+        combined = dict()
+        for p in self.properties_list():
+            combined = {**combined, **p}
+
+        return combined
 
     def get_property(self, idx, prop):
         """

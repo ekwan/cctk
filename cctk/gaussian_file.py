@@ -266,9 +266,10 @@ class GaussianFile(File):
 
             title = ""
             title_block = lines.search_for_block("l101.exe", "Symbolic Z-matrix", join="\n")
-            for line in title_block.split("\n")[1:]:
-                if not re.search("-----", line):
-                    title += line
+            if title_block is not None:
+                for line in title_block.split("\n")[1:]:
+                    if not re.search("-----", line):
+                        title += line
 
             #### extract parameters
             success = 0
@@ -408,7 +409,11 @@ class GaussianFile(File):
             if GaussianJobType.NMR in job_types:
                 #assert len(molecules) == 1, "NMR jobs should not be combined with optimizations!"
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
-                properties[0]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
+                properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
+
+                if re.search("nmr=mixed", f.route_card) or re.search("nmr=spinspin", f.route_card):
+                    couplings = parse.read_j_couplings(lines)
+                    properties[-1]["j_couplings"] = couplings.view(OneIndexedArray)
 
             if GaussianJobType.FORCE in job_types:
                 assert len(molecules) == 1, "force jobs should not be combined with optimizations!"

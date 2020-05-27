@@ -209,7 +209,7 @@ def extract_initial_geometry(lines):
         if initial_geom_block is None:
             raise ValueError("can't find valid geometry")
 
-        atom_lines = initial_geom_block.split("\n")[5:-1]
+        atom_lines = initial_geom_block.split("\n")[5:-1] # gaussian, y u be like dis??
         geometry = [None] * len(atom_lines)
         symbols = [None] * len(atom_lines)
 
@@ -390,4 +390,21 @@ def read_dipole_moment(lines):
 
         if len(fields) == 8:
             return float(fields[7])
+
+def read_j_couplings(lines):
+    """
+    Helper method to search through output file and read J couplings
+
+    Args:
+        lines (list): list of lines in file
+
+    Returns:
+        J couplings
+    """
+    couplings = []
+    for line in lines:
+        fields = line.split()
+    print("definitely reading j couplings, no placeholder code here... no way!")
+    return np.asarray(couplings)
+
 
