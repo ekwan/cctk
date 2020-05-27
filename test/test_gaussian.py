@@ -131,5 +131,24 @@ class TestGaussian(unittest.TestCase):
         ense = file.ensemble
         self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
 
+    def test_basis_set_exchange(self):
+        path = "test/static/dcm_force.out"
+        file = cctk.GaussianFile.read_file(path)
+        file.route_card = "#p opt wB97X-D/gen"
+        file.add_custom_basis_set("pcseg-2")
+
+        old_path = "test/static/pcseg_dcm.gjf"
+        new_path = "test/static/new_pcseg_dcm.gjf"
+        file.write_file(new_path)
+
+        with open(old_path) as old:
+            with open(new_path) as new:
+                self.assertListEqual(
+                    list(new),
+                    list(old)
+                )
+
+        os.remove(new_path)
+
 if __name__ == '__main__':
     unittest.main()

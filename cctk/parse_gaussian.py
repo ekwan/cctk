@@ -338,7 +338,7 @@ def read_mulliken_charges(lines):
         ``cctk.OneIndexedArray`` of charges
     """
     charges = []
-    charge_block = lines.search_for_block(" Mulliken charges:", " Sum of Mulliken charges", join="\n")
+    charge_block = lines.search_for_block(" Mulliken charges:", " Sum of Mulliken charges", join="\n", max_len=1000)
     if charge_block is not None:
         for line in charge_block.split("\n")[2:]:
             fields = re.split(" +", line)
@@ -362,7 +362,7 @@ def read_hirshfeld_charges(lines):
     """
     charges = []
     spins = []
-    charge_block = lines.search_for_block("Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", join="\n")
+    charge_block = lines.search_for_block("Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", join="\n", max_len=1000)
     for line in charge_block.split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))

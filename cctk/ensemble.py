@@ -1,5 +1,6 @@
-import sys, re, copy
+import sys, re
 import numpy as np
+from copy import deepcopy
 
 import cctk
 from cctk import Molecule
@@ -277,7 +278,7 @@ class Ensemble:
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
         if copy:
-            molecule = copy.deepcopy(molecule)
+            molecule = deepcopy(molecule)
 
         if properties is None:
             #### empty dicts all point to the same memory address by default, so need to prevent that behavior by initializing non-empty dict
@@ -436,7 +437,7 @@ class ConformationalEnsemble(Ensemble):
         assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
         # duplicate the ensemble
-        new_ensemble = copy.deepcopy(self)
+        new_ensemble = deepcopy(self)
 
         # translate all molecules to the origin
         # with respect to the comparison atoms
@@ -547,8 +548,8 @@ class ConformationalEnsemble(Ensemble):
         Returns:
             a list of the specified parameter's values for each geometry
         """
-        output = [None] * len(self.molecules)
-        for index, molecule in enumerate(self.molecules):
+        output = [None] * len(self)
+        for index, molecule in enumerate(self.molecule_list()):
             if parameter == "distance":
                 output[index] = molecule.get_distance(atom1, atom2)
             elif parameter == "angle":
@@ -563,5 +564,4 @@ class ConformationalEnsemble(Ensemble):
                 ValueError("Invalid parameter {}!".format(parameter))
 
         return output
-
 

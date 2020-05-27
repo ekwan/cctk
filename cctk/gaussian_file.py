@@ -1,5 +1,6 @@
 import sys, re
 import numpy as np
+import basis_set_exchange as bse
 
 from enum import Enum
 
@@ -665,4 +666,32 @@ class GaussianFile(File):
                 else:
                     cls.write_molecule_to_file(filename, molecule, route_card[idx], link0[idx], footer=footer[idx], title=title[idx], print_symbol=print_symbol[idx], append=True)
 
+    def add_custom_basis_set(self, name, add_all_elements=False):
+        """
+        Appends custom basis sets (from Basis Set Exchange) to ``self.footer``. Should be used in combination with the ``gen`` keyword.
 
+        Args:
+            name (str): name of basis set (look it up on Basis Set Exchange)
+            add_all_elements (bool): whether the complete basis set should be added or just the elements of interest
+
+        Returns:
+            nothing
+        """
+        assert isinstance(name, str), "need basis set name to be a string, for starters"
+
+        try:
+            basis_definition = ""
+            if add_all_elements:
+                basis_definition = bse.get_basis(name, fmt="gaussian94", header=False)
+            else:
+                elements = list(np.unique(self.get_molecule().atomic_numbers.view(np.ndarray)))
+                basis_definition = bse.get_basis(name, fmt="gaussian94", header=False, elements=elements)
+
+            if self.footer is None:
+                self.footer = basis_definition
+            else:
+                self.footer += basis_definition
+            self.footer += "\n"
+
+        except Exception as e:
+            raise ValueError(f"adding basis set {name} from basis set exchange failed!\n{e}")
