@@ -619,13 +619,11 @@ class GaussianFile(File):
             assert len(ensemble) > 0, "cannot write a blank ensemble"
 
             if isinstance(route_card, str):
-                assert re.match(r"^#p", route_card), "route card should start with #p: {route_card}"
                 route_card = [route_card for m in ensemble._items]
             elif isinstance(route_card, list):
                 assert len(route_card) == n_geometries, f"expected {n_geometries} route cards but got {len(route_card)}"
                 for card in route_card:
                     assert isinstance(card, str), "expected route card to be a str"
-                    assert re.match(r"^#p", route_card), "route card should start with #p: f{card}"
             else:
                 raise ValueError(f"unexpected type for route_card: {str(type(route_card))}")
 
