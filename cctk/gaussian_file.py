@@ -153,7 +153,8 @@ class GaussianFile(File):
         if (route_card is None) or (not isinstance(route_card, str)):
             raise ValueError("can't write a file without a route card")
 
-        assert re.match(r"^#p", route_card), f"route card doesn't start with #p: {route_card}"
+        if not re.match(r"^#p", route_card):
+            print(f"ALERT - route card doesn't start with #p: {route_card}")
 
         #### generate the text
         text = ""

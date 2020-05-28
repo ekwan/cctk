@@ -1574,3 +1574,56 @@ class Molecule:
                 returns = returns + new_returns
         return returns
 
+    def get_components(self):
+        """
+        Returns a list of all the connected components in a molecule.
+        """
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        fragments = nx.connected_components(self.bonds)
+        return [list(f) for f in list(fragments)]
+
+    def limit_solvent_shell(self, num_atoms=0, num_solvents=10):
+        """
+        Automatically detects solvent molecules and removes them until you have a set number of solvents or atoms.
+
+        This code assumes that the fragment of interest comes first in the file, which is almost always true but may not be true.
+
+        Args:
+            num_atoms (int): remove atoms until there are this number (module size of a solvent molecule)
+            num_solvents (int): remove solvent molecules until there are this number
+
+        Returns:
+            new ``Molecule`` object
+        """
+        assert isinstance(num_atoms, int)
+        assert isinstance(num_solvents, int)
+
+        fragments = self.get_components()
+        #### not strictly a centroid since it's not mass-weighted.
+        centroids = np.zeros(shape=(len(fragments), 3))
+        distances = np.zeros(shape=len(fragments))
+        for i, f in enumerate(fragments):
+            centroids[i] = np.mean(self.geometry[f], axis=0)
+            if i > 0:
+                distances[i] = np.linalg.norm(centroids[i] - centroids[0])
+
+        mol = copy.deepcopy(self)
+        #### reverse order - farthest away comes first
+        order = np.argsort(distances)[::-1]
+
+        current_num_solvents = len(fragments) - 1
+        current_num_atoms = mol.num_atoms()
+
+        to_remove = []
+        for i in order:
+            for j in fragments[i]:
+                to_remove.append(j)
+                current_num_atoms += -1
+            current_num_solvents += -1
+
+            if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
+                #### have to remove in reverse direction for indexing consistency
+                for i in sorted(to_remove, reverse=True):
+                    mol.remove_atom(i)
+                return mol
+
