@@ -2,8 +2,6 @@ import re
 import numpy as np
 import networkx as nx
 
-from abc import abstractmethod
-
 from cctk import File, Ensemble, ConformationalEnsemble, Molecule
 from cctk.helper_functions import get_symbol, get_number
 
@@ -201,7 +199,7 @@ class MOL2File(File):
                                 raise ValueError(f"inconsistent bond order definition: {line}")
                         this_bonds.add_edge(atom1, atom2, weight=bond_order)
                         this_bonds.add_edge(atom2, atom1, weight=bond_order)
-                    except:
+                    except Exception as e:
                         # assume we have left the bond block
                         in_geometry_block = False
                         in_bond_block = False

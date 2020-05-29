@@ -410,7 +410,7 @@ def read_j_couplings(lines, n_atoms):
         n_lines += 1 + lines_in_partial_block
     n_lines = int(n_lines)
     lines = lines.search_for_block("Total nuclear spin-spin coupling J \(Hz\):", None, max_len=n_lines, join="\n")
-    if lines == None:
+    if lines is None:
         return None
 
     lines = lines.split("\n")
@@ -435,7 +435,7 @@ def read_j_couplings(lines, n_atoms):
 
         # read the column indices
         if read_column_indices:
-            this_n_columns = len(fields)
+#            this_n_columns = len(fields)
             this_column_indices = [ int(j)-1 for j in fields ]
             i += 1
             read_column_indices = False
@@ -450,15 +450,16 @@ def read_j_couplings(lines, n_atoms):
                 couplings[row,column] = value
                 couplings[column,row] = value
 
+            # check if we have read the entire matrix
+            if row == n_atoms - 1 and column == n_atoms - 1:
+                break
+
             # check if this is the end of the current block
             if row == n_atoms - 1:
                 read_column_indices = True
                 read_row = False
                 i += 1
                 continue
-            # check if we have read the entire matrix
-            elif row == n_atoms-1 and column == n_atoms-1:
-                break
 
             read_row = True
             i += 1

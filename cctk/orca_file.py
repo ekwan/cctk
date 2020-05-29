@@ -1,11 +1,11 @@
-import sys, re
+import re
 import numpy as np
 
 from enum import Enum
 #from abc import abstractmethod
 
 from cctk import File, Molecule, ConformationalEnsemble
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number, get_corrected_free_energy
+from cctk.helper_functions import get_symbol, get_corrected_free_energy
 
 import cctk.parse_orca as parse
 
@@ -190,20 +190,20 @@ class OrcaFile(File):
                 charges = parse.read_mulliken_charges(lines)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["mulliken_charges"] = charges
-            except:
+            except Exception as e:
                 pass
 
             try:
                 charges = parse.read_loewdin_charges(lines)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["lowdin_charges"] = charges
-            except:
+            except Exception as e:
                 pass
 
             try:
                 dipole = lines.find_parameter("Magnitude \(Debye\)", 4, 3)
                 properties[-1]["dipole_moment"] = dipole[0]
-            except:
+            except Exception as e:
                 pass
 
             for mol, prop in zip(molecules, properties):

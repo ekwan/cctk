@@ -1,13 +1,11 @@
-import sys, re
+import re
 import numpy as np
 import basis_set_exchange as bse
 
 from enum import Enum
 
-from cctk import File, Ensemble, Molecule, ConformationalEnsemble, OneIndexedArray
-from cctk.helper_functions import get_symbol, compute_distance_between, \
-                                  compute_angle_between, compute_dihedral_between, \
-                                  get_number, get_corrected_free_energy
+from cctk import File, Molecule, ConformationalEnsemble, OneIndexedArray
+from cctk.helper_functions import get_symbol, get_number, get_corrected_free_energy
 
 import cctk.parse_gaussian as parse
 
@@ -72,7 +70,7 @@ class GaussianFile(File):
     Class representing Gaussian input/output files.
 
     Attributes:
-        ensemble (Ensemble): ``ConformationalEnsemble`` instance
+        ensemble (ConformationalEnsemble): ``ConformationalEnsemble`` instance
         job_types (list): list of `job_type`` instances
         route_card (str): optional, route card of .gjf file
         link0 (dict): optional, dictionary of Link 0 commands (e.g. {"mem": "32GB", "nprocshared": 16})
@@ -294,7 +292,7 @@ class GaussianFile(File):
             #### convert to right datatype
             try:
                 atomic_numbers = np.array(atom_list, dtype=np.int8)
-            except:
+            except Exception as e:
                 atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
 
             footer = None
@@ -395,7 +393,7 @@ class GaussianFile(File):
                     frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=3)
                     frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=4)
                     properties[-1]["frequencies"] = sorted(frequencies)
-                except:
+                except Exception as e:
                     raise ValueError("error finding frequencies")
 
                 #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
@@ -431,13 +429,13 @@ class GaussianFile(File):
             try:
                 charges = parse.read_mulliken_charges(lines)
                 properties[-1]["mulliken_charges"] = charges
-            except:
+            except Exception as e:
                 pass
 
             try:
                 dipole = parse.read_dipole_moment(lines)
                 properties[-1]["dipole_moment"] = dipole
-            except:
+            except Exception as e:
                 pass
 
             for mol, prop in zip(molecules, properties):
@@ -531,7 +529,7 @@ class GaussianFile(File):
 
         try:
             atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
-        except:
+        except Exception as e:
             atomic_numbers = np.array(list(map(get_number, atomic_numbers)), dtype=np.int8)
 
         job_types = cls._assign_job_types(header)
@@ -619,7 +617,7 @@ class GaussianFile(File):
             assert len(ensemble) > 0, "cannot write a blank ensemble"
 
             if isinstance(route_card, str):
-                route_card = [route_card for m in ensemble._items]
+                route_card = [route_card for _ in ensemble._items]
             elif isinstance(route_card, list):
                 assert len(route_card) == n_geometries, f"expected {n_geometries} route cards but got {len(route_card)}"
                 for card in route_card:
@@ -628,7 +626,7 @@ class GaussianFile(File):
                 raise ValueError(f"unexpected type for route_card: {str(type(route_card))}")
 
             if isinstance(link0, dict):
-                link0 = [link0 for m in ensemble._items]
+                link0 = [link0 for _ in ensemble._items]
             elif isinstance(link0, list):
                 assert len(link0) == n_geometries, f"expected {n_geometries} link0 entries, but got {len(link0)}"
                 for d in link0:
@@ -637,7 +635,7 @@ class GaussianFile(File):
                 raise ValueError(f"unexpected type for link0: {str(type(link0))}")
 
             if footer is None or isinstance(footer, str):
-                footer = [footer for m in ensemble._items]
+                footer = [footer for _ in ensemble._items]
             elif isinstance(footer, list):
                 assert len(footer) == n_geometries, f"expected {n_geometries} footers, but got {len(footer)}"
                 for f in footer:
@@ -647,7 +645,7 @@ class GaussianFile(File):
 
             if isinstance(title, str):
                 assert len(title.strip()) > 0, "zero-length titles not allowed"
-                title = [title for m in ensemble._items]
+                title = [title for _ in ensemble._items]
             elif isinstance(title, list):
                 assert len(title) == n_geometries, f"expected {n_geometries} route cards but got {len(title)}"
                 for card in title:
@@ -657,7 +655,7 @@ class GaussianFile(File):
                 raise ValueError(f"unexpected type for title: {str(type(title))}")
 
             if isinstance(print_symbol, bool):
-                print_symbol = [print_symbol for m in ensemble._items]
+                print_symbol = [print_symbol for _ in ensemble._items]
             elif isinstance(print_symbol, list):
                 assert len(print_symbol) == n_geometries, f"expected {n_geometries} print_symbol entries but got {len(print_symbol)}"
                 for s in print_symbol:

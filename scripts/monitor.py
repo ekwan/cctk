@@ -1,8 +1,5 @@
-import sys, re, glob, cctk
-import numpy as np
+import sys, cctk
 import pandas as pd
-
-from tabulate import tabulate
 from asciichartpy import plot
 
 #### This is a script to monitor the output of Gaussian files. 

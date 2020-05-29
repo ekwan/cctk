@@ -1,15 +1,13 @@
-import sys, copy, re, math
+import copy
 import numpy as np
-import networkx as nx
 
 from abc import abstractmethod
 
 import cctk
-from cctk import Molecule, OneIndexedArray
 from cctk.helper_functions import get_covalent_radius, compute_angle_between, compute_rotation_matrix
 
 
-class Group(Molecule):
+class Group(cctk.Molecule):
     """
     Class representing a functional group.
 
@@ -110,7 +108,7 @@ class Group(Molecule):
         molecule.atomic_numbers[add_to] = group.atomic_numbers[group.adjacent]
         new_indices = [i + molecule.num_atoms() for i in range(1, np.sum(other_indices) + 1)]
         molecule.atomic_numbers = np.hstack([molecule.atomic_numbers, group.atomic_numbers[other_indices]])
-        molecule.atomic_numbers = molecule.atomic_numbers.view(OneIndexedArray)
+        molecule.atomic_numbers = molecule.atomic_numbers.view(cctk.OneIndexedArray)
 
         #### have to keep track of what all the new indices are, to carry over connectivity
         new_indices.insert(group.adjacent - 1, add_to)
@@ -144,7 +142,7 @@ class Group(Molecule):
         for vector in group.geometry[other_indices]:
             new_v = np.dot(rot, vector) + center_pos
             molecule.geometry = np.vstack((molecule.geometry, new_v))
-            molecule.geometry = molecule.geometry.view(OneIndexedArray)
+            molecule.geometry = molecule.geometry.view(cctk.OneIndexedArray)
 
         #### now we have to merge the new bonds
         for (atom1, atom2) in group.bonds.edges():
@@ -206,8 +204,8 @@ class Group(Molecule):
         molecule_to_group = {x: i+1 for i, x in enumerate(fragment2)}
 
         #### create new molecules
-        new_mol = Molecule(molecule.atomic_numbers[fragment1], molecule.geometry[fragment1])
-        group = Molecule(molecule.atomic_numbers[fragment2], molecule.geometry[fragment2])
+        new_mol = cctk.Molecule(molecule.atomic_numbers[fragment1], molecule.geometry[fragment1])
+        group = cctk.Molecule(molecule.atomic_numbers[fragment2], molecule.geometry[fragment2])
 
         #### add capping H to new_mol
         new_mol.add_atom("H", molecule.geometry[atom2])

@@ -1,10 +1,4 @@
-import sys
-import re
-import numpy as np
-
-from abc import abstractmethod
-
-from cctk import File, Molecule, ConformationalEnsemble
+from cctk import File
 from cctk.helper_functions import get_symbol
 
 class PDBFile(File):

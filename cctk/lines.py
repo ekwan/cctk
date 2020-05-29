@@ -1,4 +1,3 @@
-import numpy as np
 import re
 from itertools import islice
 
@@ -120,7 +119,7 @@ class LazyLineObject:
 
         try:
             pattern = re.compile(parameter)
-        except:
+        except Exception as e:
             raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
 
         if pattern:

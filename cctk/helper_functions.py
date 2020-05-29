@@ -4,7 +4,6 @@ Miscellaneous helper functions.
 
 import numpy as np
 import math
-import re
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
 try:
@@ -383,7 +382,7 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
             atomic_symbols = [ get_symbol(n) for n in atomic_numbers ]
             atomic_symbols = cctk.OneIndexedArray(atomic_symbols)
             atom_numbers = list(range(1,n_atoms+1))
-            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
+#            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
             all_labels = [ f"{current_symbol}{atom_number}" for current_symbol,atom_number in zip(atomic_symbols,atom_numbers) ]
             all_labels = cctk.OneIndexedArray(all_labels)
             label_dict = dict(zip(atom_numbers,all_labels))
@@ -392,7 +391,7 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
             n_atoms = len(atomic_numbers)
             symmetrical_groups_dict = {}    # symbol --> [ [list1], [list2], ...] where each list is a group of symmetrical atom numbers
             symmetrical_groups_dict2 = {}   # symbol --> [ union of all symmetrical atom numbers for this symbol ]
-            unique_atoms_dict = {}          # symbol --> [ union of all unique atom numbers for this symbol ]
+#            unique_atoms_dict = {}          # symbol --> [ union of all unique atom numbers for this symbol ]
             for symmetrical_group in symmetrical_atom_numbers:
                 assert len(symmetrical_group) > 1, "must be at least 2 symmetrical nuclei in a group"
                 assert len(symmetrical_group) == len(set(symmetrical_group)), f"check for duplicate atom numbers in {symmetrical_group}"
@@ -508,7 +507,6 @@ def compute_chirality(v1, v2, v3, v4):
     assert (isinstance(v4, np.ndarray) and len(v4) == 3), "v4 needs to be a 3-element np.ndarray!"
 
     e1 = np.array([1, 0, 0])
-    e2 = np.array([0, 1, 0])
     e3 = np.array([0, 0, 1])
 
     # rotate v4 so that it's pointing back!
@@ -532,8 +530,6 @@ def compute_chirality(v1, v2, v3, v4):
     v2 = R2 @ v2
     v3 = R2 @ v3
     v4 = R2 @ v4
-
-    theta2 = compute_angle_between(np.array([0, 0, v1[2]]), e3) # projection of v1 onto e3
 
     assert 1.0 > compute_angle_between(v4, e1), f"rotating v4 failed - 1.0 ≤ {compute_angle_between(v4, e1)}"
     assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), f"rotating v1 failed, - 1.0 ≤ {compute_angle_between(e3, np.array([0, 0, v1[2]]))}"

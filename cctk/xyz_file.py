@@ -1,11 +1,8 @@
-import sys
 import re
 import numpy as np
 
-from abc import abstractmethod
-
 from cctk import File, Molecule
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
+from cctk.helper_functions import get_symbol, get_number
 
 
 class XYZFile(File):

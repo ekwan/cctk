@@ -1,8 +1,4 @@
-import sys
 import os
-import re
-import numpy as np
-
 from abc import ABC, abstractmethod
 
 
@@ -30,7 +26,6 @@ class File(ABC):
         """
         if not isinstance(text, str):
             raise TypeError("cannot write non-string to file!")
-            return False
 
         if not overwrite_existing and os.path.exists(filename):
             raise ValueError(f"{filename} already exists but not allowed to overwrite")
@@ -57,7 +52,6 @@ class File(ABC):
         """
         if not isinstance(text, str):
             raise TypeError("cannot write non-string to file!")
-            return False
 
         if os.path.exists(filename):
             try:

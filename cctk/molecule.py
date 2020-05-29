@@ -1,9 +1,8 @@
-import sys, re, math, copy, scipy
+import math, copy, scipy
 import numpy as np
 import networkx as nx
 
 import cctk
-from cctk import OneIndexedArray
 from cctk.helper_functions import (
     get_symbol,
     get_number,
@@ -55,7 +54,7 @@ class Molecule:
             try:
                 geometry = np.array(geometry)
                 geometry = geometry.astype(float)
-            except:
+            except Exception as e:
                 raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
 
             if not all(all(isinstance(y, float) for y in x) for x in geometry):
@@ -73,18 +72,18 @@ class Molecule:
             if not isinstance(charge, int):
                 try:
                     charge = int(charge)
-                except:
+                except Exception as e:
                     raise TypeError("charge must be integer or castable to integer!")
 
             if not isinstance(multiplicity, int):
                 try:
                     multiplicity = int(multiplicity)
-                except:
+                except Exception as e:
                     raise TypeError("multiplicity must be positive integer or castable to positive integer")
             assert multiplicity > 0, "multiplicity must be positive"
 
-        self.atomic_numbers = atomic_numbers.view(OneIndexedArray)
-        self.geometry = geometry.view(OneIndexedArray)
+        self.atomic_numbers = atomic_numbers.view(cctk.OneIndexedArray)
+        self.geometry = geometry.view(cctk.OneIndexedArray)
 
         self.name = name
         self.multiplicity = multiplicity
@@ -114,9 +113,6 @@ class Molecule:
             return f"Molecule (name={self.name}, {len(self.atomic_numbers)} atoms)"
         else:
             return f"Molecule ({len(self.atomic_numbers)} atoms)"
-
-    def __hash__(self):
-        return hash(id(self))
 
     def assign_connectivity(self, cutoff=0.1):
         """
@@ -275,7 +271,7 @@ class Molecule:
 
     def _get_bond_fragments(self, atom1, atom2):
         """
-        Returns the pieces of a molecule that one would obtain by breaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
+        Returns the pieces of a molecule that one would obtain by ereaking the bond between two atoms. Will throw ``ValueError`` if the atoms are in a ring.
         Useful for distance/angle/dihedral scans -- one fragment can be moved and the other held constant.
 
         Args:
@@ -334,7 +330,6 @@ class Molecule:
         for fragment in fragments:
             if atom in fragment:
                 return list(fragment)
-                break
 
     def set_distance(self, atom1=None, atom2=None, distance=None, move="group", atoms=None):
         """
@@ -453,7 +448,7 @@ class Molecule:
 
         try:
             angle = float(angle)
-        except:
+        except Exception as e:
             raise TypeError(f"angle {angle} cannot be converted to float!")
 
         if (not isinstance(angle, float)) or ((angle < 0) or (angle > 360)):
@@ -570,7 +565,7 @@ class Molecule:
 
         try:
             dihedral = float(dihedral)
-        except:
+        except Exception as e:
             raise TypeError(f"dihedral angle {dihedral} cannot be converted to float!")
 
         if (not isinstance(dihedral, float)) or ((dihedral < 0) or (dihedral > 360)):
@@ -634,8 +629,6 @@ class Molecule:
 
         for atom in atoms_to_move:
             self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom, check=False))
-
-        error = self.get_dihedral(atom1, atom2, atom3, atom4, check=False) - dihedral
 
         #### and move it back!
         self.translate_molecule(v3)
@@ -799,8 +792,8 @@ class Molecule:
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atomic_numbers = np.append(self.atomic_numbers, [number]).astype(np.int8).view(OneIndexedArray)
-        self.geometry = np.append(self.geometry, [coordinates], axis=0).view(OneIndexedArray)
+        self.atomic_numbers = np.append(self.atomic_numbers, [number]).astype(np.int8).view(cctk.OneIndexedArray)
+        self.geometry = np.append(self.geometry, [coordinates], axis=0).view(cctk.OneIndexedArray)
         self.bonds.add_node(self.num_atoms())
 
         return self
@@ -820,10 +813,10 @@ class Molecule:
 
         try:
             self.bonds.remove_node(number)
-            self.geometry = np.delete(self.geometry, number - 1, axis=0).view(OneIndexedArray)
-            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(OneIndexedArray)
+            self.geometry = np.delete(self.geometry, number - 1, axis=0).view(cctk.OneIndexedArray)
+            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(cctk.OneIndexedArray)
             return self
-        except:
+        except Exception as e:
             raise ValueError("removing atom {number} failed!")
 
     def get_atomic_number(self, atom):
@@ -861,7 +854,7 @@ class Molecule:
         """
         n_atoms = self.get_n_atoms()
         l = [ self.get_atomic_symbol(i) for i in range(1,n_atoms+1) ]
-        return OneIndexedArray(l)
+        return cctk.OneIndexedArray(l)
 
     def get_n_atoms(self):
         """
@@ -921,7 +914,7 @@ class Molecule:
             try:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
-            except:
+            except Exception as e:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -945,7 +938,7 @@ class Molecule:
             try:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
-            except:
+            except Exception as e:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -982,7 +975,7 @@ class Molecule:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
                 atom3 = int(atom3)
-            except:
+            except Exception as e:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -1027,7 +1020,7 @@ class Molecule:
                 atom2 = int(atom2)
                 atom3 = int(atom3)
                 atom4 = int(atom4)
-            except:
+            except Exception as e:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -1107,7 +1100,7 @@ class Molecule:
         """
         try:
             atom = int(atom)
-        except:
+        except Exception as e:
             raise TypeError(f"atom number {atom} cannot be cast to int!")
 
         self._check_atom_number(atom)
@@ -1176,7 +1169,7 @@ class Molecule:
         """
         try:
             atom = int(atom)
-        except:
+        except Exception as e:
             raise ValueError("atom cannot be cast to int")
 
         self._check_atom_number(atom)
@@ -1224,8 +1217,8 @@ class Molecule:
             new ``Molecule`` object
         """
 
-        atoms = np.hstack((molecule1.atomic_numbers.T, molecule2.atomic_numbers.T)).view(OneIndexedArray)
-        geoms = np.vstack((molecule1.geometry, molecule2.geometry)).view(OneIndexedArray)
+        atoms = np.hstack((molecule1.atomic_numbers.T, molecule2.atomic_numbers.T)).view(cctk.OneIndexedArray)
+        geoms = np.vstack((molecule1.geometry, molecule2.geometry)).view(cctk.OneIndexedArray)
         charge = molecule1.charge + molecule2.charge
 
         s1 = (molecule1.multiplicity - 1) / 2
@@ -1351,7 +1344,6 @@ class Molecule:
         if isinstance(check_chirality, list):
             #### find all the differences and exchange them
             model_report = model.get_chirality_report(check_chirality)
-            mol_report = mol.get_chirality_report(check_chirality)
 
             #### generate all meso ring permutations
             candidates = mol.flip_meso_rings(atoms=check_chirality)
@@ -1397,7 +1389,7 @@ class Molecule:
                 mol = self.exchange_identical_substituents(center)
                 exchangeable_centers.append(center)
                 continue
-            except:
+            except Exception as e:
                 pass
 
             mols = self.flip_meso_rings(atoms=[center])
@@ -1463,7 +1455,6 @@ class Molecule:
                     match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
 
                     if match.is_isomorphic():
-                        new_returns = []
                         for mol in returns:
                             new_mol = copy.deepcopy(mol)
                             for k,v in match.mapping.items():
@@ -1515,7 +1506,6 @@ class Molecule:
                     continue
 
                 #### reorder to put ``center`` first
-                idx = cycle.index(center)
                 while cycle[0] != center:
                     # why yes, this /is/ a O(n) solution for reordering a list. why do you ask?
                     cycle = cycle[1:] + cycle[0:1]
@@ -1623,7 +1613,7 @@ class Molecule:
 
             if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
                 #### have to remove in reverse direction for indexing consistency
-                for i in sorted(to_remove, reverse=True):
-                    mol.remove_atom(i)
+                for j in sorted(to_remove, reverse=True):
+                    mol.remove_atom(j)
                 return mol
 

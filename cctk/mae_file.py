@@ -2,10 +2,8 @@ import re
 import numpy as np
 import networkx as nx
 
-from abc import abstractmethod
-
 from cctk import File, Ensemble, ConformationalEnsemble, Molecule
-from cctk.helper_functions import get_symbol, get_number
+from cctk.helper_functions import get_number
 
 
 class MAEFile(File):

@@ -1,7 +1,7 @@
 import numpy as np
 import re
 
-from cctk.helper_functions import get_symbol, get_number
+from cctk.helper_functions import get_number
 from cctk import OneIndexedArray, LazyLineObject
 
 """

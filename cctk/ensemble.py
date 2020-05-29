@@ -1,9 +1,7 @@
-import sys, re
 import numpy as np
 from copy import deepcopy
 
 import cctk
-from cctk import Molecule
 from cctk.helper_functions import align_matrices
 
 
@@ -51,7 +49,7 @@ class Ensemble:
             new = type(self)(name=self.name) # will return either Ensemble or subclass thereof
             new.add_molecule(mol, properties=prop)
             return new
-        elif isinstance(key, Molecule):
+        elif isinstance(key, cctk.Molecule):
             idx = self.molecule_list().index(key)
             return self[idx]
         elif isinstance(key, (list, np.ndarray)):
@@ -231,8 +229,8 @@ class Ensemble:
             else:
                 raise ValueError(f"cannot index with type {str(type(key))}")
 
-        def __setitem__(self, key):
-            raise ValueError("cannot set molecule properties this way; use ensemble.set_property_dict(molecule, property_dict) instead")
+        def __setitem__(self, key, item):
+            raise LookupError("cannot set molecule properties this way; use ensemble.set_property_dict(molecule, property_dict) instead")
 
         def _check_key(self, key, n_items):
             assert -n_items <= key < n_items, f"key {key} is out of range...must be between {-n_items} and {n_items-1} inclusive"
@@ -285,7 +283,7 @@ class Ensemble:
             properties (dict): property name (str) to property value
             copy (bool): whether to store an independent copy of the molecule
         """
-        if not isinstance(molecule, Molecule):
+        if not isinstance(molecule, cctk.Molecule):
             raise TypeError("molecule is not a Molecule - so it can't be added!")
 
         if copy:
@@ -564,15 +562,15 @@ class ConformationalEnsemble(Ensemble):
             if parameter == "distance":
                 output[index] = molecule.get_distance(atom1, atom2)
             elif parameter == "angle":
-                if atom3 == None:
+                if atom3 is None:
                     raise ValueError("need atom3 to calculate angle!")
                 output[index] = molecule.get_angle(atom1, atom2, atom3)
             elif parameter == "dihedral":
-                if (atom3 == None) or (atom4 == None):
+                if (atom3 is None) or (atom4 is None):
                     raise ValueError("need atom3 and atom4 to calculate dihedral!")
                 output[index] = molecule.get_dihedral(atom1, atom2, atom3, atom4)
             else:
-                ValueError("Invalid parameter {}!".format(parameter))
+                raise ValueError(f"Invalid parameter {parameter}!")
 
         return output
 

@@ -1,6 +1,3 @@
-import os
-import sys
-
 try:
     import importlib.resources as pkg_resources
 except ImportError:
@@ -8,7 +5,7 @@ except ImportError:
 
 from cctk import MOL2File, Group
 
-from . import data, groups
+from . import groups
 
 filenames = [
     "MeH.mol2",
