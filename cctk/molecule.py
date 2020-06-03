@@ -1617,3 +1617,26 @@ class Molecule:
                     mol.remove_atom(j)
                 return mol
 
+    def center_periodic(self, center, side_length):
+        """
+        Adjusts a molecule to be in the center of a cube, moving all other molecules accordingly. Bonded subgroups will be moved as a unit.
+
+        For analysis of MD files with periodic boundary conditions.
+
+        Args:
+            center (int): atomic number to center
+            side_length (float): length of side, in Å
+        """
+        self._check_atomic_number(center)
+        assert isinstance(side_length, (int, float))
+        assert side_length > 0
+
+        #### Center the atom of interest
+        self.positions += -1 * self.positions[center-1]
+        self.positions += side_length / 2
+
+        for fragment in self.get_components():
+            centroid = np.mean(self.geometry[f], axis=0)
+            self.geometry[f] += -1 * np.floor_divide(centroid, side_length) * side_length
+
+        return self
