@@ -1589,7 +1589,6 @@ class Molecule:
         assert isinstance(num_solvents, int)
 
         fragments = self.get_components()
-        print("HERE")
 
         #### not strictly a centroid since it's not mass-weighted.
         centroids = np.zeros(shape=(len(fragments), 3))
@@ -1612,8 +1611,6 @@ class Molecule:
                 to_remove.append(j)
                 current_num_atoms += -1
             current_num_solvents += -1
-            
-            print(f"num = {current_num_solvents}")
 
             if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
                 #### have to remove in reverse direction for indexing consistency
@@ -1631,15 +1628,15 @@ class Molecule:
             center (int): atomic number to center
             side_length (float): length of side, in Å
         """
-        self._check_atomic_number(center)
+        self._check_atom_number(center)
         assert isinstance(side_length, (int, float))
         assert side_length > 0
 
         #### Center the atom of interest
-        self.positions += -1 * self.positions[center-1]
-        self.positions += side_length / 2
+        self.geometry += -1 * self.geometry[center]
+        self.geometry += side_length / 2
 
-        for fragment in self.get_components():
+        for f in self.get_components():
             centroid = np.mean(self.geometry[f], axis=0)
             self.geometry[f] += -1 * np.floor_divide(centroid, side_length) * side_length
 

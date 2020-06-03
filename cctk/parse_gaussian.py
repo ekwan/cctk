@@ -244,8 +244,13 @@ def read_nmr_shifts(lines, num_atoms):
             except:
                 raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
             shieldings.append(shielding)
-    assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
-    return np.asarray(shieldings)
+
+    if len(shieldings) is not 0:
+        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        return np.asarray(shieldings)
+    else:
+        #### we can catch this problem later if the file is finished
+        return None
 
 def split_link1(filename):
     """

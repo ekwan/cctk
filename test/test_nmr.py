@@ -174,5 +174,9 @@ class TestNMR(unittest.TestCase):
         #with np.printoptions(precision=1, suppress=True):
         #    print(np.array2string(couplings, separator=","))
 
+    def test_nmr_solvated(self):
+        file = cctk.GaussianFile.read_file("test/static/ibuprofen_solvated.out")
+        print("done")
+
 if __name__ == '__main__':
     unittest.main()
