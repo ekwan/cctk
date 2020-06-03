@@ -1589,6 +1589,8 @@ class Molecule:
         assert isinstance(num_solvents, int)
 
         fragments = self.get_components()
+        print("HERE")
+
         #### not strictly a centroid since it's not mass-weighted.
         centroids = np.zeros(shape=(len(fragments), 3))
         distances = np.zeros(shape=len(fragments))
@@ -1610,6 +1612,8 @@ class Molecule:
                 to_remove.append(j)
                 current_num_atoms += -1
             current_num_solvents += -1
+            
+            print(f"num = {current_num_solvents}")
 
             if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
                 #### have to remove in reverse direction for indexing consistency
