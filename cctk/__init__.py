@@ -5,7 +5,7 @@ from .molecule import Molecule
 from .ensemble import Ensemble, ConformationalEnsemble
 from .group import Group
 
-from .gaussian_file import GaussianFile, GaussianJobType
+from .gaussian_file import GaussianJobType, GaussianFile
 from .orca_file import OrcaFile, OrcaJobType
 from .xyz_file import XYZFile
 from .mol2_file import MOL2File

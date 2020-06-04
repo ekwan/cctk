@@ -32,6 +32,13 @@ class LazyLineObject:
             for line in islice(lines, self.start + key, self.start + key + 1):
                 return line.rstrip()
 
+    def full_text(self):
+        text = ""
+        with open(self.file, "r") as lines:
+            for line in islice(lines, self.start, self.end + 1):
+                text += line.rstrip() + "\n"
+        return text
+
     def search_for_block(self, start, end, count=1, join=" ", max_len=1000, format_line=None):
         """
         Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
@@ -101,18 +108,23 @@ class LazyLineObject:
         Args:
             parameter (string): test to search for
             expected_length (int): how many fields there should be
-            which_field (int): which field the parameter is (zero-indexed)
+            which_field (int or list): which field(s) the parameter is (zero-indexed)
             split_on (str): additional non-space field on which to split
             cast_to_float (Bool): whether or not to cast extracted value to float
         Returns:
             a list of all the extracted values
         """
+        if not isinstance(which_field, list):
+            which_field = [which_field]
 
-        if (not isinstance(expected_length, int)) or (not isinstance(which_field, int)):
-            raise TypeError("expected_length and which_field must be type int!")
+        if not isinstance(expected_length, int):
+            raise TypeError("expected_length must be type int!")
 
-        if which_field >= expected_length:
-            raise ValueError("can't expect a field after the last field!")
+        for n in which_field:
+            if not isinstance(n, int):
+                raise TypeError("which_field must be type int!")
+            if n >= expected_length:
+                raise ValueError("can't expect a field after the last field!")
 
         matches = []
         pattern = False
@@ -134,12 +146,18 @@ class LazyLineObject:
                     fields = list(filter(None, fields))
 
                     if len(fields) == expected_length:
-                        if cast_to_float:
-                            try:
-                                matches.append(float(fields[which_field]))
-                            except:
-                                matches.append(0)
+                        desired_fields = []
+                        for n in which_field:
+                            if cast_to_float:
+                                try:
+                                    desired_fields.append(float(fields[n]))
+                                except:
+                                    desired_fields.append(0)
+                            else:
+                                desired_fields.append(fields[n])
+                        if len(desired_fields) == 1:
+                            matches.append(desired_fields[0])
                         else:
-                            matches.append(fields[which_field])
+                            matches.append(desired_fields)
             return matches
 

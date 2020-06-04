@@ -43,7 +43,12 @@ class Molecule:
         """
         if checks:
             if len(atomic_numbers) != len(geometry):
-                raise ValueError("length of geometry and atomic_numbers does not match!")
+                raise ValueError(f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}")
+
+            try:
+                atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
+            except Exception as e:
+                raise ValueError("invalid atom list")
 
             if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
                 raise ValueError("invalid atom list")
@@ -815,6 +820,10 @@ class Molecule:
             self.bonds.remove_node(number)
             self.geometry = np.delete(self.geometry, number - 1, axis=0).view(cctk.OneIndexedArray)
             self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(cctk.OneIndexedArray)
+
+            #### need to renumber to fill gaps
+            self.bonds = nx.convert_node_labels_to_integers(self.bonds, first_label=1, ordering="sorted")
+
             return self
         except Exception as e:
             raise ValueError("removing atom {number} failed!")

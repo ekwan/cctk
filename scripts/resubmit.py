@@ -1,6 +1,6 @@
 import sys, argparse, re, glob
 
-from cctk import GaussianFile,
+from cctk import GaussianFile
 
 #### This is a script to resubmit failed Gaussian files.
 #### Parameters:
@@ -32,6 +32,8 @@ for filename in glob.iglob(args["filename"], recursive=True):
 
     try:
         output_file = GaussianFile.read_file(filename)
+        if isinstance(output_file, list):
+            output_file = output_file[-1]
         if args["perturb"]:
             output_file.get_molecule().perturb()
         success = output_file.successful_terminations
@@ -47,4 +49,4 @@ for filename in glob.iglob(args["filename"], recursive=True):
             print(f"{filename} > {newfile}")
 
     except Exception as e:
-        print(f"can't read file {filename}!")
+        print(f"can't read file {filename}!\n{e}")

@@ -111,7 +111,7 @@ class GaussianFile(File):
         if success and not isinstance(success, int):
             raise TypeError("success needs to be an integer")
 
-        if not isinstance(elapsed_time, float) or elapsed_time < 0.0:
+        if not isinstance(elapsed_time, (float, int)) or elapsed_time < 0.0:
             raise TypeError(f"elapsed_time invalid: {elapsed_time}")
 
         if job_types is not None:
@@ -231,6 +231,7 @@ class GaussianFile(File):
             return list()
 
     @classmethod
+#    @profile
     def read_file(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
@@ -254,6 +255,7 @@ class GaussianFile(File):
 
         link1_lines = parse.split_link1(filename)
         files = []
+
         for link1idx, lines in enumerate(link1_lines):
             #### automatically assign job types based on header
             header = lines.search_for_block("#p", "----", format_line=lambda x: x.lstrip(), join="")
@@ -270,23 +272,9 @@ class GaussianFile(File):
                     if not re.search("-----", line):
                         title += line
 
-            #### extract parameters
-            success = 0
-            elapsed_time = 0.0  # in seconds
-            for line in lines:
-                if line.strip().startswith("Normal termination"):
-                    success += 1
-                elif line.startswith(" Elapsed time:"):
-                    # Elapsed time:       0 days  0 hours  0 minutes  0.6 seconds.
-                    fields = line.split()
-                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
-                    days = float(fields[2])
-                    hours = float(fields[4])
-                    minutes = float(fields[6])
-                    seconds = float(fields[8])
-                    elapsed_time += days * 86400 + hours * 3600 + minutes * 60 + seconds
 
-            (geometries, atom_list, energies, scf_iterations,) = parse.read_geometries_and_energies(lines)
+            (geometries, atom_list, energies, scf_iterations, success, elapsed_time) = parse.read_geometries_and_energies(lines)
+            success, elapsed_time = parse.extract_success_and_time(lines)
             atomic_numbers = []
 
             #### convert to right datatype
@@ -303,8 +291,7 @@ class GaussianFile(File):
                     footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
 
             bonds = parse.read_bonds(lines)
-            charge = lines.find_parameter("Multiplicity", expected_length=4, which_field=1, split_on="=")[0]
-            multip = lines.find_parameter("Multiplicity", expected_length=4, which_field=3, split_on="=")[0]
+            charge, multip =  lines.find_parameter("Multiplicity", expected_length=4, which_field=[1,3], split_on="=")[0]
 
             f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
 
@@ -389,9 +376,7 @@ class GaussianFile(File):
 
                 frequencies = []
                 try:
-                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=2)
-                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=3)
-                    frequencies += lines.find_parameter("Frequencies", expected_length=5, which_field=4)
+                    frequencies = sum(lines.find_parameter("Frequencies", expected_length=5, which_field=[2,3,4]), [])
                     properties[-1]["frequencies"] = sorted(frequencies)
                 except Exception as e:
                     raise ValueError("error finding frequencies")
@@ -700,3 +685,31 @@ class GaussianFile(File):
 
         except Exception as e:
             raise ValueError(f"adding basis set {name} from basis set exchange failed!\n{e}")
+
+    @classmethod
+    def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
+        """
+        Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
+        Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
+
+        Note:
+
+        Will throw ``ValueError`` if there have been no successful iterations.
+
+        Args:
+            filename (str): path to the out file
+            return_lines (Bool): whether the lines of the file should be returned
+            extended_opt_info (Bool): if full parameters about each opt step should be collected
+                (by default, only ``rms_displacement`` and ``rms_force`` are collected)
+        Returns:
+            ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
+            (optional) the lines of the file (or list of lines of file for Link1 files)
+        """
+        if re.search("gjf$", filename) or re.search("com$", filename):
+            return cls._read_gjf_file(filename, return_lines)
+
+        link1_lines = parse.split_link1_to_text(filename)
+        files = []
+
+        for link1idx, lines in enumerate(link1_lines):
+            parse.read_file_fast(lines, filename, link1idx, extended_opt_info=extended_opt_info)
