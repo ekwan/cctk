@@ -570,12 +570,20 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
     A.make_automaton()
     found_words = A.iter(file_text)
 
-    # this loop call is slow, might be a better way to do it with map()
+#    newline_locations = np.array([match.start() for match in re.finditer("\n", file_text)])
+
     for position, idx in found_words:
         if isinstance(idx, int):
-            match = file_text[position]
+
+#            end_idx = np.searchsorted(newline_locations, position)
+#            start_loc = newline_locations[end_idx - 1]
+#            end_loc = newline_locations[end_idx]
+#            word_matches[idx].append(file_text[start_loc:end_loc].strip())
+#            continue
+
             stepsize = 10
 
+            match = file_text[position]
             i = position + 1
             while match[-1-stepsize:].find("\n") < 0:
                 match = match + file_text[i:i+stepsize]
