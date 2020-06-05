@@ -540,7 +540,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         ["The following ModRedundant input section", "\n \n", 1],
         [
             ["Input orientation", "Standard orientation", "Cartesian Coordinates"],
-            "Rotational",
+           "Rotational",
             1000,
         ],
         ["Wallingford", "#p", 1],
@@ -612,9 +612,21 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
                     break
 
             match = match.split(end)[0]
-            block_matches[idx].append(match)
+
+            # special geometry handling :/
+            if idx == 3:
+                if len(block_matches[3]) == len(word_matches[0]):
+                    block_matches[3].append(match)
+                else:
+                    block_matches[3][-1] = match
+
+            else:
+                block_matches[idx].append(match)
 
     del file_text # here, have your RAM back!
+
+    if len(block_matches[1]) == 0:
+        raise ValueError(f"Can't find a title block - something is wrong with {filename}!")
 
     n, g = parse_geometry(block_matches[3])
     title, link0, route_card, footer, job_types = parse_header_footer(block_matches[0], block_matches[1], block_matches[2], block_matches[4])
@@ -644,11 +656,11 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         if extended_opt_info:
             max_forces = extract_parameter(word_matches[7], 2)
             max_disp = extract_parameter(word_matches[8], 2)
-            rms_int = extract_parameter(word_matches[9], 5)
-            max_int = extract_parameter(word_matches[9], 3)
-            rms_grad = extract_parameter(word_matches[10], 5)
-            max_grad = extract_parameter(word_matches[10], 3)
-            delta_e = extract_parameter(word_matches[11], 3)
+            rms_grad = extract_parameter(word_matches[9], 5)
+            max_grad = extract_parameter(word_matches[9], 3)
+            rms_int = extract_parameter(word_matches[10], 5)
+            max_int = extract_parameter(word_matches[10], 3)
+            delta_e = extract_parameter(word_matches[11], 3, cast_to_float=False)
 
         for idx, force in enumerate(rms_forces):
             properties[idx]["rms_force"] = force
@@ -658,22 +670,22 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
                 if idx < len(max_forces):
                     properties[idx]["max_force"] = max_forces[idx]
 
-                if idx < len(max_displacements):
+                if idx < len(max_disp):
                     properties[idx]["max_displacement"] = max_disp[idx]
 
-                if idx < len(max_gradients):
+                if idx < len(max_grad):
                     properties[idx]["max_gradient"] = max_grad[idx]
 
-                if idx < len(rms_gradients):
+                if idx < len(rms_grad):
                     properties[idx]["rms_gradient"] = rms_grad[idx]
 
-                if idx < len(max_int_forces):
+                if idx < len(max_int):
                     properties[idx]["max_internal_force"] = max_int[idx]
 
-                if idx < len(rms_int_forces):
+                if idx < len(rms_int):
                     properties[idx]["rms_internal_force"] = rms_int[idx]
 
-                if idx < len(delta_energy):
+                if idx < len(delta_e):
                     change_in_energy = re.sub(r"Energy=", "", delta_e[idx])
                     properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
 
@@ -717,17 +729,17 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
 
     if cctk.GaussianJobType.FORCE in job_types:
         assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
-        forces = parse_forces(lines)
+        forces = parse_forces(block_matches[7])
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types:
         if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
-            charges, spins = parse.read_hirshfeld(block_matches[8])
+            charges, spins = parse_hirshfeld(block_matches[8])
             properties[-1]["hirshfeld_charges"] = charges
             properties[-1]["hirshfeld_spins"] = spins
 
     try:
-        charges, dipole = parse.read_charges_dipole(block_matches[9], block_matches[10])
+        charges, dipole = parse_charges_dipole(block_matches[9], block_matches[10])
         properties[-1]["mulliken_charges"] = charges
         properties[-1]["dipole_moment"] = dipole
     except Exception as e:
@@ -760,12 +772,13 @@ def parse_geometry(blocks):
 def parse_header_footer(route_block, title_block, footer_block, link0_block):
     link0 = dict()
     route_card = ""
-    footer = ""
+    footer = None
     title = ""
     job_types = []
 
     title = title_block[0].split("\n")[2].strip()
-    route_card = route_block[0].strip().replace("\n", "")
+    for line in route_block[0].split("\n"):
+        route_card += line.lstrip()
 
     if len(footer_block) > 0:
         footer = "\n".join(list(footer_block[0].split("\n"))[1:])  # get rid of the first line
@@ -846,7 +859,7 @@ def extract_parameter(lines, position, cast_to_float=True):
 
 def parse_forces(force_block):
     forces = []
-    for line in force_block.split("\n")[2:]:
+    for line in force_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 
@@ -859,14 +872,14 @@ def parse_charges_dipole(mulliken_block, dipole_block):
     charges = []
     dipole = 0
 
-    for line in mulliken_block.split("\n")[2:]:
+    for line in mulliken_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 
         if len(fields) == 3:
             charges.append(float(fields[2]))
 
-    for line in dipole_block.split("\n")[1:]:
+    for line in dipole_block[0].split("\n")[1:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 
@@ -879,7 +892,7 @@ def parse_charges_dipole(mulliken_block, dipole_block):
 def parse_hirshfeld(hirshfeld_block):
     charges = []
     spins = []
-    for line in hirshfeld_block.split("\n")[2:]:
+    for line in hirshfeld_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 

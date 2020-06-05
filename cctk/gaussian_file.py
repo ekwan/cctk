@@ -687,8 +687,8 @@ class GaussianFile(File):
             raise ValueError(f"adding basis set {name} from basis set exchange failed!\n{e}")
 
     @classmethod
-#    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
-    def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
+    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
+#    def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
         Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
