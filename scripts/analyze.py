@@ -1,6 +1,7 @@
 import sys, re, glob, cctk, argparse
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 
 from tabulate import tabulate
 from tqdm import tqdm
@@ -26,15 +27,20 @@ args = vars(parser.parse_args(sys.argv[1:]))
 
 print("\n\033[3mreading files:\033[0m")
 
-for filename in tqdm(sorted(glob.glob(args["filename"], recursive=True))):
-    if re.search("slurm", filename):
-        continue
+files = glob.glob(args["filename"], recursive=True)
 
-    output_file = cctk.GaussianFile.read_file(filename)
-    if isinstance(output_file, list):
-        output_file = output_file[-1]
+def read(file):
+    try:
+        output_file = cctk.GaussianFile.read_file(file)
+        if isinstance(output_file, list):
+            output_file = output_file[-1]
+        return output_file
+    except Exception as e:
+        print(f"Error reading {file}\n{e}")
+        return
 
-    molecule = None
+pool = mp.Pool(processes=16)
+for output_file in tqdm(pool.imap(read, files), total=len(files)):
     if output_file.successful_terminations:
         results.add_molecule(*list(output_file.ensemble.items())[-1])
         molecule = output_file.ensemble.molecules[-1]

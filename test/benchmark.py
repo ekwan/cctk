@@ -3,6 +3,9 @@ import time, sys
 sys.path.insert(0,'/Users/cwagen/code/cctk')
 import cctk
 
+#### 79.9 seconds before refactorization (6/3/2020)
+#### 4.96 seconds after refactorization (6/5/2020)
+
 files = [
     "test/static/eliminationTS.out",
     "test/static/LSD_custom.out",

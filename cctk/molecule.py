@@ -1,6 +1,7 @@
 import math, copy, scipy
 import numpy as np
 import networkx as nx
+from scipy.spatial.distance import cdist
 
 import cctk
 from cctk.helper_functions import (
@@ -118,19 +119,25 @@ class Molecule:
             self
         """
 
+        self.bonds = nx.create_empty_copy(self.bonds)
+
         assert isinstance(cutoff, (float, int)), "need cutoff to be numeric!"
+        g = self.geometry.view(np.ndarray)
+
+        dist_matrix = cdist(g, g, "euclidean")
+
+        covalent_radii = {z: get_covalent_radius(z) for z in set(self.atomic_numbers)}
+        radii_by_num = [covalent_radii[z] for z in self.atomic_numbers]
 
         for i in range(1, self.num_atoms() + 1):
             for j in range(i + 1, self.num_atoms() + 1):
-                distance = self.get_distance(i, j)
-                r_i = get_covalent_radius(self.get_atomic_number(i))
-                r_j = get_covalent_radius(self.get_atomic_number(j))
+                distance = dist_matrix[i-1][j-1]
+                r_i = radii_by_num[i-1]
+                r_j = radii_by_num[j-1]
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
                     self.add_bond(i, j)
-                elif self.get_bond_order(i, j):
-                    self.remove_bond(i, j)
 
         return self
 
