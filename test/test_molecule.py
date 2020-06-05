@@ -171,5 +171,14 @@ class TestMolecule(unittest.TestCase):
 
         mol.get_chirality_report()
 
+    def test_periodic_boundary_conditions(self):
+        m1 = cctk.Molecule([9, 9], [[0, 5, 4.5], [0, 0, 0.5]], charge=0, multiplicity=1)
+
+        m1.assign_connectivity()
+        self.assertFalse(m1.get_bond_order(1,2))
+
+        m1.assign_connectivity(periodic_boundary_conditions=np.array([5,5,5]))
+        self.assertTrue(m1.get_bond_order(1,2))
+
 if __name__ == '__main__':
     unittest.main()

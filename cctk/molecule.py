@@ -108,7 +108,7 @@ class Molecule:
         else:
             return f"Molecule ({len(self.atomic_numbers)} atoms)"
 
-    def assign_connectivity(self, cutoff=0.1):
+    def assign_connectivity(self, cutoff=0.1, periodic_boundary_conditions=None):
         """
         Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + 0.5 Angstroms, then they are considered bonded.
 
@@ -125,8 +125,23 @@ class Molecule:
         assert isinstance(cutoff, (float, int)), "need cutoff to be numeric!"
         g = self.geometry.view(np.ndarray)
 
-        #### optimized for speed
-        dist_matrix = cdist(g, g, "euclidean")
+        dist_matrix = None
+
+        if periodic_boundary_conditions is None:
+            #### optimized for speed
+            dist_matrix = cdist(g, g, "euclidean")
+        else:
+            pbc = periodic_boundary_conditions
+            assert isinstance(pbc, np.ndarray) and len(pbc) == 3, "Need 3-element ``np.ndarray`` for PBCs"
+
+            #### Adapted from
+            #### https://stackoverflow.com/questions/11108869/optimizing-python-distance-calculation-while-accounting-for-periodic-boundary-co
+            def pbc_distance(x, y):
+                delta = np.abs(x-y)
+                delta = np.where(delta > 0.5 * pbc, delta - pbc, delta)
+                return np.sqrt((delta ** 2).sum(axis=-1))
+
+            dist_matrix = cdist(g, g, pbc_distance)
 
         covalent_radii = {z: get_covalent_radius(z) for z in set(self.atomic_numbers)}
         radii_by_num = [covalent_radii[z] for z in self.atomic_numbers]
