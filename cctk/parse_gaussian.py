@@ -511,9 +511,10 @@ def extract_success_and_time(lines):
 
 def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_info=False):
 
-    # "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
-    # Welcome to the fast part!
+    #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
+    #### Welcome to the fast part!
 
+    #### Here we identify all the lines we're going to scrape
     words = [
         "SCF Done",
         "Entering Link 1",
@@ -533,6 +534,9 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         "Temperature", #15
         "Isotropic",
     ]
+
+    #### And here are the blocks of text
+    #### format: [start, stop, num]
 
     blocks = [
         ["#p", "----", 1],
@@ -567,19 +571,14 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         else:
             A.add_word(b[0], ("start", idx))
 
+    #### perform search
     A.make_automaton()
     found_words = A.iter(file_text)
 
-#    newline_locations = np.array([match.start() for match in re.finditer("\n", file_text)])
-
+    #### now, we have to expand our one-character matches to whole lines/blocks
+    #### this is the slowest part
     for position, idx in found_words:
         if isinstance(idx, int):
-#            end_idx = np.searchsorted(newline_locations, position)
-#            start_loc = newline_locations[end_idx - 1]
-#            end_loc = newline_locations[end_idx]
-#            word_matches[idx].append(file_text[start_loc:end_loc].strip())
-#            continue
-
             stepsize = 10
 
             match = file_text[position]
@@ -635,6 +634,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
     if len(block_matches[1]) == 0:
         raise ValueError(f"Can't find a title block - something is wrong with {filename}!")
 
+    #### and from here, we're off to the races!
     n, g = parse_geometry(block_matches[3])
     title, link0, route_card, footer, job_types = parse_header_footer(block_matches[0], block_matches[1], block_matches[2], block_matches[4])
     energies, scf_iterations = parse_energies(word_matches[0])

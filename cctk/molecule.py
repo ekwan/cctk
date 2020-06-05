@@ -119,11 +119,13 @@ class Molecule:
             self
         """
 
+        #### delete all edges
         self.bonds = nx.create_empty_copy(self.bonds)
 
         assert isinstance(cutoff, (float, int)), "need cutoff to be numeric!"
         g = self.geometry.view(np.ndarray)
 
+        #### optimized for speed
         dist_matrix = cdist(g, g, "euclidean")
 
         covalent_radii = {z: get_covalent_radius(z) for z in set(self.atomic_numbers)}
