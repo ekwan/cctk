@@ -574,7 +574,6 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
 
     for position, idx in found_words:
         if isinstance(idx, int):
-
 #            end_idx = np.searchsorted(newline_locations, position)
 #            start_loc = newline_locations[end_idx - 1]
 #            end_loc = newline_locations[end_idx]
