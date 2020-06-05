@@ -687,6 +687,7 @@ class GaussianFile(File):
             raise ValueError(f"adding basis set {name} from basis set exchange failed!\n{e}")
 
     @classmethod
+#    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
     def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
@@ -703,7 +704,7 @@ class GaussianFile(File):
                 (by default, only ``rms_displacement`` and ``rms_force`` are collected)
         Returns:
             ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
-            (optional) the lines of the file (or list of lines of file for Link1 files)
+            (optional) the lines of the file (or list of lines of file for Link1 files) as Lines object
         """
         if re.search("gjf$", filename) or re.search("com$", filename):
             return cls._read_gjf_file(filename, return_lines)
@@ -712,4 +713,18 @@ class GaussianFile(File):
         files = []
 
         for link1idx, lines in enumerate(link1_lines):
-            parse.read_file_fast(lines, filename, link1idx, extended_opt_info=extended_opt_info)
+            files.append(parse.read_file_fast(lines, filename, link1idx, extended_opt_info=extended_opt_info))
+
+        if return_lines:
+            link1_lines = parse.split_link1(filename)
+            if len(link1_lines) == 1:
+                return files[0], link1_lines[0]
+            else:
+                return files, link1_lines
+        else:
+            if len(link1_lines) == 1:
+                return files[0]
+            else:
+                return files
+
+

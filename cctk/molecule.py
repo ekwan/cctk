@@ -41,54 +41,38 @@ class Molecule:
 
         ``bonds`` must be a list of edges (i.e. an n x 2 ``numpy`` array).
         """
-        if checks:
-            if len(atomic_numbers) != len(geometry):
-                raise ValueError(f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}")
+        if len(atomic_numbers) != len(geometry):
+            raise ValueError(f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}")
 
-            try:
-                atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
-            except Exception as e:
-                raise ValueError("invalid atom list")
+        try:
+            atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8).view(cctk.OneIndexedArray)
+        except Exception as e:
+            raise ValueError("invalid atom list")
 
-            if not all(isinstance(z, np.int8) for z in atomic_numbers) or atomic_numbers.size == 0:
-                raise ValueError("invalid atom list")
+        try:
+            geometry = np.array(geometry, dtype=np.float32).view(cctk.OneIndexedArray)
+        except Exception as e:
+            raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
 
-            if len(geometry) == 0:
-                raise ValueError("invalid geometry list")
-
-            try:
-                geometry = np.array(geometry)
-                geometry = geometry.astype(float)
-            except Exception as e:
-                raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
-
-            if not all(all(isinstance(y, float) for y in x) for x in geometry):
-                raise TypeError("each element of self.geometry must be a 3-tuple")
-
-            if name and not isinstance(name, str):
+        if name is not None:
+            if not isinstance(name, str):
                 raise TypeError("name must be a string!")
 
-            for atom in atomic_numbers:
-                try:
-                    get_symbol(atom)
-                except ValueError:
-                    raise ValueError(f"unknwon atomic number {atom}")
+        if not isinstance(charge, int):
+            try:
+                charge = int(charge)
+            except Exception as e:
+                raise TypeError("charge must be integer or castable to integer!")
 
-            if not isinstance(charge, int):
-                try:
-                    charge = int(charge)
-                except Exception as e:
-                    raise TypeError("charge must be integer or castable to integer!")
+        if not isinstance(multiplicity, int):
+            try:
+                multiplicity = int(multiplicity)
+            except Exception as e:
+                raise TypeError("multiplicity must be positive integer or castable to positive integer")
+        assert multiplicity > 0, "multiplicity must be positive"
 
-            if not isinstance(multiplicity, int):
-                try:
-                    multiplicity = int(multiplicity)
-                except Exception as e:
-                    raise TypeError("multiplicity must be positive integer or castable to positive integer")
-            assert multiplicity > 0, "multiplicity must be positive"
-
-        self.atomic_numbers = atomic_numbers.view(cctk.OneIndexedArray)
-        self.geometry = geometry.view(cctk.OneIndexedArray)
+        self.atomic_numbers = atomic_numbers
+        self.geometry = geometry
 
         self.name = name
         self.multiplicity = multiplicity
@@ -98,15 +82,19 @@ class Molecule:
             self.bonds = bonds
         elif isinstance(bonds, (list,np.ndarray,nx.classes.reportviews.EdgeView)):
             if checks:
+                known_atomic_numbers = set()
                 for bond in bonds:
-                    assert isinstance(bond, (tuple,list,np.ndarray)), f"expected a 2-iterable for bond, got {type(bond)}"
                     assert len(bond)==2, f"unexpected number of atoms in bond, expected 2, got {len(bond)}"
-                    self._check_atom_number(bond[0])
-                    self._check_atom_number(bond[1])
+                    if bond[0] not in known_atomic_numbers:
+                        self._check_atom_number(bond[0])
+                        known_atomic_numbers.add(bond[0])
+                    if bond[1] not in known_atomic_numbers:
+                        self._check_atom_number(bond[1])
+                        known_atomic_numbers.add(bond[1])
+
             self.bonds = nx.Graph()
             self.bonds.add_nodes_from(range(1, len(atomic_numbers) + 1))
-            for bond in bonds:
-                self.add_bond(bond[0], bond[1])
+            self.bonds.add_edges_from(bonds, weight=1)
         elif bonds is None:
             self.bonds = nx.Graph()
             self.bonds.add_nodes_from(range(1, len(atomic_numbers)+1))
@@ -185,7 +173,7 @@ class Molecule:
 
         return True
 
-    def add_bond(self, atom1, atom2, bond_order=1):
+    def add_bond(self, atom1, atom2, bond_order=1, check=True):
         """
         Adds a new bond to the bond graph, or updates the existing bond order. Will not throw an error if the bond already exists.
 
@@ -194,11 +182,11 @@ class Molecule:
             atom2 (int): the number of the second atom
             bond_order (int): bond order of bond between atom1 and atom2
         """
-        self._check_atom_number(atom1)
-        self._check_atom_number(atom2)
-
-        assert isinstance(bond_order, int), f"bond order {bond_order} must be an integer"
-        assert bond_order >= 0, f"bond order {bond_order} must be positive"
+        if check:
+            self._check_atom_number(atom1)
+            self._check_atom_number(atom2)
+            assert isinstance(bond_order, int), f"bond order {bond_order} must be an integer"
+            assert bond_order >= 0, f"bond order {bond_order} must be positive"
 
         if self.bonds.has_edge(atom1, atom2):
             if bond_order == 0:
@@ -219,14 +207,8 @@ class Molecule:
         """
         Helper method which performs quick checks on the validity of a given atom number.
         """
-        if not isinstance(number, int):
-            raise TypeError("atom number must be integer")
-
-        if number > self.num_atoms():
-            raise ValueError(f"atom number {number} too large!")
-
-        if number <= 0:
-            raise ValueError(f"atom number {number} invalid: must be a positive integer!")
+        assert isinstance(number, int), "atomic number must be integer"
+        assert 0 < number <= self.num_atoms(), "atom number {number} too large! (or too small - needs to be >0)"
 
     def formula(self, return_dict=False):
         """

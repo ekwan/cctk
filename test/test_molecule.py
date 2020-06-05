@@ -129,7 +129,9 @@ class TestMolecule(unittest.TestCase):
         v = np.array([1.5234,1.231234,-1.77777])
         mol = mol.translate_molecule(v)
 
-        self.assertListEqual(mol.geometry.tolist()[0], list(v))
+        for target, actual in zip(mol.geometry.tolist()[0], list(v)):
+            self.assertTrue(abs(target-actual) < 0.00001)
+#        self.assertListEqual(mol.geometry.tolist()[0], list(v))
         self.assertTrue(isinstance(mol.geometry, cctk.OneIndexedArray))
 
         mol2 = self.load_molecule()
@@ -150,7 +152,7 @@ class TestMolecule(unittest.TestCase):
 
     def test_volume(self):
         mol = self.load_molecule()
-        self.assertEqual(mol.volume(), 80.42662712363737)
+        self.assertEqual(mol.volume(), 80.42662516224424)
 
     def test_renumber(self):
         mol = self.load_molecule()

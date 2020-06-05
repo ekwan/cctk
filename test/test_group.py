@@ -25,10 +25,7 @@ class TestGroup(unittest.TestCase):
         # test geometry
         with open(old_path) as old:
             with open(new_path) as new:
-                self.assertListEqual(
-                    list(new),
-                    list(old)
-                )
+                self.assertListEqual(list(old), list(new))
 
         os.remove(new_path)
 
@@ -66,12 +63,9 @@ class TestGroup(unittest.TestCase):
 
         l_ala2 = d_ala.epimerize(1, 3, 11)
         file.write_file(new_path, l_ala2)
-        with open(path) as old:
-            with open(new_path) as new:
-                self.assertListEqual(
-                    list(new),
-                    list(old)
-                )
+
+        for x1, x2 in zip(np.ravel(l_ala.geometry), np.ravel(l_ala2.geometry)):
+            self.assertTrue(abs(float(x1)-float(x2)) < 0.0001)
 
         os.remove(new_path)
 
