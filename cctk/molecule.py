@@ -127,29 +127,37 @@ class Molecule:
 
         dist_matrix = None
 
+        #### cdist is SO FAST
         if periodic_boundary_conditions is None:
-            #### optimized for speed
             dist_matrix = cdist(g, g, "euclidean")
         else:
+            # even 16 cdist calls is faster than any other implementation, i tested it
             pbc = periodic_boundary_conditions
             assert isinstance(pbc, np.ndarray) and len(pbc) == 3, "Need 3-element ``np.ndarray`` for PBCs"
 
-            #### Adapted from
-            #### https://stackoverflow.com/questions/11108869/optimizing-python-distance-calculation-while-accounting-for-periodic-boundary-co
-            def pbc_distance(x, y):
-                delta = np.abs(x-y)
-                delta = np.where(delta > 0.5 * pbc, delta - pbc, delta)
-                return np.sqrt((delta ** 2).sum(axis=-1))
+            nearby_cells = [
+                [0, 0, 0],
+                [pbc[0], 0, 0],
+                [0, pbc[1], 0],
+                [0, 0, pbc[2]],
+                [pbc[0], pbc[1], 0],
+                [pbc[0], 0, pbc[2]],
+                [0, pbc[1], pbc[2]],
+                [pbc[0], pbc[1], pbc[2]],
+            ]
 
-            dist_matrix = cdist(g, g, pbc_distance)
+            dist_matrices = [cdist(g, g + np.array(nc), "euclidean") for nc in nearby_cells]
+            dist_matrices += [cdist(g, g - np.array(nc), "euclidean") for nc in nearby_cells]
+            distances_3d = np.stack(dist_matrices)
+            dist_matrix = distances_3d.min(axis=0)
 
         covalent_radii = {z: get_covalent_radius(z) for z in set(self.atomic_numbers)}
         radii_by_num = [covalent_radii[z] for z in self.atomic_numbers]
 
         for i in range(1, self.num_atoms() + 1):
+            r_i = radii_by_num[i-1]
             for j in range(i + 1, self.num_atoms() + 1):
                 distance = dist_matrix[i-1][j-1]
-                r_i = radii_by_num[i-1]
                 r_j = radii_by_num[j-1]
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
@@ -664,8 +672,10 @@ class Molecule:
         Returns:
             the Molecule object
         """
-        for atom in range(1, self.num_atoms() + 1):
-            self.geometry[atom] = self.geometry[atom] + vector
+#        for atom in range(1, self.num_atoms() + 1):
+#            self.geometry[atom] = self.geometry[atom] + vector
+
+        self.geometry += vector
 
         return self
 
@@ -1365,8 +1375,9 @@ class Molecule:
 
             #### for each, try flipping configuration of all centers
             for candidate in candidates:
+                report = candidate.get_chirality_report(check_chirality)
                 for center in check_chirality:
-                    if model_report[center] != candidate.get_chirality_report(check_chirality)[center]:
+                    if model_report[center] != report[center]:
                         try:
                             candidate = candidate.exchange_identical_substituents(center)
                         except ValueError as e:
@@ -1457,6 +1468,7 @@ class Molecule:
         if self_permutations is not None:
             returns = self_permutations
 
+
         for i in range(len(neighbors)):
             for j in range(i+1, len(neighbors)):
                 try:
@@ -1468,7 +1480,6 @@ class Molecule:
 
                     nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
                     match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
-
                     if match.is_isomorphic():
                         for mol in returns:
                             new_mol = copy.deepcopy(mol)

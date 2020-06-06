@@ -11,7 +11,7 @@ class TestAlign(unittest.TestCase):
         ensemble = gaussian_file.ensemble
         m1 = ensemble.molecules[0]
         m2 = ensemble.molecules[-1]
-        RMSD = cctk.helper_functions.compute_RMSD(m1,m2)
+        RMSD = cctk.helper_functions.compute_RMSD(m1.geometry,m2.geometry)
         delta = abs(0.0006419131435567976 - RMSD)
         self.assertLess(delta, 0.0001)
 
@@ -36,7 +36,7 @@ class TestAlign(unittest.TestCase):
         #        print(k,v)
         #    print
         ensemble2 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy")
-        self.assertEqual(len(ensemble2), 2)
+        self.assertEqual(len(ensemble2), 3)
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned2.gjf", ensemble2, "#p")
         ensemble3 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms=comparison_atoms)
         self.assertEqual(len(ensemble3), 1)

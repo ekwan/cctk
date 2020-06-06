@@ -414,7 +414,7 @@ class ConformationalEnsemble(Ensemble):
         optionally computing the root-mean-square distance between each
         geometry and the reference geometry.
 
-	Alignments are based on `atom_numbers`.
+        Alignments are based on `atom_numbers`.
         The current ensemble will not be altered.  RMSDs will be calculated over the
         comparison atoms only.
 
@@ -471,7 +471,8 @@ class ConformationalEnsemble(Ensemble):
             new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
             molecule.geometry = new_geometry
             if compute_RMSD:
-                after_RMSD = cctk.helper_functions.compute_RMSD(new_ensemble.molecules[to_geometry], new_ensemble.molecules[i], comparison_atoms)
+                partial_geometry = new_geometry[comparison_atoms]
+                after_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
                 after_RMSDs.append(after_RMSD)
             assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
@@ -528,19 +529,32 @@ class ConformationalEnsemble(Ensemble):
             energies = old_ensemble[:,"energy"]
             sorted_indices = list(np.argsort(energies))
 
+        # boolean indexing noticeably faster
+        idxs = np.array(comparison_atoms)
+        mask = np.zeros(old_ensemble.molecules[0].geometry.shape[0], dtype=bool)
+        mask[idxs - 1] = True
+
+        partial_geoms = [m.geometry[mask] for m in old_ensemble.molecules]
+        new_partial_geoms = []
+
         # add molecules one by one
         new_ensemble = ConformationalEnsemble()
         for i in sorted_indices:
-            candidate_molecule = old_ensemble.molecules[i]
-            candidate_molecule_properties = old_ensemble.get_properties_dict(candidate_molecule)
             ok_to_add = True
-            for existing_molecule in new_ensemble.molecules:
-                candidate_rmsd = cctk.helper_functions.compute_RMSD(candidate_molecule, existing_molecule, comparison_atoms, checks=False)
+
+            for existing_molecule in new_partial_geoms:
+                candidate_rmsd = cctk.helper_functions.compute_RMSD(partial_geoms[i], existing_molecule, checks=False)
                 if candidate_rmsd < RMSD_cutoff:
                     ok_to_add = False
                     break
+
             if ok_to_add:
+                candidate_molecule = old_ensemble.molecules[i]
+                candidate_molecule_properties = old_ensemble.get_properties_dict(candidate_molecule)
+
                 new_ensemble.add_molecule(candidate_molecule, candidate_molecule_properties)
+                new_partial_geoms.append(candidate_molecule.geometry[mask])
+
         return new_ensemble
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
