@@ -4,6 +4,7 @@ Miscellaneous helper functions.
 
 import numpy as np
 import math
+from scipy.spatial.distance import cdist
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
 try:
@@ -270,6 +271,7 @@ def compute_RMSD(geometry1, geometry2, checks=True):
     if checks and len(geometry2) != len(geometry1):
         raise ValueError("can't compare two geometries with different lengths!")
 
+#    return np.trace(cdist(geometry1, geometry2)) / len(geometry1)
     return np.sqrt( np.sum( ( geometry1 - geometry2 ) ** 2) / len(geometry1) )
 
 def get_isotopic_distribution(z):
