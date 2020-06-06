@@ -180,5 +180,12 @@ class TestMolecule(unittest.TestCase):
         m1.assign_connectivity(periodic_boundary_conditions=np.array([5,5,5]))
         self.assertTrue(m1.get_bond_order(1,2))
 
+        m2 = cctk.GaussianFile.read_file("test/static/periodic.gjf").get_molecule()
+        m2 = m2.assign_connectivity(periodic_boundary_conditions=np.array([20, 20, 20]))
+        m2.center_periodic(1, 20)
+
+        m3 = m2.limit_solvent_shell(num_solvents=10)
+        self.assertEqual(m3.num_atoms(), 83)
+
 if __name__ == '__main__':
     unittest.main()
