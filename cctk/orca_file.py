@@ -178,7 +178,6 @@ class OrcaFile(File):
                 elif len(gibbs) > 1:
                     raise ValueError(f"unexpected # of gibbs free energies found!\ngibbs free energies = {enthalpies}")
 
-                #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
                 temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
                 if len(temperature) == 1 and len(gibbs) > 0:
                     properties[-1]["temperature"] = temperature[0]

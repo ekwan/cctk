@@ -1667,3 +1667,33 @@ class Molecule:
             self.geometry[f] += -1 * np.floor_divide(centroid, side_length) * side_length
 
         return self
+
+    @classmethod
+    def new_from_name(cls, name):
+        """
+        Create a new ``Molecule`` instance using ``rdkit``.
+        """
+        from urllib.request import urlopen
+
+        try:
+            from rdkit.Chem import AllChem as Chem
+        except ImportError as e:
+            raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
+
+        try:
+            url = 'http://cactus.nci.nih.gov/chemical/structure/' + name + '/smiles'
+            smiles = urlopen(url).read().decode('utf8')
+            rdkm = Chem.MolFromSmiles(smiles)
+            rdkm = Chem.AddHs(rdkm)
+            Chem.EmbedMolecule(rdkm)
+            Chem.MMFFOptimizeMolecule(rdkm)
+
+            nums = []
+            for atom in rdkm.GetAtoms():
+                nums.append(atom.GetAtomicNum())
+
+            geom = rdkm.GetConformers()[0].GetPositions()
+
+            return cls(nums, geom)
+        except Exception as e:
+            raise ValueError(f"something went wrong auto-generating molecule {name}:\n{e}")

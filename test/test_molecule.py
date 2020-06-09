@@ -187,5 +187,9 @@ class TestMolecule(unittest.TestCase):
         m3 = m2.limit_solvent_shell(num_solvents=10)
         self.assertEqual(m3.num_atoms(), 83)
 
+    def test_rdkit(self):
+        mol = cctk.Molecule.new_from_name("acetone")
+        self.assertEqual(len(mol.atomic_numbers), 10)
+
 if __name__ == '__main__':
     unittest.main()
