@@ -1254,7 +1254,6 @@ class Molecule:
 
         return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
 
-    @profile
     def volume(self, pts_per_angstrom=10):
         """
         Returns volume calculated from ``scipy.spatial.ConvexHull``. Not a perfect approximation (assumes all atoms are points).
