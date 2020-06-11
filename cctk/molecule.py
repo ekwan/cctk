@@ -1,4 +1,4 @@
-import math, copy, scipy
+import math, copy, re
 import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cdist
@@ -13,6 +13,7 @@ from cctk.helper_functions import (
     compute_dihedral_between,
     compute_unit_vector,
     get_covalent_radius,
+    get_vdw_radius,
     get_isotopic_distribution,
     compute_chirality,
 )
@@ -110,7 +111,8 @@ class Molecule:
 
     def assign_connectivity(self, cutoff=0.2, periodic_boundary_conditions=None):
         """
-        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + ``cutoff`` Angstroms, then they are considered bonded.
+        Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + ``cutoff`` Angstroms,
+        then they are considered bonded.
 
         Args:
             cutoff (float): the threshold (in Angstroms) for how close two covalent radii must be to be considered bonded
@@ -1252,12 +1254,30 @@ class Molecule:
 
         return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
 
-    def volume(self):
+    @profile
+    def volume(self, pts_per_angstrom=10):
         """
         Returns volume calculated from ``scipy.spatial.ConvexHull``. Not a perfect approximation (assumes all atoms are points).
         """
-        hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
-        return hull.volume
+        box_max = np.max(self.geometry.view(np.ndarray), axis=0) + 4
+        box_min = np.min(self.geometry.view(np.ndarray), axis=0) - 4
+
+        box_volume = (box_max[0] - box_min[0]) * (box_max[1] - box_min[1]) * (box_max[2] - box_min[2])
+
+        x_vals = np.linspace(box_min[0], box_max[0], int((box_max[0] - box_min[0]) * pts_per_angstrom))
+        y_vals = np.linspace(box_min[1], box_max[1], int((box_max[1] - box_min[1]) * pts_per_angstrom))
+        z_vals = np.linspace(box_min[2], box_max[2], int((box_max[2] - box_min[2]) * pts_per_angstrom))
+
+        # h4ck3r
+        box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
+        vdw_radii = {z: get_vdw_radius(z) for z in set(self.atomic_numbers)}
+        radii_per_atom = np.array([vdw_radii[z] for z in self.atomic_numbers]).reshape(-1,1)
+
+        dists_per_atom = cdist(self.geometry.view(np.ndarray), box_pts)
+        occupied = np.sum(np.max(dists_per_atom < radii_per_atom, axis=0))
+
+        percent_occupied = occupied / box_pts.shape[0]
+        return percent_occupied * box_volume
 
     def swap_atom_numbers(self, atom1, atom2):
         """
@@ -1681,7 +1701,8 @@ class Molecule:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
         try:
-            url = 'http://cactus.nci.nih.gov/chemical/structure/' + name + '/smiles'
+            url_name = re.sub(" ", "%20", name)
+            url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
             smiles = urlopen(url).read().decode('utf8')
             rdkm = Chem.MolFromSmiles(smiles)
             rdkm = Chem.AddHs(rdkm)
@@ -1696,4 +1717,4 @@ class Molecule:
 
             return cls(nums, geom)
         except Exception as e:
-            raise ValueError(f"something went wrong auto-generating molecule {name}:\n{e}")
+            raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")

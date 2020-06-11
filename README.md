@@ -105,9 +105,13 @@ A full list of requirements can be found in `env.yml`.
 [NIST website](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&all=all&ascii=ascii2&isotype=some) 
 and stored in `cctk/data/isotopes.csv`.
 - Covalent radii are taken from 
-[**Dalton Trans.** *2008*, 2832&ndash;2838](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract) 
+[*Dalton Trans.* **2008**, 2832](https://pubs.rsc.org/en/content/articlelanding/2008/dt/b801115j#!divAbstract) 
 and stored in `cctk/data/covalent_radii.csv`.
 (When multiple atomic types were specified, the one with longer bond distances was adopted for simplicity).
+- van der Waals radii were taken from
+[*J. Am. Chem. Soc.* **1983**, *105*, 5220](https://pubs.acs.org/doi/10.1021/ja00354a007), 
+[*Inorg. Mater.* **2001**, *37*, 871](https://link.springer.com/article/10.1023/A:1011625728803), and
+[*J. Phys. Chem. A*, **2009**, *113*, 5806](https://pubs.acs.org/doi/10.1021/jp8111556) and stored in `cctk/data/vdw_radii.csv`.
 
 ### Authors:
 

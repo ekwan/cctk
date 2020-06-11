@@ -151,8 +151,8 @@ class TestMolecule(unittest.TestCase):
         self.assertEqual(m3.multiplicity, 1)
 
     def test_volume(self):
-        mol = self.load_molecule()
-        self.assertEqual(mol.volume(), 80.42662516224424)
+        mol = cctk.Molecule.new_from_name("acetone")
+        self.assertTrue(abs(mol.volume() - 62) < 1)
 
     def test_renumber(self):
         mol = self.load_molecule()
@@ -189,6 +189,9 @@ class TestMolecule(unittest.TestCase):
 
     def test_rdkit(self):
         mol = cctk.Molecule.new_from_name("acetone")
+        self.assertEqual(len(mol.atomic_numbers), 10)
+
+        mol = cctk.Molecule.new_from_name("acetic acid")
         self.assertEqual(len(mol.atomic_numbers), 10)
 
 if __name__ == '__main__':

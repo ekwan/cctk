@@ -109,6 +109,33 @@ def get_covalent_radius(atomic_number):
     else:
         raise ValueError("no covalent radius defined for atomic number ", atomic_number)
 
+"""
+This code populates VDW_RADII_DICTIONARY from a static datafile.
+"""
+VDW_RADII_DICTIONARY = {}
+with pkg_resources.open_text(data, "vdw_radii.csv") as vdw_radii:
+    for line in vdw_radii:
+        line_fragments = line.split(",")
+
+        #### There's a variable number from line to line, but the first three are always number, symbol, radius
+        VDW_RADII_DICTIONARY[line_fragments[0]] = line_fragments[1]
+
+def get_vdw_radius(atomic_number):
+    """
+    Gets the van der Waals radius for a given element.
+
+    Args:
+        atomic_number (int): the number of the given element
+
+    Returns:
+        the van der Waals radius in Angstroms (float)
+    """
+    #    if isinstance(atomic_number, int):
+    atomic_number = str(atomic_number)
+    if atomic_number in VDW_RADII_DICTIONARY:
+        return float(VDW_RADII_DICTIONARY[atomic_number])
+    else:
+        raise ValueError("no van der Waals radius defined for atomic number ", atomic_number)
 
 def compute_distance_between(v1, v2, _norm=np.linalg.norm):
     """
