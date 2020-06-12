@@ -26,13 +26,16 @@ class XYZFile(File):
         Factory method to create new XYZFile instances.
         """
         lines = super().read_file(filename)
-        num_atoms = 0
 
+        return cls.file_from_lines(lines)
+
+    @classmethod
+    def file_from_lines(cls, lines):
+        num_atoms = 0
         try:
             num_atoms = int(lines[0])
         except:
             raise ValueError("can't get the number of atoms from the first line!")
-
 
         title = lines[1]
 
@@ -86,3 +89,28 @@ class XYZFile(File):
         Write an ``.xyz`` file, using object attributes.
         """
         self.write_molecule_to_file(filename, self.molecule, title=self.title)
+
+    @classmethod
+    def read_trajectory(cls, filename):
+        """
+        Read an ``.xyz`` trajectory file, which is just a bunch of concatenated ``.xyz`` files.
+        Currently the files must be separated by nothing (no blank line, just one after the other) although this may be changed in future.
+
+        Args:
+            filename (str): path to file
+
+        Returns:
+            list of ``cctk.XYZFile`` objects in the order they appear in the file
+        """
+        files = []
+        lines = super().read_file(filename)
+
+        current_lines = list()
+        for line in lines:
+            if re.search(r"^\d+$", line):
+                if len(current_lines) > 0:
+                    files.append(cls.file_from_lines(current_lines))
+                    current_lines = list()
+            current_lines.append(line)
+
+        return files

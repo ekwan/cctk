@@ -1256,8 +1256,17 @@ class Molecule:
 
     def volume(self, pts_per_angstrom=10):
         """
-        Returns volume calculated from ``scipy.spatial.ConvexHull``. Not a perfect approximation (assumes all atoms are points).
+        Returns volume calculated using the Gavezotti algorithm (JACS, 1983, 105, 5220). Relatively slow.
+
+        Args:
+            pts_per_angstrom (int): how many grid points to use per Å - time scales as O(n**3) so be careful!
+
+        Returns:
+            volume in Å**3
         """
+        assert isinstance(pts_per_angstrom, int), "Need an integer number of pts per Å!"
+        assert pts_per_angstrom > 0, "Need a positive integer of pts per Å!"
+
         box_max = np.max(self.geometry.view(np.ndarray), axis=0) + 4
         box_min = np.min(self.geometry.view(np.ndarray), axis=0) - 4
 
@@ -1269,9 +1278,12 @@ class Molecule:
 
         # h4ck3r
         box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
+
+        # caching to speed call
         vdw_radii = {z: get_vdw_radius(z) for z in set(self.atomic_numbers)}
         radii_per_atom = np.array([vdw_radii[z] for z in self.atomic_numbers]).reshape(-1,1)
 
+        # this is the slow part since it's approximately a zillion operations
         dists_per_atom = cdist(self.geometry.view(np.ndarray), box_pts)
         occupied = np.sum(np.max(dists_per_atom < radii_per_atom, axis=0))
 

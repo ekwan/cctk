@@ -192,7 +192,7 @@ class TestMolecule(unittest.TestCase):
         self.assertEqual(len(mol.atomic_numbers), 10)
 
         mol = cctk.Molecule.new_from_name("acetic acid")
-        self.assertEqual(len(mol.atomic_numbers), 10)
+        self.assertEqual(len(mol.atomic_numbers), 8)
 
 if __name__ == '__main__':
     unittest.main()

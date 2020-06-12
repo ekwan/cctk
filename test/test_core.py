@@ -29,6 +29,14 @@ class TestXYZ(unittest.TestCase):
 
         os.remove(new_path)
 
+    def test_traj(self):
+        path = "test/static/methane_traj.xyz"
+        files = cctk.XYZFile.read_trajectory(path)
+
+        self.assertEqual(len(files), 250)
+        self.assertTrue(isinstance(files[0], cctk.XYZFile))
+        self.assertEqual(files[0].molecule.num_atoms(), 5)
+
 class TestMAE(unittest.TestCase):
     def test_read(self):
         path = "test/static/dodecane_csearch-out.mae"
