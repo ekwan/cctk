@@ -377,7 +377,7 @@ class Molecule:
             atom1 = atoms[0]
             atom2 = atoms[1]
 
-        assert isinstance(distance, (float, int)), "need distance to set distance"
+        assert isinstance(distance, (float, int, np.number)), "need distance to set distance"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -452,7 +452,7 @@ class Molecule:
             atom2 = atoms[1]
             atom3 = atoms[2]
 
-        assert isinstance(angle, (float, int)), "need angle to set angle"
+        assert isinstance(angle, (float, int, np.number)), "need angle to set angle"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -559,7 +559,7 @@ class Molecule:
             atom3 = atoms[2]
             atom4 = atoms[3]
 
-        assert isinstance(dihedral, (float, int)), "need angle to set dihedral angle"
+        assert isinstance(dihedral, (float, int, np.number)), "need angle to set dihedral angle"
 
         # check atom numbers
         self._check_atom_number(atom1)
@@ -1704,7 +1704,23 @@ class Molecule:
         """
         Create a new ``Molecule`` instance using ``rdkit``.
         """
+        assert isinstance(name, str)
         from urllib.request import urlopen
+
+        try:
+            url_name = re.sub(" ", "%20", name)
+            url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
+            smiles = urlopen(url).read().decode('utf8')
+            return cls.new_from_smiles(smiles)
+        except Exception as e:
+            raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")
+
+    @classmethod
+    def new_from_smiles(cls, smiles):
+        """
+        Create a new ``Molecule`` instance using ``rdkit``.
+        """
+        assert isinstance(smiles, str)
 
         try:
             from rdkit.Chem import AllChem as Chem
@@ -1712,9 +1728,6 @@ class Molecule:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
         try:
-            url_name = re.sub(" ", "%20", name)
-            url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
-            smiles = urlopen(url).read().decode('utf8')
             rdkm = Chem.MolFromSmiles(smiles)
             rdkm = Chem.AddHs(rdkm)
             Chem.EmbedMolecule(rdkm)
@@ -1723,9 +1736,55 @@ class Molecule:
             nums = []
             for atom in rdkm.GetAtoms():
                 nums.append(atom.GetAtomicNum())
-
             geom = rdkm.GetConformers()[0].GetPositions()
 
             return cls(nums, geom)
+
         except Exception as e:
-            raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")
+            raise ValueError(f"something went wrong auto-generating molecule {smiles}:\n{e}")
+
+    def fragment(self):
+        fragments = list()
+        indices = self.get_components()
+        for idx in indices:
+            mol = cctk.Molecule(self.atomic_numbers[idx], self.geometry[idx]).assign_connectivity()
+            fragments.append(mol)
+
+        return fragments
+
+    @classmethod
+    def are_isomorphic(cls, mol1, mol2, return_ordering=False):
+        """
+        Checks if two molecules are isomorphic (by comparing bond graphs and atomic numbers - not bond orders!).
+
+        Args:
+            mol1 (cctk.Molecule):
+            mol2 (cctk.Molecule):
+            return_ordering (Bool): if True, also returns a mapping between atomic numbers
+
+        Returns:
+            Boolean denoting if the molecules are isomorphic
+            (optional) mapping list
+        """
+        assert mol1.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert mol2.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+
+        mol1._add_atomic_numbers_to_nodes()
+        mol2._add_atomic_numbers_to_nodes()
+
+        nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
+        match = nx.algorithms.isomorphism.GraphMatcher(mol1.bonds, mol2.bonds, node_match=nm)
+
+        if match.is_isomorphic():
+            if return_ordering:
+                new_ordering = [match.mapping[x] for x in range(1, mol1.num_atoms() + 1)]
+                return True, new_ordering
+            else:
+                return True
+        else:
+            if return_ordering:
+                return False, None
+            else:
+                return False
+
+

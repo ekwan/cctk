@@ -194,5 +194,16 @@ class TestMolecule(unittest.TestCase):
         mol = cctk.Molecule.new_from_name("acetic acid")
         self.assertEqual(len(mol.atomic_numbers), 8)
 
+    def test_fragment(self):
+        m = cctk.GaussianFile.read_file("test/static/periodic.gjf").get_molecule()
+        m = m.assign_connectivity(periodic_boundary_conditions=np.array([20, 20, 20]))
+        f = m.fragment()
+
+        ibuprofen = cctk.Molecule.new_from_name("ibuprofen").assign_connectivity()
+        chloroform = cctk.Molecule.new_from_name("chloroform").assign_connectivity()
+
+        self.assertTrue(cctk.Molecule.are_isomorphic(f[0], ibuprofen))
+        self.assertTrue(cctk.Molecule.are_isomorphic(f[1], chloroform))
+
 if __name__ == '__main__':
     unittest.main()
