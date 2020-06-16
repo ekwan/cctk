@@ -74,3 +74,15 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(file.ensemble[mol, "enthalpy"], -229.05330337)
         self.assertEqual(file.ensemble[mol, "gibbs_free_energy"], -229.08534132)
 
+    def test_nmr(self):
+        path = "test/static/ibuprofen_nmr_orca.out"
+        file = cctk.OrcaFile.read_file(path)
+
+        molecule = file.get_molecule()
+        properties_dict = file.ensemble.get_properties_dict(molecule)
+        energy = properties_dict["energy"]
+        self.assertTrue(abs(energy + 656.306067336866) < 1e8)
+        self.assertTrue(abs(file.ensemble[-1, "energy"] + 656.306067336866) < 1e8)
+        shieldings = properties_dict["isotropic_shielding"]
+        self.assertListEqual(list(shieldings[:6]), [55.307, 68.003, 63.738, 51.446, 65.325])
+
