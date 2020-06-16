@@ -27,7 +27,7 @@ author = 'Corin Wagen and Eugene Kwan'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-needs_sphinx = 2.2
+#needs_sphinx = "2.2"
 
 extensions = [
     'sphinx.ext.autodoc',
