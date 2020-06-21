@@ -2,6 +2,7 @@ import unittest, sys, os, io, copy, math
 import numpy as np
 import networkx as nx
 import cctk
+import cctk.topology as top
 
 class TestMolecule(unittest.TestCase):
     def load_molecule(self, path="test/static/test_peptide.xyz"):
@@ -167,9 +168,9 @@ class TestMolecule(unittest.TestCase):
 
     def test_chirality(self):
         mol = self.load_molecule().assign_connectivity()
-        self.assertListEqual(mol._get_stereogenic_centers(), [3, 5, 11, 13, 18, 28])
+        self.assertListEqual(top.get_stereogenic_centers(mol), [3, 5, 11, 13, 18, 28])
 
-        mol.get_chirality_report()
+        top.get_chirality_report(mol)
 
     def test_periodic_boundary_conditions(self):
         m1 = cctk.Molecule([9, 9], [[0, 5, 4.5], [0, 0, 0.5]], charge=0, multiplicity=1)
@@ -202,8 +203,8 @@ class TestMolecule(unittest.TestCase):
         ibuprofen = cctk.Molecule.new_from_name("ibuprofen").assign_connectivity()
         chloroform = cctk.Molecule.new_from_name("chloroform").assign_connectivity()
 
-        self.assertTrue(cctk.Molecule.are_isomorphic(f[0], ibuprofen))
-        self.assertTrue(cctk.Molecule.are_isomorphic(f[1], chloroform))
+        self.assertTrue(top.are_isomorphic(f[0], ibuprofen))
+        self.assertTrue(top.are_isomorphic(f[1], chloroform))
 
 if __name__ == '__main__':
     unittest.main()

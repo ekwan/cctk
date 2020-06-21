@@ -55,6 +55,29 @@ names = [
     ["formyl", "CHO",],
 ]
 
+isomorphic = [
+    [3, 4, 5],
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+]
 
 def load_group(name):
     filename = None
