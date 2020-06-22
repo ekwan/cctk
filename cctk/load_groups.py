@@ -56,10 +56,10 @@ names = [
 ]
 
 isomorphic = [
-    [3, 4, 5],
+    [[3, 4, 5]],
     None,
-    None,
-    None,
+    [[4, 8], [9, 10, 11, 5, 6, 7]],
+    [[3, 7, 11], [4, 5, 6, 8, 9, 10, 12, 13, 14]],
     None,
     None,
     None,
@@ -81,10 +81,12 @@ isomorphic = [
 
 def load_group(name):
     filename = None
+    iso = None
 
     for row in names:
         if name in row:
             filename = filenames[names.index(row)]
+            iso = isomorphic[names.index(row)]
             break
 
     assert filename is not None, f"can't find name {name}!"
@@ -94,5 +96,15 @@ def load_group(name):
         mol.assign_connectivity()
 
         #### every molecule is set so you need to attach to atom 2
-        new_group = Group.new_from_molecule(attach_to=2, molecule=mol)
+        new_group = Group.new_from_molecule(attach_to=2, molecule=mol, isomorphic=iso)
         return new_group
+
+def group_iterator(symmetric_only=False):
+    """
+    Returns a generator over all *cctk*-predefined groups.
+    """
+    for row, iso in zip(names, isomorphic):
+        if symmetric_only:
+            if iso is None:
+                continue
+        yield load_group(row[0])

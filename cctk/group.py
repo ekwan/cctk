@@ -22,17 +22,21 @@ class Group(cctk.Molecule):
         _map_from_truncated(dict): a dictionary mapping atom numbers of the group without ``attach_to`` to the atom numbers of the normal group
     """
 
-    def __init__(self, attach_to, **kwargs):
+    def __init__(self, attach_to, isomorphic=None, **kwargs):
         super().__init__(**kwargs)
         self.add_attachment_point(attach_to)
         self._map_from_truncated = None
 
+        if isomorphic is not None:
+            assert isinstance(isomorphic, list), "group.isomorphic must be list of lists!"
+        self.isomorphic = isomorphic
+
     @classmethod
-    def new_from_molecule(cls, molecule, attach_to):
+    def new_from_molecule(cls, molecule, attach_to, **kwargs):
         """
         Convenient method to convert ``molecule`` to ``group`` directly.
         """
-        group = Group(attach_to, atomic_numbers=molecule.atomic_numbers, geometry=molecule.geometry, bonds=molecule.bonds.edges())
+        group = Group(attach_to, atomic_numbers=molecule.atomic_numbers, geometry=molecule.geometry, bonds=molecule.bonds.edges(), **kwargs)
         return group
 
     def add_attachment_point(self, attach_to):

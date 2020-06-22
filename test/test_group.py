@@ -77,6 +77,12 @@ class TestGroup(unittest.TestCase):
         molecule = cctk.Molecule.new_from_name("camphor").assign_connectivity()
 
         subgroups = top.find_group(molecule, group)
+        self.assertEqual(len(subgroups), 3)
+
+        molecule = cctk.Molecule.new_from_name("tert-butanol").assign_connectivity()
+        sets = molecule.get_symmetric_atoms()
+        self.assertEqual(len(sets[0]), 3)
+        self.assertEqual(len(sets[1]), 9)
 
 if __name__ == '__main__':
     unittest.main()

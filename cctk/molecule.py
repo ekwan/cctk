@@ -17,7 +17,6 @@ from cctk.helper_functions import (
     get_isotopic_distribution,
     compute_chirality,
 )
-
 import cctk.topology as top
 
 class Molecule:
@@ -1566,12 +1565,42 @@ class Molecule:
             raise ValueError(f"something went wrong auto-generating molecule {smiles}:\n{e}")
 
     def fragment(self):
+        """
+        Returns list of ``cctk.Molecule`` objects based on the bond-connected components of ``self``.
+        """
         fragments = list()
         indices = self.get_components()
         for idx in indices:
             mol = cctk.Molecule(self.atomic_numbers[idx], self.geometry[idx]).assign_connectivity()
             fragments.append(mol)
-
         return fragments
+
+    def get_symmetric_atoms(self):
+        """
+        Returns lists of symmetric atoms, as defined in ``cctk.load_group``.
+
+        Useful for NMR spectroscopy, etc.
+        """
+        from cctk.load_groups import group_iterator
+        symmetric_sets = []
+        for group in group_iterator(symmetric_only=True):
+            # this gives us a list of dictionaries mapping from self.atomic_numbers to group numbers
+            matches = top.find_group(self, group)
+
+            for m in matches:
+                i = {v: k for k,v in m.items()}
+                for n in group.isomorphic:
+                    symmetric_sets.append([i[idx] for idx in n])
+
+        #### some groups overlap (e.g. methyl and t-butyl), so now we collapse the overlapping sets
+        for i, s1 in enumerate(symmetric_sets):
+            for j, s2 in enumerate(symmetric_sets[i+1:]):
+                if set(s1).intersection(set(s2)):
+                    symmetric_sets[i + j + 1] = list(set(s1).union(s2))
+                    symmetric_sets[i] = None # can't delete yet - messes up indexing
+
+        #### now we delete
+        symmetric_sets = list(filter(None, symmetric_sets))
+        return symmetric_sets
 
 
