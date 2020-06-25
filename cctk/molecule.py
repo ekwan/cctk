@@ -17,6 +17,7 @@ from cctk.helper_functions import (
     get_isotopic_distribution,
     compute_chirality,
 )
+import cctk.topology as top
 
 class Molecule:
     """
@@ -1356,7 +1357,7 @@ class Molecule:
         mol = cctk.Group.add_group_to_molecule(mol, group1, mmap3[h2])
 
         #### relabel new graph to match original molecule
-        which = self._get_stereogenic_centers()
+        which = top.get_stereogenic_centers(self)
         which.remove(center_atom)
         return mol.renumber_to_match(self, check_chirality=which)
 
@@ -1367,7 +1368,7 @@ class Molecule:
         Args:
             model (cctk.Molecule): isomorphic molecule to renumber by
             check_chirality (list of atomic numbers): atomic numbers to check, to prevent inversion due to graph isomorphism.
-                Alternatively ``None`` will prevent any checking and "all" will use ``self._get_exchangable_centers()``.
+                Alternatively ``None`` will prevent any checking and "all" will use ``cctk.topology.get_exchangable_centers()``.
 
         Returns:
             new ``Molecule`` object
@@ -1393,29 +1394,29 @@ class Molecule:
         mol.bonds = nx.relabel_nodes(self.bonds, mapping=inv_mapping, copy=True)
 
         if check_chirality == "all":
-            check_chirality = mol._get_exchangeable_centers()
+            check_chirality = top.get_exchangeable_centers(mol)
 
         #### diastereotopic protons get scrambled by the above code so we gotta go through and fix all of them
         #### this happens because networkx doesn't store chirality - a known limitation of graph molecular encoding!
         if isinstance(check_chirality, list):
             #### find all the differences and exchange them
-            model_report = model.get_chirality_report(check_chirality)
+            model_report = top.get_chirality_report(model, check_chirality)
 
             #### generate all meso ring permutations
-            candidates = mol.flip_meso_rings(atoms=check_chirality)
+            candidates = top.flip_meso_rings(mol, atoms=check_chirality)
 
             #### for each, try flipping configuration of all centers
             for candidate in candidates:
-                report = candidate.get_chirality_report(check_chirality)
+                report = top.get_chirality_report(candidate, check_chirality)
                 for center in check_chirality:
                     if model_report[center] != report[center]:
                         try:
-                            candidate = candidate.exchange_identical_substituents(center)
+                            candidate = top.exchange_identical_substituents(candidate, center)
                         except ValueError as e:
                             break
 
                 #### check that we actually fixed all the problems
-                mol_report = candidate.get_chirality_report(check_chirality)
+                mol_report = top.get_chirality_report(candidate, check_chirality)
                 all_good = True
                 for center in check_chirality:
                     if mol_report[center] != model_report[center]:
@@ -1426,108 +1427,6 @@ class Molecule:
                     return candidate
 
         raise ValueError("can't get a proper renumbering: are you *sure* these two molecules can have the same chirality?")
-
-    def _get_stereogenic_centers(self):
-        """
-        Returns every atom making 4 or more bonds. A bit misleading, since diastereotopic protons/meso protons are also counted.
-        """
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-        num_neighbors = np.array([len(list(self.bonds[x])) for x in range(1, self.num_atoms() + 1)])
-        return [int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)] # love me some off-by-one indexing errors
-
-    def _get_exchangeable_centers(self):
-        """
-        Returns all atoms making 4 or more bonds that have two isomorphic substituents, i.e. where renumbering could be broken.
-        """
-        centers = self._get_stereogenic_centers()
-        exchangeable_centers = []
-        for center in centers:
-            try:
-                mol = self.exchange_identical_substituents(center)
-                exchangeable_centers.append(center)
-                continue
-            except Exception as e:
-                pass
-
-            mols = self.flip_meso_rings(atoms=[center])
-            if len(mols) > 1:
-                exchangeable_centers.append(center)
-
-        return exchangeable_centers
-
-    def get_chirality_report(self, centers=None):
-        """
-        Computes chirality at stereogenic centers.
-
-        Args:
-            centers (list): atomic numbers to check. defaults to all centers with 4+ substituents.
-
-        Returns:
-            dict with centers as keys and ±1 as values
-        """
-        if centers is None:
-            centers = self._get_stereogenic_centers()
-        assert isinstance(centers, list)
-
-        results = {}
-        for center in centers:
-            neighbors = list(self.bonds[center])
-            neighbors.sort()
-            assert len(neighbors) >= 4, f"atom {center} has fewer than 4 neighbors ({neighbors})!"
-            results[center] = compute_chirality(*[self.get_vector(n, center) for n in neighbors])
-
-        return results
-
-    def exchange_identical_substituents(self, center, self_permutations=None):
-        """
-        Replace homotopic/enantiotopic/diastereotopic substituents about a single atom.
-
-        If a list of permuted ``Molecule`` objects is passed (as ``self_permutations``), then this code will apply this to each member and return a list.
-
-        Args:
-            center (integer): atomic number of atom to swap substituents around
-            self_permutations (list of Molecules): optional list of starting ``Molecule`` objects
-
-        Returns:
-            ``Molecule`` object (or list if ``self_permutations`` is not ``None``)
-        """
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-        self._add_atomic_numbers_to_nodes()
-        neighbors = list(self.bonds[center])
-
-        returns = [copy.deepcopy(self)]
-        if self_permutations is not None:
-            returns = self_permutations
-
-
-        for i in range(len(neighbors)):
-            for j in range(i+1, len(neighbors)):
-                try:
-                    _, frag1 = self._get_bond_fragments(center, neighbors[i])
-                    _, frag2 = self._get_bond_fragments(center, neighbors[j])
-
-                    graph1 = self.bonds.subgraph(frag1)
-                    graph2 = self.bonds.subgraph(frag2)
-
-                    nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-                    match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
-                    if match.is_isomorphic():
-                        for mol in returns:
-                            new_mol = copy.deepcopy(mol)
-                            for k,v in match.mapping.items():
-                                new_mol = new_mol.swap_atom_numbers(k, v)
-                            if self_permutations is None:
-                                return new_mol
-
-                        returns.append(new_mol)
-
-                except ValueError as e:
-                    pass # probably indicates a cycle
-
-        if self_permutations is None:
-            raise ValueError("could not find substituents to switch")
-        else:
-            return returns
 
     def _add_atomic_numbers_to_nodes(self):
         """
@@ -1542,84 +1441,6 @@ class Molecule:
             if atom in cycle:
                 return True
         return False
-
-    def flip_meso_rings(self, atoms):
-        """
-        Returns a list of permuted molecules with various ``meso`` rings renumbered.
-
-        Args:
-            atoms (list): atomic numbers of potential atoms to consider
-
-        Returns:
-            list of ``Molecule`` objects
-        """
-        #### get all rings in graph
-        returns = [copy.deepcopy(self)]
-        for center in atoms:
-            cycles = nx.cycle_basis(self.bonds, root=center)
-            for cycle in cycles:
-                #### get the correct ring
-                if center not in cycle:
-                    continue
-
-                #### reorder to put ``center`` first
-                while cycle[0] != center:
-                    # why yes, this /is/ a O(n) solution for reordering a list. why do you ask?
-                    cycle = cycle[1:] + cycle[0:1]
-                assert cycle[0] == center, "graph reorder failed"
-
-                #### create fragments
-                frag1 = [cycle.pop(1)]
-                frag2 = [cycle.pop(-1)]
-                while len(cycle) > 2:
-                    frag1.append(cycle.pop(1))
-                    frag2.append(cycle.pop(-1))
-
-                #### cut fragment bonds, depending on if we have even- or odd-numbered ring
-                new_returns = []
-                for mol in returns:
-                    mol = copy.deepcopy(mol)
-                    mol.remove_bond(frag1[0], cycle[0])
-                    mol.remove_bond(frag2[0], cycle[0])
-                    if len(cycle) == 1:
-                        mol.remove_bond(frag1[-1], frag2[-1])
-                    elif len(cycle) == 2:
-                        mol.remove_bond(frag1[-1], cycle[-1])
-                        mol.remove_bond(frag2[-1], cycle[-1])
-
-                    #### generate graphs
-                    graph1 = None
-                    graph2 = None
-                    fragments = nx.connected_components(mol.bonds)
-                    for fragment in fragments:
-                        if frag1[0] in fragment:
-                            graph1 = mol.bonds.subgraph(fragment)
-                        if frag2[0] in fragment:
-                            graph2 = mol.bonds.subgraph(fragment)
-
-                    assert isinstance(graph1, nx.Graph), "can't find graph 1"
-                    assert isinstance(graph2, nx.Graph), "can't find graph 1"
-
-                    #### do our two ring-halves match?? if so, we swap them
-                    nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-                    match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
-
-                    if match.is_isomorphic():
-                        for k,v in match.mapping.items():
-                            mol = mol.swap_atom_numbers(k, v)
-
-                        #### redo all the bonds we ablated
-                        if len(cycle) == 1:
-                            mol.add_bond(frag1[-1], frag2[-1], self.get_bond_order(frag1[-1], frag2[-1]))
-                        elif len(cycle) == 2:
-                            mol.add_bond(frag1[-1], cycle[-1], self.get_bond_order(frag1[-1], cycle[-1]))
-                            mol.add_bond(frag2[-1], cycle[-1], self.get_bond_order(frag2[-1], cycle[-1]))
-                        mol.add_bond(frag1[0], cycle[0], self.get_bond_order(frag1[0], cycle[0]))
-                        mol.add_bond(frag2[0], cycle[0], self.get_bond_order(frag2[0], cycle[0]))
-
-                        new_returns.append(mol)
-                returns = returns + new_returns
-        return returns
 
     def get_components(self):
         """
@@ -1744,47 +1565,42 @@ class Molecule:
             raise ValueError(f"something went wrong auto-generating molecule {smiles}:\n{e}")
 
     def fragment(self):
+        """
+        Returns list of ``cctk.Molecule`` objects based on the bond-connected components of ``self``.
+        """
         fragments = list()
         indices = self.get_components()
         for idx in indices:
             mol = cctk.Molecule(self.atomic_numbers[idx], self.geometry[idx]).assign_connectivity()
             fragments.append(mol)
-
         return fragments
 
-    @classmethod
-    def are_isomorphic(cls, mol1, mol2, return_ordering=False):
+    def get_symmetric_atoms(self):
         """
-        Checks if two molecules are isomorphic (by comparing bond graphs and atomic numbers - not bond orders!).
+        Returns lists of symmetric atoms, as defined in ``cctk.load_group``.
 
-        Args:
-            mol1 (cctk.Molecule):
-            mol2 (cctk.Molecule):
-            return_ordering (Bool): if True, also returns a mapping between atomic numbers
-
-        Returns:
-            Boolean denoting if the molecules are isomorphic
-            (optional) mapping list
+        Useful for NMR spectroscopy, etc.
         """
-        assert mol1.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-        assert mol2.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        from cctk.load_groups import group_iterator
+        symmetric_sets = []
+        for group in group_iterator(symmetric_only=True):
+            # this gives us a list of dictionaries mapping from self.atomic_numbers to group numbers
+            matches = top.find_group(self, group)
 
-        mol1._add_atomic_numbers_to_nodes()
-        mol2._add_atomic_numbers_to_nodes()
+            for m in matches:
+                i = {v: k for k,v in m.items()}
+                for n in group.isomorphic:
+                    symmetric_sets.append([i[idx] for idx in n])
 
-        nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-        match = nx.algorithms.isomorphism.GraphMatcher(mol1.bonds, mol2.bonds, node_match=nm)
+        #### some groups overlap (e.g. methyl and t-butyl), so now we collapse the overlapping sets
+        for i, s1 in enumerate(symmetric_sets):
+            for j, s2 in enumerate(symmetric_sets[i+1:]):
+                if set(s1).intersection(set(s2)):
+                    symmetric_sets[i + j + 1] = list(set(s1).union(s2))
+                    symmetric_sets[i] = None # can't delete yet - messes up indexing
 
-        if match.is_isomorphic():
-            if return_ordering:
-                new_ordering = [match.mapping[x] for x in range(1, mol1.num_atoms() + 1)]
-                return True, new_ordering
-            else:
-                return True
-        else:
-            if return_ordering:
-                return False, None
-            else:
-                return False
+        #### now we delete
+        symmetric_sets = list(filter(None, symmetric_sets))
+        return symmetric_sets
 
 

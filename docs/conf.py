@@ -21,12 +21,14 @@ project = 'cctk'
 copyright = '2020, Corin Wagen and Eugene Kwan'
 author = 'Corin Wagen and Eugene Kwan'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
+#needs_sphinx = "2.2"
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',

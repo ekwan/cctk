@@ -186,3 +186,35 @@ def read_gradients(lines, num_to_find):
                     max_step.append(float(fields[2]))
 
     return rms_grad, max_grad, rms_step, max_step
+
+def read_nmr_shifts(lines, num_atoms):
+    """
+    Helper method to search through output file and read NMR shifts.
+
+    Args:
+        lines (list): list of lines in file
+        num_atoms (int): number of atoms expected
+
+    Returns:
+        list of isotropic NMR shifts (np.ndarray)
+    """
+    # assumes that lines only come from one Link1 section
+    shieldings = []
+    block = lines.search_for_block("Nucleus  Element", "^$", join="\n")
+    for line in block.split("\n")[2:]:
+        fields = line.split()
+        if len(fields) == 4:
+            try:
+                shielding = float(fields[2])
+            except:
+                raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
+            shieldings.append(shielding)
+
+    if len(shieldings) is not 0:
+        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        return np.asarray(shieldings).view(OneIndexedArray)
+    else:
+        #### we can catch this problem later if the file is finished
+        return None
+
+

@@ -1,8 +1,10 @@
 import unittest, sys, os, io, copy, math
 import numpy as np
-import cctk
 import random
 import networkx as nx
+
+import cctk
+import cctk.topology as top
 
 class TestRenumber(unittest.TestCase):
 
@@ -92,7 +94,7 @@ class TestRenumber(unittest.TestCase):
         self.assertTrue(np.array_equal(mol1.geometry, mol2.geometry))
 
         mol3 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_3.gjf").get_molecule().assign_connectivity() # just a bond rotation
-        self.assertListEqual(list(mol1.get_chirality_report().values()), list(mol3.get_chirality_report().values()))
+        self.assertListEqual(list(top.get_chirality_report(mol1).values()), list(top.get_chirality_report(mol3).values()))
 
         mol4 = cctk.GaussianFile.read_file("test/static/chiral_fluorine_4.gjf").get_molecule().assign_connectivity() # two protons switched (24 & 25)
         self.assertTrue(np.array_equal(mol1.atomic_numbers, mol4.atomic_numbers))

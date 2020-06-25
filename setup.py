@@ -18,7 +18,7 @@ setup(
     author_email="corin.wagen@gmail.com",
     url="https://github.com/ekwan/cctk",
     download_url="https://github.com/ekwan/cctk/archive/v0.2.4.tar.gz",
-    install_requires=["numpy", "networkx", "importlib_resources", "scipy", "pyahocorasick"],
+    install_requires=["numpy", "networkx", "importlib_resources", "scipy", "pyahocorasick", "basis_set_exchange"],
     long_description=long_description,
     long_description_content_type='text/markdown',
     classifiers=[

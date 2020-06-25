@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import networkx as nx
 
 from abc import abstractmethod
 
@@ -16,18 +17,26 @@ class Group(cctk.Molecule):
     Attributes:
         attach_to (int): atom number to replace with larger fragment. must have only one bond! (e.g. H in F3C-H)
         adjacent (int): atom number that will be bonded to new molecule. (e.g. C in F3C-H)
+        isomorphic (list of lists): list of lists of atoms that should be considered symmetry equivalent.
+            For instance, the three methyl protons can be considered symmetry equivalent, so ``methane.isomorphic = [[3, 4, 5]]``.
+        _map_from_truncated(dict): a dictionary mapping atom numbers of the group without ``attach_to`` to the atom numbers of the normal group
     """
 
-    def __init__(self, attach_to, **kwargs):
+    def __init__(self, attach_to, isomorphic=None, **kwargs):
         super().__init__(**kwargs)
         self.add_attachment_point(attach_to)
+        self._map_from_truncated = None
+
+        if isomorphic is not None:
+            assert isinstance(isomorphic, list), "group.isomorphic must be list of lists!"
+        self.isomorphic = isomorphic
 
     @classmethod
-    def new_from_molecule(cls, molecule, attach_to):
+    def new_from_molecule(cls, molecule, attach_to, **kwargs):
         """
         Convenient method to convert ``molecule`` to ``group`` directly.
         """
-        group = Group(attach_to, atomic_numbers=molecule.atomic_numbers, geometry=molecule.geometry, bonds=molecule.bonds.edges())
+        group = Group(attach_to, atomic_numbers=molecule.atomic_numbers, geometry=molecule.geometry, bonds=molecule.bonds.edges(), **kwargs)
         return group
 
     def add_attachment_point(self, attach_to):
@@ -245,3 +254,26 @@ class Group(cctk.Molecule):
             return new_mol, group, molecule_to_molecule, molecule_to_group
         else:
             return new_mol, group
+
+    def map_from_truncated(self):
+        """
+        Returns a dictionary mapping atomic numbers without ``attach_to`` to atomic_numbers with ``attach_to``.
+        """
+        if self._map_from_truncated is not None:
+            return self._map_from_truncated
+
+        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        g = copy.deepcopy(self)
+        g._add_atomic_numbers_to_nodes()
+        tg = copy.deepcopy(g)
+        tg.remove_atom(g.attach_to)
+
+        nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
+        match = nx.algorithms.isomorphism.GraphMatcher(g.bonds, tg.bonds, node_match=nm)
+
+        for sg in match.subgraph_isomorphisms_iter():
+            if self.attach_to in sg.keys():
+                continue
+            sg = {v: k for k, v in sg.items()} # invert
+            self._map_from_truncated = sg
+            return sg

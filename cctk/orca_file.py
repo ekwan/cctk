@@ -33,12 +33,18 @@ class OrcaJobType(Enum):
     Hessian calculation.
     """
 
+    NMR = "nmr"
+    """
+    NMR shielding prediction.
+    """
+
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
 #    "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
     "opt": [],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
+    "nmr": ["isotropic_shielding",],
 }
 
 
@@ -184,6 +190,11 @@ class OrcaFile(File):
                     corrected_free_energy = get_corrected_free_energy(gibbs[0], properties[-1]["frequencies"],
                                                                       frequency_cutoff=100.0, temperature=temperature[0])
                     properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+
+            if OrcaJobType.NMR in job_types:
+                nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
+                if nmr_shifts is not None:
+                    properties[-1]["isotropic_shielding"] = nmr_shifts
 
             try:
                 charges = parse.read_mulliken_charges(lines)

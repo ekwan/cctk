@@ -1,6 +1,9 @@
 import unittest, sys, os, io, copy
 import numpy as np
 import cctk
+import cctk.topology as top
+
+from cctk.load_groups import load_group
 
 class TestGroup(unittest.TestCase):
     def test_group_add(self):
@@ -68,6 +71,18 @@ class TestGroup(unittest.TestCase):
             self.assertTrue(abs(float(x1)-float(x2)) < 0.0001)
 
         os.remove(new_path)
+
+    def test_subgroup_isomorphism(self):
+        group = load_group("methyl")
+        molecule = cctk.Molecule.new_from_name("camphor").assign_connectivity()
+
+        subgroups = top.find_group(molecule, group)
+        self.assertEqual(len(subgroups), 3)
+
+        molecule = cctk.Molecule.new_from_name("tert-butanol").assign_connectivity()
+        sets = molecule.get_symmetric_atoms()
+        self.assertEqual(len(sets[0]), 3)
+        self.assertEqual(len(sets[1]), 9)
 
 if __name__ == '__main__':
     unittest.main()
