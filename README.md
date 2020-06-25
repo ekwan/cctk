@@ -13,7 +13,7 @@
 
 A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-start.html). More documentation is [here](https://cctk.readthedocs.io/).
  
-*cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com). Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca]() `.inp`).
+*cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com). Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca](https://sites.google.com/site/orcainputlibrary/) `.inp`/`.out`).
 
 ## Installation
 
