@@ -30,26 +30,36 @@ print("\n\033[3mreading files:\033[0m")
 files = glob.glob(args["filename"], recursive=True)
 
 def read(file):
+    if re.match("slurm", file):
+        return
     try:
         output_file = cctk.GaussianFile.read_file(file)
         if isinstance(output_file, list):
-            output_file = output_file[-1]
+            if len(output_file) > 0:
+                output_file = output_file[-1]
+            else:
+                return 
         return output_file
     except Exception as e:
-        print(f"Error reading {file}\n{e}")
+#        print(f"Error reading {file}\n{e}")
         return
 
 pool = mp.Pool(processes=16)
 for output_file in tqdm(pool.imap(read, files), total=len(files)):
+    molecule = None
+    if output_file is None or (isinstance(output_file, list) and len(output_file) == 0):
+        continue
     if output_file.successful_terminations:
         results.add_molecule(*list(output_file.ensemble.items())[-1])
         molecule = output_file.ensemble.molecules[-1]
     elif len(output_file.ensemble) > 1:
         results.add_molecule(*list(output_file.ensemble.items())[-2])
         molecule = output_file.ensemble.molecules[-2]
-    else:
+    elif len(output_file.ensemble) == 1:
         results.add_molecule(*list(output_file.ensemble.items())[-1])
         molecule = output_file.ensemble.molecules[-1]
+    else:
+        continue
     results[molecule, "iters"] = len(output_file.ensemble)
     results[molecule, "success"] = output_file.successful_terminations
     results[molecule, "imaginary"] = output_file.imaginaries()
@@ -65,13 +75,17 @@ if not isinstance(values[0], list):
     values = [values]
 
 df = pd.DataFrame(values, columns=property_names).fillna("")
+df.sort_values("filename", inplace=True)
 
 if args["g"]:
     df["rel_energy"] = (df.quasiharmonic_gibbs_free_energy- df.quasiharmonic_gibbs_free_energy.min()) * 627.509469
 elif args["h"]:
     df["rel_energy"] = (df.enthalpy - df.enthalpy.min()) * 627.509469
 else:
-    df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
+    try:
+        df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
+    except:
+        df["rel_energy"] = 0
 
 df.rename(columns={"rms_displacement": "rms_disp", "quasiharmonic_gibbs_free_energy": "GFE (corrected)"}, inplace=True)
 df["filename"] = df["filename"].apply(lambda x: x[-60:])
