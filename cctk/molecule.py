@@ -1298,7 +1298,8 @@ class Molecule:
                 qhull = True
 
         if qhull:
-             hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
+            import scipy
+            hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
             return hull.volume
 
     def swap_atom_numbers(self, atom1, atom2):
