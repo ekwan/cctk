@@ -712,8 +712,17 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         frequencies = []
         try:
             frequencies += extract_parameter(word_matches[14], 2)
-            frequencies += extract_parameter(word_matches[14], 3)
-            frequencies += extract_parameter(word_matches[14], 4)
+
+            # very small molecules might only have 1 or 2 freqs
+            try:
+                frequencies += extract_parameter(word_matches[14], 3)
+            except:
+                pass
+            try:
+                frequencies += extract_parameter(word_matches[14], 4)
+            except:
+                pass
+
             properties[-1]["frequencies"] = sorted(frequencies)
         except Exception as e:
             raise ValueError("error finding frequencies")

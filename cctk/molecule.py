@@ -1255,41 +1255,51 @@ class Molecule:
 
         return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
 
-    def volume(self, pts_per_angstrom=10):
+    def volume(self, pts_per_angstrom=10, qhull=False):
         """
         Returns volume calculated using the Gavezotti algorithm (JACS, 1983, 105, 5220). Relatively slow.
+        If MemoryError, defaults to a qhull-based approach (accurate in the limit as number of atoms goes to infinity)
 
         Args:
             pts_per_angstrom (int): how many grid points to use per Å - time scales as O(n**3) so be careful!
+            qhull (bool): use faster QHull algorithm
 
         Returns:
             volume in Å**3
         """
-        assert isinstance(pts_per_angstrom, int), "Need an integer number of pts per Å!"
-        assert pts_per_angstrom > 0, "Need a positive integer of pts per Å!"
+        if not qhull:
+            try:
+                assert isinstance(pts_per_angstrom, int), "Need an integer number of pts per Å!"
+                assert pts_per_angstrom > 0, "Need a positive integer of pts per Å!"
 
-        box_max = np.max(self.geometry.view(np.ndarray), axis=0) + 4
-        box_min = np.min(self.geometry.view(np.ndarray), axis=0) - 4
+                box_max = np.max(self.geometry.view(np.ndarray), axis=0) + 4
+                box_min = np.min(self.geometry.view(np.ndarray), axis=0) - 4
 
-        box_volume = (box_max[0] - box_min[0]) * (box_max[1] - box_min[1]) * (box_max[2] - box_min[2])
+                box_volume = (box_max[0] - box_min[0]) * (box_max[1] - box_min[1]) * (box_max[2] - box_min[2])
 
-        x_vals = np.linspace(box_min[0], box_max[0], int((box_max[0] - box_min[0]) * pts_per_angstrom))
-        y_vals = np.linspace(box_min[1], box_max[1], int((box_max[1] - box_min[1]) * pts_per_angstrom))
-        z_vals = np.linspace(box_min[2], box_max[2], int((box_max[2] - box_min[2]) * pts_per_angstrom))
+                x_vals = np.linspace(box_min[0], box_max[0], int((box_max[0] - box_min[0]) * pts_per_angstrom))
+                y_vals = np.linspace(box_min[1], box_max[1], int((box_max[1] - box_min[1]) * pts_per_angstrom))
+                z_vals = np.linspace(box_min[2], box_max[2], int((box_max[2] - box_min[2]) * pts_per_angstrom))
 
-        # h4ck3r
-        box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
+                # h4ck3r
+                box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
 
-        # caching to speed call
-        vdw_radii = {z: get_vdw_radius(z) for z in set(self.atomic_numbers)}
-        radii_per_atom = np.array([vdw_radii[z] for z in self.atomic_numbers]).reshape(-1,1)
+                # caching to speed call
+                vdw_radii = {z: get_vdw_radius(z) for z in set(self.atomic_numbers)}
+                radii_per_atom = np.array([vdw_radii[z] for z in self.atomic_numbers]).reshape(-1,1)
 
-        # this is the slow part since it's approximately a zillion operations
-        dists_per_atom = cdist(self.geometry.view(np.ndarray), box_pts)
-        occupied = np.sum(np.max(dists_per_atom < radii_per_atom, axis=0))
+                # this is the slow part since it's approximately a zillion operations
+                dists_per_atom = cdist(self.geometry.view(np.ndarray), box_pts)
+                occupied = np.sum(np.max(dists_per_atom < radii_per_atom, axis=0))
 
-        percent_occupied = occupied / box_pts.shape[0]
-        return percent_occupied * box_volume
+                percent_occupied = occupied / box_pts.shape[0]
+                return percent_occupied * box_volume
+            except MemoryError:
+                qhull = True
+
+        if qhull:
+             hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
+            return hull.volume
 
     def swap_atom_numbers(self, atom1, atom2):
         """
@@ -1582,6 +1592,7 @@ class Molecule:
         Useful for NMR spectroscopy, etc.
         """
         from cctk.load_groups import group_iterator
+
         symmetric_sets = []
         for group in group_iterator(symmetric_only=True):
             # this gives us a list of dictionaries mapping from self.atomic_numbers to group numbers
@@ -1603,4 +1614,9 @@ class Molecule:
         symmetric_sets = list(filter(None, symmetric_sets))
         return symmetric_sets
 
-
+    def atomic_symbols(self):
+        """
+        Return list of atomic symbols.
+        """
+        symbols = {z: get_symbol(z) for z in set(self.atomic_numbers)}
+        return [symbols[z] for z in self.atomic_numbers]

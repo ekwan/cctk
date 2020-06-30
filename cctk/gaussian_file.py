@@ -385,9 +385,12 @@ class GaussianFile(File):
                 temperature = lines.find_parameter("Temperature", expected_length=6, which_field=1)
                 if len(temperature) == 1:
                     properties[-1]["temperature"] = temperature[0]
-                    corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
-                                                                      frequency_cutoff=100.0, temperature=temperature[0])
-                    properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                    try:
+                        corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
+                                                                        frequency_cutoff=100.0, temperature=temperature[0])
+                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                    except:
+                        pass
 
 
             if GaussianJobType.NMR in job_types:
