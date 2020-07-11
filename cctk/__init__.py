@@ -4,6 +4,7 @@ from .array import OneIndexedArray
 from .molecule import Molecule
 from .ensemble import Ensemble, ConformationalEnsemble
 from .group import Group
+from .vibrational_mode import VibrationalMode
 
 from .gaussian_file import GaussianJobType, GaussianFile
 from .orca_file import OrcaFile, OrcaJobType

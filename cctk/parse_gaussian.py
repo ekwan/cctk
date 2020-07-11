@@ -509,7 +509,7 @@ def extract_success_and_time(lines):
         elapsed_time += fields[0] * 86400 + fields[1] * 3600 + fields[2] * 60 + fields[3]
     return len(success), elapsed_time
 
-def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_info=False):
+def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_info=False):
 
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
@@ -554,6 +554,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
         ["Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", 1],
         ["Mulliken charges", "Sum of Mulliken charges", 1],
         ["Electronic spatial extent", "Quadrupole moment", 1], #10
+        ["normal coordinates", "Thermochemistry", 1],
     ]
 
     word_matches = [[] for _ in words]
@@ -708,6 +709,10 @@ def read_file_fast(file_text, filename, link1idx, max_len=1000, extended_opt_inf
             properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
         elif len(gibbs_vals) > 1:
             raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
+
+
+        vibrational_modes = parse_modes(block_matches[11])
+        molecules[-1].vibrational_modes = vibrational_modes
 
         frequencies = []
         try:
@@ -918,3 +923,51 @@ def parse_hirshfeld(hirshfeld_block):
 
     return cctk.OneIndexedArray(charges), cctk.OneIndexedArray(spins)
 
+def parse_modes(freq_block):
+    freqs = list()
+    masses = list()
+    force_ks = list()
+    displacements = list()
+
+    chunks = freq_block[0].split("\n Freq")
+    for chunk in chunks:
+        lines = chunk.split("\n")
+        freqs += re.split(" +", lines[0])[2:]
+        masses += re.split(" +", lines[1])[4:]
+        force_ks += re.split(" +", lines[2])[4:]
+
+        current_displacements = [list() for x in re.split(" +", lines[0])[2:]]
+
+        for line in lines[5:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
+
+            if len(fields) < 5:
+                break
+
+            current_displacements[0].append([float(x) for x in fields[2:5]])
+
+            if len(current_displacements) > 1:
+                current_displacements[1].append([float(x) for x in fields[5:8]])
+
+            if len(current_displacements) > 2:
+                current_displacements[2].append([float(x) for x in fields[8:11]])
+
+
+        for d in current_displacements:
+            displacements.append(cctk.OneIndexedArray(d))
+
+    freqs = [float(x) for x in freqs]
+    masses = [float(x) for x in masses]
+    force_ks = [float(x) for x in force_ks]
+
+    assert len(freqs) == len(masses)
+    assert len(freqs) == len(force_ks)
+    assert len(freqs) == len(displacements)
+
+    modes = list()
+    for f, m, k, d in zip(freqs, masses, force_ks, displacements):
+        k *= 143.836 # mdyne Å**-1 to kcal/mol Å**-2
+        modes.append(cctk.VibrationalMode(f, m, k, d))
+
+    return modes

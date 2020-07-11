@@ -22,6 +22,8 @@ results = cctk.Ensemble()
 parser = argparse.ArgumentParser(prog="analyze.py")
 parser.add_argument("--g", action="store_true")
 parser.add_argument("--h", action="store_true")
+parser.add_argument("--standard_state", action="store_true", default=False)
+parser.add_argument("--correct_gibbs", action="store_true", default=False)
 parser.add_argument("filename")
 args = vars(parser.parse_args(sys.argv[1:]))
 
@@ -38,10 +40,10 @@ def read(file):
             if len(output_file) > 0:
                 output_file = output_file[-1]
             else:
-                return 
+                return
         return output_file
     except Exception as e:
-#        print(f"Error reading {file}\n{e}")
+        print(f"Error reading {file}\n{e}")
         return
 
 pool = mp.Pool(processes=16)
@@ -69,7 +71,12 @@ if len(results) == 0:
     exit()
 
 print("\n\n\033[3manalysis:\033[0m\n")
-property_names = ["filename", "iters", "energy", "enthalpy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+property_names = None
+if args["correct_gibbs"]:
+    property_names = ["filename", "iters", "energy", "enthalpy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+else:
+    property_names = ["filename", "iters", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+
 values = results[:, property_names]
 if not isinstance(values[0], list):
     values = [values]
@@ -78,7 +85,7 @@ df = pd.DataFrame(values, columns=property_names).fillna("")
 df.sort_values("filename", inplace=True)
 
 if args["g"]:
-    df["rel_energy"] = (df.quasiharmonic_gibbs_free_energy- df.quasiharmonic_gibbs_free_energy.min()) * 627.509469
+    df["rel_energy"] = (df.quasiharmonic_gibbs_free_energy - df.quasiharmonic_gibbs_free_energy.min()) * 627.509469
 elif args["h"]:
     df["rel_energy"] = (df.enthalpy - df.enthalpy.min()) * 627.509469
 else:
@@ -87,9 +94,18 @@ else:
     except:
         df["rel_energy"] = 0
 
-df.rename(columns={"rms_displacement": "rms_disp", "quasiharmonic_gibbs_free_energy": "GFE (corrected)"}, inplace=True)
+if args["correct_gibbs"]:
+    df.rename(columns={"rms_displacement": "rms_disp", "quasiharmonic_gibbs_free_energy": "GFE"}, inplace=True)
+else:
+    df.rename(columns={"rms_displacement": "rms_disp", "gibbs_free_energy": "GFE"}, inplace=True)
+
+if args["standard_state"]:
+    # convert to 1 M standard state = 6.354 e.u. * 298 K / 4184 J/kcal
+    df["GFE"] = df["GFE"].apply(lambda x: f"{x - (0.4526 / 627.509):.5f}" if isinstance(x, float) else "")
+else:
+    df["GFE"] = df["GFE"].apply(lambda x: f"{x:.5f}" if isinstance(x, float) else "")
+
 df["filename"] = df["filename"].apply(lambda x: x[-60:])
-#df["GFE (corrected)"] = df["GFE (corrected)"].apply(lambda x: f"{x:.5f}")
 df["rms_force"] = df["rms_force"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.0001 else f"\033[93m{x}\033[0m")
 df["rms_disp"] = df["rms_disp"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.003 else f"\033[93m{x}\033[0m")
 df["success"] = df["success"].apply(lambda x: f"\033[92m{x}\033[0m" if x else f"\033[93m{x}\033[0m")
