@@ -141,9 +141,8 @@ class VibrationalMode:
         H = get_hermite_polynomial(n)
 
         # following https://github.com/ekwan/Jprogdyn/blob/master/src/main/java/edu/harvard/chemistry/ekwan/Jprogdyn/HarmonicOscillatorDistribution.java, line 109
-
-        # 4 * pi * 3 * 10**10 / (1000 * 10**23 * 6.022 * 10**23 * 6.626 * 10^-34) = 9.448 * 10 ** -6, take it or leave it
-        omega_term = 9.448 * 10 ** -6 * self.reduced_mass * freq
+        # 4 * pi * 3 * 10**8 / (1000 * 10**20 * 6.022 * 10**23 * 6.626 * 10^-34) = 0.000094411, take it or leave it
+        omega_term = 9.4411e-5 * self.reduced_mass * freq
         val = math.sqrt(omega_term) * math.exp(-1 * omega_term * math.pi * x ** 2 ) * (H(math.sqrt(omega_term * math.pi) * x) ** 2) / (2 ** n * math.factorial(n))
         return val
 

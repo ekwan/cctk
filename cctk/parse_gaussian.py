@@ -967,7 +967,7 @@ def parse_modes(freq_block):
 
     modes = list()
     for f, m, k, d in zip(freqs, masses, force_ks, displacements):
-        k *= 143.836 # mdyne Å**-1 to kcal/mol Å**-2
-        modes.append(cctk.VibrationalMode(f, m, k, d))
+        k *= 143.9326 # mdyne Å**-1 to kcal/mol Å**-2
+        modes.append(cctk.VibrationalMode(frequency=f, reduced_mass=m, force_constant=k, displacements=d))
 
     return modes

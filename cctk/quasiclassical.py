@@ -51,7 +51,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298):
 
     # here we could compute atom velocities if we wanted to! initializer lines 440-480
 
-    print(f"Mode {mode.frequency:.2f}\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol")
+    print(f"Mode {mode.frequency:.2f} ({mode.energy():.2f} kcal/mol)\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2")
 
     return potential_energy, kinetic_energy
 
