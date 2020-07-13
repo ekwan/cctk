@@ -82,6 +82,8 @@ class Molecule:
         self.multiplicity = multiplicity
         self.charge = charge
 
+        self.vibrational_modes = list()
+
         if isinstance(bonds, nx.Graph):
             self.bonds = bonds
         elif isinstance(bonds, (list,np.ndarray,nx.classes.reportviews.EdgeView)):

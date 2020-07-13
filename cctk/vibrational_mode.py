@@ -55,7 +55,7 @@ class VibrationalMode:
 
         # probability of being in state 0 is equal to 1 - zpe_ratio
         # 1 = P(0) + P(1) + P(2) + ... = P + P * zpe_ratio + P * zpe_ratio ** 2 + ...
-        # 1 = P(0) / (1 - zpe_ratio) # geometric series
+        # 1 = P(0) / (1 - zpe_ratio) bc geometric series
         P = 1.0 - zpe_ratio
 
         random = np.random.uniform()
@@ -147,6 +147,9 @@ class VibrationalMode:
         return val
 
     def quantum_distribution_max(self, level=0, num_pts=1e5):
+        """
+        Returns the maximum value of psi**2 for the quantum harmonic oscillator at a given level.
+        """
         assert isinstance(level, int) and level >= 0, "need positive integer for vibrational level"
 
         freq = self.frequency
@@ -158,6 +161,7 @@ class VibrationalMode:
 
         max_x = self.classical_turning_point()
 
+        # there is certainly a better way to do this
         max_p = 0
         for x in np.linspace(0, max_x, num_pts):
             p = self.quantum_distribution_value(x, level)
@@ -167,4 +171,7 @@ class VibrationalMode:
         return max_p
 
     def classical_turning_point(self, level=0):
+        """
+        Returns the maximum allowed shift based on modelling the mode as a classical harmonic oscillator (e.g. the point where potential energy is maximum).
+        """
         return math.sqrt(2 * self.energy(level) / self.force_constant)

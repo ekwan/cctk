@@ -299,7 +299,7 @@ def compute_RMSD(geometry1, geometry2, checks=True):
         raise ValueError("can't compare two geometries with different lengths!")
 
 #    return np.trace(cdist(geometry1, geometry2)) / len(geometry1)
-    return np.sqrt( np.sum( ( geometry1 - geometry2 ) ** 2) / len(geometry1) )
+    return np.sqrt( np.sum( ( geometry1.view(np.ndarray) - geometry2.view(np.ndarray) ) ** 2) / len(geometry1) )
 
 def get_isotopic_distribution(z):
     """

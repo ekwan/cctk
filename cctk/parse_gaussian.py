@@ -711,7 +711,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
             raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
 
 
-        vibrational_modes = parse_modes(block_matches[11])
+        vibrational_modes = parse_modes(block_matches[11], num_atoms=molecules[-1].num_atoms(), hpmodes=re.search("hpmodes", route_card))
         molecules[-1].vibrational_modes = vibrational_modes
 
         frequencies = []
@@ -923,39 +923,67 @@ def parse_hirshfeld(hirshfeld_block):
 
     return cctk.OneIndexedArray(charges), cctk.OneIndexedArray(spins)
 
-def parse_modes(freq_block):
+def parse_modes(freq_block, num_atoms, hpmodes=False):
     freqs = list()
     masses = list()
     force_ks = list()
     displacements = list()
 
-    chunks = freq_block[0].split("\n Freq")
+    chunks = freq_block[0].split("Freq")
+
+    if hpmodes:
+        chunks = chunks[1:]
+        chunks = chunks[:int(len(chunks)/2)]
+
     for chunk in chunks:
         lines = chunk.split("\n")
-        freqs += re.split(" +", lines[0])[2:]
-        masses += re.split(" +", lines[1])[4:]
-        force_ks += re.split(" +", lines[2])[4:]
 
-        current_displacements = [list() for x in re.split(" +", lines[0])[2:]]
+        if hpmodes:
+            num_cols = len(re.split(" +", lines[0])) - 2
+            current_displacements = [np.zeros(shape=(num_atoms, 3)) for x in range(num_cols)]
 
-        for line in lines[5:]:
-            fields = re.split(" +", line)
-            fields = list(filter(None, fields))
+            freqs += list(filter(None, re.split(" +", lines[0])))[2:]
+            masses += list(filter(None, re.split(" +", lines[1])))[3:]
+            force_ks += list(filter(None, re.split(" +", lines[2])))[3:]
 
-            if len(fields) < 5:
-                break
+            for line in lines[6:]:
+                fields = re.split(" +", line)
+                fields = list(filter(None, fields))
 
-            current_displacements[0].append([float(x) for x in fields[2:5]])
+                if len(fields) < 5 or fields[0] == "Harmonic":
+                    break
 
-            if len(current_displacements) > 1:
-                current_displacements[1].append([float(x) for x in fields[5:8]])
+                for col_idx, val in enumerate(fields[3:]):
+                    current_displacements[col_idx][int(fields[1])-1][int(fields[0])-1] = val
 
-            if len(current_displacements) > 2:
-                current_displacements[2].append([float(x) for x in fields[8:11]])
+            for d in current_displacements:
+                displacements.append(d.view(cctk.OneIndexedArray))
+
+        else:
+            current_displacements = [list() for x in re.split(" +", lines[0])[2:]]
+
+            freqs += re.split(" +", lines[0])[2:]
+            masses += re.split(" +", lines[1])[4:]
+            force_ks += re.split(" +", lines[2])[4:]
+
+            for line in lines[5:]:
+                fields = re.split(" +", line)
+                fields = list(filter(None, fields))
+
+                if len(fields) < 4:
+                    break
+
+                current_displacements[0].append([float(x) for x in fields[2:5]])
+
+                if len(current_displacements) > 1:
+                    current_displacements[1].append([float(x) for x in fields[5:8]])
+
+                if len(current_displacements) > 2:
+                    current_displacements[2].append([float(x) for x in fields[8:11]])
 
 
-        for d in current_displacements:
-            displacements.append(cctk.OneIndexedArray(d))
+            for d in current_displacements:
+                displacements.append(cctk.OneIndexedArray(d))
 
     freqs = [float(x) for x in freqs]
     masses = [float(x) for x in masses]

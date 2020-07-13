@@ -7,8 +7,24 @@ import math, copy
 
 import cctk
 
-def get_quasiclassical_vibration(molecule, temperature=298):
+def get_quasiclassical_perturbation(molecule, temperature=298):
+    """
+    Perturbs molecule by treating each mode as a quantum harmonic oscillator and sampling from the distribution appropriate to the temperature.
+
+    This is probably the only useful function in this file.
+
+    Args:
+        molecule (cctk.Molecule): molecule with vibrational modes
+        temperature (float): temperature
+
+    Returns:
+        new ``cctk.Molecule`` object
+        energy above ground state (kcal/mol)
+    """
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule"
+    assert len(molecule.vibrational_modes) > 0, "molecule needs to have vibrational modes (try running a ``freq`` job)"
+
+    assert isinstance(temperature, (int, float)), "temperature must be numeric"
 
     mol = copy.deepcopy(molecule)
     total_PE = 0
@@ -17,12 +33,12 @@ def get_quasiclassical_vibration(molecule, temperature=298):
         PE, KE = apply_vibration(mol, mode, temperature=temperature)
         total_PE += PE
 
-    print(total_PE)
+    return mol, total_PE
 
-    return mol
-
-def apply_vibration(molecule, mode, min_freq=50, temperature=298):
+def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False):
     """
+    Apply a vibration to molecule ``molecule`` (modified in-place).
+
     Args:
         molecule (cctk.Molecule)
         mode (cctk.VibrationalMode)
@@ -50,11 +66,10 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298):
     kinetic_energy = energy - potential_energy
 
     # here we could compute atom velocities if we wanted to! initializer lines 440-480
-
-    print(f"Mode {mode.frequency:.2f} ({mode.energy():.2f} kcal/mol)\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2")
+    if verbose:
+        print(f"Mode {mode.frequency:.2f} ({mode.energy():.2f} kcal/mol)\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2")
 
     return potential_energy, kinetic_energy
-
 
 def get_hermite_polynomial(n):
     """
