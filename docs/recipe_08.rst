@@ -95,3 +95,24 @@ Epimerization
 
     # exchanges substituent atoms sub1 and sub2 (and attached groups) around atom center
     enantiomer = molecule.epimerize(center, sub1, sub2)
+
+
+"""""""""""""""""
+Detecting Groups
+""""""""""""""""
+
+- *cctk* can search within existing molecules for groups and return the relevant atom numbers.
+
+::
+
+    import cctk.topology as top
+    from cctk.load_groups import load_group
+
+    methyl = cctk.load_group("methyl")
+    camphor = cctk.Molecule.new_from_name("camphor").assign_connectivity()
+
+    top.find_group(camphor, methyl)
+    # returns a list of dictionaries
+    # each element is a mapping from atomic numbers of camphor (keys) to atomic numbers of the group (values)
+    # in this case, camphor contains 3 methyl groups, so there are 3 matches
+    # [{1: 1, 12: 3, 13: 4, 14: 5}, {3: 1, 16: 3, 17: 4, 15: 5}, {8: 1, 24: 3, 25: 4, 23: 5}]

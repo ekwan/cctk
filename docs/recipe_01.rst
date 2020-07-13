@@ -133,7 +133,7 @@ Writing Multiple Molecules to One Gaussian Input File
 Using Custom Basis Sets from the Basis Set Exchange
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 
-- Bespoke basis sets can be downloaded automatically from the `Basis Set Exchange <https://www.basissetexchange.org/>`.
+- Bespoke basis sets can be downloaded automatically from the `Basis Set Exchange <https://www.basissetexchange.org/>` _.
 - By default, the ``add_custom_basis_set`` method appends the basis set to the footer. However, 
   passing the ``return_string`` option allows for increased control over formatting (e.g. for combination with ``opt=modredundant``).
 - The ``gen`` keyword should be used in combination with these basis sets.
@@ -149,3 +149,14 @@ Using Custom Basis Sets from the Basis Set Exchange
     basis = file2.add_custom_basis_set("pcseg-2", return_string=True)
     file2.footer = f"B 1 10 F\n\n{basis}"
 
+"""""""""""""""""""""""""""
+Creating Molecules By Name
+""""""""""""""""""""""""""
+
+- If ``rdkit`` is installed, then molecules can be created from a name or SMILES string. Structures should be checked for sanity!
+
+::
+
+    imatinib = cctk.Molecule.new_from_name("imatinib")
+
+    phcf3 = cctk.Molecule.new_from_smiles("C1=CC=C(C=C1)C(F)(F)F")

@@ -41,9 +41,17 @@ Chemical Shifts
     # note: 1-indexed
     shieldings = ensemble[:,"isotropic_shielding"]
 
+    # can automatically detect symmetric atoms from methyl, isopropyl, or tert-butyl groups
+    molecule = ensemble.molecules[-1].assign_connectivity()
+    symmetric = molecule.get_symmetric_atoms() # [[32, 33, 34], [37, 38, 39]]
+
     # linearly scale to get shifts
-    scaled_shifts, shift_labels = cctk.helper_functions.scale_nmr_shifts(ensemble,
-                                  symmetrical_atom_numbers=[[37,38,39],[32,33,34]], scaling_factors="default")
+    scaled_shifts, shift_labels = cctk.helper_functions.scale_nmr_shifts(
+        ensemble,
+        symmetrical_atom_numbers=symmetric, 
+        scaling_factors="default"
+    )
+
     expected_shifts = [6.52352,6.6285,6.51045,6.53005,6.22303,2.11021,2.7025,2.73022,2.38541,2.35172,3.1467,5.82979,
                        3.29202,1.92326,114.924,98.3836,107.641,94.3333,104.421,109.795,95.1041,112.168,121.346,
                        45.4898,14.1014,26.7028,36.3779,29.4323,104.708,155.804,38.0661,109.579,22.7099]

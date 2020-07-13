@@ -1,7 +1,7 @@
 .. _recipe_03:
 
 ==========================================
-Measuring and Setting Internal Coordinates
+Manipulating Molecule Objects
 ==========================================
 
 - ``import cctk`` is assumed
@@ -28,6 +28,10 @@ Measuring Distances and Angles
 
     # alternately, all get_ or set_ methods will also take a list of atom numbers
     dihedral_angle = molecule.get_dihedral(atoms=[1, 2, 3, 4])
+
+
+    # you can also get the volume!
+    vol = molecule.volume()
 
 """"""""""""""""""""""""""""
 Setting Distances and Angles
@@ -80,4 +84,17 @@ Checking For Clashes
 
         no_clashes_present = molecule.check_for_conflicts()
         
+""""""""""""""""""""""""""""
+Generating Non-Ground States
+""""""""""""""""""""""""""""
+
+- The output of a frequency job can be used to generate molecules with realistic non-equilibrium geometries.
+
+::
+
+    import cctk.quasiclassical as qc
+
+    # returns a new Molecule object and the energy above the ground state, sampled from the relevant Boltzmann distribution
+    perturbed_molecule, energy = qc.get_quasiclassical_perturbation(molecule, temp=350)
+
 

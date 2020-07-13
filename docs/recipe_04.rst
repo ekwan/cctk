@@ -57,5 +57,7 @@ Renumbering Molecules
     assert isinstance(mol1, cctk.Molecule)
     assert isinstance(mol2, cctk.Molecule)
 
+    assert cctk.Molecule.are_isomorphic(mol1, mol2)
+
     mol2 = mol2.renumber_to_match(mol1)
 
