@@ -933,7 +933,6 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
 
     if hpmodes:
         chunks = chunks[1:]
-        chunks = chunks[:int(len(chunks)/2)]
 
     for chunk in chunks:
         lines = chunk.split("\n")
@@ -942,7 +941,16 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             num_cols = len(re.split(" +", lines[0])) - 2
             current_displacements = [np.zeros(shape=(num_atoms, 3)) for x in range(num_cols)]
 
-            freqs += list(filter(None, re.split(" +", lines[0])))[2:]
+            if len(freqs):
+                new_freqs = list(filter(None, re.split(" +", lines[0])))[2:]
+
+                if float(new_freqs[-1]) < float(freqs[-1]):
+                    break # want to skip the non-hpmodes section, so no looping allowed
+                else:
+                    freqs += new_freqs
+            else:
+                freqs += list(filter(None, re.split(" +", lines[0])))[2:]
+
             masses += list(filter(None, re.split(" +", lines[1])))[3:]
             force_ks += list(filter(None, re.split(" +", lines[2])))[3:]
 
@@ -950,7 +958,10 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
                 fields = re.split(" +", line)
                 fields = list(filter(None, fields))
 
-                if len(fields) < 5 or fields[0] == "Harmonic":
+                if len(fields) < (num_cols + 3):
+                    continue
+
+                if fields[0] == "Harmonic":
                     break
 
                 for col_idx, val in enumerate(fields[3:]):
