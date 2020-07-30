@@ -24,6 +24,7 @@ class TestOneIndexedArray(unittest.TestCase):
         self.assertEqual(new_a[1], 8)
 
         a_2d = [[1,1,1],[2,2,2],[3,3,3]]
+
         new_a_2d = cctk.OneIndexedArray(a_2d)
         self.assertEqual(new_a_2d[1,1], 1)
         self.assertEqual(new_a_2d[2,0], 2)
@@ -37,6 +38,9 @@ class TestOneIndexedArray(unittest.TestCase):
 
         v = new_a_2d[1]
         self.assertTrue(isinstance(v, np.ndarray))
+
+        new_a_2d[1] = np.asarray([4, 4, 4])
+        self.assertListEqual(list(new_a_2d[1]), [4, 4, 4])
 
     def test_smart_indexing(self):
         a1 = cctk.OneIndexedArray([1,2,3])

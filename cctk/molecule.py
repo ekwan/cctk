@@ -1464,14 +1464,15 @@ class Molecule:
         fragments = nx.connected_components(self.bonds)
         return [list(f) for f in list(fragments)]
 
-    def limit_solvent_shell(self, num_atoms=0, num_solvents=10):
+    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10):
         """
         Automatically detects solvent molecules and removes them until you have a set number of solvents or atoms.
 
-        This code assumes that the fragment of interest comes first in the file, which is almost always true but may not be true.
+        The "distance" between molecules is the minimum of the pairwise atomic distances, to emphasize inner-sphere interactions.
 
         Args:
-            num_atoms (int): remove atoms until there are this number (module size of a solvent molecule)
+            solute (int): which fragment is the solute, 0-indexed
+            num_atoms (int): remove atoms until there are this number (modulo the size of a solvent molecule)
             num_solvents (int): remove solvent molecules until there are this number
 
         Returns:
@@ -1481,16 +1482,20 @@ class Molecule:
         assert isinstance(num_solvents, int)
 
         fragments = self.get_components()
+        solute_x = self.geometry[fragments[0]].view(np.ndarray)
 
-        #### not strictly a centroid since it's not mass-weighted.
-        centroids = np.zeros(shape=(len(fragments), 3))
         distances = np.zeros(shape=len(fragments))
         for i, f in enumerate(fragments):
-            centroids[i] = np.mean(self.geometry[f], axis=0)
-            if i > 0:
-                distances[i] = np.linalg.norm(centroids[i] - centroids[0])
+            if i == solute:
+                distances[i] = 0
+            else:
+                solvent_x = self.geometry[f].view(np.ndarray)
+                # cdist is absurdly fast
+                pairwise_distances = cdist(solvent_x, solute_x)
+                distances[i] = np.min(pairwise_distances)
 
         mol = copy.deepcopy(self)
+
         #### reverse order - farthest away comes first
         order = np.argsort(distances)[::-1]
 
