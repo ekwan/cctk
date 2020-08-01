@@ -95,6 +95,6 @@ Generating Non-Ground States
     import cctk.quasiclassical as qc
 
     # returns a new Molecule object and the energy above the ground state, sampled from the relevant Boltzmann distribution
-    perturbed_molecule, energy = qc.get_quasiclassical_perturbation(molecule, temp=350)
+    perturbed_molecule, energy = qc.get_quasiclassical_perturbation(molecule, temperature=350)
 
 
