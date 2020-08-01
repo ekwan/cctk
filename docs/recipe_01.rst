@@ -59,7 +59,7 @@ Reading a Gaussian Output File
 
     # following is equivalent to file.get_molecule()
     ensemble = file.ensemble
-    molecule = file.molecules[-1]
+    molecule = ensemble.molecules[-1]
 
     # get the molecular properties dictionary
     properties_dict = ensemble.get_properties_dict(molecule)
