@@ -58,11 +58,12 @@ MOL2 Files
     len(ensemble) == 597
 
     # write one structure
+    filename2 = "my_filename.mol2"
     cctk.MOL2File.write_molecule_to_file(filename2, molecule, title)
-    write_molecule_to_file(cls, filename, molecule, title=None):
 
     # write multiple structures
-    cctk.MOL2File.write_ensemble_to_file(filename2, ensemble)
+    filename3 = "your_filename.mol2"
+    cctk.MOL2File.write_ensemble_to_file(filename3, ensemble)
 
 - Setting ``print_status_messages`` to ``True`` will print progress to stdout.
 - For large files that contain only conformers, set ``contains_conformers`` to ``True``.

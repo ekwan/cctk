@@ -305,7 +305,7 @@ class MOL2File(File):
         assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
 
         text = f"# {title}\n#\n#\n\n#\n#\n\n"
-        text += f"@<TRIPOS>MOLECULE\nMolecule Name\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"
+        text += f"@<TRIPOS>MOLECULE\n{title}\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"
         text += "@<TRIPOS>ATOM\n"
         for idx, z in enumerate(molecule.atomic_numbers, start=1):
             v = molecule.get_vector(idx)
