@@ -1629,3 +1629,21 @@ class Molecule:
         """
         symbols = {z: get_symbol(z) for z in set(self.atomic_numbers)}
         return [symbols[z] for z in self.atomic_numbers]
+
+    def optimize(self, inplace=True, nprocs=1):
+        """
+        Optimize molecule at the GFN2-xtb level of theory.
+
+        Args:
+            inplace (Bool): whether or not to return a new molecule or simply modify ``self.geometry``
+            nprocs (int): number of processors to use
+        """
+        import cctk.optimize as opt
+        assert isinstance(nprocs, int), "nprocs must be int!"
+        optimized = opt.optimize_molecule(self, nprocs=nprocs)
+
+        if inplace:
+            self.geometry = optimized.geometry
+            return self
+        else:
+            return optimized
