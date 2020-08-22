@@ -1647,3 +1647,15 @@ class Molecule:
             return self
         else:
             return optimized
+
+    def csearch(self, nprocs=1):
+        """
+        Optimize molecule at the GFN2-xtb level of theory.
+
+        Args:
+            inplace (Bool): whether or not to return a new molecule or simply modify ``self.geometry``
+            nprocs (int): number of processors to use
+        """
+        import cctk.optimize as opt
+        assert isinstance(nprocs, int), "nprocs must be int!"
+        return opt.csearch(self, nprocs=nprocs)

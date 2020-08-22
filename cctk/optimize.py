@@ -70,3 +70,48 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     else:
         return output_mol
 
+def csearch(molecule, constrain_atoms=None, rotamers=True, nprocs=1):
+    """
+    Run a conformational search on a molecule using ``crest``.
+
+    Args:
+        molecule (cctk.Molecule): molecule of interest
+        constraints (list): list of atom numbers to constrain
+        rotamers (bool): return all rotamers or group into distinct conformers
+        nprocs (int): number of processors to use
+
+    Returns:
+        cctk.ConformationalEnsemble
+    """
+
+    assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
+    assert isinstance(nprocs, int)
+
+    assert shutil.which("xtb") is not None, "xtb must be installed for csearch to work!"
+    assert shutil.which("crest") is not None, "crest must be installed for csearch to work!"
+
+    ensemble = None
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            if constrain_atoms is not None:
+                assert isinstance(constrain_atoms, list)
+                assert all(isinstance(n, int) for n in constrain_atoms)
+                command = f"crest --constrain {','.join(constrain_atoms)}"
+                result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+                result.check_returncode()
+
+            cctk.XYZFile.write_molecule_to_file(f"{tmpdir}/xtb-in.xyz", molecule)
+            command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs}"
+            result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+            result.check_returncode()
+
+            if rotamers:
+                ensemble = cctk.XYZFile.read_ensemble(f"{tmpdir}/crest_rotamers.xyz")
+            else:
+                ensemble = cctk.XYZFile.read_ensemble(f"{tmpdir}/crest_conformers.xyz")
+
+    except Exception as e:
+        raise ValueError(f"Error running xtb:\n{e}")
+
+    return ensemble
+

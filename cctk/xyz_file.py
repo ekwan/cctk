@@ -114,3 +114,24 @@ class XYZFile(File):
             current_lines.append(line)
 
         return files
+
+    @classmethod
+    def read_ensemble(cls, filename, conformational=False):
+        """
+        Alias for read_trajectory.
+        """
+        files = cls.read_trajectory(filename)
+
+        ensemble = None
+        if conformational:
+            ensemble = cctk.ConformationalEnsemble()
+        else:
+            ensemble = cctk.Ensemble()
+
+        for file in files:
+            ensemble.add_molecule(file.molecule)
+
+        return ensemble
+
+
+

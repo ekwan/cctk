@@ -1,4 +1,4 @@
-import unittest, sys, os, io, copy, math
+import unittest, sys, os, io, copy, math, shutil
 import numpy as np
 
 import cctk
@@ -17,6 +17,15 @@ class TestMolecule(unittest.TestCase):
 
         for x1, x2 in zip(np.ravel(mol2.geometry), np.ravel(mol.geometry)):
             self.assertTrue(abs(float(x1)-float(x2)) < 0.1)
+
+    def test_csearch(self):
+        mol = cctk.GaussianFile.read_file("test/static/L-Ala.gjf").get_molecule()
+
+        if shutil.which("crest") is not None:
+            conformers = mol.csearch()
+        else:
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
