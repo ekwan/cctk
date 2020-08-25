@@ -53,6 +53,15 @@ class TestFrequencies(unittest.TestCase):
         self.assertTrue(abs(np.mean(energies) - 9.4) < 0.5)
         self.assertTrue(abs(np.std(energies) - 3) < 0.5)
 
+    def test_perturb_water(self):
+        path = "test/static/h2o_hpmodes.out"
+        file = cctk.GaussianFile.read_file(path)
+
+        mol = file.get_molecule()
+        mol2, e = qc.get_quasiclassical_perturbation(mol)
+
+        self.assertTrue(isinstance(mol2, cctk.Molecule))
+
     def test_final_structure(self):
         path1 = "test/static/methane_perturbed.gjf"
         path2 = "test/static/methane_perturbed_key.gjf"

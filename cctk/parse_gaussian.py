@@ -710,7 +710,6 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         elif len(gibbs_vals) > 1:
             raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
 
-
         vibrational_modes = parse_modes(block_matches[11], num_atoms=molecules[-1].num_atoms(), hpmodes=re.search("hpmodes", route_card))
         molecules[-1].vibrational_modes = vibrational_modes
 
@@ -947,7 +946,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             if len(freqs):
                 new_freqs = list(filter(None, re.split(" +", lines[0])))[2:]
 
-                if float(new_freqs[-1]) < float(freqs[-1]):
+                if float(new_freqs[-1]) <= float(freqs[-1]):
                     break # want to skip the non-hpmodes section, so no looping allowed
                 else:
                     freqs += new_freqs
