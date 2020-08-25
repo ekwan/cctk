@@ -1,6 +1,5 @@
 import re
 import numpy as np
-import basis_set_exchange as bse
 
 from enum import Enum
 
@@ -670,6 +669,7 @@ class GaussianFile(File):
             nothing (if return_string is ``False``)
             string of basis set definition (if return string is ``True``)
         """
+        import basis_set_exchange as bse
         assert isinstance(name, str), "need basis set name to be a string, for starters"
 
         try:

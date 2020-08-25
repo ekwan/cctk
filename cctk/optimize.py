@@ -3,7 +3,7 @@ Functions to assist in optimizing structures.
 """
 
 import numpy as np
-import os, tempfile, shutil
+import os, tempfile, shutil, re
 import cctk
 import subprocess as sp
 
@@ -14,6 +14,14 @@ class Methods(Enum):
     Enum of different computational methods. For now, just GFN2-xtb is implemented.
     """
     GFN2_XTB = "xtb"
+
+def installed(command):
+    if shutil.which("command") is not None:
+        return True
+    if re.search(command, os.environ["PATH"]):
+        return True
+
+    return False
 
 def optimize_molecule(molecule, method=Methods.GFN2_XTB, nprocs=1, return_energy=False):
     """
@@ -42,7 +50,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
 
-    assert shutil.which("xtb") is not None, "xtb must be installed for optimization to work!"
+    assert installed("xtb"), "xtb must be installed!"
 
     command = f"xtb --gfn 2 --chrg {molecule.charge} --uhf {molecule.multiplicity - 1}"
     if nprocs > 1:
@@ -87,12 +95,12 @@ def csearch(molecule, constrain_atoms=None, rotamers=True, nprocs=1):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
 
-    assert shutil.which("xtb") is not None, "xtb must be installed for csearch to work!"
-    assert shutil.which("crest") is not None, "crest must be installed for csearch to work!"
+    assert installed("crest"), "crest must be installed!"
 
     ensemble = None
     try:
-        with tempfile.TemporaryDirectory() as tmpdir:
+        if 1:
+            tmpdir = "/n/home03/cwagen/sw/cctk/crest/"
             if constrain_atoms is not None:
                 assert isinstance(constrain_atoms, list)
                 assert all(isinstance(n, int) for n in constrain_atoms)

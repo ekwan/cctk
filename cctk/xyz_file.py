@@ -1,11 +1,11 @@
 import re
 import numpy as np
 
-from cctk import File, Molecule
+import cctk
 from cctk.helper_functions import get_symbol, get_number
 
 
-class XYZFile(File):
+class XYZFile(cctk.File):
     """
     Class representing plain ``.xyz`` files.
 
@@ -15,7 +15,7 @@ class XYZFile(File):
     """
 
     def __init__(self, molecule, title=None):
-        if molecule and isinstance(molecule, Molecule):
+        if molecule and isinstance(molecule, cctk.Molecule):
             self.molecule = molecule
         if title and (isinstance(title, str)):
             self.title = title
@@ -60,7 +60,7 @@ class XYZFile(File):
                 raise ValueError(f"can't parse line {index+2}: {line}")
 
         assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
-        molecule = Molecule(atomic_numbers, geometry)
+        molecule = cctk.Molecule(atomic_numbers, geometry)
         return XYZFile(molecule, title)
 
     @classmethod
@@ -73,7 +73,7 @@ class XYZFile(File):
             molecule (Molecule): molecule to write
             title (str): title of file
         """
-        assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
+        assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
 
         text = f"{molecule.num_atoms()}\n"
         text += f"{title}\n"
@@ -107,7 +107,7 @@ class XYZFile(File):
 
         current_lines = list()
         for line in lines:
-            if re.search(r"^\d+$", line):
+            if re.search(r"^\s*\d+$", line):
                 if len(current_lines) > 0:
                     files.append(cls.file_from_lines(current_lines))
                     current_lines = list()
@@ -128,8 +128,8 @@ class XYZFile(File):
         else:
             ensemble = cctk.Ensemble()
 
-        for file in files:
-            ensemble.add_molecule(file.molecule)
+        for f in files:
+            ensemble.add_molecule(f.molecule)
 
         return ensemble
 

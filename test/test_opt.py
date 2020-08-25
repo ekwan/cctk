@@ -21,8 +21,10 @@ class TestMolecule(unittest.TestCase):
     def test_csearch(self):
         mol = cctk.GaussianFile.read_file("test/static/L-Ala.gjf").get_molecule()
 
-        if shutil.which("crest") is not None:
+        if opt.installed("crest") is not None:
             conformers = mol.csearch()
+            self.assertEqual(len(conformers), 36)
+            self.assertTrue(isinstance(conformers, cctk.ConformationalEnsemble))
         else:
             pass
 
