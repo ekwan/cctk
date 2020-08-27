@@ -31,15 +31,14 @@ class TestAlign(unittest.TestCase):
         for before,after in zip(before_RMSD, after_RMSD):
             self.assertLess(after,0.0001)
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned.gjf", aligned_ensemble, "#p")
-        #for molecule,properties in aligned_ensemble.items():
-        #    for k,v in properties.items():
-        #        print(k,v)
-        #    print
-        ensemble2 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy")
+
+        ensemble2, rmsds = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms="heavy", return_RMSD=True)
         self.assertEqual(len(ensemble2), 3)
+
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned2.gjf", ensemble2, "#p")
         ensemble3 = aligned_ensemble.eliminate_redundant(RMSD_cutoff=0.5, comparison_atoms=comparison_atoms)
         self.assertEqual(len(ensemble3), 1)
+
         cctk.GaussianFile.write_ensemble_to_file("test/static/phenylpropane_aligned3.gjf", ensemble3, "#p")
         cctk.MOL2File.write_ensemble_to_file("test/static/phenylpropane_aligned.mol2", aligned_ensemble)
 

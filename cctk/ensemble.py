@@ -480,7 +480,7 @@ class ConformationalEnsemble(Ensemble):
             return new_ensemble, before_RMSDs, after_RMSDs
         return new_ensemble
 
-    def eliminate_redundant(self, RMSD_cutoff=0.5, comparison_atoms="heavy"):
+    def eliminate_redundant(self, RMSD_cutoff=0.5, comparison_atoms="heavy", return_RMSD=False):
         """
         Aligns every geometry in this ensemble and then creates a new ensemble that contains only the non-redundant conformers.
         If energies are available, the lowest energy conformer will be kept for every redundancy.
@@ -493,9 +493,10 @@ class ConformationalEnsemble(Ensemble):
                                             "heavy" for all non-hydrogen atoms,
                                             "all" for all atoms, or
                                             a list of 1-indexed atom numbers
+            return_RMSD (bool): whether or not to return list of RMSD values
 
         Returns:
-            new ```ConformationalEnsemble```, RMSDs to the reference geometry
+            new ``ConformationalEnsemble``, RMSDs to the reference geometry
         """
         # check inputs
         n_atoms = self.molecules[0].num_atoms()
@@ -504,10 +505,10 @@ class ConformationalEnsemble(Ensemble):
                 comparison_atoms = np.arange(1, n_atoms + 1)
             elif comparison_atoms == "heavy":
                 comparison_atoms = self.molecules[0].get_heavy_atoms()
+
         assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
         for a in comparison_atoms:
             assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
-
         assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
         assert isinstance(RMSD_cutoff, float), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
@@ -537,11 +538,14 @@ class ConformationalEnsemble(Ensemble):
         partial_geoms = [m.geometry[mask] for m in old_ensemble.molecules]
         new_partial_geoms = []
 
+        rmsds = list()
+
         # add molecules one by one
         new_ensemble = ConformationalEnsemble()
         for i in sorted_indices:
             ok_to_add = True
 
+            candidate_rmsd = 0
             for existing_molecule in new_partial_geoms:
                 candidate_rmsd = cctk.helper_functions.compute_RMSD(partial_geoms[i], existing_molecule, checks=False)
                 if candidate_rmsd < RMSD_cutoff:
@@ -554,8 +558,12 @@ class ConformationalEnsemble(Ensemble):
 
                 new_ensemble.add_molecule(candidate_molecule, candidate_molecule_properties)
                 new_partial_geoms.append(candidate_molecule.geometry[mask])
+                rmsds.append(candidate_rmsd)
 
-        return new_ensemble
+        if return_RMSD:
+            return new_ensemble, rmsds
+        else:
+            return new_ensemble
 
     def get_geometric_parameters(self, parameter, atom1, atom2, atom3=None, atom4=None):
         """
