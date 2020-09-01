@@ -150,5 +150,11 @@ class TestGaussian(unittest.TestCase):
 
         os.remove(new_path)
 
+    def test_tiny_read(self):
+        path = "test/static/Li.out"
+        file = cctk.GaussianFile.read_file(path)
+
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
+
 if __name__ == '__main__':
     unittest.main()
