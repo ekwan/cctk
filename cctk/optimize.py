@@ -3,7 +3,7 @@ Functions to assist in optimizing structures.
 """
 
 import numpy as np
-import os, tempfile, shutil, re
+import os, tempfile, shutil, re, logging
 import cctk
 import subprocess as sp
 
@@ -78,7 +78,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     else:
         return output_mol
 
-def csearch(molecule, constraints=None, rotamers=True, nprocs=1, noncovalent=False):
+def csearch(molecule, constraints=None, rotamers=True, nprocs=1, noncovalent=False, logfile=None):
     """
     Run a conformational search on a molecule using ``crest``.
 
@@ -88,13 +88,14 @@ def csearch(molecule, constraints=None, rotamers=True, nprocs=1, noncovalent=Fal
         rotamers (bool): return all rotamers or group into distinct conformers
         nprocs (int): number of processors to use
         noncovalent (Bool): whether or not to use non-covalent settings
+        logfile (str): file to write ongoing ``crest`` output to
 
     Returns:
         cctk.ConformationalEnsemble
     """
-
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
+    assert isinstance(logfile, str)
 
     assert installed("crest"), "crest must be installed!"
 
@@ -115,7 +116,13 @@ def csearch(molecule, constraints=None, rotamers=True, nprocs=1, noncovalent=Fal
                 result.check_returncode()
 
             command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
-            result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+
+            if logfile:
+                with open(logfile, "w") as f:
+                    result = sp.run(command, stdout=f, stderr=f, cwd=tmpdir, shell=True)
+            else:
+                result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+
             result.check_returncode()
 
             if rotamers:
