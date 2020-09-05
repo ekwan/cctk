@@ -78,7 +78,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     else:
         return output_mol
 
-def csearch(molecule, constraints=None, rotamers=True, nprocs=1, noncovalent=False, logfile=None):
+def csearch(molecule, constraints=None, rotamers=False, nprocs=1, noncovalent=False, logfile=None):
     """
     Run a conformational search on a molecule using ``crest``.
 
