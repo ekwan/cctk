@@ -1653,8 +1653,10 @@ class Molecule:
         Optimize molecule at the GFN2-xtb level of theory.
 
         Args:
-            inplace (Bool): whether or not to return a new molecule or simply modify ``self.geometry``
             nprocs (int): number of processors to use
+
+        Returns
+            ConformationalEnsemble
         """
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
