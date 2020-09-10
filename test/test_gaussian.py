@@ -71,6 +71,10 @@ class TestGaussian(unittest.TestCase):
         self.assertEqual(file.route_card, "#p opt=modredundant freq=noraman b3lyp/6-31g(d) empiricaldispersion=gd3bj")
         self.assertEqual(file.footer, "B 48 50 F\nB 2 48 F")
 
+        path = "test/static/HBD_dimer.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
+
     def test_link1_out_file(self):
         path = "test/static/ethane.out"
         f, lines = cctk.GaussianFile.read_file(path, return_lines=True)
@@ -153,8 +157,8 @@ class TestGaussian(unittest.TestCase):
     def test_tiny_read(self):
         path = "test/static/Li.out"
         file = cctk.GaussianFile.read_file(path)
-
         self.assertTrue(isinstance(file, cctk.GaussianFile))
+
 
 if __name__ == '__main__':
     unittest.main()

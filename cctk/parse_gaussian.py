@@ -423,7 +423,11 @@ def extract_parameter(lines, position, cast_to_float=True):
     for line in lines:
         pieces = list(filter(None, line.split(" ")))
         if cast_to_float:
-            vals.append(float(pieces[position]))
+            try:
+                vals.append(float(pieces[position]))
+            except:
+                #### sometimes RMS Force comes thru as "******" for some reason
+                vals.append(0)
         else:
             vals.append(pieces[position])
     return vals
