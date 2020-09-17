@@ -304,7 +304,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types:
-        if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
+        if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card) and len(block_matches[8]) > 0:
             charges, spins = parse_hirshfeld(block_matches[8])
             properties[-1]["hirshfeld_charges"] = charges
             properties[-1]["hirshfeld_spins"] = spins
@@ -467,6 +467,10 @@ def parse_charges_dipole(mulliken_block, dipole_block):
 def parse_hirshfeld(hirshfeld_block):
     charges = []
     spins = []
+
+    if len(hirshfeld_block) == 0:
+        return None, None
+
     for line in hirshfeld_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))

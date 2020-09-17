@@ -596,3 +596,16 @@ class ConformationalEnsemble(Ensemble):
 
         return output
 
+    def assign_connectivity(self, index=0):
+        """
+        Assigns connectivity for all molecules based on molecule of index ``index``. Much faster than assigning connectivity for each individually -- but assumes all bonding is the same.
+        """
+        assert isinstance(index, int), "Need integer index"
+        bonds = self.molecules[index].assign_connectivity().bonds
+
+        for mol in self.molecules:
+            mol.bonds = bonds
+
+        return self
+
+
