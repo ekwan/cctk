@@ -81,6 +81,7 @@ class Molecule:
         self.name = name
         self.multiplicity = multiplicity
         self.charge = charge
+        self.checks = checks
 
         self.vibrational_modes = list()
 
