@@ -1666,3 +1666,12 @@ class Molecule:
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
         return opt.csearch(self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile)
+
+    def num_neighbors_by_atom(self):
+        """
+        Returns a list of the number of neighbors of each atom.
+        """
+        result = []
+        for i in range(self.num_atoms()):
+            result.append(len(self.get_adjacent_atoms(i)))
+        return result

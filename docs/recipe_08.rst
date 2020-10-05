@@ -99,7 +99,7 @@ Epimerization
 
 """""""""""""""""
 Detecting Groups
-""""""""""""""""
+"""""""""""""""""
 
 - *cctk* can search within existing molecules for groups and return the relevant atom numbers.
 

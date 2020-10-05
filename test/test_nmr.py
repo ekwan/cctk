@@ -21,6 +21,10 @@ class TestNMR(unittest.TestCase):
         shieldings = ensemble[:,"isotropic_shielding"]
         self.assertListEqual(list(shieldings), [198.2259, 32.6869, 32.6869, 32.6869, 32.6869])
 
+        tensors = ensemble[:, "shielding_tensors"]
+        self.assertEqual(tensors[0][0][0], 198.2259)
+        self.assertEqual(tensors[1][0][0], 32.6869)
+
     def test_nmr2(self):
         # this file contains opt freq followed by Link1 NMR on methane
         gaussian_file = cctk.GaussianFile.read_file("test/static/methane2.out")

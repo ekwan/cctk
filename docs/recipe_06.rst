@@ -8,7 +8,6 @@ NMR Spectroscopy
 Chemical Shifts
 """""""""""""""
 
-- ``import cctk`` is assumed.
 - Isotropic shieldings are read automatically.
 - The ``scale_nmr_shifts`` function will apply scaling factors to the shieldings
   to produce chemical shift predictions.
@@ -106,5 +105,24 @@ Coupling Constants
     couplings = ensemble[-1,"j_couplings"]
     self.assertTrue(np.any(expected_couplings-couplings < 0.1))
 
+
+""""""""""""""""""
+Shielding Tensors
+""""""""""""""""""
+
+- The 3 by 3 shielding tensors are stored in ``shielding_tensors`` in ``properties_dict``.
+- Each tensor is a ``np.ndarray`` (0-indexed), stored in a 0-indexed list.
+
+::
+
+    gaussian_file = cctk.GaussianFile.read_file("test/static/methane.out")
+    ensemble = gaussian_file.ensemble
+    shielding_tensors = ensemble[-1,"shielding_tensors"]
+    print(shielding_tensors(1))
+
+    # will print
+    # array([[32.6869,  3.0191,  3.0191],
+    #   [ 3.0191, 32.6869,  3.0191],
+    #   [ 3.0191,  3.0191, 32.6869]]
 
 
