@@ -78,7 +78,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     else:
         return output_mol
 
-def csearch(molecule, constraints=None, rotamers=False, nprocs=1, noncovalent=False, logfile=None):
+def csearch(use_tempdir=True, **kwargs):
     """
     Run a conformational search on a molecule using ``crest``.
 
@@ -93,45 +93,54 @@ def csearch(molecule, constraints=None, rotamers=False, nprocs=1, noncovalent=Fa
     Returns:
         cctk.ConformationalEnsemble
     """
+    assert installed("crest"), "crest must be installed!"
+
+    ensemble = None
+    try:
+        if use_tempdir:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                ensemble = _do_csearch(directory=tmpdir, **kwargs)
+        else:
+            ensemble = _do_csearch(directory=os.getcwd(), **kwargs)
+    except Exception as e:
+        raise ValueError(f"Error running xtb:\n{e}")
+
+    return ensemble
+
+def _do_csearch(molecule, nprocs, logfile, noncovalent, directory, constraints):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
     assert isinstance(logfile, str)
 
-    assert installed("crest"), "crest must be installed!"
+    cctk.XYZFile.write_molecule_to_file(f"{directory}/xtb-in.xyz", molecule)
 
     nci = ""
     if noncovalent:
         nci = "-nci"
 
-    ensemble = None
-    try:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cctk.XYZFile.write_molecule_to_file(f"{tmpdir}/xtb-in.xyz", molecule)
+    if constraints is not None:
+        assert isinstance(constraints, list)
+        assert all(isinstance(n, int) for n in constraints)
+        command = f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
+        result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
+        result.check_returncode()
 
-            if constraints is not None:
-                assert isinstance(constraints, list)
-                assert all(isinstance(n, int) for n in constraints)
-                command = f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
-                result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
-                result.check_returncode()
+    command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
 
-            command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+    if logfile:
+        with open(logfile, "w") as f:
+            result = sp.run(command, stdout=f, stderr=f, cwd=directory, shell=True)
+    else:
+        result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
 
-            if logfile:
-                with open(logfile, "w") as f:
-                    result = sp.run(command, stdout=f, stderr=f, cwd=tmpdir, shell=True)
-            else:
-                result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+    result.check_returncode()
 
-            result.check_returncode()
-
-            if rotamers:
-                ensemble = cctk.XYZFile.read_ensemble(f"{tmpdir}/crest_rotamers.xyz")
-            else:
-                ensemble = cctk.XYZFile.read_ensemble(f"{tmpdir}/crest_conformers.xyz")
-
-    except Exception as e:
-        raise ValueError(f"Error running xtb:\n{e}")
+    if rotamers:
+        ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_rotamers.xyz")
+    else:
+        ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz")
 
     return ensemble
+
+
 

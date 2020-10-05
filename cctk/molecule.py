@@ -1648,19 +1648,20 @@ class Molecule:
         else:
             return optimized
 
-    def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False):
+    def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False, use_tempdir=True):
         """
         Optimize molecule at the GFN2-xtb level of theory.
 
         Args:
             nprocs (int): number of processors to use
             constraints (list): atoms numbers to freeze
-            noncovalent (Bool): whether or not to use non-covalent settings
+            noncovalent (bool): whether or not to use non-covalent settings
             logfile (str): file to write ongoing ``crest`` output to
+            use_tempdir (bool): write intermediate files to hidden directory (as opposed to current directory)
 
         Returns
             ConformationalEnsemble
         """
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
-        return opt.csearch(self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile)
+        return opt.csearch(molecule=self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile, use_tempdir=use_tempdir)
