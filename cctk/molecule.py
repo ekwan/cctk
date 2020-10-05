@@ -35,7 +35,6 @@ class Molecule:
         bonds (nx.Graph or list of tuples): connectivity graph or list of 2-tuples, with each element representing the 1-indexed atom number of a bonded pair
         charge (int): the charge of the molecule
         multiplicity (int): the spin state of the molecule (1 corresponds to singlet, 2 to doublet, 3 to triplet, etc. -- so a multiplicity of 1 is equivalent to S=0)
-        checks (bool): whether to check that the constructor parameters are valid
         vibrational_modes (list of cctk.VibrationalMode): vibrational modes
     """
 
@@ -44,6 +43,9 @@ class Molecule:
         Create new Molecule object, and assign connectivity if needed.
 
         ``bonds`` must be a list of edges (i.e. an n x 2 ``numpy`` array).
+
+        If ``checks`` is True, the atomic numbers in bonds will all be checked for consistency.
+        This option can be disabled by setting ``checks`` to False, but this is not recommended for external data.
         """
         if len(atomic_numbers) != len(geometry):
             raise ValueError(f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}")
@@ -1665,3 +1667,12 @@ class Molecule:
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
         return opt.csearch(molecule=self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile, use_tempdir=use_tempdir)
+
+    def num_neighbors_by_atom(self):
+        """
+        Returns a list of the number of neighbors of each atom.
+        """
+        result = []
+        for i in range(self.num_atoms()):
+            result.append(len(self.get_adjacent_atoms(i)))
+        return result

@@ -41,6 +41,7 @@ def main():
     parser.add_argument("--h", action="store_true")
     parser.add_argument("--standard_state", action="store_true", default=False)
     parser.add_argument("--correct_gibbs", action="store_true", default=False)
+    parser.add_argument("--sort", action="store_true", default=False)
     parser.add_argument("filename")
     args = vars(parser.parse_args(sys.argv[1:]))
 
@@ -83,12 +84,18 @@ def main():
     if not isinstance(values[0], list):
         values = [values]
 
-    df = pd.DataFrame(values, columns=property_names).fillna("")
+    df = pd.DataFrame(values, columns=property_names)
     df.sort_values("filename", inplace=True)
 
+    if args["correct_gibbs"]:
+        df.rename(columns={"quasiharmonic_gibbs_free_energy": "gibbs_free_energy"}, inplace=True)
+
     if args["g"]:
-        df["rel_energy"] = (df.quasiharmonic_gibbs_free_energy - df.quasiharmonic_gibbs_free_energy.min()) * 627.509469
+        print(df.columns)
+        df = df.dropna(subset=["gibbs_free_energy"])
+        df["rel_energy"] = (df.gibbs_free_energy - df.gibbs_free_energy.min()) * 627.509469
     elif args["h"]:
+        df = df.dropna(subset=["enthalpy"])
         df["rel_energy"] = (df.enthalpy - df.enthalpy.min()) * 627.509469
     else:
         try:
@@ -96,10 +103,11 @@ def main():
         except:
             df["rel_energy"] = 0
 
-    if args["correct_gibbs"]:
-        df.rename(columns={"rms_displacement": "rms_disp", "quasiharmonic_gibbs_free_energy": "GFE"}, inplace=True)
-    else:
-        df.rename(columns={"rms_displacement": "rms_disp", "gibbs_free_energy": "GFE"}, inplace=True)
+    if args["sort"]:
+        df.sort_values("rel_energy", inplace=True)
+
+    df.fillna("")
+    df.rename(columns={"rms_displacement": "rms_disp", "gibbs_free_energy": "GFE"}, inplace=True)
 
     if args["standard_state"]:
         # convert to 1 M standard state = 6.354 e.u. * 298 K / 4184 J/kcal

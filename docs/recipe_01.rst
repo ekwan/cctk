@@ -151,7 +151,7 @@ Using Custom Basis Sets from the Basis Set Exchange
 
 """""""""""""""""""""""""""
 Creating Molecules By Name
-""""""""""""""""""""""""""
+"""""""""""""""""""""""""""
 
 - If ``rdkit`` is installed, then molecules can be created from a name or SMILES string. Structures should be checked for sanity!
 

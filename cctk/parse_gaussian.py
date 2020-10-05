@@ -11,7 +11,7 @@ from cctk.helper_functions import get_symbol, get_number, get_corrected_free_ene
 Functions to help with parsing Gaussian files
 """
 
-def read_nmr_shifts(lines, num_atoms):
+def read_nmr_shifts(blocks, num_atoms):
     """
     Helper method to search through output file and read NMR shifts.
     Args:
@@ -19,26 +19,44 @@ def read_nmr_shifts(lines, num_atoms):
         num_atoms (int): number of atoms expected
     Returns:
         list of isotropic NMR shifts (np.ndarray)
+        list of shielding tensors (list of 3x3 np.ndarray)
     """
     # assumes that lines only come from one Link1 section
     shieldings = []
-    for line in lines:
-        fields = line.split()
-        if len(fields) == 8 and fields[2] == "Isotropic" and fields[5] == "Anisotropy":
+    tensors = []
+    for block in blocks:
+        lines = block.split("\n")
+        tensor = np.zeros(shape=(3,3))
+        for line in lines:
             fields = line.split()
-            assert len(fields) == 8, f"Expected 8 fields on an NMR shielding output line but found {len(fields)} instead!"
-            try:
-                shielding = float(fields[4])
-            except:
-                raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
-            shieldings.append(shielding)
+            # there are 8 on each line but we truncate the first 2 in the block selection process
+            if len(fields) == 6 and fields[0] == "Isotropic" and fields[3] == "Anisotropy":
+                fields = line.split()
+                assert len(fields) == 6, f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
+                try:
+                    shielding = float(fields[2])
+                except:
+                    raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
+                shieldings.append(shielding)
+
+        # yes, this is very elegant.
+        tensor[0][0] = float(re.search("XX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][1] = float(re.search("XY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][2] = float(re.search("XZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][0] = float(re.search("YX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][1] = float(re.search("YY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][2] = float(re.search("YZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][0] = float(re.search("ZX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][1] = float(re.search("ZY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensors.append(tensor)
 
     if len(shieldings) is not 0:
         assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
-        return np.asarray(shieldings)
+        return np.asarray(shieldings), tensors
     else:
         #### we can catch this problem later if the file is finished
-        return None
+        return None, None
 
 def split_link1(filename):
     """
@@ -106,6 +124,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         ["Mulliken charges", "Sum of Mulliken charges", 1],
         ["Electronic spatial extent", "Quadrupole moment", 1], #10
         ["normal coordinates", "Thermochemistry", 1],
+        ["Isotropic", "Eigenvalues", 1000],
     ]
 
     word_matches = [[] for _ in words]
@@ -289,9 +308,10 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
             properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
 
     if cctk.GaussianJobType.NMR in job_types:
-        nmr_shifts = read_nmr_shifts(word_matches[16], molecules[0].num_atoms())
+        nmr_shifts, shielding_tensors = read_nmr_shifts(block_matches[12], molecules[0].num_atoms())
         if nmr_shifts is not None:
             properties[-1]["isotropic_shielding"] = nmr_shifts.view(cctk.OneIndexedArray)
+            properties[-1]["shielding_tensors"] = shielding_tensors
 
         if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search("nmr=spinspin", f.route_card,flags=re.IGNORECASE):
             couplings = read_j_couplings(block_matches[6], molecules[0].num_atoms())
@@ -304,7 +324,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types:
-        if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
+        if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card) and len(block_matches[8]) > 0:
             charges, spins = parse_hirshfeld(block_matches[8])
             properties[-1]["hirshfeld_charges"] = charges
             properties[-1]["hirshfeld_spins"] = spins
@@ -467,6 +487,10 @@ def parse_charges_dipole(mulliken_block, dipole_block):
 def parse_hirshfeld(hirshfeld_block):
     charges = []
     spins = []
+
+    if len(hirshfeld_block) == 0:
+        return None, None
+
     for line in hirshfeld_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
@@ -567,3 +591,75 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
         modes.append(cctk.VibrationalMode(frequency=f, reduced_mass=m, force_constant=k, displacements=d))
 
     return modes
+
+def read_j_couplings(lines, n_atoms):
+    """
+    Helper method to search through output file and read J couplings
+    Args:
+        lines (list): list of lines in file
+        n_atoms (int): how many atoms are in the molecule
+    Returns:
+        ``couplings`` symmetric 2D np.array of couplings (in Hz) with zero-indexed atoms on both axes
+        or None if no couplings were found
+    """
+    couplings = np.zeros((n_atoms,n_atoms))
+    n_full_blocks, lines_in_partial_block = divmod(n_atoms,5)
+    n_lines = 5 * (n_full_blocks * (n_full_blocks+1) / 2) + n_full_blocks + 1
+    if lines_in_partial_block > 0:
+        n_lines += 1 + lines_in_partial_block
+    n_lines = int(n_lines)
+
+    lines = lines[0].split("\n")
+
+    i = 0
+    read_column_indices = False
+    read_row = False
+    this_column_indices = []
+    while i < n_lines:
+        # get current line
+        line = lines[i]
+
+        # if this is the header, we should be reading the column indices next
+        if "Total nuclear spin-spin coupling J (Hz):" in line:
+            i += 1
+            read_column_indices = True
+            continue
+
+        # this is not the header, so split the fields
+        fields = line.split()
+
+        # read the column indices
+        if read_column_indices:
+#            this_n_columns = len(fields)
+            this_column_indices = [ int(j)-1 for j in fields ]
+            i += 1
+            read_column_indices = False
+            read_row = True
+            continue
+        elif read_row:
+            row = int(fields[0])-1
+            for j,value in enumerate(fields[1:]):
+                column = this_column_indices[j]
+                value = value.replace("D","E")
+                value = float(value)
+                couplings[row,column] = value
+                couplings[column,row] = value
+
+            # check if we have read the entire matrix
+            if row == n_atoms - 1 and column == n_atoms - 1:
+                break
+
+            # check if this is the end of the current block
+            if row == n_atoms - 1:
+                read_column_indices = True
+                read_row = False
+                i += 1
+                continue
+
+            read_row = True
+            i += 1
+            continue
+        else:
+            raise ValueError("impossible")
+
+    return couplings
