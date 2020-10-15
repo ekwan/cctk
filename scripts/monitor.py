@@ -1,67 +1,45 @@
-import sys
-import numpy as np
-from cctk import GaussianFile, Molecule
+import sys, cctk
+import pandas as pd
+from asciichartpy import plot
 
 #### This is a script to monitor the output of Gaussian files. 
-#### In contrast to ``analyze.py``, this script analyzes only a *single* file in depth. 
-#### If the file has not successfully achieved SCF convergence at least once, this file will not display any information. 
-#### usage: ``python monitor.py path/to/output.out``
+#### In contrast to ``analyze.py``, this script analyzes only one file! 
+
+#### Usage: ``python monitor.py path/to/output.out``
 
 #### Corin Wagen and Eugene Kwan, 2019
 
 filename = sys.argv[1]
-print(f"reading file {filename}")
-try:
-    output_file = GaussianFile.read_file(filename)
+print(f"\n\033[3mreading {filename}:\033[0m")
 
-    energies = output_file.energies
-    scf_iter = output_file.scf_iterations
-    rms_displacements = output_file.rms_displacements
-    rms_forces = output_file.rms_forces
+output_file = cctk.GaussianFile.read_file(filename, extended_opt_info=True)
+if isinstance(output_file, list):
+    output_file = output_file[-1]
+print(f"{output_file.successful_terminations} successful terminations")
+print(f"{output_file.num_imaginaries()} imaginary frequencies")
+if output_file.num_imaginaries():
+    freqs = [f"{f:.1f} cm-1" for f in output_file.imaginaries()]
+    for f in freqs:
+        print(f"\t{f}")
 
-    if len(energies) > len(rms_forces):
-        #### sometimes you just catch the job in the middle
-        if len(rms_forces) == 0:
-            raise ValueError("not all necessary parameters calculated yet") 
+print("\n\033[3manalysis:\033[0m")
+print(f"{len(output_file.ensemble)} iterations completed")
+property_names = ["scf_iters", "energy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "rms_gradient"]
 
-        energies = energies[:len(rms_forces)-1]
-        scf_iter = scf_iter[:len(rms_forces)-1]
-        rms_displacements = rms_displacements[:len(rms_forces)-1]
+properties = output_file.ensemble[:,property_names]
+if len(output_file.ensemble) == 1:
+    properties = [properties]
+df = pd.DataFrame(properties, columns=property_names).fillna(0)
+df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
 
-    if output_file.success:
-        print("Optimization converged!")
-        print(f"{output_file.num_imaginaries()} imaginary frequencies")
-   
-    #### often you care about the largest atom and its neighbors... so this will automatically print that bond distance 
-    mol = output_file.molecules[0]
-    biggest_atom = np.argmax(mol.atomic_numbers) + 1
-    nearby_atoms = mol.get_adjacent_atoms(biggest_atom)
-    biggest_nearby_atom = nearby_atoms[np.argmax([mol.atomic_numbers[x] for x in nearby_atoms])]
+print("\n\033[1mENERGY (kcal/mol):\033[0m")
+print(plot(df["rel_energy"], {"height": 12, "format": " {:8.2f} "}))
 
-    print("{0:5} {1:20} {2:20} {3:15} {4:15} {5:20} {6:15}".format(
-        "#", 
-        "Energy (Hartree)", 
-        "Rel Energy (kcal)", 
-        "SCF Cycles", 
-        "RMS Force", 
-        "RMS Displacement", 
-        f"Distance({mol.atom_string(biggest_atom)},{mol.atom_string(biggest_nearby_atom)})"
-    ))
+print("\n\033[1mRMS GRADIENT:\033[0m")
+print(plot(df["rms_gradient"], {"height": 12, "format": " {:8.6f} "}))
 
-    distances = output_file.molecules.get_geometric_parameters('distance',biggest_atom,biggest_nearby_atom)
+print("\n\033[1mRMS FORCE:\033[0m")
+print(plot(df["rms_force"], {"height": 12, "format": " {:8.6f} "}))
 
-    min_energy = np.min(energies)
-    for i, energy in enumerate(energies):
-        rel_energy = (energy - min_energy) * 627.509 #### convert to kcal
-        print("{0:5d} {1:20.5f} {2:20.5f} {3:15d} {4:15.5f} {5:20.5f} {6:15.3f}".format(
-            i+1, 
-            energy, 
-            rel_energy, 
-            scf_iter[i], 
-            rms_forces[i], 
-            rms_displacements[i], 
-            distances[i]
-        ))
-
-except ValueError as e:
-    print(f"job has not finished any iterations: {e}")
+print("\n\033[1mRMS DISPLACEMENT:\033[0m")
+print(plot(df["rms_displacement"], {"height": 12, "format": " {:8.4f} "}))

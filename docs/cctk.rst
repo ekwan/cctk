@@ -1,117 +1,57 @@
+.. _cctk:
+
+.. |br| raw:: html
+
+  <br/>
+
+.. currentmodule:: cctk
+
 cctk package
 ============
 
-Subpackages
------------
+This section describes the *cctk* API.  Please program responsibly.
 
-.. toctree::
+"""""""""""
+*cctk* Core
+"""""""""""
 
-   cctk.data
+*These are the core classes that represent molecules and collections of molecules in cctk*
 
-Submodules
-----------
+.. autosummary::
+    :nosignatures:
+    :toctree: _autosummary
 
-cctk.DEPRECATED\_cctk module
-----------------------------
+    Molecule <molecule.Molecule>
+    Ensemble <ensemble.Ensemble>
+    ConformationalEnsemble <ensemble.ConformationalEnsemble>
+ 
+"""""
+Files
+"""""
 
-.. automodule:: cctk.DEPRECATED_cctk
-   :members:
-   :undoc-members:
-   :show-inheritance:
+*These classes enable input/output functions.*
 
-cctk.ensemble module
---------------------
+.. autosummary::
+    :nosignatures:
+    :toctree: _autosummary 
 
-.. automodule:: cctk.ensemble
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    File <file.File>
+    GaussianJobType <gaussian_file.GaussianJobType>
+    GaussianFile <gaussian_file.GaussianFile>
+    MAEFile <mae_file.MAEFile>
+    MOL2File <mol2_file.MOL2File>
+    XYZFile <xyz_file.XYZFile>
 
-cctk.file module
-----------------
+"""""""""""""
+Miscellaneous
+"""""""""""""
 
-.. automodule:: cctk.file
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autosummary::
+    :nosignatures:
+    :toctree: _autosummary
 
-cctk.gaussian\_file module
---------------------------
+    Group <group.Group>
+    helper_functions
+    
+|br|
 
-.. automodule:: cctk.gaussian_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.group module
------------------
-
-.. automodule:: cctk.group
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.group\_substitution module
--------------------------------
-
-.. automodule:: cctk.group_substitution
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.helper\_functions module
------------------------------
-
-.. automodule:: cctk.helper_functions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.mae\_file module
----------------------
-
-.. automodule:: cctk.mae_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.mol2\_file module
-----------------------
-
-.. automodule:: cctk.mol2_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.molecule module
---------------------
-
-.. automodule:: cctk.molecule
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.parse\_gaussian module
----------------------------
-
-.. automodule:: cctk.parse_gaussian
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cctk.xyz\_file module
----------------------
-
-.. automodule:: cctk.xyz_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: cctk
-   :members:
-   :undoc-members:
-   :show-inheritance:

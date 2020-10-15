@@ -1,7 +1,6 @@
-import sys, os, argparse, glob, re, copy
-import numpy as np
+import sys, argparse, glob, re,
 
-from cctk import GaussianFile, Molecule, Group, XYZFile
+from cctk import GaussianFile
 from cctk.load_groups import load_group
 from cctk.Group import add_group_to_molecule
 

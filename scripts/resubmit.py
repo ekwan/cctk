@@ -1,15 +1,14 @@
 import sys, argparse, re, glob
-import numpy as np
 
-from cctk import GaussianFile, Molecule
+from cctk import GaussianFile
 
 #### This is a script to resubmit failed Gaussian files.
 #### Parameters:
 #### ``--type, -t``: which jobs to resubmit 
 ####     "failed": will resubmit jobs with no successes
-####     "all": will resubmit all jobs
+####     "all": will resubmit all jobs (default)
 #### ``--perturb, -p``: whether or not to apply a random geometric perturbation to each job
-#### ``--output, -o``: output file (only one)
+#### ``--output, -o``: name of output file (don't use with multiple output files!)
 
 #### Usage: ``python resubmit.py --type all --perturb "path/to/output/*.out"``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
@@ -33,9 +32,11 @@ for filename in glob.iglob(args["filename"], recursive=True):
 
     try:
         output_file = GaussianFile.read_file(filename)
+        if isinstance(output_file, list):
+            output_file = output_file[-1]
         if args["perturb"]:
             output_file.get_molecule().perturb()
-        success = output_file.success
+        success = output_file.successful_terminations
 
         if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
             newfile = filename.rsplit('/',1)[-1]
@@ -47,5 +48,5 @@ for filename in glob.iglob(args["filename"], recursive=True):
             output_file.write_file(newfile)
             print(f"{filename} > {newfile}")
 
-    except:
-        print(f"can't read file {filename}!")
+    except Exception as e:
+        print(f"can't read file {filename}!\n{e}")

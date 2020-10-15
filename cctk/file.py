@@ -1,15 +1,12 @@
-import sys
 import os
-import re
-import numpy as np
-
 from abc import ABC, abstractmethod
+
 
 class File(ABC):
     """
-    Represents a text file for use as input or output to another program like Gaussian.
-    This class is abstract.
+    Abstract class representing text files.
     """
+
     @abstractmethod
     def __init__(self):
         pass
@@ -29,13 +26,12 @@ class File(ABC):
         """
         if not isinstance(text, str):
             raise TypeError("cannot write non-string to file!")
-            return False
 
         if not overwrite_existing and os.path.exists(filename):
             raise ValueError(f"{filename} already exists but not allowed to overwrite")
         else:
             try:
-                with open(filename, 'w+') as output_file:
+                with open(filename, "w+") as output_file:
                     output_file.write(text)
                 return True
             except OSError as e:
@@ -43,8 +39,34 @@ class File(ABC):
                 return False
 
     @staticmethod
-    def read_file(filename):
-        '''
+    def append_to_file(filename, text):
+        """
+        Appends output text to a file.
+
+        Args:
+            filename (str): path to file, including name (e.g. ``path/to/input.gjf``)
+            text (str): desired contents of file
+
+        Returns:
+            ``True`` if write succeeded, ``False`` otherwise
+        """
+        if not isinstance(text, str):
+            raise TypeError("cannot write non-string to file!")
+
+        if os.path.exists(filename):
+            try:
+                with open(filename, "a+") as output_file:
+                    output_file.write(text)
+                return True
+            except OSError as e:
+                print(e)
+                return False
+        else:
+            raise ValueError(f"{filename} does not exist")
+
+    @staticmethod
+    def read_file(filename, lazy=False):
+        """
         Reads a file and parses into lines.
 
         Args:
@@ -52,7 +74,8 @@ class File(ABC):
 
         Returns:
             A list containing all the lines in the file.
-        '''
-        with open(filename, 'r') as filehandle:
+        """
+        with open(filename, "r") as filehandle:
             lines = filehandle.read().splitlines()
             return lines
+

@@ -1,0 +1,8 @@
+numpy
+scipy
+networkx
+importlib_resources
+sphinx==2.2
+sphinx_bootstrap_theme
+pyahocorasick
+basis_set_exchange

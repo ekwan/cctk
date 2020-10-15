@@ -1,0 +1,3 @@
+include README.md
+recursive-include cctk/groups *
+recursive-include cctk/data *

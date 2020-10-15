@@ -1,0 +1,11 @@
+%nprocshared=1
+%mem=4GB
+#p opt pop=hirshfeld b3lyp/6-31g(d)
+
+title
+
+0 1
+O 0.0 0.0 0.0
+H 1.0 0.0 0.0
+H 0.0 1.0 0.0
+

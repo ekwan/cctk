@@ -1,16 +1,13 @@
-import sys
 import re
 import numpy as np
 
-from abc import abstractmethod
-
-from cctk import File, Molecule
-from cctk.helper_functions import get_symbol, compute_distance_between, compute_angle_between, compute_dihedral_between, get_number
+import cctk
+from cctk.helper_functions import get_symbol, get_number
 
 
-class XYZFile(File):
+class XYZFile(cctk.File):
     """
-    Generic class for all xyz files.
+    Class representing plain ``.xyz`` files.
 
     Attributes:
         title (str): the title from the file
@@ -18,7 +15,7 @@ class XYZFile(File):
     """
 
     def __init__(self, molecule, title=None):
-        if molecule and isinstance(molecule, Molecule):
+        if molecule and isinstance(molecule, cctk.Molecule):
             self.molecule = molecule
         if title and (isinstance(title, str)):
             self.title = title
@@ -29,47 +26,112 @@ class XYZFile(File):
         Factory method to create new XYZFile instances.
         """
         lines = super().read_file(filename)
-        num_atoms = 0
 
+        return cls.file_from_lines(lines)
+
+    @classmethod
+    def file_from_lines(cls, lines):
+        num_atoms = 0
         try:
             num_atoms = int(lines[0])
         except:
             raise ValueError("can't get the number of atoms from the first line!")
 
-        assert num_atoms == (len(lines) - 2), "wrong number of atoms!"
-
         title = lines[1]
 
         atomic_numbers = np.zeros(shape=num_atoms, dtype=np.int8)
-        geometry = np.zeros(shape=(num_atoms,3))
+        geometry = np.zeros(shape=(num_atoms, 3))
 
         for index, line in enumerate(lines[2:]):
+            # ignore blank lines
+            if len(line.strip()) == 0:
+                continue
+
             pieces = list(filter(None, line.split(" ")))
             try:
-                atomic_numbers[index] = int(get_number(pieces[0]))
-                geometry[index][0]= float(pieces[1])
-                geometry[index][1]= float(pieces[2])
-                geometry[index][2]= float(pieces[3])
+                if re.match("[0-9]", pieces[0]):
+                    atomic_numbers[index] = int(pieces[0])
+                else:
+                    atomic_numbers[index] = int(get_number(pieces[0]))
+                geometry[index][0] = float(pieces[1])
+                geometry[index][1] = float(pieces[2])
+                geometry[index][2] = float(pieces[3])
             except:
-                raise ValueError(f"can't parse line {index+2}!")
+                raise ValueError(f"can't parse line {index+2}: {line}")
 
-        molecule = Molecule(atomic_numbers, geometry)
+        assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
+        molecule = cctk.Molecule(atomic_numbers, geometry)
         return XYZFile(molecule, title)
 
-    def write_file(self, filename):
+    @classmethod
+    def write_molecule_to_file(cls, filename, molecule, title="title"):
         """
-        Write a .xyz file, using object attributes. "title" will be used as the title if none is defined.
+        Write an ``.xyz`` file, using object attributes.
 
         Args:
             filename (str): path to the new file
+            molecule (Molecule): molecule to write
+            title (str): title of file
         """
-        text = f"{self.molecule.num_atoms()}\n"
-        try:
-            text += f"{self.title}\n"
-        except:
-            text += "title\n"
-        for index, line in enumerate(self.molecule.geometry):
-            text += "{:2s} {:.8f} {:.8f} {:.8f}\n".format(get_symbol(self.molecule.atomic_numbers[index]), line[0], line[1], line[2])
+        assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
+
+        text = f"{molecule.num_atoms()}\n"
+        text += f"{title}\n"
+
+        for index, Z in enumerate(molecule.atomic_numbers, start=1):
+            line = molecule.get_vector(index)
+            text += f"{get_symbol(Z):>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
         super().write_file(filename, text)
+
+    def write_file(self, filename):
+        """
+        Write an ``.xyz`` file, using object attributes.
+        """
+        self.write_molecule_to_file(filename, self.molecule, title=self.title)
+
+    @classmethod
+    def read_trajectory(cls, filename):
+        """
+        Read an ``.xyz`` trajectory file, which is just a bunch of concatenated ``.xyz`` files.
+        Currently the files must be separated by nothing (no blank line, just one after the other) although this may be changed in future.
+
+        Args:
+            filename (str): path to file
+
+        Returns:
+            list of ``cctk.XYZFile`` objects in the order they appear in the file
+        """
+        files = []
+        lines = super().read_file(filename)
+
+        current_lines = list()
+        for line in lines:
+            if re.search(r"^\s*\d+$", line):
+                if len(current_lines) > 0:
+                    files.append(cls.file_from_lines(current_lines))
+                    current_lines = list()
+            current_lines.append(line)
+
+        return files
+
+    @classmethod
+    def read_ensemble(cls, filename, conformational=False):
+        """
+        Alias for read_trajectory.
+        """
+        files = cls.read_trajectory(filename)
+
+        ensemble = None
+        if conformational:
+            ensemble = cctk.ConformationalEnsemble()
+        else:
+            ensemble = cctk.Ensemble()
+
+        for f in files:
+            ensemble.add_molecule(f.molecule)
+
+        return ensemble
+
+
 

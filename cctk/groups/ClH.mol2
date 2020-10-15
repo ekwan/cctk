@@ -1,0 +1,19 @@
+# Molecule Name
+# Created by GaussView 6.0.16
+#
+
+#
+#
+
+@<TRIPOS>MOLECULE
+Molecule Name
+2 1
+SMALL
+NO_CHARGES
+
+
+@<TRIPOS>ATOM
+1 Cl1     0.2861     0.4087     0.0000 Cl
+2 H2    -1.0039     0.4087     0.0000 H
+@<TRIPOS>BOND
+1 1 2 1

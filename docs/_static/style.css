@@ -1,0 +1,47 @@
+p {
+  font-size: 16px;
+}
+
+li { 
+  font-size: 16px;
+}
+
+.line {
+  font-size: 14px;
+}
+
+td {
+  padding: 4px;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h2 {
+  font-size: 22px;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 18px;
+}
+
+h5 {
+  font-size: 18px;
+}
+
+h6 {
+  font-size: 18px;
+}
+
+blockquote {
+  border-left: 0px;
+}
+
+.full-width-table {
+  width: 95%;
+}

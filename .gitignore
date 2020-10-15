@@ -2,6 +2,7 @@
 *.pyc
 corin_notes
 docs/_build/*
+docs/_autosummary/*
 cctk/scripts/scan_angle/*
 pyproject.toml
 *.swp
@@ -18,3 +19,11 @@ tutorial/*nics_ene/IRC*
 tutorial/*nics_ene/starting*
 tutorial/*nics_ene/nics*
 tutorial/*nics_ene/pop*
+dist/*
+MANIFEST
+__pycache__/
+*.py[cod]
+test/static/phenylpropane*.gjf
+test/static/phenylpropane*.mol2
+cctk.egg-info/*
+test/static/renumber_error*.gjf

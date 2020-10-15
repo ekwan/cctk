@@ -1,21 +1,22 @@
-.. cctk documentation master file, created by
-   sphinx-quickstart on Wed Oct 23 16:02:25 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. This is the main landing page for the cctk documentation.
+   It should contain the root `toctree` directive.
 
-Welcome to cctk's documentation!
-================================
+.. _index:
+.. |br| raw:: html
 
-.. toctree::
-   :maxdepth: 4
-   :caption: Contents:
+  <br/>
 
-   cctk
+.. |nbsp| raw:: html
 
+   &nbsp;
 
-Indices and tables
-==================
+===========================================================================================
+`cctk <https://www.github.com/ekwan/cctk>`_: a Python-based computational chemistry toolkit
+===========================================================================================
 
-* :ref:`genindex`
-* :ref:`modindex`
+This is the main documentation page for *cctk*.  Try the `quick start <quick-start.html>`_ guide
+to get going right away or peruse the `overview <overview.html>`_ to learn more details.
+
+* :ref:`genindex` of all API members
 * :ref:`search`
+

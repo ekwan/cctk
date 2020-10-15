@@ -1,7 +1,11 @@
-import sys, re, glob
+import sys, re, glob, cctk, argparse
 import numpy as np
+import pandas as pd
+import multiprocessing as mp
+from multiprocessing import freeze_support
 
-from cctk import GaussianFile, Molecule
+from tabulate import tabulate
+from tqdm import tqdm
 
 #### This is a script to monitor the output of Gaussian files. 
 #### In contrast to ``monitor.py``, this script analyzes many files! 
@@ -14,64 +18,112 @@ from cctk import GaussianFile, Molecule
 
 #### Corin Wagen and Eugene Kwan, 2019
 
-filenames = sys.argv[1]
-info = []
-text_width = 70
-
-for filename in sorted(glob.glob(filenames, recursive=True)):
-    if re.search("slurm", filename):
-        continue
-
+def read(file):
+    if re.match("slurm", file):
+        return
     try:
-        output_file = GaussianFile.read_file(filename)
+        output_file = cctk.GaussianFile.read_file(file)
+        if isinstance(output_file, list):
+            if len(output_file) > 0:
+                output_file = output_file[-1]
+            else:
+                return
+        return output_file
+    except Exception as e:
+        print(f"Error reading {file}\n{e}")
+        return
 
-        energy = output_file.energies[-1]
-        iters = len(output_file.energies)
-        rms_disp  = 0
-        rms_force = 0
+def main():
+    results = cctk.Ensemble()
 
+    parser = argparse.ArgumentParser(prog="analyze.py")
+    parser.add_argument("--g", action="store_true")
+    parser.add_argument("--h", action="store_true")
+    parser.add_argument("--standard_state", action="store_true", default=False)
+    parser.add_argument("--correct_gibbs", action="store_true", default=False)
+    parser.add_argument("--sort", action="store_true", default=False)
+    parser.add_argument("filename")
+    args = vars(parser.parse_args(sys.argv[1:]))
+
+    print("\n\033[3mreading files:\033[0m")
+
+    files = glob.glob(args["filename"], recursive=True)
+
+    pool = mp.Pool(processes=16)
+    for output_file in tqdm(pool.imap(read, files), total=len(files)):
+        molecule = None
+        if output_file is None or (isinstance(output_file, list) and len(output_file) == 0):
+            continue
+        if output_file.successful_terminations:
+            results.add_molecule(*list(output_file.ensemble.items())[-1])
+            molecule = output_file.ensemble.molecules[-1]
+        elif len(output_file.ensemble) > 1:
+            results.add_molecule(*list(output_file.ensemble.items())[-2])
+            molecule = output_file.ensemble.molecules[-2]
+        elif len(output_file.ensemble) == 1:
+            results.add_molecule(*list(output_file.ensemble.items())[-1])
+            molecule = output_file.ensemble.molecules[-1]
+        else:
+            continue
+        results[molecule, "iters"] = len(output_file.ensemble)
+        results[molecule, "success"] = output_file.successful_terminations
+        results[molecule, "imaginary"] = output_file.imaginaries()
+
+    if len(results) == 0:
+        print("no jobs to analyze!")
+        exit()
+
+    print("\n\n\033[3manalysis:\033[0m\n")
+    property_names = None
+    if args["correct_gibbs"]:
+        property_names = ["filename", "iters", "energy", "enthalpy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+    else:
+        property_names = ["filename", "iters", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+
+    values = results[:, property_names]
+    if not isinstance(values[0], list):
+        values = [values]
+
+    df = pd.DataFrame(values, columns=property_names)
+    df.sort_values("filename", inplace=True)
+
+    if args["correct_gibbs"]:
+        df.rename(columns={"quasiharmonic_gibbs_free_energy": "gibbs_free_energy"}, inplace=True)
+
+    if args["g"]:
+        print(df.columns)
+        df = df.dropna(subset=["gibbs_free_energy"])
+        df["rel_energy"] = (df.gibbs_free_energy - df.gibbs_free_energy.min()) * 627.509469
+    elif args["h"]:
+        df = df.dropna(subset=["enthalpy"])
+        df["rel_energy"] = (df.enthalpy - df.enthalpy.min()) * 627.509469
+    else:
         try:
-            rms_disp = output_file.rms_displacements[-1]
-            rms_force = output_file.rms_forces[-1]
+            df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
         except:
-            pass
+            df["rel_energy"] = 0
 
-        success = "NO"
-        if output_file.success:
-            success = output_file.success
+    if args["sort"]:
+        df.sort_values("rel_energy", inplace=True)
 
-        imaginaries = "--"
-        try:
-            if output_file.num_imaginaries() > 0:
-                if output_file.num_imaginaries() > 1:
-                    imaginaries = ", ".join(output_file.imaginaries())
-                else:
-                    imaginaries = output_file.imaginaries()[0]
-        except:
-            #### Will raise ValueError if job is not of type "FREQ"
-            pass
+    df.fillna("")
+    df.rename(columns={"rms_displacement": "rms_disp", "gibbs_free_energy": "GFE"}, inplace=True)
 
-        info.append([filename[-text_width:], energy, energy * 627.509, iters, rms_force, rms_disp, success, imaginaries])
+    if args["standard_state"]:
+        # convert to 1 M standard state = 6.354 e.u. * 298 K / 4184 J/kcal
+        df["GFE"] = df["GFE"].apply(lambda x: f"{x - (0.4526 / 627.509):.5f}" if isinstance(x, float) else "")
+    else:
+        df["GFE"] = df["GFE"].apply(lambda x: f"{x:.5f}" if isinstance(x, float) else "")
 
-    except:
-        info.append([filename[-text_width:], 0, 0, 0, '', '', "NO", ''])
+    df["filename"] = df["filename"].apply(lambda x: x[-60:])
+    df["rms_force"] = df["rms_force"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.0001 else f"\033[93m{x}\033[0m")
+    df["rms_disp"] = df["rms_disp"].apply(lambda x: f"\033[92m{x}\033[0m" if float(x or 0) < 0.003 else f"\033[93m{x}\033[0m")
+    df["success"] = df["success"].apply(lambda x: f"\033[92m{x}\033[0m" if x else f"\033[93m{x}\033[0m")
 
+    df.columns = [f"\033[1m{c}\033[0m" for c in df.columns]
+    print(tabulate(df, headers="keys", tablefmt="presto", floatfmt=".5f"))
 
-if len(info) > 0:
-    min_energy = np.min([x[2] for x in info])
-    def adjust_energy(row):
-        if row[2] < 0:
-            row[2] = row[2] - min_energy
-        return row
+if __name__ == '__main__':
+    freeze_support()
+    main()
 
-    info = list(map(adjust_energy, info))
-
-    print("{0:{text_width}}    {1:16}    {2:17}    {3:10}    {4:9}    {5:16}    {6:10}     {7:>15}".format(
-        "File", "Energy (Hartree)", "Rel Energy (kcal)", "Iterations", "RMS Force", "RMS Displacement", "Success?", "Imaginaries?", text_width=text_width
-    ))
-
-    for row in info:
-        print("{0:{text_width}}    {1:16.4f}    {2:17.2f}    {3:10}    {4:9}    {5:16}    {6:>10}     {7:>15}".format(*row, text_width=text_width))
-
-else:
-    print("no jobs to analyze!")
