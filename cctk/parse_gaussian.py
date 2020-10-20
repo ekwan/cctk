@@ -102,6 +102,8 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         "Frequencies",
         "Temperature", #15
         "Isotropic",
+        "EUMP2",
+        "UMP4(SDTQ)",
     ]
 
     #### And here are the blocks of text
@@ -212,6 +214,12 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
     success, elapsed_time = parse_success_elapsed_time(word_matches[2], word_matches[3])
     charge, multip = parse_charge_multiplicity(word_matches[4])
     bonds = parse_bonds(block_matches[5])
+
+    # post-HF methods give weird energies
+    if re.search("mp2", route_card, re.IGNORECASE):
+        energies = parse_mp2_energies(word_matches[17])
+    elif re.search("mp4", route_card, re.IGNORECASE):
+        energies = parse_mp4_energies(word_matches[18])
 
     f = cctk.GaussianFile(job_types=job_types, route_card=route_card, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
 
@@ -663,3 +671,21 @@ def read_j_couplings(lines, n_atoms):
             raise ValueError("impossible")
 
     return couplings
+
+def parse_mp2_energies(lines):
+    energies = []
+    for line in lines:
+        pieces = list(filter(None, line.split(" ")))
+        energy_str = pieces[5]
+        energy_str = re.sub("D", "E", energy_str)
+        energies.append(float(energy_str))
+    return energies
+
+def parse_mp4_energies(lines):
+    energies = []
+    for line in lines:
+        pieces = list(filter(None, line.split(" ")))
+        energy_str = pieces[3]
+        energy_str = re.sub("D", "E", energy_str)
+        energies.append(float(energy_str))
+    return energies

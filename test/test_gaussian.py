@@ -159,6 +159,16 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.GaussianFile))
 
+    def test_post_hf(self):
+        path = "test/static/water_mp2.out"
+        file = cctk.GaussianFile.read_file(path)
+        emp2 = file.ensemble[-1,"energy"]
+        self.assertTrue(-76.19037 - emp2 < 0.0001)
+
+        path = "test/static/water_mp4.out"
+        file = cctk.GaussianFile.read_file(path)
+        emp4 = file.ensemble[-1,"energy"]
+        self.assertTrue(-76.20098 - emp4 < 0.0001)
 
 if __name__ == '__main__':
     unittest.main()
