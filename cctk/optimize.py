@@ -85,7 +85,6 @@ def csearch(use_tempdir=True, **kwargs):
     Args:
         molecule (cctk.Molecule): molecule of interest
         constraints (list): list of atom numbers to constrain
-        rotamers (bool): return all rotamers or group into distinct conformers
         nprocs (int): number of processors to use
         noncovalent (Bool): whether or not to use non-covalent settings
         logfile (str): file to write ongoing ``crest`` output to
@@ -118,28 +117,25 @@ def _do_csearch(molecule, nprocs, logfile, noncovalent, directory, constraints):
     if noncovalent:
         nci = "-nci"
 
+    command = None
     if constraints is not None:
         assert isinstance(constraints, list)
         assert all(isinstance(n, int) for n in constraints)
         command = f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
         result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
         result.check_returncode()
-
-    command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+        command = f"crest xtb-in.xyz --chrg {molecule.charge} -cinp .xcontrol.sample --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+    else:
+        command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
 
     if logfile:
         with open(logfile, "w") as f:
             result = sp.run(command, stdout=f, stderr=f, cwd=directory, shell=True)
     else:
         result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
-
     result.check_returncode()
 
-    if rotamers:
-        ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_rotamers.xyz")
-    else:
-        ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz")
-
+    ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz")
     return ensemble
 
 

@@ -4,8 +4,12 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 from cctk import MOL2File, Group
+<<<<<<< HEAD
+from . import data, groups
+=======
 
 from . import groups
+>>>>>>> 6e17773c6918d5ad05887b78cde95b9d99add7ce
 
 filenames = [
     "MeH.mol2",
