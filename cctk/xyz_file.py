@@ -64,7 +64,7 @@ class XYZFile(cctk.File):
         return XYZFile(molecule, title)
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, title="title"):
+    def write_molecule_to_file(cls, filename, molecule, title="title", append=False):
         """
         Write an ``.xyz`` file, using object attributes.
 
@@ -72,6 +72,7 @@ class XYZFile(cctk.File):
             filename (str): path to the new file
             molecule (Molecule): molecule to write
             title (str): title of file
+            append (Bool): whether or not to append to file
         """
         assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
 
@@ -82,7 +83,10 @@ class XYZFile(cctk.File):
             line = molecule.get_vector(index)
             text += f"{get_symbol(Z):>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
-        super().write_file(filename, text)
+        if append:
+            super().append_to_file(filename, text)
+        else:
+            super().write_file(filename, text)
 
     def write_file(self, filename):
         """
@@ -132,6 +136,4 @@ class XYZFile(cctk.File):
             ensemble.add_molecule(f.molecule)
 
         return ensemble
-
-
 
