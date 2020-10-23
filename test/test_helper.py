@@ -41,5 +41,19 @@ class TestHelper(unittest.TestCase):
         #delta = (-free_energy+corrected_free_energy)*627.509469
         #print(delta)
 
+    def test_avg_mw(self):
+        h_m = helper.get_avg_mass(1)
+        c_m = helper.get_avg_mass(6)
+        o_m = helper.get_avg_mass(8)
+        br_m = helper.get_avg_mass(35)
+
+        self.assertLess(abs(h_m - 1.008), 0.001)
+        self.assertLess(abs(c_m - 12.011), 0.001)
+        self.assertLess(abs(o_m - 15.999), 0.001)
+        self.assertLess(abs(br_m - 79.904), 0.001)
+
+        self.assertEqual(6, helper.get_z_from_mass(12.011))
+        self.assertEqual(11, helper.get_z_from_mass(22.9897))
+
 if __name__ == '__main__':
     unittest.main()

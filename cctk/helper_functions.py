@@ -45,7 +45,6 @@ with pkg_resources.open_text(data, "isotopes.csv") as isotope_file:
 
 INV_ELEMENT_DICTIONARY = {v: int(k) for k, v in ELEMENT_DICTIONARY.items()}
 
-
 def get_symbol(atomic_number):
     """
     Gets element symbol from a given atomic number.
@@ -298,7 +297,6 @@ def compute_RMSD(geometry1, geometry2, checks=True):
     if checks and len(geometry2) != len(geometry1):
         raise ValueError("can't compare two geometries with different lengths!")
 
-#    return np.trace(cdist(geometry1, geometry2)) / len(geometry1)
     return np.sqrt( np.sum( ( geometry1.view(np.ndarray) - geometry2.view(np.ndarray) ) ** 2) / len(geometry1) )
 
 def get_isotopic_distribution(z):
@@ -316,6 +314,24 @@ def get_isotopic_distribution(z):
     masses = list(ISOTOPE_DICTIONARY[z].keys())
     weights = list(ISOTOPE_DICTIONARY[z].values())
     return np.array(masses), np.array(weights)
+
+def get_avg_mass(z):
+    """
+    For an element with number ``z``, return average mass of that element.
+    """
+    masses, weights = get_isotopic_distribution(z)
+    return np.dot(masses, weights)
+
+def get_z_from_mass(desired_mass):
+    mass_dict = {}
+    for z in ISOTOPE_DICTIONARY.keys():
+        z = int(z)
+        mass = get_avg_mass(z)
+        if mass == 0:
+            continue
+
+        if abs(desired_mass - mass) < 0.001:
+            return z
 
 def draw_isotopologue(z):
     """
