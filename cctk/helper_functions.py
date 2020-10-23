@@ -322,7 +322,12 @@ def get_avg_mass(z):
     masses, weights = get_isotopic_distribution(z)
     return np.dot(masses, weights)
 
-def get_z_from_mass(desired_mass):
+def get_z_from_mass(desired_mass, tolerance=0.001):
+    """
+    For an element with atomic mass ``desired_mass``, return the element's atomic number.
+
+    Returns ``None`` if no mass within ``tolerance`` is found.
+    """
     mass_dict = {}
     for z in ISOTOPE_DICTIONARY.keys():
         z = int(z)
@@ -330,7 +335,7 @@ def get_z_from_mass(desired_mass):
         if mass == 0:
             continue
 
-        if abs(desired_mass - mass) < 0.001:
+        if abs(desired_mass - mass) < tolerance:
             return z
 
 def draw_isotopologue(z):
