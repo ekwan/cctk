@@ -68,6 +68,7 @@ def main():
         results[molecule, "iters"] = len(output_file.ensemble)
         results[molecule, "success"] = output_file.successful_terminations
         results[molecule, "imaginary"] = output_file.imaginaries()
+        results[molecule, "ts_atoms"] = molecule.atoms_moving_in_imaginary(return_string=False)
 
     if len(results) == 0:
         print("no jobs to analyze!")
@@ -76,9 +77,9 @@ def main():
     print("\n\n\033[3manalysis:\033[0m\n")
     property_names = None
     if args["correct_gibbs"]:
-        property_names = ["filename", "iters", "energy", "enthalpy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+        property_names = ["filename", "iters", "energy", "enthalpy", "quasiharmonic_gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary", "ts_atoms"]
     else:
-        property_names = ["filename", "iters", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary"]
+        property_names = ["filename", "iters", "energy", "enthalpy", "gibbs_free_energy", "rms_force", "rms_displacement", "success", "imaginary", "ts_atoms"]
 
     values = results[:, property_names]
     if not isinstance(values[0], list):
