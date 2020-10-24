@@ -1697,7 +1697,10 @@ class Molecule:
                 ts_mode = mode
 
         if ts_mode is None:
-            return None
+            if return_string:
+                return ""
+            else:
+                return None
 
         displacements = np.linalg.norm(ts_mode.displacements.view(np.ndarray), axis=-1)
 

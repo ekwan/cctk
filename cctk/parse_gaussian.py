@@ -516,7 +516,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
     displacements = list()
 
     if len(freq_block) == 0:
-        return None
+        return list()
 
     chunks = freq_block[0].split("Freq")
 
