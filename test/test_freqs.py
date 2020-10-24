@@ -75,3 +75,9 @@ class TestFrequencies(unittest.TestCase):
 
         self.assertTrue(after[1] < 0.005)
 
+    def test_imaginary(self):
+        path = "test/static/eliminationTS.out"
+        file = cctk.GaussianFile.read_file(path)
+        mol = file.get_molecule()
+
+        self.assertListEqual(mol.atoms_moving_in_imaginary(), [48,2,51])

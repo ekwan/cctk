@@ -1676,3 +1676,42 @@ class Molecule:
         for i in range(self.num_atoms()):
             result.append(len(self.get_adjacent_atoms(i)))
         return result
+
+    def atoms_moving_in_imaginary(self, max_num=5, percent_cutoff=0.03, return_string=False):
+        """
+        Returns atoms moving in imaginary, ranked by how much they're moving.
+
+        Args:
+            max_num (int): how many atoms max to return
+            percent_cutoff (float): threshold for what percent of total TS movement qualifies as "movement"
+            return_string (bool): whether or not to return a formatted string report
+
+        Returns:
+            list of atomic numbers or string
+        """
+        imaginary = 0
+        ts_mode = None
+        for mode in self.vibrational_modes:
+            if mode.frequency < imaginary:
+                imaginary = mode.frequency
+                ts_mode = mode
+
+        if ts_mode is None:
+            return None
+
+        displacements = np.linalg.norm(ts_mode.displacements.view(np.ndarray), axis=-1)
+
+        atoms_ranked = np.argsort(displacements)[::-1] + 1
+        percent_movement = np.sort(displacements)[::-1] / np.sum(displacements)
+
+        return_list, string = list(), ""
+        for atom, percent in zip(atoms_ranked, percent_movement):
+            if percent > percent_cutoff and len(return_list) <= max_num:
+                return_list.append(atom)
+                string += f"{self.atom_string(atom)} ({percent:.1%}), "
+            else:
+                if return_string:
+                    return string[:-2]
+                else:
+                    return return_list
+
