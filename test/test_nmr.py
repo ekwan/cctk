@@ -24,6 +24,9 @@ class TestNMR(unittest.TestCase):
         tensors = ensemble[:, "shielding_tensors"]
         self.assertEqual(tensors[0][0][0], 198.2259)
         self.assertEqual(tensors[1][0][0], 32.6869)
+        for shielding, tensor in zip(shieldings, tensors):
+            pred_shielding = np.trace(tensor)/3
+            self.assertTrue((shielding-pred_shielding < 0.001))
 
     def test_nmr2(self):
         # this file contains opt freq followed by Link1 NMR on methane
@@ -40,6 +43,11 @@ class TestNMR(unittest.TestCase):
         ensemble = second_link.ensemble
         shieldings = list(ensemble[-1,"isotropic_shielding"])
         self.assertListEqual(list(shieldings), [192.9242, 31.8851, 31.8851, 31.8851, 31.8851])
+
+        tensors = ensemble[:, "shielding_tensors"]
+        for shielding, tensor in zip(shieldings, tensors):
+            pred_shielding = np.trace(tensor)/3
+            self.assertTrue((shielding-pred_shielding < 0.001))
 
     def test_nmr3(self):
         # this file contains opt freq / Link1 NMR on ethane then Link1 single point NMR on methane
@@ -89,6 +97,11 @@ class TestNMR(unittest.TestCase):
         expected_shifts = np.asarray(expected_shifts)
         self.assertTrue((np.abs(scaled_shifts[0] - expected_shifts) <= 0.001).all())
         #print(shift_labels)
+
+        tensors = ensemble[:, "shielding_tensors"]
+        for shielding, tensor in zip(shieldings, tensors):
+            pred_shielding = np.trace(tensor)/3
+            self.assertTrue((shielding-pred_shielding < 0.001))
 
     def test_nmr5(self):
         # ensure all acetone files can be read

@@ -53,6 +53,8 @@ def read_nmr_shifts(blocks, num_atoms):
 
     if len(shieldings) is not 0:
         assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        for shielding, tensor in zip(shieldings, tensors):
+            assert 0.01 > abs(np.trace(tensor)/3 - shielding)
         return np.asarray(shieldings), tensors
     else:
         #### we can catch this problem later if the file is finished
@@ -453,7 +455,7 @@ def extract_parameter(lines, position, cast_to_float=True):
         if cast_to_float:
             try:
                 vals.append(float(pieces[position]))
-            except:
+            except Exception as e:
                 #### sometimes RMS Force comes thru as "******" for some reason
                 vals.append(0)
         else:
@@ -560,7 +562,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
                 displacements.append(d.view(cctk.OneIndexedArray))
 
         else:
-            current_displacements = [list() for x in re.split(" +", lines[0])[2:]]
+            current_displacements = [list() for _ in re.split(" +", lines[0])[2:]]
 
             freqs += re.split(" +", lines[0])[2:]
             masses += re.split(" +", lines[1])[4:]

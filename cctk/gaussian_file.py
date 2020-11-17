@@ -114,8 +114,10 @@ class GaussianFile(File):
             raise TypeError(f"elapsed_time invalid: {elapsed_time}")
 
         if job_types is not None:
+            if isinstance(job_types, str):
+                raise ValueError(f"invalid job_types {job_types} - did you mean to call GaussianFile.read_file({job_types})?")
             if not all(isinstance(job, GaussianJobType) for job in job_types):
-                raise TypeError(f"invalid job type {job}")
+                raise TypeError(f"invalid job_types {job_types}")
 
         self.ensemble = ConformationalEnsemble()
         self.route_card = route_card

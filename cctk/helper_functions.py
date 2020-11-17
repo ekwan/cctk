@@ -328,7 +328,6 @@ def get_z_from_mass(desired_mass, tolerance=0.001):
 
     Returns ``None`` if no mass within ``tolerance`` is found.
     """
-    mass_dict = {}
     for z in ISOTOPE_DICTIONARY.keys():
         z = int(z)
         mass = get_avg_mass(z)

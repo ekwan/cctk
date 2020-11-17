@@ -3,7 +3,7 @@ Functions to assist in optimizing structures.
 """
 
 import numpy as np
-import os, tempfile, shutil, re, logging
+import os, tempfile, shutil, re
 import cctk
 import subprocess as sp
 
@@ -57,7 +57,6 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
         command += f" --parallel {nprocs}"
     command += " xtb-in.xyz --opt tight &> xtb-out.out"
 
-    output_mol, energy, gradient = None, None, None
     try:
         os.environ["OMP_NUM_THREADS"] = str(nprocs)
         os.environ["MKL_NUM_THREADS"] = str(nprocs)
@@ -70,13 +69,13 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
 
             fields = energy_file[1].split()
             energy, gradient = float(fields[1]), float(fields[3])
+
+            if return_energy:
+                return output_mol, energy
+            else:
+                return output_mol
     except Exception as e:
         raise ValueError(f"Error running xtb:\n{e}")
-
-    if return_energy:
-        return output_mol, energy
-    else:
-        return output_mol
 
 def csearch(use_tempdir=True, **kwargs):
     """
