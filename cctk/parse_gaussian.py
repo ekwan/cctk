@@ -340,9 +340,10 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
             properties[-1]["hirshfeld_spins"] = spins
 
     try:
-        charges, dipole = parse_charges_dipole(block_matches[9], block_matches[10])
+        charges, dipole, dipole_v = parse_charges_dipole(block_matches[9], block_matches[10])
         properties[-1]["mulliken_charges"] = charges
         properties[-1]["dipole_moment"] = dipole
+        properties[-1]["dipole_vector"] = dipole_v
     except Exception as e:
         pass
 
@@ -476,6 +477,7 @@ def parse_forces(force_block):
 def parse_charges_dipole(mulliken_block, dipole_block):
     charges = []
     dipole = 0
+    dipole_v = np.zeros(shape=3)
 
     for line in mulliken_block[0].split("\n")[2:]:
         fields = re.split(" +", line)
@@ -489,10 +491,13 @@ def parse_charges_dipole(mulliken_block, dipole_block):
         fields = list(filter(None, fields))
 
         if len(fields) == 8:
+            dipole_v[0] = float(fields[1])
+            dipole_v[1] = float(fields[3])
+            dipole_v[2] = float(fields[5])
             dipole = float(fields[7])
             break
 
-    return cctk.OneIndexedArray(charges), dipole
+    return cctk.OneIndexedArray(charges), dipole, dipole_v
 
 def parse_hirshfeld(hirshfeld_block):
     charges = []

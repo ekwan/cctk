@@ -134,6 +134,9 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         ense = file.ensemble
         self.assertEqual(ense[-1, "dipole_moment"], 0.3316)
+        self.assertEqual(ense[-1, "dipole_vector"][0], 0)
+        self.assertEqual(ense[-1, "dipole_vector"][1], 0)
+        self.assertEqual(ense[-1, "dipole_vector"][2], 0.3316)
 
     def test_basis_set_exchange(self):
         path = "test/static/dcm_force.out"
