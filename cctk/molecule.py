@@ -1466,7 +1466,7 @@ class Molecule:
         fragments = nx.connected_components(self.bonds)
         return [list(f) for f in list(fragments)]
 
-    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10):
+    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10, distance_from_atom=None):
         """
         Automatically detects solvent molecules and removes them until you have a set number of solvents or atoms.
 
@@ -1476,6 +1476,8 @@ class Molecule:
             solute (int): which fragment is the solute, 0-indexed
             num_atoms (int): remove atoms until there are this number (modulo the size of a solvent molecule)
             num_solvents (int): remove solvent molecules until there are this number
+            distance_from_atom (int): if you want to find molecules closest to a given atom in the solute, specify the atom number here.
+                if this atom is not in the solute fragment, an exception will be raised.
 
         Returns:
             new ``Molecule`` object
@@ -1484,7 +1486,11 @@ class Molecule:
         assert isinstance(num_solvents, int)
 
         fragments = self.get_components()
-        solute_x = self.geometry[fragments[0]].view(np.ndarray)
+        solute_x = self.geometry[fragments[solute]].view(np.ndarray)
+
+        if distance_from_atom:
+            assert distance_from_atom in fragments[solute], f"{distance_from_atom} is not in the solute fragment"
+            solute_x = self.geometry[[distance_from_atom]].view(np.ndarray)
 
         distances = np.zeros(shape=len(fragments))
         for i, f in enumerate(fragments):
