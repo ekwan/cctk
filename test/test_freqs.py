@@ -15,9 +15,14 @@ class TestFrequencies(unittest.TestCase):
         mol = file.get_molecule()
         self.assertEqual(len(mol.vibrational_modes), 9)
         self.assertEqual(mol.vibrational_modes[-1].frequency, 3119.6807)
+        self.assertEqual(mol.vibrational_modes[-1].intensity, 26.1449)
 
         path = "test/static/methane_hpmodes.out"
         file = cctk.GaussianFile.read_file(path)
+        mol = file.get_molecule()
+        self.assertEqual(len(mol.vibrational_modes), 9)
+        self.assertEqual(mol.vibrational_modes[-1].frequency, 3121.6678)
+        self.assertEqual(mol.vibrational_modes[-1].intensity, 26.1383)
 
     def draw_qho(self):
         from asciichartpy import plot

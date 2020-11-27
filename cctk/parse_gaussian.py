@@ -520,6 +520,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
     freqs = list()
     masses = list()
     force_ks = list()
+    intensities = list()
     displacements = list()
 
     if len(freq_block) == 0:
@@ -549,6 +550,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
 
             masses += list(filter(None, re.split(" +", lines[1])))[3:]
             force_ks += list(filter(None, re.split(" +", lines[2])))[3:]
+            intensities += list(filter(None, re.split(" +", lines[3])))[3:]
 
             for line in lines[6:]:
                 fields = re.split(" +", line)
@@ -572,6 +574,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             freqs += re.split(" +", lines[0])[2:]
             masses += re.split(" +", lines[1])[4:]
             force_ks += re.split(" +", lines[2])[4:]
+            intensities += re.split(" +", lines[3])[4:]
 
             for line in lines[5:]:
                 fields = re.split(" +", line)
@@ -595,15 +598,16 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
     freqs = [float(x) for x in freqs]
     masses = [float(x) for x in masses]
     force_ks = [float(x) for x in force_ks]
+    intensities = [float(x) for x in intensities]
 
     assert len(freqs) == len(masses)
     assert len(freqs) == len(force_ks)
     assert len(freqs) == len(displacements)
 
     modes = list()
-    for f, m, k, d in zip(freqs, masses, force_ks, displacements):
+    for f, m, k, i, d in zip(freqs, masses, force_ks, intensities, displacements):
         k *= 143.9326 # mdyne Å**-1 to kcal/mol Å**-2
-        modes.append(cctk.VibrationalMode(frequency=f, reduced_mass=m, force_constant=k, displacements=d))
+        modes.append(cctk.VibrationalMode(frequency=f, reduced_mass=m, force_constant=k, intensity=i, displacements=d))
 
     return modes
 

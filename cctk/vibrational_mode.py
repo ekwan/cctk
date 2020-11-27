@@ -22,10 +22,11 @@ class VibrationalMode:
         frequency (float): frequency, in cm-1
         force_constant (float): force constant, in kcal/mol per Å
         reduced_mass (float): mass, in amus
+        intensity (float): IR intensity
         displacements (cctk.OneIndexedArray): displacements
 
     """
-    def __init__(self, frequency, force_constant, reduced_mass, displacements):
+    def __init__(self, frequency, force_constant, reduced_mass, intensity, displacements):
         assert isinstance(frequency, float)
         self.frequency = frequency
 
@@ -34,6 +35,9 @@ class VibrationalMode:
 
         assert isinstance(reduced_mass, float)
         self.reduced_mass = reduced_mass
+
+        assert isinstance(intensity, float)
+        self.intensity = intensity
 
         assert isinstance(displacements, cctk.OneIndexedArray)
         self.displacements = displacements
