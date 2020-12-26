@@ -105,7 +105,9 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
         "Temperature", #15
         "Isotropic",
         "EUMP2",
+        "EUMP3",
         "UMP4(SDTQ)",
+        "Wavefunction amplitudes converged", #20
     ]
 
     #### And here are the blocks of text
@@ -220,8 +222,14 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
     # post-HF methods give weird energies
     if re.search("mp2", route_card, re.IGNORECASE):
         energies = parse_mp2_energies(word_matches[17])
+    elif re.search("mp3", route_card, re.IGNORECASE):
+        energies = parse_mp3_energies(word_matches[18])
     elif re.search("mp4", route_card, re.IGNORECASE):
-        energies = parse_mp4_energies(word_matches[18])
+        energies = parse_mp4_energies(word_matches[19])
+    elif re.search("ccsd", route_card, re.IGNORECASE):
+        energies = parse_cc_energies(word_matches[20])
+    elif re.search("cisd", route_card, re.IGNORECASE):
+        energies = parse_ci_energies(word_matches[20])
 
     f = cctk.GaussianFile(job_types=job_types, route_card=route_card, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
 
@@ -692,6 +700,15 @@ def parse_mp2_energies(lines):
         energies.append(float(energy_str))
     return energies
 
+def parse_mp3_energies(lines):
+    energies = []
+    for line in lines:
+        pieces = list(filter(None, line.split(" ")))
+        energy_str = pieces[3]
+        energy_str = re.sub("D", "E", energy_str)
+        energies.append(float(energy_str))
+    return energies
+
 def parse_mp4_energies(lines):
     energies = []
     for line in lines:
@@ -700,3 +717,15 @@ def parse_mp4_energies(lines):
         energy_str = re.sub("D", "E", energy_str)
         energies.append(float(energy_str))
     return energies
+
+def parse_cc_energies(lines):
+    energies = []
+    for line in lines:
+        pieces = list(filter(None, line.split(" ")))
+        energy_str = pieces[4]
+        energy_str = re.sub("D", "E", energy_str)
+        energies.append(float(energy_str))
+    return energies
+
+def parse_ci_energies(lines):
+    return parse_cc_energies(lines)

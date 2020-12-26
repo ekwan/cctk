@@ -1638,23 +1638,42 @@ class Molecule:
         symbols = {z: get_symbol(z) for z in set(self.atomic_numbers)}
         return [symbols[z] for z in self.atomic_numbers]
 
-    def optimize(self, inplace=True, nprocs=1):
+    def optimize(self, inplace=True, nprocs=1, return_energy=False):
         """
         Optimize molecule at the GFN2-xtb level of theory.
 
         Args:
             inplace (Bool): whether or not to return a new molecule or simply modify ``self.geometry``
             nprocs (int): number of processors to use
+            return_energy (Bool): whether to return energy or not
         """
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
-        optimized = opt.optimize_molecule(self, nprocs=nprocs)
+        optimized, energy = opt.optimize_molecule(self, nprocs=nprocs, return_energy=True)
 
         if inplace:
             self.geometry = optimized.geometry
-            return self
+            if return_energy:
+                return self, energy
+            else:
+                return self
         else:
-            return optimized
+            if return_energy:
+                return optimized, energy
+            else:
+                return optimized
+
+    def compute_energy(self, nprocs=1):
+        """
+        Compute energy of molecule at the GFN2-xtb level of theory.
+
+        Args:
+            nprocs (int): number of processors to use
+        """
+        import cctk.optimize as opt
+        assert isinstance(nprocs, int), "nprocs must be int!"
+        energy = opt.get_energy(self, nprocs=nprocs)
+        return energy
 
     def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False, use_tempdir=True):
         """

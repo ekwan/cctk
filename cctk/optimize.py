@@ -41,9 +41,28 @@ def optimize_molecule(molecule, method=Methods.GFN2_XTB, nprocs=1, return_energy
     assert isinstance(method, Methods), "need a valid molecule!"
 
     if method is Methods.GFN2_XTB:
-        return run_xtb(molecule, nprocs=nprocs, return_energy=return_energy)
+        return run_xtb(molecule, nprocs=nprocs, return_energy=return_energy, opt=True)
 
-def run_xtb(molecule, nprocs=1, return_energy=False):
+def get_energy(molecule, method=Methods.GFN2_XTB, nprocs=1):
+    """
+    Dispatcher method to connect method to molecule.
+
+    Args:
+        molecule (cctk.Molecule):
+        method (Methods):
+        nprocs (int): number of cores to employ
+
+    Returns:
+        energy
+    """
+    assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
+    assert isinstance(method, Methods), "need a valid molecule!"
+
+    if method is Methods.GFN2_XTB:
+        _, energy = run_xtb(molecule, nprocs=nprocs, return_energy=True, opt=False)
+        return energy
+
+def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
     """
     Run ``xtb`` in a temporary directory and return the output molecule.
     """
@@ -55,7 +74,11 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
     command = f"xtb --gfn 2 --chrg {molecule.charge} --uhf {molecule.multiplicity - 1}"
     if nprocs > 1:
         command += f" --parallel {nprocs}"
-    command += " xtb-in.xyz --opt tight &> xtb-out.out"
+
+    if opt:
+        command += " xtb-in.xyz --opt tight &> xtb-out.out"
+    else:
+        command += " xtb-in.xyz &> xtb-out.out"
 
     try:
         os.environ["OMP_NUM_THREADS"] = str(nprocs)
@@ -64,8 +87,13 @@ def run_xtb(molecule, nprocs=1, return_energy=False):
             cctk.XYZFile.write_molecule_to_file(f"{tmpdir}/xtb-in.xyz", molecule)
             result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
 
-            output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").molecule
-            energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
+            output_mol, energy_file = None, None
+            if opt:
+                output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").molecule
+                energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
+            else:
+                print("Need to read energy from xtb-out.out!")
+                raise NotImplementedError
 
             fields = energy_file[1].split()
             energy, gradient = float(fields[1]), float(fields[3])

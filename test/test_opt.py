@@ -10,8 +10,12 @@ class TestMolecule(unittest.TestCase):
 
     def test_basic(self):
         mol = self.load_molecule()
-        mol2 = opt.optimize_molecule(mol, nprocs=4)
+#        e1 = mol.compute_energy()
+#        print(e1)
+
+        mol2, e2 = opt.optimize_molecule(mol, nprocs=4, return_energy=True)
         self.assertTrue(isinstance(mol2, cctk.Molecule))
+        self.assertTrue(e2 + 66.394 < 0.1)
 
         mol.optimize(nprocs=4) #in-place
 

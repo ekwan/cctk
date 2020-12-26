@@ -51,6 +51,10 @@ class XYZFile(cctk.File):
             try:
                 if re.match("[0-9]", pieces[0]):
                     atomic_numbers[index] = int(pieces[0])
+                elif re.match("([A-Za-z])+([0-9])+", pieces[0]):
+                    # mdtraj writes in this format, for some reason
+                    m = re.match("([A-Za-z])+([0-9])+", pieces[0])
+                    atomic_numbers[index] = int(get_number(m.group(1)))
                 else:
                     atomic_numbers[index] = int(get_number(pieces[0]))
                 geometry[index][0] = float(pieces[1])
