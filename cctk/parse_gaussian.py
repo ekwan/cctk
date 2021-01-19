@@ -115,7 +115,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
 
     blocks = [
         ["#p", "----", 1],
-        ["l101.exe", "Symbolic Z-matrix", 1],
+        ["/99;", "Symbolic Z-matrix", 1],
         ["The following ModRedundant input section", "\n \n", 1],
         [
             ["Input orientation", "Standard orientation", "Cartesian Coordinates"],
@@ -367,6 +367,7 @@ def parse_geometry(blocks):
     for block in blocks:
         current_nums = []
         current_geoms = []
+        print(block)
         for line in block.split("\n")[4:-2]:
             if re.search("Distance", line):
                 break
@@ -386,7 +387,9 @@ def parse_header_footer(route_block, title_block, footer_block, link0_block):
     title = ""
     job_types = []
 
-    title = title_block[0].split("\n")[2].strip()
+    # 2 lines before 'Symbolic Z Matrix'
+    title = title_block[0].split("\n")[-3].strip()
+
     for line in route_block[0].split("\n"):
         route_card += line.lstrip()
 

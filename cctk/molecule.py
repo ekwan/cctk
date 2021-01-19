@@ -1466,7 +1466,7 @@ class Molecule:
         fragments = nx.connected_components(self.bonds)
         return [list(f) for f in list(fragments)]
 
-    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10, distance_from_atom=None):
+    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10, distance_from_atom=None, return_idxs=False):
         """
         Automatically detects solvent molecules and removes them until you have a set number of solvents or atoms.
 
@@ -1478,6 +1478,7 @@ class Molecule:
             num_solvents (int): remove solvent molecules until there are this number
             distance_from_atom (int): if you want to find molecules closest to a given atom in the solute, specify the atom number here.
                 if this atom is not in the solute fragment, an exception will be raised.
+            return_idxs (bool): if True, indices of atoms that would be in the new molecule are returned. no change is made to ``self``.
 
         Returns:
             new ``Molecule`` object
@@ -1518,10 +1519,14 @@ class Molecule:
             current_num_solvents += -1
 
             if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
-                #### have to remove in reverse direction for indexing consistency
-                for j in sorted(to_remove, reverse=True):
-                    mol.remove_atom(j)
-                return mol
+                if return_idxs:
+                    all_idxs = set(range(1,self.num_atoms()))
+                    return list(all_idxs - set(to_remove))
+                else:
+                    #### have to remove in reverse direction for indexing consistency
+                    for j in sorted(to_remove, reverse=True):
+                        mol.remove_atom(j)
+                    return mol
 
     def center_periodic(self, center, side_length):
         """

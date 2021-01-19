@@ -141,3 +141,21 @@ class XYZFile(cctk.File):
 
         return ensemble
 
+    @classmethod
+    def write_ensemble_to_file(cls, filename, ensemble, title=None):
+        """
+        Write a ``cctk.Ensemble`` to a single ``.xyz`` file. Can be viewed in MOLDEN.
+        """
+        assert isinstance(ensemble, cctk.Ensemble), f"ensemble {ensemble} is not a cctk.Ensemble"
+
+        if title is None:
+            title = "title"
+        if isinstance(title, str):
+            title = [title for _ in range(len(ensemble))]
+        assert len(title) == len(ensemble)
+
+        for idx, (molecule, title) in enumerate(zip(ensemble._items, title)):
+            if idx == 0:
+                cls.write_molecule_to_file(filename, molecule, title=title, append=False)
+            else:
+                cls.write_molecule_to_file(filename, molecule, title=title, append=True)

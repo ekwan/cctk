@@ -188,6 +188,9 @@ class TestMolecule(unittest.TestCase):
         m3 = m2.limit_solvent_shell(num_solvents=10)
         self.assertEqual(m3.num_atoms(), 83)
 
+        m3_idxs = m2.limit_solvent_shell(num_solvents=10, return_idxs=True)
+        self.assertEqual(len(m3_idxs), 83)
+
         m4 = m2.limit_solvent_shell(num_solvents=10, distance_from_atom=1)
         self.assertEqual(m4.num_atoms(), 83)
 

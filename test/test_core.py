@@ -39,8 +39,12 @@ class TestXYZ(unittest.TestCase):
 
     def test_ense(self):
         path = "test/static/methane_traj.xyz"
-        ense = cctk.XYZFile.read_trajectory(path)
+        ense = cctk.XYZFile.read_ensemble(path)
         self.assertEqual(len(ense), 250)
+
+        new_path = "test/static/methane_traj_new.xyz"
+        cctk.XYZFile.write_ensemble_to_file(new_path, ense, title="sample title")
+        os.remove(new_path)
 
 class TestMAE(unittest.TestCase):
     def test_read(self):
