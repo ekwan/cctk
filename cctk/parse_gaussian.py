@@ -80,7 +80,7 @@ def split_link1(filename):
 
     return link1_blocks[1:] #### the first block is just a few lines
 
-def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_info=False):
+def read_file_fast(file_text, filename, link1idx, max_len=100000, extended_opt_info=False):
 
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
@@ -209,7 +209,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=10000, extended_opt_in
     del file_text # here, have your RAM back!
 
     if len(block_matches[1]) == 0:
-        raise ValueError(f"Can't find a title block - something is wrong with {filename}!")
+        raise ValueError(f"Can't find a title block - something is wrong with {filename}! (cctk requires Gaussian output files to have been run in ``#p`` verbose mode)")
 
     #### and from here, we're off to the races!
     n, g = parse_geometry(block_matches[3])
@@ -367,7 +367,6 @@ def parse_geometry(blocks):
     for block in blocks:
         current_nums = []
         current_geoms = []
-        print(block)
         for line in block.split("\n")[4:-2]:
             if re.search("Distance", line):
                 break
@@ -585,7 +584,7 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             freqs += re.split(" +", lines[0])[2:]
             masses += re.split(" +", lines[1])[4:]
             force_ks += re.split(" +", lines[2])[4:]
-            intensities += re.split(" +", lines[3])[4:]
+            intensities += re.split(" +", lines[3].rstrip())[4:]
 
             for line in lines[5:]:
                 fields = re.split(" +", line)
@@ -601,7 +600,6 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
 
                 if len(current_displacements) > 2:
                     current_displacements[2].append([float(x) for x in fields[8:11]])
-
 
             for d in current_displacements:
                 displacements.append(cctk.OneIndexedArray(d))

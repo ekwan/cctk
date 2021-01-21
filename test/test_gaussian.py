@@ -175,5 +175,11 @@ class TestGaussian(unittest.TestCase):
         emp4 = file.ensemble[-1,"energy"]
         self.assertTrue(-76.20098 - emp4 < 0.0001)
 
+    def test_pathological(self):
+#        path = "test/static/sugar_failed.out"
+#        file = cctk.GaussianFile.read_file(path)
+#        self.assertTrue(isinstance(file, cctk.GaussianFile))
+        pass
+
 if __name__ == '__main__':
     unittest.main()
