@@ -80,7 +80,7 @@ def split_link1(filename):
 
     return link1_blocks[1:] #### the first block is just a few lines
 
-def read_file_fast(file_text, filename, link1idx, max_len=100000, extended_opt_info=False):
+def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_info=False):
 
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
