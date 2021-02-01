@@ -23,7 +23,8 @@ class VibrationalMode:
         force_constant (float): force constant, in kcal/mol per Å
         reduced_mass (float): mass, in amus
         intensity (float): IR intensity
-        displacements (cctk.OneIndexedArray): displacements
+        displacements (cctk.OneIndexedArray): atom displacements
+        velocities (cctk.OneIndexedArray): atom velocities
 
     """
     def __init__(self, frequency, force_constant, reduced_mass, intensity, displacements):

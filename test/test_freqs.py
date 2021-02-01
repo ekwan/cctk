@@ -64,8 +64,10 @@ class TestFrequencies(unittest.TestCase):
 
         mol = file.get_molecule()
         mol2, e = qc.get_quasiclassical_perturbation(mol)
-
         self.assertTrue(isinstance(mol2, cctk.Molecule))
+
+        mol3, e, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True)
+        self.assertTrue(isinstance(mol3, cctk.Molecule))
 
     def test_final_structure(self):
         path1 = "test/static/methane_perturbed.gjf"

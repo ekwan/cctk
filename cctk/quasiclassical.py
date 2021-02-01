@@ -3,11 +3,17 @@ Functions to assist in sampling thermally excited states through quasiclassical 
 """
 
 import numpy as np
-import math, copy
+import math, copy, random
 
 import cctk
 
-def get_quasiclassical_perturbation(molecule, temperature=298):
+"""
+Constants:
+"""
+
+AMU_A2_FS2_PER_KCAL_MOL = 0.0004184
+
+def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities=False):
     """
     Perturbs molecule by treating each mode as a quantum harmonic oscillator and sampling from the distribution appropriate to the temperature.
 
@@ -16,10 +22,12 @@ def get_quasiclassical_perturbation(molecule, temperature=298):
     Args:
         molecule (cctk.Molecule): molecule with vibrational modes
         temperature (float): temperature
+        return velocities (bool): whether or not to return velocities
 
     Returns:
         new ``cctk.Molecule`` object
         energy above ground state (kcal/mol)
+        velocities (cctk.OneIndexedArray)
     """
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule"
     assert len(molecule.vibrational_modes) > 0, "molecule needs to have vibrational modes (try running a ``freq`` job)"
@@ -29,11 +37,27 @@ def get_quasiclassical_perturbation(molecule, temperature=298):
     mol = copy.deepcopy(molecule)
     total_PE = 0
 
+    velocities = np.zeros_like(molecule.geometry.view(np.ndarray)).view(cctk.OneIndexedArray)
+
     for mode in mol.vibrational_modes:
         PE, KE = apply_vibration(mol, mode, temperature=temperature)
         total_PE += PE
 
-    return mol, total_PE
+        #### below code initializes velocities. pulling from jprogdyn Initializer lines 440 & onwards.
+
+        if return_velocities:
+            # mode velocity = sqrt(2 * KE / reduced mass) - want value in Å/fs. we randomize the sign
+            # https://stackoverflow.com/questions/46820182/randomly-generate-1-or-1-positive-or-negative-integer
+            mode_velocity = math.sqrt(2*KE*AMU_A2_FS2_PER_KCAL_MOL/mode.reduced_mass)
+            mode_velocity *= (1 if random.random() < 0.5 else -1)
+
+            for idx in range(1,molecule.num_atoms()+1):
+                velocities[idx] += mode_velocity * mode.displacements[idx]
+
+    if return_velocities:
+        return mol, total_PE, velocities
+    else:
+        return mol, total_PE
 
 def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False):
     """
@@ -62,10 +86,8 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False)
     molecule.geometry += mode.displacements * rel_shift * max_shift
 
     potential_energy = 0.5 * mode.force_constant * shift ** 2
-
     kinetic_energy = energy - potential_energy
 
-    # here we could compute atom velocities if we wanted to! initializer lines 440-480
     if verbose:
         print(f"Mode {mode.frequency:.2f} ({mode.energy():.2f} kcal/mol)\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2")
 
