@@ -5,6 +5,7 @@ Miscellaneous helper functions.
 import numpy as np
 import math
 from scipy.spatial.distance import cdist
+from io import BytesIO
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
 try:
@@ -606,3 +607,16 @@ def get_corrected_free_energy(free_energy, frequencies, frequency_cutoff=100.0, 
     entropy_correction = (entropy_uncorrected - entropy_corrected)*temperature/1000.0
     corrected_free_energy = free_energy + entropy_correction
     return corrected_free_energy
+
+def numpy_to_bytes(arr):
+    """ Utility function for pickling numpy arrays """
+    arr_bytes = BytesIO()
+    np.save(arr_bytes, arr, allow_pickle=True)
+    arr_bytes = arr_bytes.getvalue()
+    return arr_bytes
+
+def bytes_to_numpy(arr_bytes):
+    """ Utility function for unpickling numpy arrays """
+    load_bytes = BytesIO(arr_bytes)
+    loaded_np = np.load(load_bytes, allow_pickle=True)
+    return loaded_np

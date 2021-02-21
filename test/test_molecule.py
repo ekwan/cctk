@@ -212,5 +212,12 @@ class TestMolecule(unittest.TestCase):
         self.assertTrue(top.are_isomorphic(f[0], ibuprofen))
         self.assertTrue(top.are_isomorphic(f[1], chloroform))
 
+    def test_save_load(self):
+        mol = self.load_molecule()
+        saved = mol.to_string()
+
+        mol2 = cctk.Molecule.from_string(saved)
+        self.assertTrue(cctk.Molecule.equal(mol, mol2))
+
 if __name__ == '__main__':
     unittest.main()

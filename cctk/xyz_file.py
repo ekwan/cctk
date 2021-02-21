@@ -21,13 +21,27 @@ class XYZFile(cctk.File):
             self.title = title
 
     @classmethod
-    def read_file(cls, filename):
+    def read_file(cls, filename, charge=0, multiplicity=1):
         """
         Factory method to create new XYZFile instances.
+
+
+        Arguments:
+            filename (str): path to ``.xyz`` file
+            charge (int): charge of resultant molecule
+            multiplicity (int): multiplicity of resultant molecule
         """
         lines = super().read_file(filename)
+        xyzfile = cls.file_from_lines(lines)
 
-        return cls.file_from_lines(lines)
+        assert isinstance(charge, int), "charge must be integer"
+        assert isinstance(multiplicity, int), "multiplicity must be integer"
+        assert multiplicity > 0, "multiplicity must be a positive integer"
+
+        xyzfile.molecule.charge = charge
+        xyzfile.molecule.multiplicity = multiplicity
+
+        return xyzfile
 
     @classmethod
     def file_from_lines(cls, lines):

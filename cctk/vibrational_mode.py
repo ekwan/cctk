@@ -180,3 +180,9 @@ class VibrationalMode:
         Returns the maximum allowed shift based on modelling the mode as a classical harmonic oscillator (e.g. the point where potential energy is maximum).
         """
         return math.sqrt(2 * self.energy(level) / self.force_constant)
+
+    def to_string(self):
+        ...
+
+    def from_string(self):
+        ...

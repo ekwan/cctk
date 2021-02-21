@@ -2,6 +2,8 @@ import math, copy, re
 import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cdist
+import pkg_resources
+import yaml
 
 import cctk
 from cctk.helper_functions import (
@@ -16,6 +18,8 @@ from cctk.helper_functions import (
     get_vdw_radius,
     get_isotopic_distribution,
     compute_chirality,
+    numpy_to_bytes,
+    bytes_to_numpy,
 )
 import cctk.topology as top
 
@@ -114,6 +118,30 @@ class Molecule:
             return f"Molecule (name={self.name}, {len(self.atomic_numbers)} atoms)"
         else:
             return f"Molecule ({len(self.atomic_numbers)} atoms)"
+
+    def __repr__(self):
+        return str(self) # placeholder
+
+#    def __eq__(self, other):
+    @classmethod
+    def equal(cls, mol1, mol2):
+        """
+        Atomic numbers, geometry, charge, and multiplicity all must match. Name is irrelevant.
+        """
+        if not isinstance(mol1, cctk.Molecule):
+            return False
+
+        if not isinstance(mol2, cctk.Molecule):
+            return False
+
+        comparisons = [
+            np.array_equal(mol1.atomic_numbers, mol2.atomic_numbers),
+            np.array_equal(mol1.geometry, mol2.geometry),
+            mol1.charge == mol2.charge,
+            mol1.multiplicity == mol2.multiplicity
+        ]
+
+        return all(comparisons)
 
     def assign_connectivity(self, cutoff=0.2, periodic_boundary_conditions=None):
         """
@@ -1563,7 +1591,7 @@ class Molecule:
         try:
             url_name = re.sub(" ", "%20", name)
             url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
-            smiles = urlopen(url).read().decode('utf8')
+            smiles = urlopen(url, timeout=5).read().decode('utf8')
             return cls.new_from_smiles(smiles)
         except Exception as e:
             raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")
@@ -1748,3 +1776,67 @@ class Molecule:
                 else:
                     return return_list
 
+
+    def to_string(self):
+        """
+        Save the current molecule as a string, for subsequent loading. Not human-readable.
+
+        Vibrational modes are currently not saved.
+        """
+        # name, charge, multiplicity need no encoding
+        atomic_number_encoding = numpy_to_bytes(self.atomic_numbers.view(np.ndarray))
+        geometry_encoding = numpy_to_bytes(self.geometry.view(np.ndarray))
+        bonds_encoding = numpy_to_bytes(nx.convert_matrix.to_numpy_array(self.bonds))
+
+        if self.name is None:
+            self.name = "name"
+
+        cctk_version = pkg_resources.get_distribution("cctk").version
+
+        store_dict = {
+            "name": self.name,
+            "charge": self.charge,
+            "multiplicity": self.multiplicity,
+            "atomic_numbers": atomic_number_encoding,
+            "geometry": geometry_encoding,
+            "bonds": bonds_encoding,
+            "cctk_version": cctk_version,
+        }
+
+        return yaml.dump(store_dict)
+
+    @classmethod
+    def from_string(cls, string, check_version=True):
+        """
+        Loads a ``cctk.Molecule`` object from a string.
+
+        Arguments:
+            string (str): stringified version of the molecule
+            check_version (bool): whether version consistency should be enforced
+        """
+
+        try:
+            store_dict = yaml.safe_load(string)
+
+            if check_version:
+                cctk_version = pkg_resources.get_distribution("cctk").version
+                assert cctk_version == store_dict["cctk_version"], f"Warning: the data was saved in cctk {store_dict['cctk_version']} but is being loaded in cctk {cctk_version}!"
+
+            atomic_numbers = bytes_to_numpy(store_dict["atomic_numbers"]).astype(np.int8)
+            geometry = bytes_to_numpy(store_dict["geometry"]).astype(np.float32)
+            bonds = nx.convert_matrix.from_numpy_array(bytes_to_numpy(store_dict["bonds"]))
+
+            mol = cls(
+                atomic_numbers,
+                geometry,
+                bonds=bonds,
+                charge=store_dict["charge"],
+                multiplicity=store_dict["multiplicity"],
+                name=store_dict["name"],
+                checks=False, # trust nx data implicitly
+            )
+
+            return mol
+
+        except Exception as e:
+            raise ValueError(f"this stringified Molecule fails import: {e}")

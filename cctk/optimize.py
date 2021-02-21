@@ -16,7 +16,7 @@ class Methods(Enum):
     GFN2_XTB = "xtb"
 
 def installed(command):
-    if shutil.which("command") is not None:
+    if shutil.which(command) is not None:
         return True
     if re.search(command, os.environ["PATH"]):
         return True
