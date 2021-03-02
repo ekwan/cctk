@@ -389,7 +389,8 @@ class GaussianFile(File):
                     try:
                         corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies,
                                                                         frequency_cutoff=100.0, temperature=temperature[0])
-                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(f"{float(corrected_free_energy):.6f}") # yes this is dumb
+                        print(properties[-1])
                     except:
                         pass
 
