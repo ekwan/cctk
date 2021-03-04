@@ -114,7 +114,7 @@ class TestMolecule(unittest.TestCase):
         self.assertListEqual(list(mol.get_vector(4)), [2, 0, 0])
 
     def test_mass_spec(self):
-        mol = cctk.Molecule(np.array([12], dtype=np.int8), [[0, 0, 0]])
+        mol = cctk.Molecule(np.array([11], dtype=np.int8), [[0, 0, 0]])
         masses, weights = mol.calculate_mass_spectrum()
         self.assertListEqual(list(masses), [23.])
         self.assertListEqual(list(weights), [1.])

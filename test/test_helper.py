@@ -55,5 +55,14 @@ class TestHelper(unittest.TestCase):
         self.assertEqual(6, helper.get_z_from_mass(12.011))
         self.assertEqual(11, helper.get_z_from_mass(22.9897))
 
+    def test_mw_splitting(self):
+        molecule = cctk.Molecule.new_from_name("ibuprofen")
+        masses, weights = molecule.calculate_mass_spectrum()
+        self.assertEqual(masses[0], 206.1)
+
+        fdict = helper.formula_dict_from_string("C10H12N2O1")
+        masses, weights = helper.compute_mass_spectrum(fdict)
+        self.assertEqual(masses[0], 176.1)
+
 if __name__ == '__main__':
     unittest.main()

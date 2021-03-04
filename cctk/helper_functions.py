@@ -3,7 +3,7 @@ Miscellaneous helper functions.
 """
 
 import numpy as np
-import math
+import math, re
 from scipy.spatial.distance import cdist
 from io import BytesIO
 
@@ -621,7 +621,7 @@ def bytes_to_numpy(arr_bytes):
     loaded_np = np.load(load_bytes, allow_pickle=True)
     return loaded_np
 
-def compute_mass_spectrum(formula_dict):
+def compute_mass_spectrum(formula_dict, **kwargs):
     """
     Computes the expected low-res mass spec ions for a given formula.
 
@@ -637,7 +637,7 @@ def compute_mass_spectrum(formula_dict):
         if isinstance(z, str):
             z = get_number(z)
         assert isinstance(z, int), "atomic number must be integer"
-        form_vec[z - 1] += n
+        form_vec[z] += n
 
     masses, weights = _recurse_through_formula(form_vec, [0], [1], **kwargs)
 
@@ -658,7 +658,7 @@ def _recurse_through_formula(formula, masses, weights, cutoff=0.0000001, mass_pr
     The default values should work nicely for low-res MS applications.
 
     Args:
-        formula (np.ndarray, dtype=np.int8): vector containing atoms left to incorporate
+        formula (np.ndarray, dtype=np.int8): vector containing atoms left to incorporate. first element should always be 0 as there is no element 0.
         masses (np.ndarray): list of mass fragments at current iteration
         weights (np.ndarray): relative weights at current iteration
         cutoff (float): cutoff for similarity (masses within ``cutoff`` will be combined)
@@ -697,4 +697,14 @@ def _recurse_through_formula(formula, masses, weights, cutoff=0.0000001, mass_pr
     above_cutoff = np.nonzero(newer_weights > cutoff)
     return _recurse_through_formula(formula, newer_masses[above_cutoff], newer_weights[above_cutoff], cutoff, mass_precision, weight_precision)
 
+def formula_dict_from_string(formula_string):
+    """
+    Eugene challenged me to code golf, this isn't my fault.
 
+    Args:
+        formula_string (str): the formula as a string, e.g. C10H12N2O1. you need the "1" explicitly
+
+    Returns:
+        formula_dict (dict): e.g. {'C': 10, 'H': 12, 'N': 2, 'O': 1}
+    """
+    return {t[0]: int(t[1]) for t in re.findall(r"([a-z]+)([0-9]+)", formula_string, re.I)}

@@ -742,7 +742,7 @@ class Molecule:
         """
         form_vec = np.zeros(shape=92, dtype=np.int8)
         for z in self.atomic_numbers:
-            form_vec[z - 1] += 1
+            form_vec[z] += 1
 
         masses, weights = _recurse_through_formula(form_vec, [0], [1], **kwargs)
 
