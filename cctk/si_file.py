@@ -30,6 +30,7 @@ class SIFile(cctk.File):
             filename (str): path to the new file
             append (Bool): whether or not to append to file
         """
+        first = True
         for title, (molecule, properties) in zip(self.titles, self.ensemble.items()):
             assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
 
@@ -37,15 +38,17 @@ class SIFile(cctk.File):
             for key, value in generate_info(molecule, properties).items():
                 text += f"{key}:\t{value}\n"
 
+            text += f"Cartesian Coordinates (Å):\n"
             for index, Z in enumerate(molecule.atomic_numbers, start=1):
                 line = molecule.get_vector(index)
                 text += f"{get_symbol(Z):>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
 
-            if append:
+            if first:
+                super().write_file(filename, text)
+                first = False
+            else:
                 text += "\n"
                 super().append_to_file(filename, text)
-            else:
-                super().write_file(filename, text)
 
 
 def generate_info(molecule, properties):
@@ -56,8 +59,17 @@ def generate_info(molecule, properties):
         "Multiplicity": molecule.multiplicity,
     }
 
+    # for now manually handling route card and imaginaries, which typically aren't linked to cctk.Molecule.
+    # long-term would be good to manually pass an extra info_dict from the calling environment
+    # to avoid these ad hoc carveouts. ccw 3.8.21
+
     if "route_card" in properties:
         info["Route Card"] = properties["route_card"]
+
+    if "imaginaries" in properties:
+        info["Imaginary Frequencies (cm-1)"] = properties["imaginaries"]
+    else:
+        info["Imaginary Frequencies (cm-1)"] = "None"
 
     if "energy" in properties:
         info["Energy"] = properties["energy"]
@@ -67,6 +79,8 @@ def generate_info(molecule, properties):
         info["Gibbs Free Energy"] = properties["gibbs_free_energy"]
     if "quasiharmonic_gibbs_free_energy" in properties:
         info["Gibbs Free Energy (Quasiharmonic Correction)"] = properties["quasiharmonic_gibbs_free_energy"]
+    if "dipole_moment" in properties:
+        info["Dipole Moment (Debye)"] = properties["dipole_moment"]
 
     return info
 

@@ -530,11 +530,12 @@ class GaussianFile(File):
         else:
             return f
 
-    def get_molecule(self, num=None):
+    def get_molecule(self, num=None, properties=False):
         """
         Returns the last molecule (from an optimization job) or the only molecule (from other jobs).
 
         If ``num`` is specified, returns ``self.ensemble.molecule_list()[num]``
+        If ``properties`` is True, returns ``(molecule, properties)``.
         """
         # some methods pass num=None, which overrides setting the default above
         if num is None:
@@ -543,7 +544,10 @@ class GaussianFile(File):
         if not isinstance(num, int):
             raise TypeError("num must be int")
 
-        return self.ensemble.molecule_list()[num]
+        if properties:
+            return self.ensemble.molecule_list()[num], self.ensemble.properties_list()[num]
+        else:
+            return self.ensemble.molecule_list()[num]
 
     @classmethod
     def _assign_job_types(cls, header):

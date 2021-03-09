@@ -312,13 +312,13 @@ class Molecule:
             elements = list(formula_dict.keys())
 
             #### H and C always come first
-            if "H" in elements:
-                elements.remove("H")
-                formula += f"H{formula_dict['H']}"
-
             if "C" in elements:
                 elements.remove("C")
                 formula += f"C{formula_dict['C']}"
+
+            if "H" in elements:
+                elements.remove("H")
+                formula += f"H{formula_dict['H']}"
 
             for element in sorted(elements):
                 formula += f"{element}{formula_dict[element]}"
