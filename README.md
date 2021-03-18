@@ -9,7 +9,7 @@
  - **method screening**: creating jobs that screen grids of DFT methods and basis sets
  - **job monitoring**: identification of job status, progress of optimizations, and resubmission of failed jobs
  - **data extraction**: geometries, energies, molecular properties (e.g. charges or NMR shieldings), or geometric parameters (distances, angles, dihedrals) from output files
- - **data analysis**: easy export to [pandas](https://pandas.pydata.org/) for statistical analysis or visualization
+ - **data analysis**: easy export for statistical analysis or visualization
 
 A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-start.html). More documentation is [here](https://cctk.readthedocs.io/).
  
@@ -113,10 +113,11 @@ and stored in `cctk/data/covalent_radii.csv`.
 [*Inorg. Mater.* **2001**, *37*, 871](https://link.springer.com/article/10.1023/A:1011625728803), and
 [*J. Phys. Chem. A*, **2009**, *113*, 5806](https://pubs.acs.org/doi/10.1021/jp8111556) and stored in `cctk/data/vdw_radii.csv`.
 
-### Authors:
+### Authors and Community:
 
-*cctk* was written by Corin Wagen (Harvard University) and Eugene Kwan.
-Please email `cwagen@g.harvard.edu` or `ekwan16@gmail.com` with any questions or bug reports; we will do our best! We also welcome contributors!
+*cctk* is an ongoing project led by Corin Wagen and Eugene Kwan.
+
+There is a Slack workspace for *cctk* users and developers: please email ``cwagen@g.harvard.edu`` or ``ekwan16@gmail.com`` for access.
 
 ### How to Cite:
 
