@@ -219,5 +219,14 @@ class TestMolecule(unittest.TestCase):
         mol2 = cctk.Molecule.from_string(saved)
         self.assertTrue(cctk.Molecule.equal(mol, mol2))
 
+    def test_coulomb_analysis(self):
+        file = cctk.GaussianFile.read_file("test/static/HBD_dimer.out")
+        mol = file.get_molecule()
+        atoms1 = list(range(1,46))
+        atoms2 = list(range(46,91))
+        charges = file.ensemble[-1, "mulliken_charges"]
+
+        print(mol.coulomb_analysis(atoms1, atoms2, charges))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1798,3 +1798,30 @@ class Molecule:
 
         except Exception as e:
             raise ValueError(f"this stringified Molecule fails import: {e}")
+
+    def coulomb_analysis(self, atoms1, atoms2, charges):
+        """
+        Computes the net Coulomb forces between atoms ``atoms1`` and atoms ``atoms2``.
+        """
+        assert isinstance(charges, cctk.OneIndexedArray), "charges must be cctk.OneIndexedArray"
+        assert len(charges) == self.num_atoms(), "need a charge for every atom"
+        assert isinstance(atoms1, list)
+        assert isinstance(atoms2, list)
+
+        q1 = charges[atoms1]
+        q2 = charges[atoms2]
+
+        # need to convert to Bohr
+        r1 = self.geometry[atoms1] / 0.529
+        r2 = self.geometry[atoms2] / 0.529
+
+        R = cdist(r1, r2)**2
+        Q = np.outer(q1, q2)
+
+        energy = 0
+        for i in range(len(atoms1)):
+            assert i not in atoms2, "lists must be non-overlapping"
+            for j in range(len(atoms2)):
+                energy += Q[i][j] / R[i][j]
+
+        return energy * 627.509 # convert to kcal/mol
