@@ -19,6 +19,7 @@ A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-s
 
 [![PyPI version](https://badge.fury.io/py/cctk.svg)](https://badge.fury.io/py/cctk)
 [![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
+[![Downloads](https://img.shields.io/pypi/dm/cctk.svg)](https://pypi.python.org/pypi/cctk/)
 
 ### First Time
 
