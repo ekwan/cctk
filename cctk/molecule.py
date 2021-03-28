@@ -1803,6 +1803,11 @@ class Molecule:
         """
         Computes the net Coulomb forces between atoms ``atoms1`` and atoms ``atoms2``.
         """
+        if isinstance(charges, np.ndarray):
+            charges = charges.view(cctk.OneIndexedArray)
+        elif isinstance(charges, list):
+            charges = cctk.OneIndexedArray(charges)
+
         assert isinstance(charges, cctk.OneIndexedArray), "charges must be cctk.OneIndexedArray"
         assert len(charges) == self.num_atoms(), "need a charge for every atom"
         assert isinstance(atoms1, list)
@@ -1820,7 +1825,7 @@ class Molecule:
 
         energy = 0
         for i in range(len(atoms1)):
-            assert i not in atoms2, "lists must be non-overlapping"
+            assert atoms1[i] not in atoms2, "lists must be non-overlapping"
             for j in range(len(atoms2)):
                 energy += Q[i][j] / R[i][j]
 
