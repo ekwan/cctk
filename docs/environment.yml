@@ -1,4 +1,3 @@
-name: chem
 channels:
   - conda-forge
   - defaults
@@ -12,4 +11,3 @@ dependencies:
   - xtb
   - rdkit
   - pytraj
-prefix: /opt/miniconda3/envs/chem
