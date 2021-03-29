@@ -36,10 +36,12 @@ Files
     :toctree: _autosummary 
 
     File <file.File>
-    GaussianJobType <gaussian_file.GaussianJobType>
     GaussianFile <gaussian_file.GaussianFile>
     MAEFile <mae_file.MAEFile>
     MOL2File <mol2_file.MOL2File>
+    OrcaFile <orca_file.OrcaFile>
+    PDBFile <pdb_file.PDBFile>
+    SIFile <si_file.SIFile>
     XYZFile <xyz_file.XYZFile>
 
 """""""""""""
@@ -49,9 +51,12 @@ Miscellaneous
 .. autosummary::
     :nosignatures:
     :toctree: _autosummary
-
+    
     Group <group.Group>
+    VibrationalMode <vibrational_mode.VibrationalMode>
     helper_functions
+    OneIndexedArray <array.OneIndexedArray>
+    LazyLineObject <lines.LazyLineObject>
     
 |br|
 

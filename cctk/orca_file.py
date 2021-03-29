@@ -262,11 +262,11 @@ class OrcaFile(File):
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, header, variables=None, blocks=None, print_symbol=False):
         """
-        Write a ``.inp``file using the given molecule.
+        Write an ``.inp`` file using the given molecule.
 
         Args:
             filename (str): path to the new file
-            molecule (Molecule): which molecule to use -- a``Molecule`` object.
+            molecule (Molecule): which molecule to use -- a ``Molecule`` object.
             header (str): header for new file
             print_symbol (Bool): if atomic symbols should be printed instead of atomic numbers
         """
