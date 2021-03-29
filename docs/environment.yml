@@ -10,3 +10,12 @@ dependencies:
   - numpy
   - xtb
   - rdkit
+  - pip:
+      - numpy
+      - scipy
+      - networkx
+      - importlib_resources
+      - sphinx_bootstrap_theme
+      - pyahocorasick
+      - basis_set_exchange
+      - pyyaml
