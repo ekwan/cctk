@@ -7,7 +7,7 @@ import glob as glob
 #
 # python -m unittest test.test_ensemble2.TestEnsemble2
 class TestEnsemble(unittest.TestCase):
-    def test_ensemble(self):
+    def build_test_ensemble(self):
         path = "test/static/phenylpropane*.out"
         conformational_ensemble = cctk.ConformationalEnsemble()
         for filename in sorted(glob.glob(path)):
@@ -16,6 +16,11 @@ class TestEnsemble(unittest.TestCase):
             molecule = ensemble.molecules[-1]
             properties_dict = ensemble.get_properties_dict(molecule)
             conformational_ensemble.add_molecule(molecule,properties_dict)
+        return conformational_ensemble
+
+    def test_ensemble(self):
+        conformational_ensemble = self.build_test_ensemble()
+
         m1 = conformational_ensemble.molecules[0]
         self.assertEqual(conformational_ensemble[m1,"filename"], 'test/static/phenylpropane_1.out')
         l1 = conformational_ensemble.molecules[0:2]
@@ -118,32 +123,19 @@ class TestEnsemble(unittest.TestCase):
     def test_ensemble_properties(self):
         filename = "test/static/gaussian_file.out"
         gaussian_file = cctk.GaussianFile.read_file(filename)
-        #print(gaussian_file.route_card)
-        #print(gaussian_file.job_types)
         ensemble = gaussian_file.ensemble
         self.assertTrue(isinstance(ensemble, cctk.ConformationalEnsemble))
 
         self.assertEqual(len(ensemble), 3)
         self.assertTrue(isinstance(ensemble[0], cctk.ConformationalEnsemble))
 
-        #for molecule,properties_dict in ensemble.items():
-        #    for property_name,value in properties_dict.items():
-        #        print(property_name, ":", value)
-        #    print()
-
         self.assertEqual(ensemble[0,"energy"], -1159.56782625)
         self.assertListEqual(ensemble[:,"energy"], [-1159.56782625, -1159.56782622, -1159.56782622])
         self.assertListEqual(ensemble[:,"enthalpy"], [None, None, -1159.314817])
 
     def test_sort(self):
-        path = "test/static/phenylpropane*.out"
-        conformational_ensemble = cctk.ConformationalEnsemble()
-        for filename in sorted(glob.glob(path)):
-            gaussian_file = cctk.GaussianFile.read_file(filename)
-            ensemble = gaussian_file.ensemble
-            molecule = ensemble.molecules[-1]
-            properties_dict = ensemble.get_properties_dict(molecule)
-            conformational_ensemble.add_molecule(molecule,properties_dict)
+        conformational_ensemble = self.build_test_ensemble()
+
         original_order = conformational_ensemble[:,"energy"]
         self.assertListEqual(original_order,[0.0140132996483, 0.0163679933924, 0.0213666533731, 0.0180903133947, 0.0547890926923, 0.0182782865186])
         sorted_ensemble = conformational_ensemble.sort_by("energy", ascending=False)
@@ -163,6 +155,23 @@ class TestEnsemble(unittest.TestCase):
         self.assertTrue(isinstance(lowest_molecule, cctk.Molecule))
         energy0 = sorted_ensemble.get_property(lowest_molecule, "energy")
         self.assertEqual(energy0, 0.0140132996483)
+
+    def test_boltzmann_weighting(self):
+        conformational_ensemble = self.build_test_ensemble()
+
+        values, weights = conformational_ensemble.boltzmann_average("energy", energies=[1.36,0,1000,1000,1000,1000], energy_unit="kcal_mol", return_weights=True)
+        self.assertTrue((weights[0]/weights[1] - 0.1 < 0.01))
+        self.assertTrue(values - 0.016152 < 0.0001)
+
+        ce2 = cctk.ConformationalEnsemble()
+        for filename in glob.glob("test/static/pentane*.out"):
+            gaussian_file = cctk.GaussianFile.read_file(filename)
+            ensemble = gaussian_file.ensemble
+            molecule = ensemble.molecules[-1]
+            properties_dict = ensemble.get_properties_dict(molecule)
+            ce2.add_molecule(molecule,properties_dict)
+        enthalpy = ce2.boltzmann_average("enthalpy")
+        self.assertTrue(enthalpy - .10722 < 0.0001)
 
 if __name__ == '__main__':
     unittest.main()

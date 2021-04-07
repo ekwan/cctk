@@ -134,7 +134,6 @@ class Ensemble:
         combined = dict()
         for p in self.properties_list():
             combined = {**combined, **p}
-
         return combined
 
     def get_property(self, idx, prop):
@@ -608,4 +607,57 @@ class ConformationalEnsemble(Ensemble):
 
         return self
 
+    def boltzmann_average(self, which, energies=None, temp=298, energy_unit="hartree", return_weights=False):
+        """
+        Computes the Boltzmann-weighted average of a property over the whole ensemble.
 
+        Args:
+            which (str): which property to compute
+            energy (np.ndarray): list of energies to use for weighting.
+                Will default to ``self[:,"energy"]``, although other strings can be passed as well as shorthand for ``self[:,energy]``.
+            temp (float): temperature for Boltzmann-weighting, in K
+            energy_unit (str): either ``kcal_mol`` or ``hartree``
+            return_weights (bool): whether to return a list of weights too
+
+        Returns:
+            weighted property, of the same shape as the individual property
+        """
+        if energies is None:
+            energies = self[:,"energy"]
+        elif isinstance(energies, str):
+            energies = self[:,energies]
+        elif isinstance(energies, (list, np.ndarray, cctk.OneIndexedArray)):
+            pass
+        else:
+            raise ValueError(f"invalid energy value {energies} (type {type(energies)})")
+
+        for i, (m, pd) in enumerate(self.items()):
+            assert which in pd, f"molecule #{i} doesn't have property {which} defined!"
+
+        values = np.array(self[:,which], dtype=np.float64)
+        energies = np.array(energies, dtype=np.float64)
+
+        assert len(energies) == len(self)
+        assert len(values) == len(self)
+        assert all([e is not None for e in energies]), "energy not defined for all molecules"
+        assert all([v is not None for v in values]), f"property {which} not defined for all molecules"
+
+        # perhaps at some point we will need a real unit system like simtk/OpenMM, but not today!
+        if energy_unit == "kcal_mol":
+            energies = energies / 627.509
+        energies = energies - np.min(energies)
+
+        R = 3.1668105e-6 # eH/K
+
+        weights = np.exp(-1*energies/(R*temp))
+        weights = weights / np.sum(weights)
+
+        try:
+            weighted_value = np.average(values, weights=weights)
+        except Exception as e:
+            raise ValueError(f"error computing Boltzmann average: {e}")
+
+        if return_weights:
+            return weighted_value, weights
+        else:
+            return weighted_value

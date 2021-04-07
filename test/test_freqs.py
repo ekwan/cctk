@@ -47,7 +47,7 @@ class TestFrequencies(unittest.TestCase):
 
         energies = list()
         for i in range(1000):
-            _, e = qc.get_quasiclassical_perturbation(mol)
+            _, e, _ = qc.get_quasiclassical_perturbation(mol)
             energies.append(e)
 
         energies = np.array(energies)
@@ -63,10 +63,10 @@ class TestFrequencies(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
 
         mol = file.get_molecule()
-        mol2, e = qc.get_quasiclassical_perturbation(mol)
+        mol2, e, _ = qc.get_quasiclassical_perturbation(mol)
         self.assertTrue(isinstance(mol2, cctk.Molecule))
 
-        mol3, e, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True)
+        mol3, e, _, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True)
         self.assertTrue(isinstance(mol3, cctk.Molecule))
 
     def test_final_structure(self):

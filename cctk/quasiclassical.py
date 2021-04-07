@@ -36,12 +36,14 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
 
     mol = copy.deepcopy(molecule)
     total_PE = 0
+    total = 0
 
     velocities = np.zeros_like(molecule.geometry.view(np.ndarray)).view(cctk.OneIndexedArray)
 
     for mode in mol.vibrational_modes:
-        PE, KE = apply_vibration(mol, mode, temperature=temperature)
+        PE, KE, TE = apply_vibration(mol, mode, temperature=temperature)
         total_PE += PE
+        total += TE
 
         #### below code initializes velocities. pulling from jprogdyn Initializer lines 440 & onwards.
 
@@ -55,9 +57,9 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
                 velocities[idx] += mode_velocity * mode.displacements[idx]
 
     if return_velocities:
-        return mol, total_PE, velocities
+        return mol, total_PE, total, velocities
     else:
-        return mol, total_PE
+        return mol, total_PE, total
 
 def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False):
     """
@@ -91,7 +93,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False)
     if verbose:
         print(f"Mode {mode.frequency:.2f} ({mode.energy():.2f} kcal/mol)\t QC Level {level}\t Shift {rel_shift:.2%} of a potential {max_shift:.2f} Å\tPE = {potential_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2")
 
-    return potential_energy, kinetic_energy
+    return potential_energy, kinetic_energy, energy
 
 def get_hermite_polynomial(n):
     """
