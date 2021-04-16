@@ -87,16 +87,23 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
             cctk.XYZFile.write_molecule_to_file(f"{tmpdir}/xtb-in.xyz", molecule)
             result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
 
-            output_mol, energy_file = None, None
+            output_mol, energy = None, None
             if opt:
                 output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").molecule
                 energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
-            else:
-                print("Need to read energy from xtb-out.out!")
-                raise NotImplementedError
+                fields = energy_file[1].split()
+                energy, gradient = float(fields[1]), float(fields[3])
 
-            fields = energy_file[1].split()
-            energy, gradient = float(fields[1]), float(fields[3])
+            else:
+                # stopgap solution but should work ok. XTB output files should actually be parsed eventually. 
+                # ccw 4.15.21
+                output_file = cctk.File.read_file(f"{tmpdir}/xtb-out.out")
+                r = re.compile("total energy\s+(-?\d+.\d+)", re.IGNORECASE)
+                for line in output_file[::-1]:
+                    m = r.search(line)
+                    if m:
+                        energy = float(m.group(1))
+                        break
 
             if return_energy:
                 return output_mol, energy

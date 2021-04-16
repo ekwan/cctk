@@ -22,6 +22,8 @@ class TestMolecule(unittest.TestCase):
         for x1, x2 in zip(np.ravel(mol2.geometry), np.ravel(mol.geometry)):
             self.assertTrue(abs(float(x1)-float(x2)) < 0.1)
 
+        self.assertTrue(mol.compute_energy() + 66.474523114714 < 0.00001)
+
     def skip_test_csearch(self):
         mol = cctk.GaussianFile.read_file("test/static/L-Ala.gjf").get_molecule()
 
