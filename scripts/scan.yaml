@@ -1,0 +1,108 @@
+base:
+    route_card: "#p opt=(ts,calcfc,noeigentest,maxstep=5) freq=noraman pop=hirshfeld"
+    footer: null
+dimensions:
+    dimension1:
+        name:
+            - b3lyp
+            - b3lyp-d3bj
+            - bp86 
+            - bp86-d3bj
+            - b3p86 
+            - b3pw91
+            - b97d
+            - b98
+            - bmk
+            - pbe0
+            - pbe0_d3bj
+            - wb97xd
+            - m05
+            - m052x
+            - m062x
+            - m06
+            - m06l
+            - m11
+            - mn15
+            - sogga11x
+            - lcwpbe
+            - camb3lyp
+            - vsxc
+            - tpss
+            - tpssh
+            - hf
+            - mp2
+            - b2plyp
+            - b2plypd3
+            - mpw2plyp
+            - dsdpbep86
+        route_card:
+            - b3lyp
+            - b3lyp empiricaldispersion=gd3bj
+            - bp86 
+            - bp86 empiricaldispersion=gd3bj
+            - b3p86 
+            - b3pw91
+            - b97d
+            - b98
+            - bmk
+            - pbe1pbe
+            - pbe1pbe empiricaldispersion=gd3bj
+            - wb97xd
+            - m05
+            - m052x
+            - m062x
+            - m06
+            - m06l
+            - m11
+            - mn15
+            - sogga11x
+            - lcwpbe
+            - camb3lyp
+            - vsxc
+            - tpsstpss
+            - tpssh
+            - hf
+            - mp2
+            - b2plyp
+            - b2plypd3
+            - mpw2plyp
+            - dsdpbep86
+    dimension2:
+        name:
+            - 631plusgdp
+            - 631gd
+            - jundz
+            - juntz
+            - def2tzvp
+            - pcseg1
+            - aug-pcseg1
+            - aug-pcseg2
+        route_card:
+            - 6-311+g(d,p)
+            - 6-31g(d)
+            - jun-cc-pvdz
+            - jun-cc-pvtz
+            - def2tzvp
+            - gen
+            - gen
+            - gen
+        footer:
+            - null
+            - null
+            - null
+            - null
+            - null
+            - "@/n/home03/cwagen/basis_sets/pcseg1.bas"
+            - "@/n/home03/cwagen/basis_sets/aug-pcseg1.bas"
+            - "@/n/home03/cwagen/basis_sets/aug-pcseg2.bas"
+    dimension3:
+        name:
+            - gas
+            - pcm
+            - cpcm
+            - smd
+        route_card:
+            - null
+            - scrf=(pcm,solvent=toluene)
+            - scrf=(cpcm,solvent=toluene)
+            - scrf=(smd,solvent=toluene)
