@@ -98,7 +98,7 @@ class VibrationalMode:
     def random_displacement(self, level=0, method="quasiclassical", max_attempts=1e5):
         """
         Args:
-            method (str): "quasiclassical" for now
+            method (str): "quasiclassical" or "classical"
             level (int): which vibrational level
             max_attempts (int): how many tries you get
 
@@ -124,9 +124,25 @@ class VibrationalMode:
                     attempts += 1
 
             raise ValueError("max_attempts exceeded - can't get a proper initialization for this mode!")
-        else:
-            raise ValueError(f"invalid method {method} - only ``quasiclassical`` implemented currently!")
+        elif method == "classical":
+            min_val = self.classical_distribution_value(0)
+            max_x = self.classical_turning_point()
+            max_val = self.classical_distribution_value(max_x)
 
+            attempts = 0
+            while attempts < max_attempts:
+                x = np.random.uniform(-1*max_x, max_x)
+                p = self.classical_distribution_value(max_x)
+
+                y = np.random.uniform(min_val, max_val)
+                if y < p:
+                    return x
+                else:
+                    attempts += 1
+        else:
+            raise ValueError(f"invalid method {method} - only ``quasiclassical`` and ``classical`` implemented currently!")
+
+        raise ValueError("Max attempts exceeded!")
 
     def quantum_distribution_value(self, x, level=0):
         """
@@ -174,6 +190,13 @@ class VibrationalMode:
                 max_p = p
 
         return max_p
+
+    def classical_distribution_value(self, x, num_pts=1e5):
+        """
+        Returns the value of the classical distribution at the specified ``x`` value.
+        """
+        max_x = self.classical_turning_point()
+        return 1/(math.pi * math.sqrt(max_X**2 - x**2))
 
     def classical_turning_point(self, level=0):
         """
