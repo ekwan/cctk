@@ -5,7 +5,7 @@ import cctk
 
 class TestSolventExtraction(unittest.TestCase):
     def test_basic(self):
-        mol = cctk.XYZFile.read_file("test/static/acetone_water.xyz").molecule
+        mol = cctk.XYZFile.read_file("test/static/acetone_water.xyz").get_molecule()
         mol.assign_connectivity()
         self.assertFalse(mol.num_atoms() == 40)
         new_mol = mol.limit_solvent_shell(num_solvents=10)

@@ -6,9 +6,9 @@ class TestXYZ(unittest.TestCase):
     def test_readfile(self):
         path = "test/static/test_peptide.xyz"
         file = cctk.XYZFile.read_file(path)
-        self.assertEqual(file.title, "peptide example")
+        self.assertEqual(file.titles[0], "peptide example")
 
-        mol = file.molecule
+        mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 31)
         self.assertTrue(mol.check_for_conflicts())
@@ -31,19 +31,18 @@ class TestXYZ(unittest.TestCase):
 
     def test_traj(self):
         path = "test/static/methane_traj.xyz"
-        files = cctk.XYZFile.read_trajectory(path)
+        file = cctk.XYZFile.read_trajectory(path)
 
-        self.assertEqual(len(files), 250)
-        self.assertTrue(isinstance(files[0], cctk.XYZFile))
-        self.assertEqual(files[0].molecule.num_atoms(), 5)
+        self.assertEqual(len(file.ensemble), 251)
+        self.assertEqual(file.get_molecule().num_atoms(), 5)
 
     def test_ense(self):
         path = "test/static/methane_traj.xyz"
-        ense = cctk.XYZFile.read_ensemble(path)
-        self.assertEqual(len(ense), 250)
+        file = cctk.XYZFile.read_ensemble(path)
+        self.assertEqual(len(file.ensemble), 251)
 
         new_path = "test/static/methane_traj_new.xyz"
-        cctk.XYZFile.write_ensemble_to_file(new_path, ense, title="sample title")
+        cctk.XYZFile.write_ensemble_to_file(new_path, file.ensemble, title="sample title")
         os.remove(new_path)
 
 class TestMAE(unittest.TestCase):

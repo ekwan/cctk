@@ -540,9 +540,7 @@ class GaussianFile(File):
         # some methods pass num=None, which overrides setting the default above
         if num is None:
             num = -1
-
-        if not isinstance(num, int):
-            raise TypeError("num must be int")
+        assert isinstance(num, int), "num must be int"
 
         if properties:
             return self.ensemble.molecule_list()[num], self.ensemble.properties_list()[num]

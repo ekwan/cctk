@@ -16,7 +16,6 @@ XYZ Files
 - *cctk* assumes the first line is the number of atoms, the second line is the title,
   and the third and subsequent lines are geometry specifications of the form
   ``atom_symbol x_position y_position z_position``.
-- Multiple structures per ``xyz`` file are not currently supported.
 
 ::
 
@@ -25,8 +24,11 @@ XYZ Files
     file = cctk.XYZFile.read_file(path)
     
     # file contents
-    file.title == "peptide example"
-    molecule = file.molecule
+    file.titles[0] == "peptide example"
+    ensemble = file.ensemble
+
+    # convenient accessor
+    molecule = file.get_molecule()
 
     # write xyz
     assert isinstance(molecule2, Molecule)

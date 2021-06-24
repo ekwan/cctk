@@ -12,13 +12,13 @@ class TestOrca(unittest.TestCase):
         new_path = "test/static/test_peptide_copy.inp"
 
         file = cctk.XYZFile.read_file(read_path)
-        self.assertTrue(isinstance(file.molecule, cctk.Molecule))
+        self.assertTrue(isinstance(file.get_molecule(), cctk.Molecule))
 
         header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint"
         variables = {"maxcore": 4000}
         blocks = {"pal": ["nproc 4"], "mdci": ["density none"]}
 
-        cctk.OrcaFile.write_molecule_to_file(new_path, file.molecule, header, variables, blocks)
+        cctk.OrcaFile.write_molecule_to_file(new_path, file.get_molecule(), header, variables, blocks)
 
         with open(path) as old:
             with open(new_path) as new:
@@ -30,7 +30,7 @@ class TestOrca(unittest.TestCase):
         os.remove(new_path)
 
         ensemble = cctk.ConformationalEnsemble()
-        ensemble.add_molecule(file.molecule)
+        ensemble.add_molecule(file.get_molecule())
 
         orca_file = cctk.OrcaFile(job_types=[cctk.OrcaJobType.SP], ensemble=ensemble, header=header, blocks=blocks, variables=variables)
         orca_file.write_file(new_path)

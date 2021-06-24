@@ -1,4 +1,4 @@
-import re
+import re, itertools
 import numpy as np
 
 import cctk
@@ -10,41 +10,58 @@ class XYZFile(cctk.File):
     Class representing plain ``.xyz`` files.
 
     Attributes:
-        title (str): the title from the file
-        molecule (Molecule): `Molecule` instance
+        titles (list of str): the title or titles from the file
+        ensemble (Ensemble): `Ensemble` instance
     """
 
-    def __init__(self, molecule, title=None):
-        if molecule and isinstance(molecule, cctk.Molecule):
-            self.molecule = molecule
-        if title and (isinstance(title, str)):
-            self.title = title
+    def __init__(self, ensemble, titles):
+        assert isinstance(ensemble, cctk.Ensemble), "ensemble must be cctk.Ensemble"
+        self.ensemble = ensemble
+
+        assert isinstance(titles, list), "title must be list"
+        self.titles = titles
 
     @classmethod
-    def read_file(cls, filename, charge=0, multiplicity=1):
+    def read_file(cls, filename, charge=0, multiplicity=1, conformational=False):
         """
         Factory method to create new XYZFile instances.
-
 
         Arguments:
             filename (str): path to ``.xyz`` file
             charge (int): charge of resultant molecule
             multiplicity (int): multiplicity of resultant molecule
+            conformational (bool): whether or not it's a conformational ensemble
         """
-        lines = super().read_file(filename)
-        xyzfile = cls.file_from_lines(lines)
-
         assert isinstance(charge, int), "charge must be integer"
         assert isinstance(multiplicity, int), "multiplicity must be integer"
         assert multiplicity > 0, "multiplicity must be a positive integer"
 
-        xyzfile.molecule.charge = charge
-        xyzfile.molecule.multiplicity = multiplicity
+        ensemble = cctk.Ensemble()
+        if conformational:
+            ensemble = cctk.ConformationalEnsemble()
+        titles = list()
 
-        return xyzfile
+        lines = super().read_file(filename)
+        current_lines = list()
+        for line in lines:
+            if re.search(r"^\s*\d+$", line):
+                if len(current_lines) > 0:
+                    t, m = cls.mol_from_lines(current_lines, charge=charge, multiplicity=multiplicity)
+                    ensemble.add_molecule(m)
+                    titles.append(t)
+                    current_lines = list()
+            current_lines.append(line)
+
+        # catch the last molecule
+        if len(current_lines) > 0:
+            t, m = cls.mol_from_lines(current_lines, charge=charge, multiplicity=multiplicity)
+            ensemble.add_molecule(m)
+            titles.append(t)
+
+        return XYZFile(ensemble, titles)
 
     @classmethod
-    def file_from_lines(cls, lines):
+    def mol_from_lines(cls, lines, charge=0, multiplicity=1):
         num_atoms = 0
         try:
             num_atoms = int(lines[0])
@@ -78,8 +95,8 @@ class XYZFile(cctk.File):
                 raise ValueError(f"can't parse line {index+2}: {line}")
 
         assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
-        molecule = cctk.Molecule(atomic_numbers, geometry)
-        return XYZFile(molecule, title)
+        molecule = cctk.Molecule(atomic_numbers, geometry, charge=charge, multiplicity=multiplicity)
+        return title, molecule
 
     @classmethod
     def write_molecule_to_file(cls, filename, molecule, title="title", append=False):
@@ -106,54 +123,29 @@ class XYZFile(cctk.File):
         else:
             super().write_file(filename, text)
 
-    def write_file(self, filename):
+    def write_file(self, filename, idx=-1):
         """
         Write an ``.xyz`` file, using object attributes.
-        """
-        self.write_molecule_to_file(filename, self.molecule, title=self.title)
-
-    @classmethod
-    def read_trajectory(cls, filename):
-        """
-        Read an ``.xyz`` trajectory file, which is just a bunch of concatenated ``.xyz`` files.
-        Currently the files must be separated by nothing (no blank line, just one after the other) although this may be changed in future.
 
         Args:
-            filename (str): path to file
-
-        Returns:
-            list of ``cctk.XYZFile`` objects in the order they appear in the file
+            idx (int): the index of the molecule to write
         """
-        files = []
-        lines = super().read_file(filename)
-
-        current_lines = list()
-        for line in lines:
-            if re.search(r"^\s*\d+$", line):
-                if len(current_lines) > 0:
-                    files.append(cls.file_from_lines(current_lines))
-                    current_lines = list()
-            current_lines.append(line)
-
-        return files
+        assert isinstance(idx, int), "idx must be int"
+        self.write_molecule_to_file(filename, self.get_molecule(idx), title=self.titles[idx])
 
     @classmethod
-    def read_ensemble(cls, filename, conformational=False):
+    def read_trajectory(cls, filename, **kwargs):
         """
-        Alias for read_trajectory.
+        Post refactoring, just an alias for ``XYZFile.read_file()``.
         """
-        files = cls.read_trajectory(filename)
+        return cls.read_file(filename, **kwargs)
 
-        ensemble = None
-        if conformational:
-            ensemble = cctk.ConformationalEnsemble()
-        else:
-            ensemble = cctk.Ensemble()
-
-        for f in files:
-            ensemble.add_molecule(f.molecule)
-
-        return ensemble
+    @classmethod
+    def read_ensemble(cls, filename, **kwargs):
+        """
+        Post refactoring, just an alias for ``XYZFile.read_file()``.
+        """
+        return cls.read_file(filename, **kwargs)
 
     @classmethod
     def write_ensemble_to_file(cls, filename, ensemble, title=None):
@@ -173,3 +165,17 @@ class XYZFile(cctk.File):
                 cls.write_molecule_to_file(filename, molecule, title=title, append=False)
             else:
                 cls.write_molecule_to_file(filename, molecule, title=title, append=True)
+
+    def get_molecule(self, num=None):
+        """
+        Returns a given molecule.
+
+        If ``num`` is specified, returns ``self.ensemble.molecule_list()[num]``
+        """
+        # some methods pass num=None, which overrides setting the default above
+        if num is None:
+            num = -1
+        assert isinstance(num, int), "num must be int"
+        return self.ensemble.molecule_list()[num]
+
+

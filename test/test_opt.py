@@ -6,7 +6,7 @@ import cctk.optimize as opt
 
 class TestMolecule(unittest.TestCase):
     def load_molecule(self, path="test/static/test_peptide.xyz"):
-        return cctk.XYZFile.read_file(path).molecule
+        return cctk.XYZFile.read_file(path).get_molecule()
 
     def test_basic(self):
         mol = self.load_molecule()

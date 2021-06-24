@@ -89,7 +89,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
 
             output_mol, energy = None, None
             if opt:
-                output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").molecule
+                output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").get_molecule()
                 energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
                 fields = energy_file[1].split()
                 energy, gradient = float(fields[1]), float(fields[3])
