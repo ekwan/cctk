@@ -12,11 +12,15 @@ class XYZFile(cctk.File):
     Attributes:
         titles (list of str): the title or titles from the file
         ensemble (Ensemble): `Ensemble` instance
+        molecule (Molecule): `Molecule` instance representing the first molecule in the file. deprecated, but present for backwards compatibility.
     """
 
     def __init__(self, ensemble, titles):
         assert isinstance(ensemble, cctk.Ensemble), "ensemble must be cctk.Ensemble"
         self.ensemble = ensemble
+
+        # backwards compatibility
+        self.molecule = ensemble[0]
 
         assert isinstance(titles, list), "title must be list"
         self.titles = titles
