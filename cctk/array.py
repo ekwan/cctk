@@ -16,7 +16,6 @@ class OneIndexedArray(np.ndarray):
     def __getitem__(self, index):
         index = copy.deepcopy(index)
         if isinstance(index, slice):
-            start, stop = None, None
             if index.start is None:
                 start = 0
             else:

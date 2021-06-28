@@ -1,7 +1,5 @@
-import numpy as np
-
 import cctk
-from cctk.helper_functions import get_symbol, get_number
+from cctk.helper_functions import get_symbol
 
 
 class SIFile(cctk.File):

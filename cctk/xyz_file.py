@@ -1,4 +1,4 @@
-import re, itertools, warnings
+import re, warnings
 import numpy as np
 
 import cctk

@@ -1,4 +1,4 @@
-import cctk, sys, yaml, tqdm
+import cctk, sys, tqdm
 
 # usage: python generate_si.py config.txt output.txt
 # config should be tab-separated list of titles and filenames

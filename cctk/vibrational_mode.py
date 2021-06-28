@@ -1,4 +1,4 @@
-import math, copy, re
+import math
 import numpy as np
 
 import cctk
@@ -105,8 +105,6 @@ class VibrationalMode:
         Returns:
             shift
         """
-        energy = self.energy(level)
-
         if method == "quasiclassical":
             min_val = 0
             max_val = self.quantum_distribution_max(level)
@@ -173,10 +171,6 @@ class VibrationalMode:
         """
         assert isinstance(level, int) and level >= 0, "need positive integer for vibrational level"
 
-        freq = self.frequency
-        if freq < MIN_FREQUENCY:
-            freq = MIN_FREQUENCY
-
         if level == 0:
             return self.quantum_distribution_value(0)
 
@@ -196,7 +190,7 @@ class VibrationalMode:
         Returns the value of the classical distribution at the specified ``x`` value.
         """
         max_x = self.classical_turning_point()
-        return 1/(math.pi * math.sqrt(max_X**2 - x**2))
+        return 1/(math.pi * math.sqrt(max_x**2 - x**2))
 
     def classical_turning_point(self, level=0):
         """

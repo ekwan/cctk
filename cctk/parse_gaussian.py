@@ -1,84 +1,13 @@
 import numpy as np
 import re
 import ahocorasick
-import itertools
-import string
 
 import cctk
-from cctk.helper_functions import get_symbol, get_number, get_corrected_free_energy
+from cctk.helper_functions import get_corrected_free_energy
 
 """
 Functions to help with parsing Gaussian files
 """
-
-def read_nmr_shifts(blocks, num_atoms):
-    """
-    Helper method to search through output file and read NMR shifts.
-    Args:
-        lines (list): list of lines in file
-        num_atoms (int): number of atoms expected
-    Returns:
-        list of isotropic NMR shifts (np.ndarray)
-        list of shielding tensors (list of 3x3 np.ndarray)
-    """
-    # assumes that lines only come from one Link1 section
-    shieldings = []
-    tensors = []
-    for block in blocks:
-        lines = block.split("\n")
-        tensor = np.zeros(shape=(3,3))
-        for line in lines:
-            fields = line.split()
-            # there are 8 on each line but we truncate the first 2 in the block selection process
-            if len(fields) == 6 and fields[0] == "Isotropic" and fields[3] == "Anisotropy":
-                fields = line.split()
-                assert len(fields) == 6, f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
-                try:
-                    shielding = float(fields[2])
-                except:
-                    raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
-                shieldings.append(shielding)
-
-        # yes, this is very elegant.
-        tensor[0][0] = float(re.search("XX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[0][1] = float(re.search("XY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[0][2] = float(re.search("XZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][0] = float(re.search("YX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][1] = float(re.search("YY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][2] = float(re.search("YZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][0] = float(re.search("ZX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][1] = float(re.search("ZY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensors.append(tensor)
-
-    if len(shieldings) is not 0:
-        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
-        for shielding, tensor in zip(shieldings, tensors):
-            assert 0.01 > abs(np.trace(tensor)/3 - shielding)
-        return np.asarray(shieldings), tensors
-    else:
-        #### we can catch this problem later if the file is finished
-        return None, None
-
-def split_link1(filename):
-    """
-    Splits ``filename`` into blocks by searching for "Entering Link 1".
-    Args:
-        filename (str): path to file
-    Returns:
-        list of list of lines by Link1 section; so a file with one Link1 specification would return [lines1, lines2]
-    """
-    link1_blocks = []
-
-    start_block = 0
-    with open(filename, "r") as lines:
-        for idx, line in enumerate(lines):
-            if re.search("Entering Link 1", line):
-                link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
-                start_block = idx
-    link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
-
-    return link1_blocks[1:] #### the first block is just a few lines
 
 def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_info=False):
 
@@ -308,11 +237,11 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
             # very small molecules might only have 1 or 2 freqs
             try:
                 frequencies += extract_parameter(word_matches[14], 3)
-            except:
+            except Exception as e:
                 pass
             try:
                 frequencies += extract_parameter(word_matches[14], 4)
-            except:
+            except Exception as e:
                 pass
 
             properties[-1]["frequencies"] = sorted(frequencies)
@@ -730,3 +659,74 @@ def parse_cc_energies(lines):
 
 def parse_ci_energies(lines):
     return parse_cc_energies(lines)
+
+def read_nmr_shifts(blocks, num_atoms):
+    """
+    Helper method to search through output file and read NMR shifts.
+    Args:
+        lines (list): list of lines in file
+        num_atoms (int): number of atoms expected
+    Returns:
+        list of isotropic NMR shifts (np.ndarray)
+        list of shielding tensors (list of 3x3 np.ndarray)
+    """
+    # assumes that lines only come from one Link1 section
+    shieldings = []
+    tensors = []
+    for block in blocks:
+        lines = block.split("\n")
+        tensor = np.zeros(shape=(3,3))
+        for line in lines:
+            fields = line.split()
+            # there are 8 on each line but we truncate the first 2 in the block selection process
+            if len(fields) == 6 and fields[0] == "Isotropic" and fields[3] == "Anisotropy":
+                fields = line.split()
+                assert len(fields) == 6, f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
+                try:
+                    shielding = float(fields[2])
+                except Exception as e:
+                    raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
+                shieldings.append(shielding)
+
+        # yes, this is very elegant.
+        tensor[0][0] = float(re.search("XX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][1] = float(re.search("XY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][2] = float(re.search("XZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][0] = float(re.search("YX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][1] = float(re.search("YY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][2] = float(re.search("YZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][0] = float(re.search("ZX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][1] = float(re.search("ZY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensors.append(tensor)
+
+    if len(shieldings) is not 0:
+        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        for shielding, tensor in zip(shieldings, tensors):
+            assert 0.01 > abs(np.trace(tensor)/3 - shielding)
+        return np.asarray(shieldings), tensors
+    else:
+        #### we can catch this problem later if the file is finished
+        return None, None
+
+def split_link1(filename):
+    """
+    Splits ``filename`` into blocks by searching for "Entering Link 1".
+    Args:
+        filename (str): path to file
+    Returns:
+        list of list of lines by Link1 section; so a file with one Link1 specification would return [lines1, lines2]
+    """
+    link1_blocks = []
+
+    start_block = 0
+    with open(filename, "r") as lines:
+        for idx, line in enumerate(lines):
+            if re.search("Entering Link 1", line):
+                link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
+                start_block = idx
+    link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
+
+    return link1_blocks[1:] #### the first block is just a few lines
+
+

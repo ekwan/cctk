@@ -1,8 +1,6 @@
 import sys, re, glob, cctk, argparse
-import numpy as np
 import pandas as pd
 import multiprocessing as mp
-from multiprocessing import freeze_support
 
 from tabulate import tabulate
 from tqdm import tqdm
@@ -11,12 +9,12 @@ from tqdm import tqdm
 #### In contrast to ``monitor.py``, this script analyzes many files! 
 #### If the file has not successfully achieved SCF convergence at least once, that file will not display any information. 
 
-#### Usage: ``python analyze.py "path/to/output/*.out"``
+#### Usage: ``python analyze.py path/to/output/*.out``
 #### NOTE: It's crucial to wrap the wildcard-containing path in quotes!
 
 #### NOTE: This file will reject any file that contains the string "slurm."
 
-#### Corin Wagen and Eugene Kwan, 2019
+#### Corin Wagen, 2021
 
 def read(file):
     if re.match("slurm", file):
@@ -37,17 +35,18 @@ def main():
     results = cctk.Ensemble()
 
     parser = argparse.ArgumentParser(prog="analyze.py")
-    parser.add_argument("--g", action="store_true")
-    parser.add_argument("--h", action="store_true")
-    parser.add_argument("--standard_state", action="store_true", default=False)
-    parser.add_argument("--correct_gibbs", action="store_true", default=False)
-    parser.add_argument("--sort", action="store_true", default=False)
-    parser.add_argument("filename")
+    parser.add_argument("--g", action="store_true", help="Compute relative energies with Gibbs free energy insteadd of electronic energy")
+    parser.add_argument("--h", action="store_true", help="Compute relative energies with enthalpy instead of electronic energy")
+    parser.add_argument("--standard_state", action="store_true", default=False, help="Correct GFE to 1 M standard state")
+    parser.add_argument("--correct_gibbs", action="store_true", default=False, help="Apply quasiclassical Cramer/Truhlar correction to GFE")
+    parser.add_argument("--sort", action="store_true", default=False, help="Sort output files by relative energy")
+    parser.add_argument("filename", nargs="+", help="Output files to read")
     args = vars(parser.parse_args(sys.argv[1:]))
 
     print("\n\033[3mreading files:\033[0m")
 
-    files = glob.glob(args["filename"], recursive=True)
+#    files = glob.glob(args["filename"], recursive=True)
+    files = args["filename"]
 
     pool = mp.Pool(processes=16)
     for output_file in tqdm(pool.imap(read, files), total=len(files)):
@@ -101,7 +100,7 @@ def main():
     else:
         try:
             df["rel_energy"] = (df.energy - df.energy.min()) * 627.509469
-        except:
+        except Exception as e:
             df["rel_energy"] = 0
 
     if args["sort"]:
@@ -125,6 +124,6 @@ def main():
     print(tabulate(df, headers="keys", tablefmt="presto", floatfmt=".5f"))
 
 if __name__ == '__main__':
-    freeze_support()
+    mp.freeze_support()
     main()
 

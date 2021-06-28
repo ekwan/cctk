@@ -7,7 +7,6 @@ Moved out of ``cctk.Molecule`` because the file was getting unwieldy.
 import numpy as np
 import networkx as nx
 import copy
-import cctk
 
 from cctk.helper_functions import (
     compute_chirality,
@@ -218,7 +217,7 @@ def get_exchangeable_centers(mol):
     exchangeable_centers = []
     for center in centers:
         try:
-            mol2 = exchange_identical_substituents(mol, center)
+            exchange_identical_substituents(mol, center)
             exchangeable_centers.append(center)
             continue
         except Exception as e:

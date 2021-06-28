@@ -92,7 +92,6 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
     if mode.frequency < min_freq:
         rel_shift = 0
 
-    mode_coords = mode.displacements
     molecule.geometry += mode.displacements * rel_shift * max_shift
 
     potential_energy = 0.5 * mode.force_constant * shift ** 2

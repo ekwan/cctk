@@ -2,7 +2,6 @@
 Functions to assist in optimizing structures.
 """
 
-import numpy as np
 import os, tempfile, shutil, re
 import cctk
 import subprocess as sp
@@ -85,7 +84,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
         os.environ["MKL_NUM_THREADS"] = str(nprocs)
         with tempfile.TemporaryDirectory() as tmpdir:
             cctk.XYZFile.write_molecule_to_file(f"{tmpdir}/xtb-in.xyz", molecule)
-            result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
+            sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=tmpdir, shell=True)
 
             output_mol, energy = None, None
             if opt:

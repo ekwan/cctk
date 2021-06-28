@@ -4,7 +4,6 @@ Miscellaneous helper functions.
 
 import numpy as np
 import math, re
-from scipy.spatial.distance import cdist
 from io import BytesIO
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
@@ -407,7 +406,6 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
 #            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
             all_labels = [ f"{current_symbol}{atom_number}" for current_symbol,atom_number in zip(atomic_symbols,atom_numbers) ]
             all_labels = cctk.OneIndexedArray(all_labels)
-            label_dict = dict(zip(atom_numbers,all_labels))
 
             # check symmetrical atom numbers make sense
             n_atoms = len(atomic_numbers)
