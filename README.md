@@ -1,6 +1,11 @@
 
 # cctk
 
+[![PyPI version](https://badge.fury.io/py/cctk.svg)](https://pypi.python.org/pypi/cctk/)
+[![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
+[![Downloads](https://img.shields.io/pypi/dm/cctk.svg)](https://pypi.python.org/pypi/cctk/)
+[![Code Quality](https://img.shields.io/lgtm/grade/python/g/ekwan/cctk.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ekwan/cctk/context:python)
+
 *a Python-based computational chemistry toolkit*
 
 *cctk* simplifies the computational modeling of organic reactions and small molecule structures by automating routine interactions with quantum chemistry software packages:
@@ -16,10 +21,6 @@ A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-s
 *cctk* is primarily designed for use with [Gaussian 16](https://gaussian.com). Some support is provided for other file formats (`.xyz`, `.mol2`, `.pdb`, [Schrodinger](https://www.schrodinger.com) `mae`, and [Orca](https://sites.google.com/site/orcainputlibrary/) `.inp`/`.out`).
 
 ## Installation
-
-[![PyPI version](https://badge.fury.io/py/cctk.svg)](https://badge.fury.io/py/cctk)
-[![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
-[![Downloads](https://img.shields.io/pypi/dm/cctk.svg)](https://pypi.python.org/pypi/cctk/)
 
 ### First Time
 
