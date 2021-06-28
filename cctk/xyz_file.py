@@ -1,4 +1,4 @@
-import re, itertools
+import re, itertools, warnings
 import numpy as np
 
 import cctk
@@ -20,10 +20,15 @@ class XYZFile(cctk.File):
         self.ensemble = ensemble
 
         # backwards compatibility
-        self.molecule = ensemble[0]
+        self.molecule = ensemble.molecule_list()[0]
 
         assert isinstance(titles, list), "title must be list"
         self.titles = titles
+
+    def __getattribute__(self, name):
+        if name == "molecule":
+            warnings.warn("XYZFile attribute ``molecule`` will be removed in upcoming releases of cctk. Use ``ensemble`` attribute instead!", DeprecationWarning, stacklevel=2)
+        return cctk.File.__getattribute__(self, name)
 
     @classmethod
     def read_file(cls, filename, charge=0, multiplicity=1, conformational=False):

@@ -1,4 +1,4 @@
-import re
+import re, warnings
 import numpy as np
 
 from enum import Enum
@@ -153,7 +153,7 @@ class GaussianFile(File):
             raise ValueError("can't write a file without a route card")
 
         if not re.match(r"^#p", route_card):
-            print(f"ALERT - route card doesn't start with #p: {route_card}")
+            warnings.warn(f"route card doesn't start with #p: {route_card}")
 
         #### generate the text
         text = ""

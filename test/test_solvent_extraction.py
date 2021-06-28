@@ -14,13 +14,14 @@ class TestSolventExtraction(unittest.TestCase):
         path = "test/static/acetone_10waters.gjf"
         new_path = "test/static/new_acetone_10waters.gjf"
 
-        cctk.GaussianFile.write_molecule_to_file(
-            new_path,
-            new_mol,
-            link0={"nprocshared": 4, "mem": "3GB"},
-            route_card="#t b3lyp empiricaldispersion=gd3bj gen NMR pop=none int=finegrid nosymm",
-            footer="@/n/jacobsen_lab/ekwan/solvent/basis/pcSseg-1.bas",
-        )
+        with self.assertWarns(Warning):
+            cctk.GaussianFile.write_molecule_to_file(
+                new_path,
+                new_mol,
+                link0={"nprocshared": 4, "mem": "3GB"},
+                route_card="#t b3lyp empiricaldispersion=gd3bj gen NMR pop=none int=finegrid nosymm",
+                footer="@/n/jacobsen_lab/ekwan/solvent/basis/pcSseg-1.bas",
+            )
 
         with open(path) as old:
             with open(new_path) as new:

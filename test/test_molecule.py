@@ -226,7 +226,7 @@ class TestMolecule(unittest.TestCase):
         atoms2 = list(range(46,91))
         charges = file.ensemble[-1, "mulliken_charges"]
 
-        print(mol.coulomb_analysis(atoms1, atoms2, charges))
+#        print(mol.coulomb_analysis(atoms1, atoms2, charges))
 
 if __name__ == '__main__':
     unittest.main()
