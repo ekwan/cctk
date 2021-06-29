@@ -2,7 +2,6 @@ import re
 import numpy as np
 
 from enum import Enum
-#from abc import abstractmethod
 
 from cctk import File, Molecule, ConformationalEnsemble
 from cctk.helper_functions import get_symbol, get_corrected_free_energy

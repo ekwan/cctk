@@ -2,8 +2,6 @@ import copy
 import numpy as np
 import networkx as nx
 
-from abc import abstractmethod
-
 import cctk
 from cctk.helper_functions import get_covalent_radius, compute_angle_between, compute_rotation_matrix
 
@@ -58,7 +56,7 @@ class Group(cctk.Molecule):
         adj_v = super().get_vector(self.adjacent)
         super().translate_molecule(-adj_v)
 
-    @abstractmethod
+    @staticmethod
     def add_group_to_molecule(molecule, group, add_to, optimize=True, return_mapping=False):
         """
         Adds a `Group` object to a `Molecule` at the specified atom, and returns a new `Molecule` object (generated using `copy.deepcopy()`).
@@ -176,7 +174,7 @@ class Group(cctk.Molecule):
         else:
             raise ValueError(f"molecule contains conflicts!")
 
-    @abstractmethod
+    @staticmethod
     def remove_group_from_molecule(molecule, atom1, atom2, return_mapping=False):
         """
         The microscopic reverse of ``add_group_to_molecule`` -- splits a ``Molecule`` along the ``atom1``–``atom2`` bond
