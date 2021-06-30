@@ -66,8 +66,25 @@ class TestFrequencies(unittest.TestCase):
         mol2, e, _, _ = qc.get_quasiclassical_perturbation(mol)
         self.assertTrue(isinstance(mol2, cctk.Molecule))
 
-        mol3, e, _, _, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True)
+        mo = {
+            1: {"velocity": "zero"},
+            2: {"velocity": "zero"},
+            3: {"velocity": "zero"},
+        }
+
+        mol3, e, _, _, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
         self.assertTrue(isinstance(mol3, cctk.Molecule))
+        self.assertFalse(np.any(v)) # all should be zero, AKA False
+
+        mo = {
+            1: {"velocity": "positive", "displacement": False},
+            2: {"velocity": "positive", "displacement": False},
+            3: {"velocity": "positive", "displacement": False},
+        }
+        mol3, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
+        self.assertTrue(isinstance(mol3, cctk.Molecule))
+        self.assertTrue(te - 13.28839457 < 0.00001)
+
 
     def test_final_structure(self):
         path1 = "test/static/methane_perturbed.gjf"
