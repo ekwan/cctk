@@ -54,7 +54,7 @@ class VibrationalMode:
             return 0
 
         # zpe_ratio is probability of being in level i vs level i+1, by quantum harmonic oscillator
-        zpe_ratio = math.exp( -2 * self.energy() / BOLTZMANN_CONSTANT * temperature)
+        zpe_ratio = math.exp( -2 * self.energy() / (BOLTZMANN_CONSTANT * temperature))
         if zpe_ratio > MAX_ZPE_RATIO:
             zpe_ratio = MAX_ZPE_RATIO
 
@@ -178,7 +178,7 @@ class VibrationalMode:
 
         # there is certainly a better way to do this
         max_p = 0
-        for x in np.linspace(0, max_x, num_pts):
+        for x in np.linspace(0, max_x, int(num_pts)):
             p = self.quantum_distribution_value(x, level)
             if p > max_p:
                 max_p = p
