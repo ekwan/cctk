@@ -32,6 +32,12 @@ XYZ Files
     # convenient accessor
     molecule = file.get_molecule()
 
+    # if the file contains multiple molecules
+    for title, molecule in zip(ensemble.molecule_list(), file.titles):
+        print(title)
+        print(molecule)
+        break
+
     # write xyz
     assert isinstance(molecule2, Molecule)
     XYZFile.write_molecule_to_file(filename, molecule2, title="title"):
