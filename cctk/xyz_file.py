@@ -53,7 +53,7 @@ class XYZFile(cctk.File):
         lines = super().read_file(filename)
         current_lines = list()
         for line in lines:
-            if re.search(r"^\s*\d+$", line):
+            if re.search(r"^\s*\d+$", line) and len(current_lines) > 2:
                 if len(current_lines) > 0:
                     t, m = cls.mol_from_lines(current_lines, charge=charge, multiplicity=multiplicity)
                     ensemble.add_molecule(m)
