@@ -167,7 +167,7 @@ class VibrationalMode:
         val = math.sqrt(omega_term) * math.exp(-1 * omega_term * math.pi * x ** 2 ) * (H(math.sqrt(omega_term * math.pi) * x) ** 2) / (2 ** n * math.factorial(n))
         return val
 
-    def quantum_distribution_max(self, level=0, num_pts=1e5):
+    def quantum_distribution_max(self, level=0, num_pts=1e4):
         """
         Returns the maximum value of psi**2 for the quantum harmonic oscillator at a given level.
         """
