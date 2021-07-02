@@ -63,7 +63,7 @@ class TestFrequencies(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
 
         mol = file.get_molecule()
-        mol2, e, _, _ = qc.get_quasiclassical_perturbation(mol)
+        mol2, e, _, text = qc.get_quasiclassical_perturbation(mol)
         self.assertTrue(isinstance(mol2, cctk.Molecule))
 
         mo = {
@@ -81,10 +81,10 @@ class TestFrequencies(unittest.TestCase):
             2: {"velocity": "positive", "displacement": False},
             3: {"velocity": "positive", "displacement": False},
         }
-        mol3, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
-        self.assertTrue(isinstance(mol3, cctk.Molecule))
+        mol4, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
         self.assertTrue(te - 13.28839457 < 0.00001)
 
+        mol5, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, which="classical")
 
     def test_final_structure(self):
         path1 = "test/static/methane_perturbed.gjf"
@@ -105,3 +105,13 @@ class TestFrequencies(unittest.TestCase):
         mol = file.get_molecule()
 
         self.assertListEqual(mol.atoms_moving_in_imaginary(), [48,2,51])
+
+    def test_boltzmann(self):
+        energies = np.zeros(shape=10000)
+        for i in range(10000):
+            energies[i] = cctk.quasiclassical.random_boltzmann_energy(298)
+        mean_energy = np.average(energies)
+
+        # should be 0.2965 = 0.5 kT
+        self.assertTrue(abs(0.2965 - mean_energy) < 0.2)
+

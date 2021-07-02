@@ -95,9 +95,10 @@ class VibrationalMode:
         zpe = 0.0014305 * freq
         return zpe * (2 * level + 1)
 
-    def random_displacement(self, level=0, method="quasiclassical", max_attempts=1e5):
+    def random_displacement(self, energy=None, level=0, method="quasiclassical", max_attempts=1e5):
         """
         Args:
+            energy (float): energy of mode (for classical case)
             method (str): "quasiclassical" or "classical"
             level (int): which vibrational level
             max_attempts (int): how many tries you get
@@ -123,8 +124,9 @@ class VibrationalMode:
 
             raise ValueError("max_attempts exceeded - can't get a proper initialization for this mode!")
         elif method == "classical":
+            assert energy is not None, "need energy for classical displacement"
             min_val = self.classical_distribution_value(0)
-            max_x = self.classical_turning_point()
+            max_x = self.classical_turning_point(energy)
             max_val = self.classical_distribution_value(max_x)
 
             attempts = 0
@@ -185,18 +187,26 @@ class VibrationalMode:
 
         return max_p
 
-    def classical_distribution_value(self, x, num_pts=1e5):
+    def classical_distribution_value(self, x):
         """
         Returns the value of the classical distribution at the specified ``x`` value.
         """
         max_x = self.classical_turning_point()
+        assert (x <= max_x) and (x >= -1*max_x), "x must be in [-max_x, max_x]"
         return 1/(math.pi * math.sqrt(max_x**2 - x**2))
 
-    def classical_turning_point(self, level=0):
+    def classical_turning_point(self, energy=None, level=0):
         """
         Returns the maximum allowed shift based on modelling the mode as a classical harmonic oscillator (e.g. the point where potential energy is maximum).
+
+        Args:
+            energy (float): energy of mode
+            level (int): level to compute energy for quantum harmonic oscillator
         """
-        return math.sqrt(2 * self.energy(level) / self.force_constant)
+        if energy is None:
+            energy = self.energy(level)
+
+        return math.sqrt(2 * energy / self.force_constant)
 
     def to_string(self):
         ...
