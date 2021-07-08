@@ -98,7 +98,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
         level = mode.choose_level(temperature)
         energy = mode.energy(level)
         shift = mode.random_displacement(level=level, method=which)
-        method = f"qc(n={level})"
+        method = f"qc level {level}"
     elif which == "classical":
         energy = random_boltzmann_energy(temperature)
         shift = mode.random_displacement(energy=energy, method=which)
