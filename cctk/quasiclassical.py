@@ -116,28 +116,36 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
     if not displacement or mode.frequency < min_freq:
         shift = 0
 
-    max_shift = mode.classical_turning_point(energy)
-    rel_shift = shift/max_shift
+    max_shift = mode.classical_turning_point(energy=energy)
+    if max_shift == 0.0:
+        rel_shift = 0.0
+        print("Warning: attempted to calculate relative shift when max shift is 0!")
+    else:
+        if shift > max_shift:
+            print("Warning: requested shift of {shift:.4E} exceeds the max_shift of {max_shift:.4E}!")
+            shift = max_shift
+        rel_shift = shift/max_shift
 
     # apply displacements and compute energy breakdown
     molecule.geometry += mode.displacements * rel_shift * max_shift
     potential_energy = 0.5 * mode.force_constant * shift ** 2
     kinetic_energy = energy - potential_energy
 
-    # mode velocity = sqrt(2 * KE / reduced mass) - want value in Å/fs. we randomize the sign
+    # mode velocity = sqrt(2 * KE / reduced mass) - want value in Å/fs
     # https://stackoverflow.com/questions/46820182/randomly-generate-1-or-1-positive-or-negative-integer
     mode_velocity = math.sqrt(2*kinetic_energy*AMU_A2_FS2_PER_KCAL_MOL/mode.reduced_mass)
 
+    # choose velocity sign
     if velocity == "random":
         mode_velocity *= (1 if random.random() < 0.5 else -1)
     elif velocity == "negative":
         mode_velocity *= -1
     elif velocity == "zero":
-        mode_velocity *= 0
+        mode_velocity = 0
     elif velocity != "positive":
         raise ValueError(f"unknown value {velocity} for keywork ``velocity`` - must be ``positive``, ``negative``, ``random``, or ``zero``")
 
-    text = f"{mode.frequency:.2f} cm-1 ({energy:.2f} kcal/mol)\t{method}\t Shift {rel_shift:.2%} of {max_shift:.3f} Å"
+    text = f"{mode.frequency:.1f} cm-1 ({energy:.2f} kcal/mol)\t{method}\t Shift {rel_shift:.2%} of {max_shift:.2f} Å"
     text += f"\tPE = {potential_energy:.2f} kcal/mol\tKE = {kinetic_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2"
     if not displacement:
         text += "\n\t\tDisplacement manually set to zero"

@@ -109,7 +109,7 @@ class VibrationalMode:
         if method == "quasiclassical":
             min_val = 0
             max_val = self.quantum_distribution_max(level)
-            max_x = self.classical_turning_point()
+            max_x = self.classical_turning_point(level=level)
 
             attempts = 0
             while attempts < max_attempts:
@@ -126,7 +126,7 @@ class VibrationalMode:
         elif method == "classical":
             assert energy is not None, "need energy for classical displacement"
             min_val = self.classical_distribution_value(0)
-            max_x = self.classical_turning_point(energy)
+            max_x = self.classical_turning_point(energy=energy)
             max_val = self.classical_distribution_value(max_x)
 
             attempts = 0
@@ -176,7 +176,7 @@ class VibrationalMode:
         if level == 0:
             return self.quantum_distribution_value(0)
 
-        max_x = self.classical_turning_point()
+        max_x = self.classical_turning_point(level=level)
 
         # there is certainly a better way to do this
         max_p = 0
@@ -205,6 +205,8 @@ class VibrationalMode:
         """
         if energy is None:
             energy = self.energy(level)
+        elif energy == 0.0:
+            print("Warning: classical turning point requested when the energy is 0!")
 
         return math.sqrt(2 * energy / self.force_constant)
 

@@ -700,7 +700,7 @@ def read_nmr_shifts(blocks, num_atoms):
         tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
         tensors.append(tensor)
 
-    if len(shieldings) is not 0:
+    if len(shieldings) != 0:
         assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
         for shielding, tensor in zip(shieldings, tensors):
             assert 0.01 > abs(np.trace(tensor)/3 - shielding)
