@@ -109,7 +109,7 @@ class VibrationalMode:
         if method == "quasiclassical":
             min_val = 0
             max_val = self.quantum_distribution_max(level)
-            max_x = self.classical_turning_point(level=level)
+            max_x = self.classical_turning_point()
 
             attempts = 0
             while attempts < max_attempts:
@@ -176,7 +176,7 @@ class VibrationalMode:
         if level == 0:
             return self.quantum_distribution_value(0)
 
-        max_x = self.classical_turning_point(level=level)
+        max_x = self.classical_turning_point()
 
         # there is certainly a better way to do this
         max_p = 0

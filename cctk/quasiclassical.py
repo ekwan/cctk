@@ -145,7 +145,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
     elif velocity != "positive":
         raise ValueError(f"unknown value {velocity} for keywork ``velocity`` - must be ``positive``, ``negative``, ``random``, or ``zero``")
 
-    text = f"{mode.frequency:.1f} cm-1 ({energy:4.2f} kcal/mol)\t{method}\t Shift {shift:4.2f} of {max_shift:4.2f} Å ({rel_shift:5.0%})"
+    text = f"{mode.frequency:.1f} cm-1 ({energy:4.2f} kcal/mol)\t{method}\t Shift {shift:5.2f} of {max_shift:4.2f} Å ({rel_shift:5.0%})"
     text += f"\tPE = {potential_energy:4.2f} kcal/mol\tKE = {kinetic_energy:4.2f} kcal/mol\tk = {mode.force_constant:.1f} kcal/mol Å^-2"
     if not displacement:
         text += "\n\t\tDisplacement manually set to zero"
