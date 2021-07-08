@@ -98,7 +98,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
         level = mode.choose_level(temperature)
         energy = mode.energy(level)
         shift = mode.random_displacement(level=level, method=which)
-        method = f"quasiclassical(level={level})"
+        method = f"qc(n={level})"
     elif which == "classical":
         energy = random_boltzmann_energy(temperature)
         shift = mode.random_displacement(energy=energy, method=which)
@@ -145,8 +145,8 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
     elif velocity != "positive":
         raise ValueError(f"unknown value {velocity} for keywork ``velocity`` - must be ``positive``, ``negative``, ``random``, or ``zero``")
 
-    text = f"{mode.frequency:.1f} cm-1 ({energy:.2f} kcal/mol)\t{method}\t Shift {rel_shift:.2%} of {max_shift:.2f} Å"
-    text += f"\tPE = {potential_energy:.2f} kcal/mol\tKE = {kinetic_energy:.2f} kcal/mol\tk = {mode.force_constant:.2f} kcal/mol Å^-2"
+    text = f"{mode.frequency:.1f} cm-1 ({TotE:4.2f} kcal/mol)\t{method}\t Shift {shift:4.2f} of {max_shift:4.2f} Å (rel_shift:5.0%}"
+    text += f"\tPE = {potential_energy:4.2f} kcal/mol\tKE = {kinetic_energy:4.2f} kcal/mol\tk = {mode.force_constant:.1f} kcal/mol Å^-2"
     if not displacement:
         text += "\n\t\tDisplacement manually set to zero"
     if velocity == "zero":
