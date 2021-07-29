@@ -404,7 +404,14 @@ def extract_parameter(lines, position, cast_to_float=True):
 
 def parse_forces(force_block):
     forces = []
-    for line in force_block[0].split("\n")[2:]:
+    try:
+        split_block = force_block[0].split("\n")[2:]
+    except Exception as e:
+        print(e)
+        print("------force block-------")
+        print(force_block)
+        raise e
+    for line in split_block:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 
