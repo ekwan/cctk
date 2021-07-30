@@ -267,7 +267,10 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
 
     if cctk.GaussianJobType.FORCE in job_types:
         assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
-        forces = parse_forces(block_matches[7])
+        force_block = block_matches[7]
+        if len(force_block) == 0:
+            raise ValueError("no forces to parse!")
+        forces = parse_forces(force_block)
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types:
