@@ -16,6 +16,8 @@ XYZ Files
 - *cctk* assumes the first line is the number of atoms, the second line is the title,
   and the third and subsequent lines are geometry specifications of the form
   ``atom_symbol x_position y_position z_position``.
+- For xyz files containing multiple structures, concatenate blocks of the above form
+  without any separating blank lines.
 
 ::
 
@@ -29,6 +31,12 @@ XYZ Files
 
     # convenient accessor
     molecule = file.get_molecule()
+
+    # if the file contains multiple molecules
+    for title, molecule in zip(ensemble.molecule_list(), file.titles):
+        print(title)
+        print(molecule)
+        break
 
     # write xyz
     assert isinstance(molecule2, Molecule)

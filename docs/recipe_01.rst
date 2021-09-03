@@ -6,7 +6,8 @@ Reading and Writing Gaussian Files
 
 - ``import cctk`` is assumed.
 - Statements like ``file.title == "title"`` or ``assert molecule.num_atoms() == 31``
-  indicate what you would see if you printed the fields.
+  indicate what you would see if you printed the fields.  They are not meant to
+  be typed in directly.
 
 """""""""""""""""""""""""""""
 Reading a Gaussian Input File
@@ -22,7 +23,7 @@ Reading a Gaussian Input File
 
     # what's in the file object
     file.route_card == "#p opt freq=noraman m062x/6-31g(d) scrf=(smd,solvent=diethylether)"
-    file.job_types == [cctk.JobType.OPT, cctk.JobType.FREQ, cctk.JobType.SP]
+    file.job_types == [cctk.GaussianJob.GaussianJobType.OPT, cctk.GaussianJob.GaussianJobType.FREQ, cctk.GaussianJob.GaussianJobType.SP]
     file.link0 == {"mem": "1GB", "chk": "test.chk"}
     file.title == "title"
     file.footer == None

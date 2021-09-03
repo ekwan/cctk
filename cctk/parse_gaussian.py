@@ -267,7 +267,10 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
 
     if cctk.GaussianJobType.FORCE in job_types:
         assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
-        forces = parse_forces(block_matches[7])
+        force_block = block_matches[7]
+        if len(force_block) == 0:
+            raise ValueError("no forces to parse!")
+        forces = parse_forces(force_block)
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types:
@@ -404,7 +407,14 @@ def extract_parameter(lines, position, cast_to_float=True):
 
 def parse_forces(force_block):
     forces = []
-    for line in force_block[0].split("\n")[2:]:
+    try:
+        split_block = force_block[0].split("\n")[2:]
+    except Exception as e:
+        print(e)
+        print("------force block-------")
+        print(force_block)
+        raise e
+    for line in split_block:
         fields = re.split(" +", line)
         fields = list(filter(None, fields))
 
@@ -700,7 +710,7 @@ def read_nmr_shifts(blocks, num_atoms):
         tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
         tensors.append(tensor)
 
-    if len(shieldings) is not 0:
+    if len(shieldings) != 0:
         assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
         for shielding, tensor in zip(shieldings, tensors):
             assert 0.01 > abs(np.trace(tensor)/3 - shielding)

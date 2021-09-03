@@ -126,7 +126,7 @@ class VibrationalMode:
         elif method == "classical":
             assert energy is not None, "need energy for classical displacement"
             min_val = self.classical_distribution_value(0)
-            max_x = self.classical_turning_point(energy)
+            max_x = self.classical_turning_point(energy=energy)
             max_val = self.classical_distribution_value(max_x)
 
             attempts = 0
@@ -205,6 +205,8 @@ class VibrationalMode:
         """
         if energy is None:
             energy = self.energy()
+        else:
+            assert energy > 0, "cannot request turning point for 0 energy!"
 
         return math.sqrt(2 * energy / self.force_constant)
 

@@ -18,13 +18,15 @@ mol = file.get_molecule()
 total_PE = 0
 
 for mode in mol.vibrational_modes:
+    print()
     print(mode)
 
-    level = 0
+    level = int(input("level: "))
     energy = mode.energy(level)
 
-    rel_shift = float(input("rel_shift (%):")) / 100
-    max_shift = mode.classical_turning_point(level)
+    rel_shift = float(input("rel_shift (%): ")) / 100
+    max_shift = mode.classical_turning_point(energy=energy)
+
     shift = rel_shift * max_shift
 
     mode_coords = mode.displacements

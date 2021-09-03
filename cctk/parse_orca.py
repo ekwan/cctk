@@ -210,7 +210,7 @@ def read_nmr_shifts(lines, num_atoms):
                 raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
             shieldings.append(shielding)
 
-    if len(shieldings) is not 0:
+    if len(shieldings) != 0:
         assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
         return np.asarray(shieldings).view(OneIndexedArray)
     else:
