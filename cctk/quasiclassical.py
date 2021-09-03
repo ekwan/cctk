@@ -168,6 +168,15 @@ def get_hermite_polynomial(n):
     return Hr[n]
 
 def random_boltzmann_energy(temperature, cutoff=10, step1=0.01, step2=0.0001):
+    """
+    Randomly samples from the Boltzmann distribution appropriate for the given temperature.
+
+    Arguments:
+        temperature (int or float): in K
+        cutoff (int or float): max energy considered, in kT
+        step1: coarse numerical step, in kT
+        step2: fine numerical step, in kT
+    """
     kT = temperature * BOLTZMANN_CONSTANT
 
     random = np.random.uniform()

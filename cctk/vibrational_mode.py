@@ -195,7 +195,7 @@ class VibrationalMode:
         assert (x <= max_x) and (x >= -1*max_x), "x must be in [-max_x, max_x]"
         return 1/(math.pi * math.sqrt(max_x**2 - x**2))
 
-    def classical_turning_point(self, energy=None, level=0):
+    def classical_turning_point(self, energy=None):
         """
         Returns the maximum allowed shift based on modelling the mode as a classical harmonic oscillator (e.g. the point where potential energy is maximum).
 
@@ -204,7 +204,7 @@ class VibrationalMode:
             level (int): level to compute energy for quantum harmonic oscillator
         """
         if energy is None:
-            energy = self.energy(level)
+            energy = self.energy()
 
         return math.sqrt(2 * energy / self.force_constant)
 

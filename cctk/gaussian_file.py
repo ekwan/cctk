@@ -80,7 +80,7 @@ class GaussianFile(File):
     """
 
     def __init__(
-        self, job_types, route_card=None, link0=None, footer=None, title="title", success=0, elapsed_time=0.0
+        self, job_types=None, route_card=None, link0=None, footer=None, title="title", success=0, elapsed_time=0.0, molecule=None,
     ):
         """
         Create new GaussianFile object.
@@ -93,6 +93,7 @@ class GaussianFile(File):
             title (str): optional, title of ``.gjf`` file
             success (int): num successful terminations
             elapsed_time (float): total time for job in seconds
+            molecule (cctk.Molecule): molecule to initiate, if desired
         """
 
         if route_card and not isinstance(route_card, str):
@@ -120,6 +121,11 @@ class GaussianFile(File):
                 raise TypeError(f"invalid job_types {job_types}")
 
         self.ensemble = ConformationalEnsemble()
+
+        if molecule is not None:
+            assert isinstance(molecule, cctk.Molecule), "molecule is not a valid cctk.Molecule!"
+            self.ensemble.add_molecule(molecule)
+
         self.route_card = route_card
         self.link0 = link0
         self.footer = footer
