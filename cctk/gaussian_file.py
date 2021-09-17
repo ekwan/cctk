@@ -123,7 +123,7 @@ class GaussianFile(File):
         self.ensemble = ConformationalEnsemble()
 
         if molecule is not None:
-            assert isinstance(molecule, cctk.Molecule), "molecule is not a valid cctk.Molecule!"
+            assert isinstance(molecule, Molecule), "molecule is not a valid cctk.Molecule!"
             self.ensemble.add_molecule(molecule)
 
         self.route_card = route_card
