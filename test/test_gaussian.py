@@ -176,9 +176,9 @@ class TestGaussian(unittest.TestCase):
         self.assertTrue(-76.20098 - emp4 < 0.0001)
 
     def test_pathological(self):
-#        path = "test/static/sugar_failed.out"
-#        file = cctk.GaussianFile.read_file(path)
-#        self.assertTrue(isinstance(file, cctk.GaussianFile))
+        path = "test/static/cation_cl.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
         pass
 
 if __name__ == '__main__':

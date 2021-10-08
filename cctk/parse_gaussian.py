@@ -127,7 +127,9 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
 
             # special geometry handling :/
             if idx == 3:
-                if len(block_matches[3]) == len(word_matches[0]):
+                # ccw 10.8.2021 - changed "==" to "<=" to prevent issues where # geoms would get stuck.
+                # can't remember quite why this was needed. hopefully it is ok this way. tests pass.
+                if len(block_matches[3]) <= len(word_matches[0]):
                     block_matches[3].append(match)
                 else:
                     block_matches[3][-1] = match
