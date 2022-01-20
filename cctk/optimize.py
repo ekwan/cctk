@@ -139,7 +139,7 @@ def csearch(use_tempdir=True, **kwargs):
 
     return ensemble
 
-def _do_csearch(molecule, nprocs, logfile, noncovalent, directory, constraints):
+def _do_csearch(molecule, directory, nprocs=1, logfile=None, noncovalent=False, constraints=None):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
     assert isinstance(logfile, str)

@@ -189,8 +189,11 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
             max_int = extract_parameter(word_matches[10], 3)
             delta_e = extract_parameter(word_matches[11], 3, cast_to_float=False)
 
-        for idx, force in enumerate(rms_forces):
-            properties[idx]["rms_force"] = force
+        # ccw 10.8.2021 - ad hoc correction to Gaussian. unsure what's going on here. sometimes len(rms_forces) > len(g)
+        force_property_index = min(len(g), len(rms_forces))
+
+        for idx in range(force_property_index):
+            properties[idx]["rms_force"] = rms_forces[idx]
             properties[idx]["rms_displacement"] = rms_disp[idx]
 
             if extended_opt_info:
@@ -216,7 +219,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
                     change_in_energy = re.sub(r"Energy=", "", delta_e[idx])
                     properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
 
-    if cctk.GaussianJobType.FREQ in job_types:
+    if cctk.GaussianJobType.FREQ in job_types and len(molecules):
         enthalpies = extract_parameter(word_matches[12], 6)
         if len(enthalpies) == 1:
             properties[-1]["enthalpy"] = enthalpies[0]
@@ -267,7 +270,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
             if couplings is not None:
                 properties[-1]["j_couplings"] = couplings
 
-    if cctk.GaussianJobType.FORCE in job_types:
+    if cctk.GaussianJobType.FORCE in job_types and len(molecules):
         assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
         force_block = block_matches[7]
         if len(force_block) == 0:
@@ -275,19 +278,20 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
         forces = parse_forces(force_block)
         properties[0]["forces"] = forces
 
-    if cctk.GaussianJobType.POP in job_types:
+    if cctk.GaussianJobType.POP in job_types and len(molecules):
         if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card) and len(block_matches[8]) > 0:
             charges, spins = parse_hirshfeld(block_matches[8])
             properties[-1]["hirshfeld_charges"] = charges
             properties[-1]["hirshfeld_spins"] = spins
 
-    try:
-        charges, dipole, dipole_v = parse_charges_dipole(block_matches[9], block_matches[10])
-        properties[-1]["mulliken_charges"] = charges
-        properties[-1]["dipole_moment"] = dipole
-        properties[-1]["dipole_vector"] = dipole_v
-    except Exception as e:
-        pass
+    if len(molecules):
+        try:
+            charges, dipole, dipole_v = parse_charges_dipole(block_matches[9], block_matches[10])
+            properties[-1]["mulliken_charges"] = charges
+            properties[-1]["dipole_moment"] = dipole
+            properties[-1]["dipole_vector"] = dipole_v
+        except Exception as e:
+            pass
 
     for mol, prop in zip(molecules, properties):
         f.ensemble.add_molecule(mol, properties=prop)

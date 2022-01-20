@@ -179,7 +179,14 @@ class TestGaussian(unittest.TestCase):
         path = "test/static/cation_cl.out"
         file = cctk.GaussianFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.GaussianFile))
-        pass
+
+        path = "test/static/cation_cl2.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
+
+        path = "test/static/cation_cl3.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
 
 if __name__ == '__main__':
     unittest.main()

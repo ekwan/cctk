@@ -39,13 +39,13 @@ class SIFile(cctk.File):
             text += f"Cartesian Coordinates (Å):\n"
             for index, Z in enumerate(molecule.atomic_numbers, start=1):
                 line = molecule.get_vector(index)
-                text += f"{get_symbol(Z):>2}       {line[0]:>13.8f} {line[1]:>13.8f} {line[2]:>13.8f}\n"
+                text += f"{get_symbol(Z):>2}       {line[0]:>13.6f} {line[1]:>13.6f} {line[2]:>13.8f}\n"
 
+            text += "\n"
             if first:
                 super().write_file(filename, text)
                 first = False
             else:
-                text += "\n"
                 super().append_to_file(filename, text)
 
 

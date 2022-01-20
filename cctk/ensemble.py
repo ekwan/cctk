@@ -510,7 +510,7 @@ class ConformationalEnsemble(Ensemble):
             assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
         assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
-        assert isinstance(RMSD_cutoff, float), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
+        assert isinstance(RMSD_cutoff, (float, int)), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
         assert RMSD_cutoff > 0.0001, "must use a big enough RMSD cutoff"
 
         # align all molecules
