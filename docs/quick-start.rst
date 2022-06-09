@@ -30,7 +30,7 @@ Now, we read these files.  The molecules and their properties are stored in a
         gaussian_file = cctk.GaussianFile.read_file(filename)
         ensemble = gaussian_file.ensemble
         molecule = ensemble.molecules[-1]
-        property_dict = ensemble.get_property_dict(molecule)
+        property_dict = ensemble.get_properties_dict(molecule)
         conformational_ensemble.add_molecule(molecule,property_dict)
 
 Because these are geometry optimization jobs, each ``GaussianFile``
