@@ -9,7 +9,7 @@ from cctk.helper_functions import get_corrected_free_energy
 Functions to help with parsing Gaussian files
 """
 
-def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_info=False):
+def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_info=False, fail_silently=True):
 
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
@@ -296,8 +296,17 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
     for mol, prop in zip(molecules, properties):
         f.ensemble.add_molecule(mol, properties=prop)
 
-    f.check_has_properties()
+    if fail_silently:
+        try:
+            f.check_has_properties()
+        except Exception as e:
+            # silently exclude this file
+            return None
+    else:
+        f.check_has_properties()
+
     return f
+
 
 def parse_geometry(blocks):
     nums = []
@@ -306,7 +315,7 @@ def parse_geometry(blocks):
         current_nums = []
         current_geoms = []
         for line in block.split("\n")[4:-2]:
-            if re.search("Distance", line):
+            if re.search("Distance", line) or re.search("Rotational constants", line):
                 break
             pieces = list(filter(None, line.split(" ")))
             if len(pieces) != 6:
@@ -416,9 +425,9 @@ def parse_forces(force_block):
     try:
         split_block = force_block[0].split("\n")[2:]
     except Exception as e:
-        print(e)
-        print("------force block-------")
-        print(force_block)
+#        print(e)
+#        print("------force block-------")
+#        print(force_block)
         raise e
     for line in split_block:
         fields = re.split(" +", line)

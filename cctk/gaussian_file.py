@@ -699,7 +699,7 @@ class GaussianFile(File):
             raise ValueError(f"adding basis set {name} from basis set exchange failed!\n{e}")
 
     @classmethod
-    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
+    def read_file(cls, filename, return_lines=False, extended_opt_info=False, fail_silently=True):
 #    def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
@@ -714,6 +714,8 @@ class GaussianFile(File):
             return_lines (Bool): whether the lines of the file should be returned
             extended_opt_info (Bool): if full parameters about each opt step should be collected
                 (by default, only ``rms_displacement`` and ``rms_force`` are collected)
+            fail_silently (Bool): if true, files that fail validation will just be omitted and parsing will continue.
+                useful for monitoring jobs which are in-progress and may not have all properties written.
         Returns:
             ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
             (optional) the lines of the file (or list of lines of file for Link1 files) as Lines object
@@ -725,7 +727,9 @@ class GaussianFile(File):
         files = []
 
         for link1idx, lines in enumerate(link1_lines):
-            files.append(parse.read_file_fast(lines, filename, link1idx, extended_opt_info=extended_opt_info))
+            current_file = parse.read_file_fast(lines, filename, link1idx, extended_opt_info=extended_opt_info, fail_silently=fail_silently)
+            if current_file is not None:
+                files.append(current_file)
 
         if return_lines:
             link1_lines = parse.split_link1(filename)

@@ -188,5 +188,10 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.GaussianFile))
 
+#        path = "long.out"
+#        file = cctk.GaussianFile.read_file(path)
+#        print(file)
+#        self.assertTrue(isinstance(file[0], cctk.GaussianFile))
+
 if __name__ == '__main__':
     unittest.main()
