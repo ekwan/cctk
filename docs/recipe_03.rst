@@ -82,7 +82,7 @@ Checking For Clashes
 
 ::
 
-        no_clashes_present = molecule.check_for_conflicts()
+    no_clashes_present = molecule.check_for_conflicts()
         
 """"""""""""""""""""""""""""
 Generating Non-Ground States
@@ -97,4 +97,16 @@ Generating Non-Ground States
     # returns a new Molecule object and the energy above the ground state, sampled from the relevant Boltzmann distribution
     perturbed_molecule, energy = qc.get_quasiclassical_perturbation(molecule, temperature=350)
 
+"""""""""""""""""""""
+Optimizing Geometries
+"""""""""""""""""""""
 
+- Sometimes, it's helpful to clean up a geometry before doing further calculations.
+- Here, we use xtb-GFN2 to do the cleanup.
+- You must have `xtb` installed first (`conda install -c conda-forge xtb`).
+- By default, the molecule's geometry is altered in-place.  (To override, provide the kwarg `inplace=False`.)
+
+::
+
+    # yep, that's it
+    molecule.optimize()
