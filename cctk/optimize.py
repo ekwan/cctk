@@ -139,10 +139,12 @@ def csearch(use_tempdir=True, **kwargs):
 
     return ensemble
 
-def _do_csearch(molecule, directory, nprocs=1, logfile=None, noncovalent=False, constraints=None):
+def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=False, constraints=None):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
     assert isinstance(logfile, str)
+
+    assert gfn in [2, 1, "ff"], "invalid value for ``gfn``!"
 
     cctk.XYZFile.write_molecule_to_file(f"{directory}/xtb-in.xyz", molecule)
 
@@ -157,9 +159,9 @@ def _do_csearch(molecule, directory, nprocs=1, logfile=None, noncovalent=False, 
         command = f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
         result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
         result.check_returncode()
-        command = f"crest xtb-in.xyz --chrg {molecule.charge} -cinp .xcontrol.sample --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+        command = f"crest xtb-in.xyz --gfn{gfn} --chrg {molecule.charge} -cinp .xcontrol.sample --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
     else:
-        command = f"crest xtb-in.xyz --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+        command = f"crest xtb-in.xyz --gfn{gfn} --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
 
     if logfile:
         with open(logfile, "w") as f:
@@ -168,7 +170,7 @@ def _do_csearch(molecule, directory, nprocs=1, logfile=None, noncovalent=False, 
         result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
     result.check_returncode()
 
-    ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz")
+    ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz").ensemble
     return ensemble
 
 

@@ -20,13 +20,14 @@ class SIFile(cctk.File):
         assert len(titles) == len(ensemble)
         self.titles = titles
 
-    def write_file(self, filename, append=False):
+    def write_file(self, filename, write_xyz=False, write_dir=None):
         """
         Write an SI file.
 
         Args:
             filename (str): path to the new file
-            append (Bool): whether or not to append to file
+            write_xyz (Bool): whether or not to write ``.xyz`` files for each molecule
+            write_dir (str): where to write them too
         """
         first = True
         for title, (molecule, properties) in zip(self.titles, self.ensemble.items()):
@@ -42,6 +43,10 @@ class SIFile(cctk.File):
                 text += f"{get_symbol(Z):>2}       {line[0]:>13.6f} {line[1]:>13.6f} {line[2]:>13.8f}\n"
 
             text += "\n"
+
+            if write_xyz and write_dir is not None:
+                cctk.XYZFile.write_molecule_to_file(f"{write_dir}/{title}.xyz", molecule)
+
             if first:
                 super().write_file(filename, text)
                 first = False

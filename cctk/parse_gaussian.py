@@ -317,11 +317,22 @@ def parse_geometry(blocks):
         for line in block.split("\n")[4:-2]:
             if re.search("Distance", line) or re.search("Rotational constants", line):
                 break
+
+            # on some jobs, the normal ending flags get cut off? but this should fix it.
+            # ccw 6.10.22
+            if re.search("One-electron integrals computed using", line):
+                break
+
             pieces = list(filter(None, line.split(" ")))
             if len(pieces) != 6:
                 continue
-            current_nums.append(int(pieces[1]))
-            current_geoms.append([float(pieces[3]), float(pieces[4]), float(pieces[5])])
+            try:
+                current_nums.append(int(pieces[1]))
+                current_geoms.append([float(pieces[3]), float(pieces[4]), float(pieces[5])])
+            except:
+                print(block)
+                print("\n\n")
+                print(line)
         nums.append(current_nums)
         geoms.append(current_geoms)
     return nums, geoms
