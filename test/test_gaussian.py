@@ -193,5 +193,16 @@ class TestGaussian(unittest.TestCase):
 #        print(file)
 #        self.assertTrue(isinstance(file[0], cctk.GaussianFile))
 
+    def test_point_charge(self):
+        path = "test/static/Li.out"
+        mol = cctk.GaussianFile.read_file(path).get_molecule()
+
+        point_charge = cctk.PointCharge(coordinates=[0,1,0], charge=-1)
+        self.assertTrue(isinstance(point_charge, cctk.PointCharge))
+
+        new_path = "test/static/Li_pc.gjf"
+        cctk.GaussianFile.write_molecule_to_file(new_path, mol, route_card="#p opt b3lyp/6-31gd charge", point_charges=[point_charge])
+        os.remove(new_path)
+
 if __name__ == '__main__':
     unittest.main()

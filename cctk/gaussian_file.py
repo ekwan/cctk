@@ -5,6 +5,7 @@ from enum import Enum
 
 from cctk import File, Molecule, ConformationalEnsemble, OneIndexedArray
 from cctk.helper_functions import get_symbol, get_number, get_corrected_free_energy
+import cctk
 
 import cctk.parse_gaussian as parse
 
@@ -138,7 +139,7 @@ class GaussianFile(File):
         return f"GaussianFile (title=\"{str(self.title)}\", {len(self.ensemble)} entries in Ensemble)"
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False):
+    def write_molecule_to_file(cls, filename, molecule, route_card, link0={"mem": "32GB", "nprocshared": 16}, footer=None, title="title", append=False, print_symbol=False, point_charges=None):
         """
         Write a ``.gjf`` file using the given molecule.
 
@@ -160,6 +161,11 @@ class GaussianFile(File):
 
         if not re.match(r"^#p", route_card):
             warnings.warn(f"route card doesn't start with #p: {route_card}")
+
+        if point_charges is not None:
+            assert isinstance(point_charges, list), "point_charges must be list"
+            assert all([isinstance(pc, cctk.PointCharge) for pc in point_charges]), "point_charges must be list of point charges"
+            assert re.search(r"charge", route_card, flags=re.IGNORECASE), "charge must be in route_card if point_charges are present"
 
         #### generate the text
         text = ""
@@ -184,6 +190,11 @@ class GaussianFile(File):
         text += "\n"
         if footer is not None:
             text += f"{footer.strip()}\n\n"
+
+        if point_charges is not None:
+            for point_charge in point_charges:
+                text += f"{point_charge.coordinates[0]:>13.8f} {point_charge.coordinates[1]:>13.8f} {point_charge.coordinates[2]:>13.8f} {point_charge.charge:.5f}\n"
+            text += "\n"
 
         #### write the file
         if append:

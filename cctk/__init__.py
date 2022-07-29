@@ -14,3 +14,5 @@ from .mae_file import MAEFile
 from .pdb_file import PDBFile
 
 from .si_file import SIFile
+
+from .point_charge import PointCharge
