@@ -1664,7 +1664,7 @@ class Molecule:
         energy = opt.get_energy(self, nprocs=nprocs)
         return energy
 
-    def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False, use_tempdir=True, gfn=2):
+    def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False, use_tempdir=True, gfn=2, additional_flags=None):
         """
         Optimize molecule at the GFN2-xtb level of theory.
 
@@ -1674,14 +1674,15 @@ class Molecule:
             noncovalent (bool): whether or not to use non-covalent settings
             logfile (str): file to write ongoing ``crest`` output to
             use_tempdir (bool): write intermediate files to hidden directory (as opposed to current directory)
-            gfn (int or ``ff``): level of theory, either 1, 2, or ``ff``:w
+            gfn (int or ``ff``): level of theory, either 1, 2, or ``ff``
+            additional_flags (str): additional flags for command line
 
         Returns
             ConformationalEnsemble
         """
         import cctk.optimize as opt
         assert isinstance(nprocs, int), "nprocs must be int!"
-        return opt.csearch(molecule=self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile, use_tempdir=use_tempdir, gfn=gfn)
+        return opt.csearch(molecule=self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile, use_tempdir=use_tempdir, gfn=gfn, additional_flags=additional_flags)
 
     def num_neighbors_by_atom(self):
         """

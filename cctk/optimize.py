@@ -121,6 +121,7 @@ def csearch(use_tempdir=True, **kwargs):
         nprocs (int): number of processors to use
         noncovalent (Bool): whether or not to use non-covalent settings
         logfile (str): file to write ongoing ``crest`` output to
+        additional_flags (str): flags to pass to command line
 
     Returns:
         cctk.ConformationalEnsemble
@@ -139,7 +140,7 @@ def csearch(use_tempdir=True, **kwargs):
 
     return ensemble
 
-def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=False, constraints=None):
+def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=False, constraints=None, additional_flags=None):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
     assert isinstance(logfile, str)
@@ -162,6 +163,9 @@ def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=
         command = f"crest xtb-in.xyz --gfn{gfn} --chrg {molecule.charge} -cinp .xcontrol.sample --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
     else:
         command = f"crest xtb-in.xyz --gfn{gfn} --chrg {molecule.charge} --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
+
+    if additional_flags is not None:
+        command = command + " " + additional_flags
 
     if logfile:
         with open(logfile, "w") as f:
