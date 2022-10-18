@@ -12,10 +12,9 @@ Constants:
 """
 
 AMU_A2_FS2_PER_KCAL_MOL = 0.0004184
-BOLTZMANN_CONSTANT = 0.001985875 # kcal/mol•K
-TEMP_TO_eV = 8.61733238e-5 # eV/K
+BOLTZMANN_CONSTANT = 0.001985875 # kcal/mol•Kn
 
-def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities=False, which="quasiclassical", mode_options=None, do_rotation=True):
+def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities=False, which="quasiclassical", mode_options=None):
     """
     Perturbs molecule by treating each mode as a quantum harmonic oscillator and sampling from the distribution appropriate to the temperature.
 
@@ -32,7 +31,6 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
                 val (dict):
                     velocity (str): one of "positive", "negative", "random", "zero"
                     displacement (bool): whether or not to displace
-        do_rotation (bool): whether or not to apply classical rotational initialization.
 
     Returns:
         new ``cctk.Molecule`` object
@@ -65,37 +63,6 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
 
         for idx in range(1,molecule.num_atoms()+1):
             velocities[idx] += mode_velocity * mode.displacements[idx]
-
-    if do_rotation:
-        moments, axes_of_rotation = mol.principal_axes_of_rotation()
-        omega_axis1, omega_axis2, omega_axis3 = 0, 0, 0
-
-        # get energy for each principal axis, and convert it to angular frequency
-        # we randomize the sign here...
-        # energy in kcal/mol, unlike Jprogdyn
-        energy_axis1 = random_boltzmann_energy(temperature)
-        if moments[0] > 0:
-            omega_axis1 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis1 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
-
-        energy_axis2 = random_boltzmann_energy(temperature)
-        if moments[1] > 0:
-            omega_axis2 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis2 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
-
-        energy_axis3 = random_boltzmann_energy(temperature)
-        if moments[2] > 0:
-            omega_axis3 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis3 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
-
-        # add energy to total energy counter
-        total += energy_axis1 + energy_axis2 + energy_axis3
-
-        # total rotational velocity is linear combination along principal axes
-        omega = omega_axis1*axes_of_rotation[0] + omega_axis2*axes_of_rotation[1] + omega_axis3*axes_of_rotation[2]
-
-        # now turn this into Cartesian velocity for each atom
-        shifted_positions = copy.deepcopy(mol.geometry)
-        shifted_positions -= mol.center_of_mass()
-        for idx in range(1, mol.num_atoms()+1):
-            velocities[idx] += np.cross(omega, shifted_positions[idx])
 
     if return_velocities:
         return mol, total_PE, total, all_text, velocities

@@ -72,7 +72,7 @@ class TestFrequencies(unittest.TestCase):
             3: {"velocity": "zero"},
         }
 
-        mol3, e, _, _, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
+        mol3, e, _, _, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo, do_rotation=False)
         self.assertTrue(isinstance(mol3, cctk.Molecule))
         self.assertFalse(np.any(v)) # all should be zero, AKA False
 
@@ -81,7 +81,7 @@ class TestFrequencies(unittest.TestCase):
             2: {"velocity": "positive", "displacement": False},
             3: {"velocity": "positive", "displacement": False},
         }
-        mol4, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo)
+        mol4, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, mode_options=mo, do_rotation=False)
         self.assertTrue(te - 13.28839457 < 0.00001)
 
         mol5, e, te, text, v = qc.get_quasiclassical_perturbation(mol, return_velocities=True, which="classical")

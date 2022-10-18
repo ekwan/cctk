@@ -9,7 +9,6 @@ import cctk
 from cctk.helper_functions import (
     get_symbol,
     get_number,
-    get_avg_mass,
     compute_rotation_matrix,
     compute_distance_between,
     compute_angle_between,
@@ -1831,45 +1830,3 @@ class Molecule:
                 energy += Q[i][j] / R[i][j]
 
         return energy * 627.509 # convert to kcal/mol
-
-    def center_of_mass(self):
-        """
-        Returns the center-of-mass of the molecule, as a ``np.array``.
-        """
-        masses = cctk.OneIndexedArray([get_avg_mass(z) for z in self.atomic_numbers]).reshape(-1,1)
-        return np.sum(masses * self.geometry, axis=0) / np.sum(masses)
-
-    def principal_axes_of_rotation(self):
-        """
-        Compute principal axes of rotation and corresponding moments of inertia.
-
-        See Jprogdyn, RotationalBoltzmann, lines 48–115.
-
-        Returns:
-            moments of intertia (3-element np.array) - some may be zero
-            axes of rotation (3 x 3 np.array)
-        """
-        # move everything to the center of mass (on a copy, let's not get too crazy here)
-        com = self.center_of_mass()
-        positions = copy.deepcopy(self.geometry.view(np.ndarray))
-        positions += -1 * com
-
-        masses = np.array([get_avg_mass(z) for z in self.atomic_numbers]).reshape(-1,1)
-        np.testing.assert_allclose(np.sum(masses * positions, axis=0) / np.sum(masses), 0, atol=0.00001)
-
-        # build up mass moment of inertia tensor
-        Ixx, Ixy, Ixz, Iyy, Iyz, Izz = 0, 0, 0, 0, 0, 0
-        for mass, position in zip(masses, positions):
-            Ixx += mass * (position[2]*position[2] + position[1]*position[1])
-            Iyy += mass * (position[0]*position[0] + position[2]*position[2])
-            Izz += mass * (position[0]*position[0] + position[1]*position[1])
-            Ixy -= mass * position[0] * position[1]
-            Ixz -= mass * position[0] * position[2]
-            Iyz -= mass * position[1] * position[2]
-
-        I = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]]).reshape(3,3)
-
-        # now we do an eigendecomposition on that tensor
-        return np.linalg.eigh(I)
-
-

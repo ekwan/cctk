@@ -228,5 +228,17 @@ class TestMolecule(unittest.TestCase):
 
 #        print(mol.coulomb_analysis(atoms1, atoms2, charges))
 
+    def test_rotation(self):
+        mol = self.load_molecule()
+        m1, a1 = mol.principal_axes_of_rotation()
+        ([ 672.04715793, 2908.52501403, 3481.42757748])
+        self.assertTrue(m1[0] - 672.05 < 0.1)
+        self.assertTrue(m1[1] - 2908.53 < 0.1)
+        self.assertTrue(m1[2] - 3841.43 < 0.1)
+
+        h2 = cctk.XYZFile.read_file("test/static/h2.xyz").get_molecule()
+        m2, a2, = h2.principal_axes_of_rotation()
+        self.assertEqual(m2[0], 0.0) # first moment ought to be zero
+
 if __name__ == '__main__':
     unittest.main()
