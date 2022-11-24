@@ -157,23 +157,43 @@ class XYZFile(cctk.File):
         return cls.read_file(filename, **kwargs)
 
     @classmethod
-    def write_ensemble_to_file(cls, filename, ensemble, title=None):
+    def write_ensemble_to_file(cls, filename, ensemble, titles=None):
         """
         Write a ``cctk.Ensemble`` to a single ``.xyz`` file. Can be viewed in MOLDEN.
+
+        Arguments:
+            filename (str): path to ``.xyz`` file
+            ensemble (Ensemble): the collection of structures to write
+            titles (None, str, or list of str): if None, the titles of the Molecules will be used;
+                                                if one str, then the same name will be used for all
+                                                molecules; if iterable, then the titles are assumed
+                                                to parallel the indexing of the list
         """
+        assert isinstance(filename, str), f"got {type(filename)} for filename but expected str"
         assert isinstance(ensemble, cctk.Ensemble), f"ensemble {ensemble} is not a cctk.Ensemble"
+        assert len(ensemble)>0, "can't write empty Ensemble to xyz file"
 
-        if title is None:
-            title = "title"
-        if isinstance(title, str):
-            title = [title for _ in range(len(ensemble))]
-        assert len(title) == len(ensemble)
+        if titles is None:
+            pass
+        elif isinstance(titles, str):
+            assert len(titles) > 0, "zero length title not allowed"
+            titles = [title] * len(ensemble)
+        elif isinstance(title, (list,np.ndarray)):
+            assert len(titles) == len(ensemble)
+            for i,title in enumerate(titles):
+                assert isinstance(title, str), f"got {type(filename)} at index {i} of titles, but expected str"
+        else:
+            raise ValueError(f"got {type(titles)} for title but expected None, str, or iterable")
 
-        for idx, (molecule, title) in enumerate(zip(ensemble._items, title)):
-            if idx == 0:
-                cls.write_molecule_to_file(filename, molecule, title=title, append=False)
+        for idx,molecule in enumerate(ensemble._items):
+            append = idx > 0
+            if titles is None:
+                title = molecule.name
+                if not (isinstance(title, str) and len(title)>0):
+                    title = "title"
             else:
-                cls.write_molecule_to_file(filename, molecule, title=title, append=True)
+                title = titles[idx]
+            cls.write_molecule_to_file(filename, molecule, title=title, append=append)
 
     def get_molecule(self, num=None):
         """
