@@ -83,7 +83,7 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
 
         energy_axis3 = random_boltzmann_energy(temperature)
         if moments[2] > 0:
-            omega_axis3 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis3 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
+            omega_axis3 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis3*AMU_A2_FS2_PER_KCAL_MOL / moments[2])
 
         # add energy to total energy counter
         total += energy_axis1 + energy_axis2 + energy_axis3

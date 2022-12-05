@@ -1568,7 +1568,7 @@ class Molecule:
         try:
             rdkm = Chem.MolFromSmiles(smiles)
             rdkm = Chem.AddHs(rdkm)
-            Chem.EmbedMolecule(rdkm)
+            Chem.EmbedMolecule(rdkm, maxAttempts=5000)
             Chem.MMFFOptimizeMolecule(rdkm)
 
             nums = []
