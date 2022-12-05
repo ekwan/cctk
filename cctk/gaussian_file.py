@@ -657,7 +657,7 @@ class GaussianFile(File):
                 assert len(title) == n_geometries, f"expected {n_geometries} route cards but got {len(title)}"
                 for card in title:
                     assert isinstance(card, str), "expected title to be a str"
-                    assert len(title.strip()) > 0, "zero-length titles are not allowed"
+                    assert len(card.strip()) > 0, "zero-length titles are not allowed"
             else:
                 raise ValueError(f"unexpected type for title: {str(type(title))}")
 

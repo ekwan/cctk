@@ -33,7 +33,7 @@ XYZ Files
     molecule = file.get_molecule()
 
     # if the file contains multiple molecules
-    for title, molecule in zip(ensemble.molecule_list(), file.titles):
+    for molecule, title in zip(ensemble.molecule_list(), file.titles):
         print(title)
         print(molecule)
         break
