@@ -1565,21 +1565,23 @@ class Molecule:
         except ImportError as e:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
+        rdkm = Chem.MolFromSmiles(smiles)
+        rdkm = Chem.AddHs(rdkm)
+
+        # https://github.com/rdkit/rdkit/issues/1433
         try:
-            rdkm = Chem.MolFromSmiles(smiles)
-            rdkm = Chem.AddHs(rdkm)
             Chem.EmbedMolecule(rdkm, maxAttempts=5000)
             Chem.MMFFOptimizeMolecule(rdkm)
+        except:
+            Chem.EmbedMolecule(rdkm, maxAttempts=5000, useRandomCoords=True)
+            Chem.MMFFOptimizeMolecule(rdkm)
 
-            nums = []
-            for atom in rdkm.GetAtoms():
-                nums.append(atom.GetAtomicNum())
-            geom = rdkm.GetConformers()[0].GetPositions()
+        nums = []
+        for atom in rdkm.GetAtoms():
+            nums.append(atom.GetAtomicNum())
+        geom = rdkm.GetConformers()[0].GetPositions()
 
-            return cls(nums, geom)
-
-        except Exception as e:
-            raise ValueError(f"something went wrong auto-generating molecule {smiles}:\n{e}")
+        return cls(nums, geom)
 
     def fragment(self):
         """

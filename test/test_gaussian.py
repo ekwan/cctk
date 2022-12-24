@@ -188,10 +188,9 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.GaussianFile))
 
-#        path = "long.out"
-#        file = cctk.GaussianFile.read_file(path)
-#        print(file)
-#        self.assertTrue(isinstance(file[0], cctk.GaussianFile))
+        path = "test/static/fluoroalkane.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
 
     def test_point_charge(self):
         path = "test/static/Li.out"

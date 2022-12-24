@@ -45,7 +45,7 @@ class TestXYZ(unittest.TestCase):
         self.assertEqual(len(file.ensemble), 251)
 
         new_path = "test/static/methane_traj_new.xyz"
-        cctk.XYZFile.write_ensemble_to_file(new_path, file.ensemble, title="sample title")
+        cctk.XYZFile.write_ensemble_to_file(new_path, file.ensemble, titles="sample title")
         os.remove(new_path)
 
 if __name__ == '__main__':

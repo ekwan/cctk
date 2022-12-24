@@ -177,7 +177,7 @@ class XYZFile(cctk.File):
             pass
         elif isinstance(titles, str):
             assert len(titles) > 0, "zero length title not allowed"
-            titles = [title] * len(ensemble)
+            titles = [titles] * len(ensemble)
         elif isinstance(title, (list,np.ndarray)):
             assert len(titles) == len(ensemble)
             for i,title in enumerate(titles):

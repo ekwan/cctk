@@ -59,7 +59,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_in
         ["Mulliken charges", "Sum of Mulliken charges", 1],
         ["Electronic spatial extent", "Quadrupole moment", 1], #10
         ["normal coordinates", "Thermochemistry", 1],
-        ["Isotropic", "Eigenvalues", 1000],
+        ["Isotropic =", "Eigenvalues", 1000],
     ]
 
     word_matches = [[] for _ in words]
@@ -551,11 +551,15 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             force_ks += re.split(" +", lines[2])[4:]
             intensities += re.split(" +", lines[3].rstrip())[4:]
 
+
             for line in lines[5:]:
                 fields = re.split(" +", line)
                 fields = list(filter(None, fields))
 
                 if len(fields) < 4:
+                    break
+
+                if "Rot. str." in line:
                     break
 
                 current_displacements[0].append([float(x) for x in fields[2:5]])

@@ -27,3 +27,4 @@ test/static/phenylpropane*.gjf
 test/static/phenylpropane*.mol2
 cctk.egg-info/*
 test/static/renumber_error*.gjf
+build/*
