@@ -9,7 +9,7 @@ from cctk.helper_functions import get_corrected_free_energy
 Functions to help with parsing Gaussian files
 """
 
-def read_file_fast(file_text, filename, link1idx, max_len=20000, extended_opt_info=False, fail_silently=True):
+def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_info=False, fail_silently=True):
 
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
@@ -330,9 +330,10 @@ def parse_geometry(blocks):
                 current_nums.append(int(pieces[1]))
                 current_geoms.append([float(pieces[3]), float(pieces[4]), float(pieces[5])])
             except:
-                print(block)
-                print("\n\n")
-                print(line)
+                #print(block)
+                #print("\n\n")
+                #print(line)
+                pass
         nums.append(current_nums)
         geoms.append(current_geoms)
     return nums, geoms
@@ -550,7 +551,6 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
             masses += re.split(" +", lines[1])[4:]
             force_ks += re.split(" +", lines[2])[4:]
             intensities += re.split(" +", lines[3].rstrip())[4:]
-
 
             for line in lines[5:]:
                 fields = re.split(" +", line)

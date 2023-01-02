@@ -192,6 +192,10 @@ class TestGaussian(unittest.TestCase):
         file = cctk.GaussianFile.read_file(path)
         self.assertTrue(isinstance(file, cctk.GaussianFile))
 
+        path = "test/static/pathological.out"
+        file = cctk.GaussianFile.read_file(path)
+        self.assertTrue(isinstance(file, cctk.GaussianFile))
+
     def test_point_charge(self):
         path = "test/static/Li.out"
         mol = cctk.GaussianFile.read_file(path).get_molecule()
