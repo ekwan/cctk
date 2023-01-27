@@ -177,7 +177,7 @@ class OrcaFile(File):
                 elif len(enthalpies) > 1:
                     raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
 
-                gibbs = lines.find_parameter("Final Gibbs free enthalpy", expected_length=7, which_field=5)
+                gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
                 if len(gibbs) == 1:
                     properties[-1]["gibbs_free_energy"] = gibbs[0]
                 elif len(gibbs) > 1:
