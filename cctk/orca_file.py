@@ -172,10 +172,10 @@ class OrcaFile(File):
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
-                    properties[-1]["enthalpy"] = enthalpies[-1]
+                properties[-1]["enthalpy"] = enthalpies[-1]
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
-                    properties[-1]["gibbs_free_energy"] = gibbs[-1]
+                properties[-1]["gibbs_free_energy"] = gibbs[-1]
 
                 temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
                 if len(temperature) > 0 and len(gibbs) > 0:
