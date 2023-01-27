@@ -172,22 +172,16 @@ class OrcaFile(File):
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
-                if len(enthalpies) == 1:
-                    properties[-1]["enthalpy"] = enthalpies[0]
-                elif len(enthalpies) > 1:
-                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+                    properties[-1]["enthalpy"] = enthalpies[-1]
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
-                if len(gibbs) == 1:
-                    properties[-1]["gibbs_free_energy"] = gibbs[0]
-                elif len(gibbs) > 1:
-                    raise ValueError(f"unexpected # of gibbs free energies found!\ngibbs free energies = {enthalpies}")
+                    properties[-1]["gibbs_free_energy"] = gibbs[-1]
 
                 temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
-                if len(temperature) == 1 and len(gibbs) > 0:
-                    properties[-1]["temperature"] = temperature[0]
-                    corrected_free_energy = get_corrected_free_energy(gibbs[0], properties[-1]["frequencies"],
-                                                                      frequency_cutoff=100.0, temperature=temperature[0])
+                if len(temperature) > 0 and len(gibbs) > 0:
+                    properties[-1]["temperature"] = temperature[-1]
+                    corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
+                                                                      frequency_cutoff=100.0, temperature=temperature[-1])
                     properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
 
             if OrcaJobType.NMR in job_types:
