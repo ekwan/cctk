@@ -61,7 +61,7 @@ def split_multiple_inputs(filename):
     start_block = 0
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
-            if re.search("COMPOUND JOB \d{1,}", line):
+            if re.search("COMPOUND  JOB \d{1,}", line):
                 output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
                 start_block = idx
     output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
