@@ -1,8 +1,8 @@
 import sys, argparse, re, glob
 
-from cctk import GaussianFile
+from cctk import GaussianFile, OrcaFile
 
-#### This is a script to resubmit failed Gaussian files.
+#### This is a script to resubmit failed Gaussian and ORCA files.
 #### Parameters:
 #### ``--type, -t``: which jobs to resubmit 
 ####     "failed": will resubmit jobs with no successes
@@ -16,6 +16,7 @@ from cctk import GaussianFile
 #### NOTE: This file will reject any file that contains the string "slurm."
 
 #### Corin Wagen and Eugene Kwan, 2019
+#### update to accept ORCA output, Joe Gair 2023
 
 parser = argparse.ArgumentParser(prog="resubmit.py")
 parser.add_argument("--type", "-t", type=str)
@@ -31,7 +32,13 @@ for filename in glob.iglob(args["filename"], recursive=True):
         continue
 
     try:
-        output_file = GaussianFile.read_file(filename)
+        if isinstance(GaussianFile.read_file(filename), GaussianFile):
+            output_file = GaussianFile.read_file(filename)
+            newfile_tail = "gjf"
+        elif isinstance(OrcaFile.read_file(filename), OrcaFile):
+            output_file = OrcaFile.read_file(filename)
+            newfile_tail = "inp"
+        else: print(f"error: {filename} is not recognized as an OrcaFile or a GaussianFile")
         if isinstance(output_file, list):
             output_file = output_file[-1]
         if args["perturb"]:
@@ -40,7 +47,7 @@ for filename in glob.iglob(args["filename"], recursive=True):
 
         if ((success == 0) and (args["type"] == "failed")) or (args["type"] == "all") or (args["type"] is None):
             newfile = filename.rsplit('/',1)[-1]
-            newfile = re.sub(r"out$", "gjf", newfile)
+            newfile = re.sub(r"out$", newfile_tail, newfile)
 
             if args["output"]:
                 newfile = args["output"]

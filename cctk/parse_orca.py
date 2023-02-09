@@ -48,7 +48,7 @@ def read_energies(lines):
 
 def split_multiple_inputs(filename):
     """
-    Splits ``filename`` into blocks by searching for _________.
+    Splits ``filename`` into blocks by searching for COMPOUND JOB  #.
 
     Args:
         filename (str): path to file
@@ -61,12 +61,12 @@ def split_multiple_inputs(filename):
     start_block = 0
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
-            if re.search("Entering Link 1", line): # this will never be true for an Orca file -- this is just a stopgap
+            if re.search("COMPOUND  JOB \d{1,}", line):
                 output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
                 start_block = idx
     output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
 
-    return output_blocks
+    return output_blocks[:]
 
 def read_mulliken_charges(lines):
     """
