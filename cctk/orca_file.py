@@ -23,11 +23,12 @@ class OrcaJobType(Enum):
     """
 
     OPT = "opt"
+     # should include looseopt, tightopt, normalopt, verytightopt, copt, zopt, GDIIS-COPT, GDIIS-ZOPT, GDIIS-OPT
     """
     Geometry optimization.
     """
 
-    FREQ = "freq"
+    FREQ = "freq" # should include AnFreq and NumFreq 
     """
     Hessian calculation.
     """
@@ -40,8 +41,8 @@ class OrcaJobType(Enum):
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
-#    "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
-    "opt": [],
+   "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
+    # "opt": [],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
     "nmr": ["isotropic_shielding",],
 }
@@ -107,21 +108,6 @@ class OrcaFile(File):
             job_types = cls._assign_job_types(header)
             variables, blocks = parse.read_blocks_and_variables(input_lines)
 
-            # success = 0
-            # elapsed_time = 0
-            # for line in lines:
-            #     # if line.strip().startswith("****ORCA TERMINATED NORMALLY****"):
-            #     if line.startswith(""):
-            #         success += 1
-            #     elif line.startswith("TOTAL RUN TIME"):
-            #         fields = line.split()
-            #         assert len(fields) == 13, f"unexpected number of fields on elapsed time line:\n{line}"
-            #         days = float(fields[3])
-            #         hours = float(fields[5])
-            #         minutes = float(fields[7])
-            #         seconds = float(fields[9])
-            #         elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
-
             successful_scf_convergence = 0
             successful_opt = 0
             successful_freq = 0
@@ -130,26 +116,26 @@ class OrcaFile(File):
     
             elapsed_time = 0
             for line in lines:        
-                if line.startswith("FINAL SINGLE POINT ENERGY"): # SCF converged at least once
+                if line.startswith("FINAL SINGLE POINT ENERGY"):                                        #### SCF converged at least once
                     successful_scf_convergence += 1
-                elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"): # geometry converged
+                elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"):      #### geometry converged
                     successful_opt += 1
-                elif line.startswith("Maximum memory used throughout the entire SCFHESS-calculation:"): ###### a frequency job was completed
-                    successful_freq += 1              #######
-                elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  ##### an EPR NMR job was completed
+                elif line.startswith("Maximum memory used throughout the entire SCFHESS-calculation:"): #### a frequency job was completed
+                    successful_freq += 1
+                elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  #### an EPR NMR job was completed
                     successful_NMR_EPR += 1
-                elif line.startswith("Sum of individual times         ..."): #######
+                elif line.startswith("Sum of individual times         ..."):                            #### the job was completed
                     fields = line.split()
-                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}" #####
+                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
                     elapsed_time = float(fields[5])
     
             # different than G16 "successful termination"
             success = 0   
             if successful_scf_convergence > 0:
                 success += 1
-            if successful_freq > 0:
+            if successful_opt > 0:
                 success += 1
-            if successful_scf_convergence > 0:
+            if successful_freq > 0:
                 success += 1
             if successful_NMR_EPR > 0:
                 success += 1
@@ -161,6 +147,7 @@ class OrcaFile(File):
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
             assert len(geometries) >= len(energies), "can't have an energy without a geometry (cf. pigeonhole principle)"
 
+            # this approach does not work with the option miniprint
             charge = lines.find_parameter("Total Charge           Charge          ....", 5, 4)[0]
             multip = lines.find_parameter("Multiplicity           Mult            ....", 4, 3)[0]
 
