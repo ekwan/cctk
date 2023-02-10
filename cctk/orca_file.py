@@ -107,19 +107,52 @@ class OrcaFile(File):
             job_types = cls._assign_job_types(header)
             variables, blocks = parse.read_blocks_and_variables(input_lines)
 
-            success = 0
+            # success = 0
+            # elapsed_time = 0
+            # for line in lines:
+            #     # if line.strip().startswith("****ORCA TERMINATED NORMALLY****"):
+            #     if line.startswith(""):
+            #         success += 1
+            #     elif line.startswith("TOTAL RUN TIME"):
+            #         fields = line.split()
+            #         assert len(fields) == 13, f"unexpected number of fields on elapsed time line:\n{line}"
+            #         days = float(fields[3])
+            #         hours = float(fields[5])
+            #         minutes = float(fields[7])
+            #         seconds = float(fields[9])
+            #         elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
+
+            successful_scf_convergence = 0
+            successful_opt = 0
+            successful_freq = 0
+            successful_NMR_EPR = 0
+            # add identifiers for successful termination of other job types
+    
             elapsed_time = 0
-            for line in lines:
-                if line.strip().startswith("****ORCA TERMINATED NORMALLY****"):
-                    success += 1
-                elif line.startswith("TOTAL RUN TIME"):
+            for line in lines:        
+                if line.startswith("FINAL SINGLE POINT ENERGY"): # SCF converged at least once
+                    successful_scf_convergence += 1
+                elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"): # geometry converged
+                    successful_opt += 1
+                elif line.startswith("Maximum memory used throughout the entire SCFHESS-calculation:"): ###### a frequency job was completed
+                    successful_freq += 1              #######
+                elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  ##### an EPR NMR job was completed
+                    successful_NMR_EPR += 1
+                elif line.startswith("Sum of individual times         ..."): #######
                     fields = line.split()
-                    assert len(fields) == 13, f"unexpected number of fields on elapsed time line:\n{line}"
-                    days = float(fields[3])
-                    hours = float(fields[5])
-                    minutes = float(fields[7])
-                    seconds = float(fields[9])
-                    elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
+                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}" #####
+                    elapsed_time = float(fields[5])
+    
+            # different than G16 "successful termination"
+            success = 0   
+            if successful_scf_convergence > 0:
+                success += 1
+            if successful_freq > 0:
+                success += 1
+            if successful_scf_convergence > 0:
+                success += 1
+            if successful_NMR_EPR > 0:
+                success += 1
 
             energies, iters = parse.read_energies(lines)
             if len(energies) == 0:
