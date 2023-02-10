@@ -128,8 +128,8 @@ class OrcaFile(File):
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
             assert len(geometries) >= len(energies), "can't have an energy without a geometry (cf. pigeonhole principle)"
 
-            charge = lines.find_parameter("xyz", 6, 4)[0]
-            multip = lines.find_parameter("xyz", 6, 5)[0]
+            charge = lines.find_parameter("Total Charge           Charge          ....", 5, 4)[0]
+            multip = lines.find_parameter("Multiplicity           Mult            ....", 4, 3)[0]
 
             #### TODO
             # detect Mayer bond orders

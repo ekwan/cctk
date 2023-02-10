@@ -68,6 +68,8 @@ def split_multiple_inputs(filename):
 
     if len(output_blocks) <= 1:
         return output_blocks[:]
+
+    # this conditional skips the first block of %compound jobs which only describes the input and doesn't have an associated energy
     elif len(output_blocks) > 1:
         return output_blocks[1:]
 
