@@ -21,7 +21,8 @@ class OrcaJobType(Enum):
     """
     Single point energy calculation.
     """
-
+    OPTTS = "optts"
+    TIGHTOPT = "tightopt"
     OPT = "opt"
      # should include looseopt, tightopt, normalopt, verytightopt, copt, zopt, GDIIS-COPT, GDIIS-ZOPT, GDIIS-OPT
     """
@@ -41,8 +42,10 @@ class OrcaJobType(Enum):
 #### This static variable tells what properties are expected from each JobType.
 EXPECTED_PROPERTIES = {
     "sp": ["energy", "scf_iterations",],
-   "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
-    # "opt": [],
+   # "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
+    "opt": [],
+    "tightopt" : [],
+    "optts" : [],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
     "nmr": ["isotropic_shielding",],
 }
@@ -192,6 +195,9 @@ class OrcaFile(File):
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
+                # if len(enthalpies) > 0:
+                #  for jobs that don't converge, there are no enthalpies, so this errors out
+                #  need to add a "try, else", so that it returns OrcaFile.read_file(path) returns an orca file and prints a warning.
                 properties[-1]["enthalpy"] = enthalpies[-1]
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)

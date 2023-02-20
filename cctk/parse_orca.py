@@ -161,8 +161,8 @@ def read_freqs(lines):
     freqs = []
     for line in freq_block.split("\n"):
         fields = re.split(" +", line.strip())
-        if len(fields) == 3:
-            if fields[2] == "cm**-1" and float(fields[1]) > 0:
+        if len(fields) == 3 or len(fields) == 5:
+            if fields[2] == "cm**-1" and float(fields[1]) != 0:
                 freqs.append(float(fields[1]))
     return freqs
 
