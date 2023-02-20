@@ -192,7 +192,7 @@ class OrcaFile(File):
                         properties[idx]["max_step"] = max_step[idx]
 
             if OrcaJobType.FREQ in job_types:
-                properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
+                properties[-1]["frequencies"] = sorted(parse.read_freqs(lines, successful_freq))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
                 # if len(enthalpies) > 0:
