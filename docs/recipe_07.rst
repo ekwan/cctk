@@ -112,6 +112,7 @@ Orca Input Files
 
 - In this recipe, we convert an ``.xyz`` file into an ``.inp`` file for Orca.
 - Only single geometries are supported.
+- Note that the MiniPrint option may make Orca output files unreadable by cctk
 
 ::
 

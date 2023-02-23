@@ -14,7 +14,7 @@ class TestOrca(unittest.TestCase):
         file = cctk.XYZFile.read_file(read_path)
         self.assertTrue(isinstance(file.get_molecule(), cctk.Molecule))
 
-        header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint"
+        header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO"
         variables = {"maxcore": 4000}
         blocks = {"pal": ["nproc 4"], "mdci": ["density none"]}
 
@@ -45,18 +45,18 @@ class TestOrca(unittest.TestCase):
         os.remove(new_path)
 
     def test_read(self):
-        path = "test/static/MsOH_ccsdt.out"
+        path = "test/static/H2O_dlpno_ccsdt.out"
         file = cctk.OrcaFile.read_file(path)
         self.assertEqual(file.successful_terminations, 1)
-        self.assertEqual(file.elapsed_time, 8575)
-        self.assertEqual(file.header, "! aug-cc-pVQZ aug-cc-pVQZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint")
-        self.assertEqual(file.variables["maxcore"], "50000")
+        self.assertEqual(file.elapsed_time, 18.471)
+        self.assertEqual(file.header, "! cc-pVTZ cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO")
+        self.assertEqual(file.variables["maxcore"], "1000")
         self.assertListEqual(file.blocks["mdci"], ["density none"])
 
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
-        self.assertEqual(mol.num_atoms(), 9)
-        self.assertEqual(file.ensemble[mol,"energy"], -663.663569902734)
+        self.assertEqual(mol.num_atoms(), 3)
+        self.assertEqual(file.ensemble[mol,"energy"], -76.330947653965)
 
         path = "test/static/AcOH_orca.out"
         file = cctk.OrcaFile.read_file(path)

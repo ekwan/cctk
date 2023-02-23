@@ -160,28 +160,31 @@ def read_freqs(lines, successful_freq):
     freq_blocks = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", count=successful_freq, join="\n", max_len=1000)
     if freq_blocks is None:
         return []
-    freqs_lists = []
-    for freq_block in freq_blocks:
+
+    elif successful_freq == 1:
+    # elif isinstance(freq_blocks, str):
         freqs = []
-        for line in freq_block.split("\n"):
+        for line in freq_blocks.split("\n"):
+            # print(line)
             fields = re.split(" +", line.strip())
             if len(fields) == 3 or len(fields) == 5:
                 if fields[2] == "cm**-1" and float(fields[1]) != 0:
                     freqs.append(float(fields[1]))
-        freqs_lists.append(freqs)
-    return freqs_lists[-1]
+        return freqs
 
-# def read_freqs(lines):
-#     freq_block = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", join="\n", max_len=1000)
-#     if freq_block is None:
-#         return []
-#     freqs = []
-#     for line in freq_block.split("\n"):
-#         fields = re.split(" +", line.strip())
-#         if len(fields) == 3 or len(fields) == 5:
-#             if fields[2] == "cm**-1" and float(fields[1]) != 0:
-#                 freqs.append(float(fields[1]))
-    return freqs
+    elif successful_freq > 1 :
+    # elif isinstance(freq_blocks, list):
+        freqs_lists = []
+        for freq_block in freq_blocks:
+            freqs = []
+            for line in freq_block.split("\n"):
+                fields = re.split(" +", line.strip())
+                if len(fields) == 3 or len(fields) == 5:
+                    if fields[2] == "cm**-1" and float(fields[1]) != 0:
+                        freqs.append(float(fields[1]))
+            freqs_lists.append(freqs)
+        return freqs_lists[-1]
+
 
 def read_gradients(lines, num_to_find):
     grad_blocks = lines.search_for_block("Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find)

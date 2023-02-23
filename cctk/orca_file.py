@@ -21,10 +21,11 @@ class OrcaJobType(Enum):
     """
     Single point energy calculation.
     """
-    OPTTS = "optts"
-    TIGHTOPT = "tightopt"
     OPT = "opt"
      # should include looseopt, tightopt, normalopt, verytightopt, copt, zopt, GDIIS-COPT, GDIIS-ZOPT, GDIIS-OPT
+    SCANTS = "scants"
+    OPTTS = "optts"
+    TIGHTOPT = "tightopt"
     """
     Geometry optimization.
     """
@@ -46,6 +47,7 @@ EXPECTED_PROPERTIES = {
     "opt": [],
     "tightopt" : [],
     "optts" : [],
+    "scants": [],
     "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
     "nmr": ["isotropic_shielding",],
 }
