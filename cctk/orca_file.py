@@ -17,41 +17,29 @@ class OrcaJobType(Enum):
     All jobs have type ``SP`` by default.
     """
 
-    SP = "sp"
+    SP = ("sp", ["energy", "scf_iterations"])
     """
     Single point energy calculation.
     """
-    OPT = "opt"
-     # should include looseopt, tightopt, normalopt, verytightopt, copt, zopt, GDIIS-COPT, GDIIS-ZOPT, GDIIS-OPT
-    SCANTS = "scants"
-    OPTTS = "optts"
-    TIGHTOPT = "tightopt"
+
+    OPT = ("opt", ["rms_gradient", "rms_step", "max_gradient", "max_step"])
     """
     Geometry optimization.
     """
 
-    FREQ = "freq" # should include AnFreq and NumFreq 
+    FREQ = ("freq", ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"])
     """
     Hessian calculation.
     """
 
-    NMR = "nmr"
+    NMR = ("nmr", ["isotropic_shielding"])
     """
     NMR shielding prediction.
     """
 
-#### This static variable tells what properties are expected from each JobType.
-EXPECTED_PROPERTIES = {
-    "sp": ["energy", "scf_iterations",],
-   # "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
-    "opt": [],
-    "tightopt" : [],
-    "optts" : [],
-    "scants": [],
-    "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
-    "nmr": ["isotropic_shielding",],
-}
-
+    def __init__(self, value, expected_properties):
+        self._value_ = value
+        self.expected_properties = expected_properties
 
 class OrcaFile(File):
     """
@@ -126,7 +114,7 @@ class OrcaFile(File):
                 elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"):      #### geometry converged
                     successful_opt += 1
                 elif line.startswith("Maximum memory used throughout the entire SCFHESS-calculation:"): #### a frequency job was completed
-                    successful_freq += 1
+                    successful_freq += 1                                                                #### this approach has a liability, it will return a successful frequency job even if the freq job was only the initial hessian used for the TS search
                 elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  #### an EPR NMR job was completed
                     successful_NMR_EPR += 1
                 elif line.startswith("Sum of individual times         ..."):                            #### the job was completed
@@ -197,20 +185,26 @@ class OrcaFile(File):
                 properties[-1]["frequencies"] = sorted(parse.read_freqs(lines, successful_freq))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
-                # if len(enthalpies) > 0:
-                #  for jobs that don't converge, there are no enthalpies, so this errors out
-                #  need to add a "try, else", so that it returns OrcaFile.read_file(path) returns an orca file and prints a warning.
-                properties[-1]["enthalpy"] = enthalpies[-1]
+                try:
+                    properties[-1]["enthalpy"] = enthalpies[-1]
+                except Exception as e:
+                    print(f"error finding enthalpy for {filename}")
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
-                properties[-1]["gibbs_free_energy"] = gibbs[-1]
+                try:
+                    properties[-1]["gibbs_free_energy"] = gibbs[-1]
+                except Exception as e:
+                    print(f"error finding gibbs free energy for {filename}")
 
-                temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
-                if len(temperature) > 0 and len(gibbs) > 0:
-                    properties[-1]["temperature"] = temperature[-1]
-                    corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
+                try:
+                    temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
+                    if len(temperature) > 0 and len(gibbs) > 0:
+                        properties[-1]["temperature"] = temperature[-1]
+                        corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
                                                                       frequency_cutoff=100.0, temperature=temperature[-1])
-                    properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                except Exception as e:
+                    print(f"error finding temperature for {filename}")
 
             if OrcaJobType.NMR in job_types:
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
@@ -364,7 +358,7 @@ class OrcaFile(File):
     @classmethod
     def _assign_job_types(cls, header):
         """
-        Assigns ``OrcaJobType`` objects from route card. ``OrcaJobType.SP`` is assigned by default.
+        Assigns ``OrcaJobType`` objects from header. ``OrcaJobType.SP`` is assigned by default.
 
         Args:
             header (str): Orca header
@@ -373,11 +367,13 @@ class OrcaFile(File):
             list of ``OrcaJobType`` objects
         """
         job_types = []
-        for name, member in OrcaJobType.__members__.items():
-            if re.search(f" {member.value}", str(header), re.IGNORECASE):
-                job_types.append(member)
+        for job_type in OrcaJobType:
+            if re.search(f"{job_type.value}", str(header), re.IGNORECASE):
+                job_types.append(job_type)
         if OrcaJobType.SP not in job_types:
-            job_types.append(OrcaJobType.SP)
+            job_types.append(OrcaJobType.SP) # include SP in all jobs, whether specified in header or not
+        if re.search("ScanTs", str(header), re.IGNORECASE):
+            job_types.append(OrcaJobType.OPT) #ScanTs is an optimization job that does not contain the string "opt" in it's keyword
         return job_types
 
     def check_has_properties(self):
@@ -387,8 +383,10 @@ class OrcaFile(File):
         This only checks the last molecule in ``self.ensemble``, for now.
         """
         if self.successful_terminations > 0:
+            if self.successful_terminations == 2 and ((OrcaJobType.OPT in self.job_types) and (OrcaJobType.FREQ in self.job_types)):
+                return # opt and freq jobs should have three terminations
             for job_type in self.job_types:
-                for prop in EXPECTED_PROPERTIES[job_type.value]:
+                for prop in job_type.expected_properties:
                     if not self.ensemble.has_property(-1, prop):
                         raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
         else:
