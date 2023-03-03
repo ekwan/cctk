@@ -113,7 +113,7 @@ class Ensemble:
 
     def properties_list(self):
         """
-        Returns a list of the constituent molecules.
+        Returns a list of dictionaries. One dictionary per geometry. Each dictionary contains the property names and property values for each geometry in the ensemble. 
         """
         return list(self.values())
 
