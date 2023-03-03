@@ -17,14 +17,17 @@ Overview
 ========
 
 Many computational chemistry papers report structures in the ``.xyz`` format, which is not recognized by Gaussian. 
-Although manual conversion is facile for one file, an automated solution can prove useful for bulk data processing. 
+Although manual conversion is facile for one file, an automated solution can prove useful for bulk data processing.
+A sample ``.xyz`` file can be found at the end of this tutorial. 
 
 This tutorial will showcase *cctk*'s ability to automatically interconvert between file types, as well as provide a template for other command-line scripts.
 
 Creating a Bash Script
 ======================
 
-In a terminal window, create a new file called ``read_from_xyz.py`` and open it in your favorite text editor (e.g., ``vim`` or ``emacs``)::
+Open a terminal window in a directory with a file titled ``test.xyz``. A sample xyz file can be found at the bottom of this tutorial.
+In a terminal window, create a new file called ``read_from_xyz.py`` and open it in your favorite text editor (e.g., ``vim``, ``emacs``, or ``nano``).
+::
 
     $ vim read_from_xyz.py
 
@@ -35,19 +38,20 @@ This will open a blank file. First, we need to load *cctk*::
 
 Now that we've loaded *cctk*, we can read in data from an input file::
 
-    filename = "test.xyz"
-
+    filename = "./test.xyz"
     file = XYZFile.read_file(filename)
 
 The above code creates a *cctk* ``XYZFile`` object from the file we specified, which now exists as a Python data structure. 
 To output a different filetype, we need to extract the ``Molecule`` object represented by the file and write it as a ``.gjf`` file::
+
+    molecule = file.get_molecule()
 
     newfile = filename.rsplit('/',1)[-1]
     newfile = re.sub(r"xyz$", "gjf", newfile)
 
     GaussianFile.write_molecule_to_file(
         newfile,
-        file.molecule,
+        molecule,
         "#p opt freq=noraman b3lyp/6-31g(d) empiricaldispersion=gd3bj",
         None,
     )
@@ -138,3 +142,23 @@ To run this on our test file, simply type::
 
 This script can now be copied to other directories and used as a command-line tool.
 The template provided here can also be modified for myriad *cctk*-based applications, as future tutorials will demonstrate.
+
+test.xyz::
+
+    15
+    test.xyz
+    6 0.25892000 0.68427000 0.00004500
+    6 0.26511300 -0.72188500 0.00009000
+    6 -0.94174700 -1.42160900 -0.00002100
+    6 -2.11278500 -0.69088000 -0.00005500
+    6 -2.10059200 0.71395300 -0.00000200
+    6 -0.91770900 1.42733300 0.00002600
+    6 2.30577100 -0.12622400 -0.00004900
+    1 -0.94496200 -2.50599200 -0.00006100
+    1 -3.06654500 -1.20746800 -0.00011100
+    1 -3.04325200 1.25075200 -0.00001000
+    1 -0.91311300 2.51203200 0.00002600
+    1 3.38805900 -0.11864100 -0.00015700
+    7 1.56522000 -1.19167600 0.00001600
+    7 1.58790000 1.03645900 0.00010200
+    1 1.96615100 1.96608000 -0.00071900
