@@ -6,8 +6,10 @@ Reading and Writing ORCA Files
 
 - ``import cctk`` is assumed.
 - *cctk* was originally designed with Gaussian in mind, but supports basic writing of ORCA input files and parsing of ORCA output
-- Note that the MiniPrint option may make Orca output files unreadable by cctk
-- All of the input and output files used in these recipes can be accessed at https://github.com/ekwan/cctk/tree/master/test/static
+- The default print level in ORCA (`! NormalPrint`) is recommended for parsing with cctk
+- Note that `! MiniPrint` may make Orca output files unreadable by cctk
+- All of the input and output files used in these recipes can be accessed `here <./../test/static/14-butanedione.gjf>`_.
+- All of the input and output files used in these recipes can be accessed `there <https://github.com/ekwan/cctk/tree/master/test/static>`_.
 - All of input files used in these recipes can also be copied as text at the end of this recipe.
 
 """""""""""""""""""""""""""""""""""""""

@@ -105,6 +105,7 @@ class OrcaFile(File):
             successful_opt = 0
             successful_freq = 0
             successful_NMR_EPR = 0
+            is_scan_job = False
             # add identifiers for successful termination of other job types
     
             elapsed_time = 0
@@ -113,10 +114,12 @@ class OrcaFile(File):
                     successful_scf_convergence += 1
                 elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"):      #### geometry converged
                     successful_opt += 1
-                elif line.startswith("Maximum memory used throughout the entire SCFHESS-calculation:"): #### a frequency job was completed
-                    successful_freq += 1                                                                #### this approach has a liability, it will return a successful frequency job even if the freq job was only the initial hessian used for the TS search
+                elif line.startswith("VIBRATIONAL FREQUENCIES"):                                        #### a frequency job was completed
+                    successful_freq += 1                                                                
                 elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  #### an EPR NMR job was completed
                     successful_NMR_EPR += 1
+                elif line.strip().startswith("*    Relaxed Surface Scan    *"):                         #### this is a scan job
+                    is_scan_job = True
                 elif line.startswith("Sum of individual times         ..."):                            #### the job was completed
                     fields = line.split()
                     assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
@@ -212,14 +215,14 @@ class OrcaFile(File):
                     properties[-1]["isotropic_shielding"] = nmr_shifts
 
             try:
-                charges = parse.read_mulliken_charges(lines)
+                charges = parse.read_mulliken_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["mulliken_charges"] = charges
             except Exception as e:
                 pass
 
             try:
-                charges = parse.read_loewdin_charges(lines)
+                charges = parse.read_loewdin_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["lowdin_charges"] = charges
             except Exception as e:

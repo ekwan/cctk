@@ -1,5 +1,5 @@
 import numpy as np
-import re
+import re, warnings
 
 from cctk.helper_functions import get_number
 from cctk import OneIndexedArray, LazyLineObject
@@ -73,9 +73,9 @@ def split_multiple_inputs(filename):
     elif len(output_blocks) > 1:
         return output_blocks[1:]
 
-def read_mulliken_charges(lines):
+def read_mulliken_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges.
+    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
 
     Args:
         lines (list): list of lines in file
@@ -83,21 +83,30 @@ def read_mulliken_charges(lines):
     Returns:
         ``cctk.OneIndexedArray`` of charges
     """
-    charges = []
-    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", join="\n")
-    for line in charge_block.split("\n")[2:]:
-        fields = re.split(" +", line)
-        fields = list(filter(None, fields))
 
-        if len(fields) == 4:
-            charges.append(float(fields[3]))
+    count = successful_opt + 1
+    if is_scan_job:
+        count = 2*successful_opt
+    else: 
+        count = successful_opt + 1
+
+    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", count=count, join="\n")
+    for block in charge_block:
+        charges = []
+        for line in block.split("\n")[2:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
+
+            if len(fields) == 4:
+                charges.append(float(fields[3]))
 
     return OneIndexedArray(charges)
 
 
-def read_loewdin_charges(lines):
+
+def read_loewdin_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges.
+    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
 
     Args:
         lines (list): list of lines in file
@@ -105,20 +114,30 @@ def read_loewdin_charges(lines):
     Returns:
         ``cctk.OneIndexedArray`` of charges
     """
-    charges = []
-    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", join="\n")
-    for line in charge_block.split("\n")[2:]:
-        fields = re.split(" +", line)
-        fields = list(filter(None, fields))
+    count = successful_opt + 1
+    if is_scan_job:
+        count = 2*successful_opt
+    else: 
+        count = successful_opt + 1
 
-        if len(fields) == 4:
-            charges.append(float(fields[3]))
+    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", count=count, join="\n")
+    for block in charge_block:
+        charges = []
+        for line in block.split("\n")[2:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
+
+            if len(fields) == 4:
+                charges.append(float(fields[3]))
 
     return OneIndexedArray(charges)
+
 
 def read_header(lines):
     for line in lines:
         if re.match("!", line):
+            if 'miniprint' in line.lower():
+                warnings.warn('The miniprint option may lead to parsing errors in cctk')
             return line
 
 def read_blocks_and_variables(lines):
@@ -162,10 +181,8 @@ def read_freqs(lines, successful_freq):
         return []
 
     elif successful_freq == 1:
-    # elif isinstance(freq_blocks, str):
         freqs = []
         for line in freq_blocks.split("\n"):
-            # print(line)
             fields = re.split(" +", line.strip())
             if len(fields) == 3 or len(fields) == 5:
                 if fields[2] == "cm**-1" and float(fields[1]) != 0:
@@ -173,7 +190,6 @@ def read_freqs(lines, successful_freq):
         return freqs
 
     elif successful_freq > 1 :
-    # elif isinstance(freq_blocks, list):
         freqs_lists = []
         for freq_block in freq_blocks:
             freqs = []

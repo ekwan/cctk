@@ -67,8 +67,13 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(file.ensemble[mol,"energy"], -229.12132242363)
         self.assertEqual(file.ensemble[mol, "dipole_moment"], 1.76241)
 
-        self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.333851)
-        self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.515118)
+        #these are the first values, they are not for the optimized geometry
+        # self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.333851)
+        # self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.515118)
+
+        # these are the correct values
+        self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.329311)
+        self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.539274)
 
         self.assertEqual(file.ensemble[mol, "temperature"], 298.15)
         self.assertEqual(file.ensemble[mol, "enthalpy"], -229.05330337)
