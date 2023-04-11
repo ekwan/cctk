@@ -18,16 +18,18 @@ Writing a simple ORCA input file
 
 ::
 
-    read_path = "test/static/test_peptide.xyz"
-    write_path = "test/static/test_peptide.inp"
+  read_path = "test/static/test_peptide.xyz"
+  new_path = "test/static/test_peptide_copy.inp"
+  file = cctk.XYZFile.read_file(read_path)
 
-    file = cctk.XYZFile.read_file(read_path)
-    header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO\n%pal nproc 4 end\n%maxcore 4000\n%mdci\n    density none\nend"
-    cctk.OrcaFile.write_molecule_to_file(write_path, file.molecule, header)
+  header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO"
+  variables = {"maxcore": 4000}
+  blocks = {"pal": ["nproc 4"], "mdci": ["density none"]}
+  cctk.OrcaFile.write_molecule_to_file(new_path, file.get_molecule(), header, variables, blocks)
 
 
 - The parent ``.xyz`` is `test_peptide.xyz <./../test/static/test_peptide.xyz>`_.
-- The resulting ``.inp`` is `test_peptide.inp <./../test/static/test_peptide.inp>`_.
+- The resulting ``.inp`` is `test_peptide_copy.inp <./../test/static/test_peptide_copy.inp>`_.
 
 """"""""""""""""""""""""""""""""""""""""""""""""
 Writing an ORCA input file from a SMILES string
@@ -37,8 +39,6 @@ Writing an ORCA input file from a SMILES string
 - Writing molecules from SMILES requires RDKIT which can be installed with ``pip install rdkit``
 
 ::
-
-    import cctk, sys
 
     write_path = "test/static/orca_uridine_opt_freq.inp"
 
@@ -54,10 +54,10 @@ Writing an ORCA input file from a SMILES string
 This writes `orca_uridine_opt_freq.inp <./../test/static/orca_uridine_opt_freq.inp>`_.
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-Reading Simple ORCA Output Files
+Reading Output of ORCA Geometry Optimization
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Submission of this example input above returns: `orca_uridine_opt_freq.out <./../test/static/orca_uridine_opt_freq.out>`_
+Submission of the example input above returns: `orca_uridine_opt_freq.out <./../test/static/orca_uridine_opt_freq.out>`_
 
 To access properties of the final structure in the geometry optimization::
 
@@ -98,11 +98,11 @@ To access the final geometry in the ensemble::
   # We can then do something with that geometry
   # For example, use it to write an input for a single point calculation
 
-  write_path = "../..test/static/uridine_sp.inp"
+  write_path = "test/static/uridine_sp.inp"
   header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO"
-  variables = variables={"maxcore": 4000}
-  blocks = blocks={"pal": ["nproc 8"]}
-  cctk.OrcaFile.write_molecule_to_file(write_path, mol, header)
+  variables =  {"maxcore": "4000"}
+  blocks = {"mdci": ["density none"], "pal": ["nproc 8"] }
+  cctk.OrcaFile.write_molecule_to_file(write_path, mol, header, variables, blocks)
 
 Which writes the file  `uridine_sp.inp <./../test/static/uridine_sp.inp>`_
   

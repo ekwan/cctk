@@ -4,7 +4,7 @@
 	density none
 end
 %pal
-	nproc 4
+	nproc 8
 end
 
 * xyz 0 1
