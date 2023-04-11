@@ -91,12 +91,14 @@ def read_mulliken_charges(lines, successful_opt, is_scan_job):
         count = successful_opt + 1
 
     charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", count=count, join="\n")
+    if not isinstance(charge_block, list):
+        charge_block = [charge_block]
+
     for block in charge_block:
         charges = []
         for line in block.split("\n")[2:]:
             fields = re.split(" +", line)
             fields = list(filter(None, fields))
-
             if len(fields) == 4:
                 charges.append(float(fields[3]))
 
@@ -121,12 +123,14 @@ def read_loewdin_charges(lines, successful_opt, is_scan_job):
         count = successful_opt + 1
 
     charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", count=count, join="\n")
+    if not isinstance(charge_block, list):
+        charge_block = [charge_block]
+
     for block in charge_block:
         charges = []
         for line in block.split("\n")[2:]:
             fields = re.split(" +", line)
             fields = list(filter(None, fields))
-
             if len(fields) == 4:
                 charges.append(float(fields[3]))
 
@@ -200,7 +204,6 @@ def read_freqs(lines, successful_freq):
                         freqs.append(float(fields[1]))
             freqs_lists.append(freqs)
         return freqs_lists[-1]
-
 
 def read_gradients(lines, num_to_find):
     grad_blocks = lines.search_for_block("Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find)

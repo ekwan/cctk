@@ -58,6 +58,7 @@ Reading Output of ORCA Geometry Optimization
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Submission of the example input above returns: `orca_uridine_opt_freq.out <./../test/static/orca_uridine_opt_freq.out>`_
+- Warning: parsing of `dipole_moment`, `mulliken_charges`, and `lowdin_charges` is not fully supported for relaxed scan jobs.
 
 To access properties of the final structure in the geometry optimization::
 
