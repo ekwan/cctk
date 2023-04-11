@@ -66,23 +66,20 @@ Writing an ORCA input file from a SMILES string
     mol = cctk.Molecule.new_from_smiles(SMILES)
 
     cctk.OrcaFile.write_molecule_to_file(write_path, mol, 
-	    header="! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf",
-	    variables={"maxcore": 1000},
-	    blocks={"pal": ["nproc 4"] 
-            },
-        )
+	    header="! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf")
 
 The resulting `orca_uridine_opt_freq.inp <./../test/static/orca_uridine_opt_freq.inp>`_ begins with:
 ::
 
-    ! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf
-    %maxcore 1000
-    %pal
-      nproc 4
-    end
+  ! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf
+  %maxcore 2000
+  %pal
+	  nproc 16
+  end
 
-    * xyz 0 1
-
+  * xyz 0 1
+  6          3.81472230    0.33750522    0.14614943
+  ...
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Reading Simple ORCA Output Files
@@ -121,18 +118,22 @@ To access the final geometry in the ensemble::
 
   mol = file.ensemble.molecule_list()[-1]
 
+  #equivalently
+  mol = file.get_molecule()
+  # or
+  mol = file.get_molecule(-1)
+
   # We can then do something with that geometry
   # For example, use it to write an input for a single point calculation
 
-  write_path = "test/static/uridine_sp.inp"
-  header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint\n%pal nproc 4 end\n%maxcore 4000\n%mdci\n    density none\nend"
+  write_path = "../..test/static/uridine_sp.inp"
+  header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO"
+  variables = variables={"maxcore": 4000}
+  blocks = blocks={"pal": ["nproc 8"]}
   cctk.OrcaFile.write_molecule_to_file(write_path, mol, header)
+
+Which writes the file  `uridine_sp.inp <./../test/static/uridine_sp.inp>`_
   
-
-
-
-
-
 We can also access the properties of all geometries in the ensemble with::
 
   file.ensemble.properties_list()

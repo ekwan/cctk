@@ -1,7 +1,7 @@
 ! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf
-%maxcore 1000
+%maxcore 2000
 %pal
-	nproc 4
+	nproc 16
 end
 
 * xyz 0 1
