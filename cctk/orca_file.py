@@ -127,13 +127,13 @@ class OrcaFile(File):
     
             # different than G16 "successful termination"
             success = 0   
-            if successful_scf_convergence > 0:
-                success += 1
             if successful_opt > 0:
                 success += 1
             if successful_freq > 0:
                 success += 1
             if successful_NMR_EPR > 0:
+                success += 1
+            if successful_scf_convergence > 0:
                 success += 1
 
             energies, iters = parse.read_energies(lines)
@@ -191,13 +191,13 @@ class OrcaFile(File):
                 try:
                     properties[-1]["enthalpy"] = enthalpies[-1]
                 except Exception as e:
-                    print(f"error finding enthalpy for {filename}")
+                    pass
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
                 try:
                     properties[-1]["gibbs_free_energy"] = gibbs[-1]
                 except Exception as e:
-                    print(f"error finding gibbs free energy for {filename}")
+                    pass
 
                 try:
                     temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
@@ -207,7 +207,7 @@ class OrcaFile(File):
                                                                       frequency_cutoff=100.0, temperature=temperature[-1])
                         properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
                 except Exception as e:
-                    print(f"error finding temperature for {filename}")
+                    pass
 
             if OrcaJobType.NMR in job_types:
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
@@ -278,7 +278,7 @@ class OrcaFile(File):
         self.write_molecule_to_file(filename, molecule, header, variables, blocks)
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, variables=None, blocks=None, print_symbol=False):
+    def write_molecule_to_file(cls, filename, molecule, header, variables={"maxcore": 2000}, blocks={"pal": ["nproc 16"]}, print_symbol=False):
         """
         Write an ``.inp`` file using the given molecule.
 
