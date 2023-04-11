@@ -34,7 +34,7 @@ In a terminal window, create a new file called ``read_from_xyz_01.py`` and open 
 This will open a blank file. First, we need to load *cctk*::
 
     import re
-    from cctk import XYZFile, GaussianFile
+    from cctk import XYZFile, GaussianFile, OrcaFile
 
 Now that we've loaded *cctk*, we can read in data from an input file::
 
@@ -60,9 +60,9 @@ The command ``write_molecule_to_file`` is a class method, meaning we can create 
 All we need to supply is the path to the new file, the ``Molecule`` object (in this case, ``file.molecule``), and the header and footer for the new file. 
 (In this case, we have also ensured that the output file ends in ``.gjf`` and is placed in the directory from which we run the script by using Python string manipulation.)
 
-Running this script on `tutorial1.xyz <./../test/static/tutorial1.xyz>`_ generates the desired ``test.gjf`` input file::
+Running this read_from_xyz_01.py `read_from_xyz_01.py <../tutorial/tutorial_01/read_from_xyz_01.py>`_ on `tutorial1.xyz <../tutorial/tutorial_01/tutorial1.xyz>`_ generates the desired `tutorial1.gjf <../tutorial/tutorial_01/tutorial1.gjf>`_ input file::
 
-    $ python read_from_xyz.py
+    $ python read_from_xyz_01.py
 
 The start of `tutorial1.gjf <./tutorial1.gjf>`_ is shown below::
 
