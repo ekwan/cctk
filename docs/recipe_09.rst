@@ -19,17 +19,17 @@ Writing a simple ORCA input file
 ::
 
   read_path = "test/static/test_peptide.xyz"
-  new_path = "test/static/test_peptide_copy.inp"
+  path = "test/static/test_peptide.inp"
   file = cctk.XYZFile.read_file(read_path)
 
   header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO"
   variables = {"maxcore": 4000}
   blocks = {"pal": ["nproc 4"], "mdci": ["density none"]}
-  cctk.OrcaFile.write_molecule_to_file(new_path, file.get_molecule(), header, variables, blocks)
+  cctk.OrcaFile.write_molecule_to_file(path, file.get_molecule(), header, variables, blocks)
 
 
 - The parent ``.xyz`` is `test_peptide.xyz <./../test/static/test_peptide.xyz>`_.
-- The resulting ``.inp`` is `test_peptide_copy.inp <./../test/static/test_peptide_copy.inp>`_.
+- The resulting ``.inp`` is `test_peptide.inp <./../test/static/test_peptide.inp>`_.
 
 """"""""""""""""""""""""""""""""""""""""""""""""
 Writing an ORCA input file from a SMILES string
@@ -58,7 +58,8 @@ Reading Output of ORCA Geometry Optimization
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Submission of the example input above returns: `orca_uridine_opt_freq.out <./../test/static/orca_uridine_opt_freq.out>`_
-- Warning: parsing of `dipole_moment`, `mulliken_charges`, and `lowdin_charges` is not fully supported for relaxed scan jobs.
+
+**Warning**: parsing of `dipole_moment`, `mulliken_charges`, and `lowdin_charges` is not fully supported for relaxed scan jobs.
 
 To access properties of the final structure in the geometry optimization::
 
