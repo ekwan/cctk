@@ -8,17 +8,13 @@ Reading and Writing ORCA Files
 - *cctk* was originally designed with Gaussian in mind, but supports basic writing of ORCA input files and parsing of ORCA output
 - The default print level in ORCA ``! NormalPrint`` is recommended for parsing with cctk
 - Note that ``! MiniPrint`` may make Orca output files unreadable by cctk
-- All of the input and output files used in these recipes can be accessed `here <./../test/static/>`_.
 
 """""""""""""""""""""""""""""""""""""""
 Writing a simple ORCA input file
 """""""""""""""""""""""""""""""""""""""
 
-
 - In this recipe, we convert an ``.xyz`` file into an ORCA ``.inp`` file.
-- The parent ``.xyz`` is `test_peptide.xyz <./../test/static/test_peptide.xyz>`_.
-- The resulting ``.inp`` is `test_peptide.inp <./../test/static/test_peptide.inp>`_.
-- cctk can only write single-geometry input files for ORCA
+- *cctk* can only write single-geometry input files for ORCA
 
 ::
 
@@ -29,22 +25,9 @@ Writing a simple ORCA input file
     header = "! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO\n%pal nproc 4 end\n%maxcore 4000\n%mdci\n    density none\nend"
     cctk.OrcaFile.write_molecule_to_file(write_path, file.molecule, header)
 
-The resulting ``test_peptide.inp`` begins with:
 
-::
-
-  ! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO
-  %maxcore 4000
-  %pal
-    nproc 4
-  end
-  %mdci
-    density none
-  end
-
-  * xyz 0 1
-  ...
-  *
+- The parent ``.xyz`` is `test_peptide.xyz <./../test/static/test_peptide.xyz>`_.
+- The resulting ``.inp`` is `test_peptide.inp <./../test/static/test_peptide.inp>`_.
 
 """"""""""""""""""""""""""""""""""""""""""""""""
 Writing an ORCA input file from a SMILES string
@@ -68,18 +51,7 @@ Writing an ORCA input file from a SMILES string
     cctk.OrcaFile.write_molecule_to_file(write_path, mol, 
 	    header="! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf")
 
-The resulting `orca_uridine_opt_freq.inp <./../test/static/orca_uridine_opt_freq.inp>`_ begins with:
-::
-
-  ! b3lyp/G 6-31g(d) D3 CPCM(water) opt freq tightscf
-  %maxcore 2000
-  %pal
-	  nproc 16
-  end
-
-  * xyz 0 1
-  6          3.81472230    0.33750522    0.14614943
-  ...
+This writes `orca_uridine_opt_freq.inp <./../test/static/orca_uridine_opt_freq.inp>`_.
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Reading Simple ORCA Output Files
