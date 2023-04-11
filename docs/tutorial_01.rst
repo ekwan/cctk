@@ -26,7 +26,7 @@ Creating a Bash Script
 ======================
 
 Open a terminal window in a directory with a file titled ``tutorial1.xyz``. A sample xyz file can be found here `tutorial1.xyz <../tutorial/tutorial_01/tutorial1.xyz>`_.
-In a terminal window, create a new file called ``read_from_xyz_01.py`` and open it in your favorite text editor (e.g., ``vim``, ``emacs``, or ``nano``).
+In a terminal window, create a new file called ``read_from_xyz_01.py`` and open it in your favorite text editor (e.g., ``vim``, ``emacs``, or ``nano``). If you prefer a notebook over bash scripts, you can find the corresponding notebook, here `read_from_xyz_01.ipynb <../tutorial/tutorial_01/read_from_xyz_01.ipynb>`_
 ::
 
     $ vim read_from_xyz_01.py
@@ -56,15 +56,23 @@ To output a different filetype, we need to extract the ``Molecule`` object repre
         None,
     )
 
+    # to write an orca input simultaneously we could use the block below
+    newfile = re.sub(r"gjf$", "inp", newfile)
+    OrcaFile.write_molecule_to_file(
+        newfile,
+        molecule,
+        "! opt freq b3lyp/6-31g(d) d3bj",
+        )
+
 The command ``write_molecule_to_file`` is a class method, meaning we can create a ``.gjf`` file without needing to create another Python object. 
 All we need to supply is the path to the new file, the ``Molecule`` object (in this case, ``file.molecule``), and the header and footer for the new file. 
 (In this case, we have also ensured that the output file ends in ``.gjf`` and is placed in the directory from which we run the script by using Python string manipulation.)
 
-Running this read_from_xyz_01.py `read_from_xyz_01.py <../tutorial/tutorial_01/read_from_xyz_01.py>`_ on `tutorial1.xyz <../tutorial/tutorial_01/tutorial1.xyz>`_ generates the desired `tutorial1.gjf <../tutorial/tutorial_01/tutorial1.gjf>`_ input file::
+Running `read_from_xyz_01.py <../tutorial/tutorial_01/read_from_xyz_01.py>`_ on `tutorial1.xyz <../tutorial/tutorial_01/tutorial1.xyz>`_ generates the desired input files `tutorial1.gjf <../tutorial/tutorial_01/tutorial1.gjf>`_ and `tutorial1.inp <../tutorial/tutorial_01/tutorial1.inp>`_::
 
     $ python read_from_xyz_01.py
 
-The start of `tutorial1.gjf <./tutorial1.gjf>`_ is shown below::
+The start of `tutorial1.gjf` is shown below::
 
     %nprocshared=16
     %mem=32GB
@@ -76,7 +84,7 @@ The start of `tutorial1.gjf <./tutorial1.gjf>`_ is shown below::
     6 0.25892000 0.68427000 0.00004500
     ...
 
-The and the start of `tutorial1.inp <./tutorial1.inp>`_ ::
+The and the start of `tutorial1.inp`::
 
     ! opt freq b3lyp/6-31g(d) d3bj
     %maxcore 2000
