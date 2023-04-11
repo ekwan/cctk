@@ -145,7 +145,7 @@ After adding comments and integrating the above variables throughout, the final 
 
 To run this on our test file, simply type::
 
-    python read_from_xyz.py -h "#p opt b3lyp/6-31(g)" test.xyz
+    python read_from_xyz.py -h "#p opt b3lyp/6-31(g)" tutorial1.xyz
 
 This script can now be copied to other directories and used as a command-line tool.
 The template provided here can also be modified for myriad *cctk*-based applications, as future tutorials will demonstrate.
