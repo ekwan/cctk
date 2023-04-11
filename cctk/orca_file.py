@@ -17,35 +17,29 @@ class OrcaJobType(Enum):
     All jobs have type ``SP`` by default.
     """
 
-    SP = "sp"
+    SP = ("sp", ["energy", "scf_iterations"])
     """
     Single point energy calculation.
     """
 
-    OPT = "opt"
+    OPT = ("opt", ["rms_gradient", "rms_step", "max_gradient", "max_step"])
     """
     Geometry optimization.
     """
 
-    FREQ = "freq"
+    FREQ = ("freq", ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"])
     """
     Hessian calculation.
     """
 
-    NMR = "nmr"
+    NMR = ("nmr", ["isotropic_shielding"])
     """
     NMR shielding prediction.
     """
 
-#### This static variable tells what properties are expected from each JobType.
-EXPECTED_PROPERTIES = {
-    "sp": ["energy", "scf_iterations",],
-#    "opt": ["rms_gradient", "rms_step", "max_gradient", "max_step"],
-    "opt": [],
-    "freq": ["gibbs_free_energy", "enthalpy", "frequencies", "temperature"],
-    "nmr": ["isotropic_shielding",],
-}
-
+    def __init__(self, value, expected_properties):
+        self._value_ = value
+        self.expected_properties = expected_properties
 
 class OrcaFile(File):
     """
@@ -107,19 +101,40 @@ class OrcaFile(File):
             job_types = cls._assign_job_types(header)
             variables, blocks = parse.read_blocks_and_variables(input_lines)
 
-            success = 0
+            successful_scf_convergence = 0
+            successful_opt = 0
+            successful_freq = 0
+            successful_NMR_EPR = 0
+            is_scan_job = False
+            # add identifiers for successful termination of other job types
+    
             elapsed_time = 0
-            for line in lines:
-                if line.strip().startswith("****ORCA TERMINATED NORMALLY****"):
-                    success += 1
-                elif line.startswith("TOTAL RUN TIME"):
+            for line in lines:        
+                if line.startswith("FINAL SINGLE POINT ENERGY"):                                        #### SCF converged at least once
+                    successful_scf_convergence += 1
+                elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"):      #### geometry converged
+                    successful_opt += 1
+                elif line.startswith("VIBRATIONAL FREQUENCIES"):                                        #### a frequency job was completed
+                    successful_freq += 1                                                                
+                elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  #### an EPR NMR job was completed
+                    successful_NMR_EPR += 1
+                elif line.strip().startswith("*    Relaxed Surface Scan    *"):                         #### this is a scan job
+                    is_scan_job = True
+                elif line.startswith("Sum of individual times         ..."):                            #### the job was completed
                     fields = line.split()
-                    assert len(fields) == 13, f"unexpected number of fields on elapsed time line:\n{line}"
-                    days = float(fields[3])
-                    hours = float(fields[5])
-                    minutes = float(fields[7])
-                    seconds = float(fields[9])
-                    elapsed_time = days * 86400 + hours * 3600 + minutes * 60 + seconds
+                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
+                    elapsed_time = float(fields[5])
+    
+            # different than G16 "successful termination"
+            success = 0   
+            if successful_opt > 0:
+                success += 1
+            if successful_freq > 0:
+                success += 1
+            if successful_NMR_EPR > 0:
+                success += 1
+            if successful_scf_convergence > 0:
+                success += 1
 
             energies, iters = parse.read_energies(lines)
             if len(energies) == 0:
@@ -128,8 +143,9 @@ class OrcaFile(File):
             atomic_numbers, geometries = parse.read_geometries(lines, num_to_find=len(energies))
             assert len(geometries) >= len(energies), "can't have an energy without a geometry (cf. pigeonhole principle)"
 
-            charge = lines.find_parameter("xyz", 6, 4)[0]
-            multip = lines.find_parameter("xyz", 6, 5)[0]
+            # this approach does not work with the option miniprint
+            charge = lines.find_parameter("Total Charge           Charge          ....", 5, 4)[0]
+            multip = lines.find_parameter("Multiplicity           Mult            ....", 4, 3)[0]
 
             #### TODO
             # detect Mayer bond orders
@@ -169,20 +185,29 @@ class OrcaFile(File):
                         properties[idx]["max_step"] = max_step[idx]
 
             if OrcaJobType.FREQ in job_types:
-                properties[-1]["frequencies"] = sorted(parse.read_freqs(lines))
+                properties[-1]["frequencies"] = sorted(parse.read_freqs(lines, successful_freq))
 
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
-                properties[-1]["enthalpy"] = enthalpies[-1]
+                try:
+                    properties[-1]["enthalpy"] = enthalpies[-1]
+                except Exception as e:
+                    pass
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
-                properties[-1]["gibbs_free_energy"] = gibbs[-1]
+                try:
+                    properties[-1]["gibbs_free_energy"] = gibbs[-1]
+                except Exception as e:
+                    pass
 
-                temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
-                if len(temperature) > 0 and len(gibbs) > 0:
-                    properties[-1]["temperature"] = temperature[-1]
-                    corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
+                try:
+                    temperature = lines.find_parameter("Temperature", expected_length=4, which_field=2)
+                    if len(temperature) > 0 and len(gibbs) > 0:
+                        properties[-1]["temperature"] = temperature[-1]
+                        corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
                                                                       frequency_cutoff=100.0, temperature=temperature[-1])
-                    properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+                except Exception as e:
+                    pass
 
             if OrcaJobType.NMR in job_types:
                 nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
@@ -190,14 +215,14 @@ class OrcaFile(File):
                     properties[-1]["isotropic_shielding"] = nmr_shifts
 
             try:
-                charges = parse.read_mulliken_charges(lines)
+                charges = parse.read_mulliken_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["mulliken_charges"] = charges
             except Exception as e:
                 pass
 
             try:
-                charges = parse.read_loewdin_charges(lines)
+                charges = parse.read_loewdin_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["lowdin_charges"] = charges
             except Exception as e:
@@ -253,7 +278,7 @@ class OrcaFile(File):
         self.write_molecule_to_file(filename, molecule, header, variables, blocks)
 
     @classmethod
-    def write_molecule_to_file(cls, filename, molecule, header, variables=None, blocks=None, print_symbol=False):
+    def write_molecule_to_file(cls, filename, molecule, header, variables={"maxcore": 2000}, blocks={"pal": ["nproc 16"]}, print_symbol=False):
         """
         Write an ``.inp`` file using the given molecule.
 
@@ -336,7 +361,7 @@ class OrcaFile(File):
     @classmethod
     def _assign_job_types(cls, header):
         """
-        Assigns ``OrcaJobType`` objects from route card. ``OrcaJobType.SP`` is assigned by default.
+        Assigns ``OrcaJobType`` objects from header. ``OrcaJobType.SP`` is assigned by default.
 
         Args:
             header (str): Orca header
@@ -345,11 +370,13 @@ class OrcaFile(File):
             list of ``OrcaJobType`` objects
         """
         job_types = []
-        for name, member in OrcaJobType.__members__.items():
-            if re.search(f" {member.value}", str(header), re.IGNORECASE):
-                job_types.append(member)
+        for job_type in OrcaJobType:
+            if re.search(f"{job_type.value}", str(header), re.IGNORECASE):
+                job_types.append(job_type)
         if OrcaJobType.SP not in job_types:
-            job_types.append(OrcaJobType.SP)
+            job_types.append(OrcaJobType.SP) # include SP in all jobs, whether specified in header or not
+        if re.search("ScanTs", str(header), re.IGNORECASE):
+            job_types.append(OrcaJobType.OPT) #ScanTs is an optimization job that does not contain the string "opt" in it's keyword
         return job_types
 
     def check_has_properties(self):
@@ -359,8 +386,10 @@ class OrcaFile(File):
         This only checks the last molecule in ``self.ensemble``, for now.
         """
         if self.successful_terminations > 0:
+            if self.successful_terminations == 2 and ((OrcaJobType.OPT in self.job_types) and (OrcaJobType.FREQ in self.job_types)):
+                return # opt and freq jobs should have three terminations
             for job_type in self.job_types:
-                for prop in EXPECTED_PROPERTIES[job_type.value]:
+                for prop in job_type.expected_properties:
                     if not self.ensemble.has_property(-1, prop):
                         raise ValueError(f"expected property {prop} for job type {job_type}, but it's not there!")
         else:

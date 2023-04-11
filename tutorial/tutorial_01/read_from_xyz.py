@@ -12,12 +12,13 @@ assert args["filename"], "Can't read file without a filename!"
 assert args["header"], "Can't write file without a header!"
 
 file = XYZFile.read_file(args["filename"])
+molecule = file.get_molecule()
 newfile = args["filename"].rsplit('/',1)[-1]
 newfile = re.sub(r"xyz$", "gjf", newfile)
 
 GaussianFile.write_molecule_to_file(
     newfile,
-    file.molecule,
+    molecule,
     route_card=args["header"],
     link0={"nprocshared": 16, "mem": "32GB"},
     footer=None,
