@@ -52,7 +52,6 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(file.header, "! cc-pVTZ cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO")
         self.assertEqual(file.variables["maxcore"], "1000")
         self.assertListEqual(file.blocks["mdci"], ["density none"])
-
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 3)
@@ -60,20 +59,24 @@ class TestOrca(unittest.TestCase):
 
         path = "test/static/AcOH_orca.out"
         file = cctk.OrcaFile.read_file(path)
-
         mol = file.get_molecule()
         self.assertTrue(isinstance(mol, cctk.Molecule))
         self.assertEqual(mol.num_atoms(), 8)
         self.assertEqual(file.ensemble[mol,"energy"], -229.12132242363)
         self.assertEqual(file.ensemble[mol, "dipole_moment"], 1.76241)
-
         self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], 0.329311)
         self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.539274)
-
         self.assertEqual(file.ensemble[mol, "temperature"], 298.15)
         self.assertEqual(file.ensemble[mol, "enthalpy"], -229.05330337)
         self.assertEqual(file.ensemble[mol, "gibbs_free_energy"], -229.08534132)
         self.assertListEqual(list(file.ensemble[mol, 'frequencies'][:3]), [129.95, 432.62, 559.79])
+
+        path = "test/static/orca_ACBNZA01_01.out"
+        file = cctk.OrcaFile.read_file(path)
+        self.assertEqual(file.elapsed_time, 62223.260)
+        self.assertEqual(file.header, '! hf tightscf aug-cc-pvqz')
+        mol = file.get_molecule()
+        self.assertEqual(file.ensemble[mol, "energy"], -1211.068114260911)
 
     def test_nmr(self):
         path = "test/static/ibuprofen_nmr_orca.out"
@@ -144,6 +147,8 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(file.ensemble[mol, "dipole_moment"], 37.12405)
         self.assertEqual(file.ensemble[mol, "mulliken_charges"][1], -0.211305)
         self.assertEqual(file.ensemble[mol, "lowdin_charges"][1], -0.046969)
+
+
 
 
 
