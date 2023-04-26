@@ -75,7 +75,7 @@ html_add_permalinks = ""
 html_favicon = '_static/favicon.png'
 
 def setup(app):
-    app.add_stylesheet("style.css") # also can be a full URL
+    app.add_css_file("style.css") # also can be a full URL
 
 # -- Extension configuration -------------------------------------------------
 
