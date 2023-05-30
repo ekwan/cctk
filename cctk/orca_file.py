@@ -120,9 +120,9 @@ class OrcaFile(File):
                     successful_NMR_EPR += 1
                 elif line.strip().startswith("*    Relaxed Surface Scan    *"):                         #### this is a scan job
                     is_scan_job = True
-                elif line.startswith("Sum of individual times         ..."):                            #### the job was completed
+                elif line.startswith("Sum of individual times         ..."):                            #### the job was completed  (note the '...' is key)
                     fields = line.split()
-                    assert len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
+                    assert len(fields) == 9 or len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
                     elapsed_time = float(fields[5])
     
             # different than G16 "successful termination"
