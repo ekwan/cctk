@@ -1271,7 +1271,7 @@ class Molecule:
                 y_vals = np.linspace(box_min[1], box_max[1], int((box_max[1] - box_min[1]) * pts_per_angstrom))
                 z_vals = np.linspace(box_min[2], box_max[2], int((box_max[2] - box_min[2]) * pts_per_angstrom))
 
-                # h4ck3r
+                # generate list of box points
                 box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
 
                 # caching to speed call
