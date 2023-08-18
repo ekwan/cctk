@@ -16,11 +16,16 @@ conda:
     environment: docs/environment.yml
 
 # Optionally set the version of Python and requirements required to build your docs
-python:
-  version: 3.7
+#python:
+#  version: 3.11
 #  install:
 #    - requirements: docs/requirements.txt
 
 
 submodules:
   include: all
+
+build:
+  os: "ubuntu-20.04"
+  tools:
+    python: "mambaforge-4.10"

@@ -1,4 +1,4 @@
-! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO MiniPrint
+! aug-cc-pVTZ aug-cc-pVTZ/C DLPNO-CCSD(T) TightSCF TightPNO
 %maxcore 4000
 %pal
 	nproc 4

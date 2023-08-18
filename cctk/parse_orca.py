@@ -1,5 +1,5 @@
 import numpy as np
-import re
+import re, warnings
 
 from cctk.helper_functions import get_number
 from cctk import OneIndexedArray, LazyLineObject
@@ -61,16 +61,21 @@ def split_multiple_inputs(filename):
     start_block = 0
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
-            if re.search("COMPOUND  JOB \d{1,}", line):
+            if re.search("COMPOUND JOB  \d{1,}", line):
                 output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
                 start_block = idx
     output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
 
-    return output_blocks[:]
+    if len(output_blocks) <= 1:
+        return output_blocks[:]
 
-def read_mulliken_charges(lines):
+    # this conditional skips the first block of %compound jobs which only describes the input and doesn't have an associated energy
+    elif len(output_blocks) > 1:
+        return output_blocks[1:]
+
+def read_mulliken_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges.
+    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
 
     Args:
         lines (list): list of lines in file
@@ -78,21 +83,32 @@ def read_mulliken_charges(lines):
     Returns:
         ``cctk.OneIndexedArray`` of charges
     """
-    charges = []
-    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", join="\n")
-    for line in charge_block.split("\n")[2:]:
-        fields = re.split(" +", line)
-        fields = list(filter(None, fields))
 
-        if len(fields) == 4:
-            charges.append(float(fields[3]))
+    count = successful_opt + 1
+    if is_scan_job:
+        count = 2*successful_opt
+    else: 
+        count = successful_opt + 1
+
+    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", count=count, join="\n")
+    if not isinstance(charge_block, list):
+        charge_block = [charge_block]
+
+    for block in charge_block:
+        charges = []
+        for line in block.split("\n")[2:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
+            if len(fields) == 4:
+                charges.append(float(fields[3]))
 
     return OneIndexedArray(charges)
 
 
-def read_loewdin_charges(lines):
+
+def read_loewdin_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges.
+    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
 
     Args:
         lines (list): list of lines in file
@@ -100,20 +116,32 @@ def read_loewdin_charges(lines):
     Returns:
         ``cctk.OneIndexedArray`` of charges
     """
-    charges = []
-    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", join="\n")
-    for line in charge_block.split("\n")[2:]:
-        fields = re.split(" +", line)
-        fields = list(filter(None, fields))
+    count = successful_opt + 1
+    if is_scan_job:
+        count = 2*successful_opt
+    else: 
+        count = successful_opt + 1
 
-        if len(fields) == 4:
-            charges.append(float(fields[3]))
+    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", count=count, join="\n")
+    if not isinstance(charge_block, list):
+        charge_block = [charge_block]
+
+    for block in charge_block:
+        charges = []
+        for line in block.split("\n")[2:]:
+            fields = re.split(" +", line)
+            fields = list(filter(None, fields))
+            if len(fields) == 4:
+                charges.append(float(fields[3]))
 
     return OneIndexedArray(charges)
+
 
 def read_header(lines):
     for line in lines:
         if re.match("!", line):
+            if 'miniprint' in line.lower():
+                warnings.warn('The miniprint option may lead to parsing errors in cctk')
             return line
 
 def read_blocks_and_variables(lines):
@@ -149,17 +177,33 @@ def extract_input_file(lines):
         input_lines.append(line)
     return input_lines
 
-def read_freqs(lines):
-    freq_block = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", join="\n", max_len=1000)
-    if freq_block is None:
+
+
+def read_freqs(lines, successful_freq):
+    freq_blocks = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", count=successful_freq, join="\n", max_len=1000)
+    if freq_blocks is None:
         return []
-    freqs = []
-    for line in freq_block.split("\n"):
-        fields = re.split(" +", line.strip())
-        if len(fields) == 3:
-            if fields[2] == "cm**-1" and float(fields[1]) > 0:
-                freqs.append(float(fields[1]))
-    return freqs
+
+    elif successful_freq == 1:
+        freqs = []
+        for line in freq_blocks.split("\n"):
+            fields = re.split(" +", line.strip())
+            if len(fields) == 3 or len(fields) == 5:
+                if fields[2] == "cm**-1" and float(fields[1]) != 0:
+                    freqs.append(float(fields[1]))
+        return freqs
+
+    elif successful_freq > 1 :
+        freqs_lists = []
+        for freq_block in freq_blocks:
+            freqs = []
+            for line in freq_block.split("\n"):
+                fields = re.split(" +", line.strip())
+                if len(fields) == 3 or len(fields) == 5:
+                    if fields[2] == "cm**-1" and float(fields[1]) != 0:
+                        freqs.append(float(fields[1]))
+            freqs_lists.append(freqs)
+        return freqs_lists[-1]
 
 def read_gradients(lines, num_to_find):
     grad_blocks = lines.search_for_block("Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find)

@@ -74,7 +74,7 @@ To run a single unit test::
 
 To run all the tests::
 
-    pythom -m unittest discover
+    python -m unittest discover
 
 
 
