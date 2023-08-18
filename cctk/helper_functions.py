@@ -12,6 +12,7 @@ try:
 except ImportError:
     import importlib_resources as pkg_resources
 
+from cctk import data
 import cctk
 
 """
@@ -20,7 +21,7 @@ This code populates ELEMENT_DICTIONARY and ISOTOPE_DICTIONARY from a static data
 ELEMENT_DICTIONARY = {}
 ISOTOPE_DICTIONARY = {}
 
-with pkg_resources.files(cctk.data).joinpath("isotopes.csv").open() as isotope_file:
+with pkg_resources.files(data).joinpath("isotopes.csv").open() as isotope_file:
     prev_number = 1
     current_dict = {}
     for line in isotope_file:
@@ -81,7 +82,7 @@ def get_number(atomic_symbol):
 This code populates COVALENT_RADII_DICTIONARY from a static datafile.
 """
 COVALENT_RADII_DICTIONARY = {}
-with pkg_resources.files(cctk.data).joinpath("covalent_radii.csv").open() as covalent_radii:
+with pkg_resources.files(data).joinpath("covalent_radii.csv").open() as covalent_radii:
     for line in covalent_radii:
         line_fragments = line.split(",")
 
@@ -111,7 +112,7 @@ def get_covalent_radius(atomic_number):
 This code populates VDW_RADII_DICTIONARY from a static datafile.
 """
 VDW_RADII_DICTIONARY = {}
-with pkg_resources.files(cctk.data).joinpath("vdw_radii.csv").open() as vdw_radii:
+with pkg_resources.files(data).joinpath("vdw_radii.csv").open() as vdw_radii:
     for line in vdw_radii:
         line_fragments = line.split(",")
 

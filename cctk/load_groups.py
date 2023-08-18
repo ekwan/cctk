@@ -90,7 +90,7 @@ def load_group(name):
 
     assert filename is not None, f"can't find name {name}!"
 
-    with pkg_resources.path(groups, filename) as file:
+    with pkg_resources.files(groups).joinpath(filename).open() as file:
         mol = MOL2File.read_file(file).ensemble.molecules[0]
         mol.assign_connectivity()
 
