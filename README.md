@@ -2,9 +2,9 @@
 # cctk
 
 [![PyPI version](https://badge.fury.io/py/cctk.svg)](https://pypi.python.org/pypi/cctk/)
+[![Anaconda version](https://anaconda.org/conda-forge/cctk/badges/version.svg)](https://anaconda.org/conda-forge/cctk)
 [![Doc status](https://readthedocs.org/projects/pip/badge/)](https://cctk.rtfd.io)
 [![Downloads](https://img.shields.io/pypi/dm/cctk.svg)](https://pypi.python.org/pypi/cctk/)
-[![Code Quality](https://img.shields.io/lgtm/grade/python/g/ekwan/cctk.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ekwan/cctk/context:python)
 
 *a Python-based computational chemistry toolkit*
 
@@ -26,17 +26,23 @@ A quick-start guide is [available](https://cctk.readthedocs.io/en/latest/quick-s
 
 *cctk* is easy to install! It should work on any system where Python works.
 
-With Python 3.7 or later, type:
+With Python 3.6 or later, type:
 
 ```
 pip install cctk
+```
+
+or
+
+```
+conda install -c conda-forge cctk
 ```
 
 If you don't have [pip](https://pypi.org/project/pip/) or virtual environments available on your system, then we recommend installing Anaconda first:
 
 1. Go to [https://www.anaconda.com/distribution/](https://www.anaconda.com/distribution/). Download the Python 3 installer appropriate to your system and run it.
 
-2. Create a virtual environment to use with *cctk*:
+2. Create a virtual environment to use with *cctk* (with whatever version of Python you prefer):
 
  ```
  conda create --name cctk python=3.8
