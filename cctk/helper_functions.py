@@ -3,7 +3,8 @@ Miscellaneous helper functions.
 """
 
 import numpy as np
-import math, re
+import math
+import re
 from io import BytesIO
 
 #### python 3.6 or earlier doesn't have importlib.resources, but it's backported as importlib_resources
@@ -230,7 +231,7 @@ def compute_rotation_matrix(axis, theta):
 
     try:
         theta = float(theta)
-    except:
+    except Exception:
         raise TypeError("theta must be float!")
 
     theta = np.radians(theta)
@@ -383,8 +384,8 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
     if symmetrical_atom_numbers is None:
         symmetrical_atom_numbers = []
     assert isinstance(symmetrical_atom_numbers, list), f"symmetrical atom numbers should be specified as a list of lists, but got {str(type(ensemble))} instead"
-    for l in symmetrical_atom_numbers:
-        assert isinstance(l, list), f"symmetrical atom numbers must be specified as lists, but got {str(type(l))} instead: {str(l)}"
+    for n in symmetrical_atom_numbers:
+        assert isinstance(n, list), f"symmetrical atom numbers must be specified as lists, but got {str(type(n))} instead: {str(n)}"
     if scaling_factors == "default":
         scaling_factors = DEFAULT_NMR_SCALING_FACTORS
     else:

@@ -37,7 +37,7 @@ class SIFile(cctk.File):
             for key, value in generate_info(molecule, properties).items():
                 text += f"{key}:\t{value}\n"
 
-            text += f"Cartesian Coordinates (Å):\n"
+            text += "Cartesian Coordinates (Å):\n"
             for index, Z in enumerate(molecule.atomic_numbers, start=1):
                 line = molecule.get_vector(index)
                 text += f"{get_symbol(Z):>2}       {line[0]:>13.6f} {line[1]:>13.6f} {line[2]:>13.8f}\n"

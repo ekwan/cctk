@@ -131,7 +131,7 @@ class LazyLineObject:
 
         try:
             pattern = re.compile(parameter)
-        except Exception as e:
+        except Exception:
             raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
 
         if pattern:
@@ -151,7 +151,7 @@ class LazyLineObject:
                             if cast_to_float:
                                 try:
                                     desired_fields.append(float(fields[n]))
-                                except:
+                                except Exception:
                                     desired_fields.append(0)
                             else:
                                 desired_fields.append(fields[n])

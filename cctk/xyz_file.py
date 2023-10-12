@@ -1,4 +1,5 @@
-import re, warnings
+import re
+import warnings
 import numpy as np
 
 import cctk
@@ -74,7 +75,7 @@ class XYZFile(cctk.File):
         num_atoms = 0
         try:
             num_atoms = int(lines[0])
-        except:
+        except Exception:
             raise ValueError("can't get the number of atoms from the first line!")
 
         title = lines[1]
@@ -100,7 +101,7 @@ class XYZFile(cctk.File):
                 geometry[index][0] = float(pieces[1])
                 geometry[index][1] = float(pieces[2])
                 geometry[index][2] = float(pieces[3])
-            except:
+            except Exception:
                 raise ValueError(f"can't parse line {index+2}: {line}")
 
         assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
@@ -178,9 +179,9 @@ class XYZFile(cctk.File):
         elif isinstance(titles, str):
             assert len(titles) > 0, "zero length title not allowed"
             titles = [titles] * len(ensemble)
-        elif isinstance(title, (list,np.ndarray)):
+        elif isinstance(titles, (list,np.ndarray)):
             assert len(titles) == len(ensemble)
-            for i,title in enumerate(titles):
+            for i, title in enumerate(titles):
                 assert isinstance(title, str), f"got {type(filename)} at index {i} of titles, but expected str"
         else:
             raise ValueError(f"got {type(titles)} for title but expected None, str, or iterable")

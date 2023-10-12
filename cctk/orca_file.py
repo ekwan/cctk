@@ -60,7 +60,7 @@ class OrcaFile(File):
     def __init__(self, job_types, ensemble=None,  header=None, variables=None, blocks=None):
         if job_types is not None:
             if not all(isinstance(job, OrcaJobType) for job in job_types):
-                raise TypeError(f"invalid job type {job}")
+                raise TypeError(f"invalid job type list {job_types}")
             self.job_types = job_types
         else:
             raise ValueError("need job types for new Orca file")
@@ -190,13 +190,13 @@ class OrcaFile(File):
                 enthalpies = lines.find_parameter("Total Enthalpy", expected_length=5, which_field=3)
                 try:
                     properties[-1]["enthalpy"] = enthalpies[-1]
-                except Exception as e:
+                except Exception:
                     pass
 
                 gibbs = lines.find_parameter("Final Gibbs free", expected_length=7, which_field=5)
                 try:
                     properties[-1]["gibbs_free_energy"] = gibbs[-1]
-                except Exception as e:
+                except Exception:
                     pass
 
                 try:
@@ -206,7 +206,7 @@ class OrcaFile(File):
                         corrected_free_energy = get_corrected_free_energy(gibbs[-1], properties[-1]["frequencies"],
                                                                       frequency_cutoff=100.0, temperature=temperature[-1])
                         properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
-                except Exception as e:
+                except Exception:
                     pass
 
             if OrcaJobType.NMR in job_types:
@@ -218,20 +218,20 @@ class OrcaFile(File):
                 charges = parse.read_mulliken_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["mulliken_charges"] = charges
-            except Exception as e:
+            except Exception:
                 pass
 
             try:
                 charges = parse.read_loewdin_charges(lines, successful_opt, is_scan_job)
                 assert len(charges) == len(atomic_numbers)
                 properties[-1]["lowdin_charges"] = charges
-            except Exception as e:
+            except Exception:
                 pass
 
             try:
                 dipole = lines.find_parameter("Magnitude \(Debye\)", 4, 3)
                 properties[-1]["dipole_moment"] = dipole[0]
-            except Exception as e:
+            except Exception:
                 pass
 
             for mol, prop in zip(molecules, properties):

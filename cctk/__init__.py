@@ -1,3 +1,5 @@
+# ruff: noqa
+
 from .file import File
 from .lines import LazyLineObject
 from .array import OneIndexedArray

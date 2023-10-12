@@ -263,7 +263,7 @@ class Ensemble:
         if property_list is None:
             raise ValueError(f"property '{property_name}' not found in ensemble")
         property_list = np.asarray(property_list)
-        n_missing_entries = np.count_nonzero(property_list==None)
+        n_missing_entries = np.count_nonzero(property_list==None) # noqa
         if n_missing_entries > 0:
             error = "---sorting error---\n"
             error += str(property_list)
@@ -303,7 +303,7 @@ class Ensemble:
         """
         try:
             number = int(number)
-        except:
+        except Exception:
             raise TypeError(f"atom number {number} must be integer")
 
         if number >= len(self._items):

@@ -242,15 +242,15 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
             # very small molecules might only have 1 or 2 freqs
             try:
                 frequencies += extract_parameter(word_matches[14], 3)
-            except Exception as e:
+            except Exception:
                 pass
             try:
                 frequencies += extract_parameter(word_matches[14], 4)
-            except Exception as e:
+            except Exception:
                 pass
 
             properties[-1]["frequencies"] = sorted(frequencies)
-        except Exception as e:
+        except Exception:
             raise ValueError("error finding frequencies")
 
         temperature = extract_parameter(word_matches[15], 1)
@@ -290,7 +290,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
             properties[-1]["mulliken_charges"] = charges
             properties[-1]["dipole_moment"] = dipole
             properties[-1]["dipole_vector"] = dipole_v
-        except Exception as e:
+        except Exception:
             pass
 
     for mol, prop in zip(molecules, properties):
@@ -299,7 +299,7 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
     if fail_silently:
         try:
             f.check_has_properties()
-        except Exception as e:
+        except Exception:
             # silently exclude this file
             return None
     else:
@@ -329,7 +329,7 @@ def parse_geometry(blocks):
             try:
                 current_nums.append(int(pieces[1]))
                 current_geoms.append([float(pieces[3]), float(pieces[4]), float(pieces[5])])
-            except:
+            except Exception:
                 #print(block)
                 #print("\n\n")
                 #print(line)
@@ -425,7 +425,7 @@ def extract_parameter(lines, position, cast_to_float=True):
         if cast_to_float:
             try:
                 vals.append(float(pieces[position]))
-            except Exception as e:
+            except Exception:
                 #### sometimes RMS Force comes thru as "******" for some reason
                 vals.append(0)
         else:
@@ -724,7 +724,7 @@ def read_nmr_shifts(blocks, num_atoms):
                 assert len(fields) == 6, f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
                 try:
                     shielding = float(fields[2])
-                except Exception as e:
+                except Exception:
                     raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
                 shieldings.append(shielding)
 

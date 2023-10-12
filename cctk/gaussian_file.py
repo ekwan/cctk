@@ -1,10 +1,11 @@
-import re, warnings
+import re
+import warnings
 import numpy as np
 
 from enum import Enum
 
-from cctk import File, Molecule, ConformationalEnsemble, OneIndexedArray
-from cctk.helper_functions import get_symbol, get_number, get_corrected_free_energy
+from cctk import File, Molecule, ConformationalEnsemble
+from cctk.helper_functions import get_symbol, get_number
 import cctk
 
 import cctk.parse_gaussian as parse
@@ -248,218 +249,217 @@ class GaussianFile(File):
         else:
             return list()
 
-    @classmethod
-#    @profile
-    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
-        """
-        Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
-        Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
-
-        Note:
-
-        Will throw ``ValueError`` if there have been no successful iterations.
-
-        Args:
-            filename (str): path to the out file
-            return_lines (Bool): whether the lines of the file should be returned
-            extended_opt_info (Bool): if full parameters about each opt step should be collected
-                (by default, only ``rms_displacement`` and ``rms_force`` are collected)
-        Returns:
-            ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
-            (optional) the lines of the file (or list of lines of file for Link1 files)
-        """
-        if re.search("gjf$", filename) or re.search("com$", filename):
-            return cls._read_gjf_file(filename, return_lines)
-
-        link1_lines = parse.split_link1(filename)
-        files = []
-
-        for link1idx, lines in enumerate(link1_lines):
-            #### automatically assign job types based on header
-            header = lines.search_for_block("#p", "----", format_line=lambda x: x.lstrip(), join="")
-            if header is None:
-                raise ValueError("can't find route card! (perhaps '#p' wasn't employed?)")
-            job_types = cls._assign_job_types(header)
-
-            link0 = parse.extract_link0(lines)
-
-            title = ""
-            title_block = lines.search_for_block("l101.exe", "Symbolic Z-matrix", join="\n")
-            if title_block is not None:
-                for line in title_block.split("\n")[1:]:
-                    if not re.search("-----", line):
-                        title += line
-
-
-            (geometries, atom_list, energies, scf_iterations, success, elapsed_time) = parse.read_geometries_and_energies(lines)
-            success, elapsed_time = parse.extract_success_and_time(lines)
-            atomic_numbers = []
-
-            #### convert to right datatype
-            try:
-                atomic_numbers = np.array(atom_list, dtype=np.int8)
-            except Exception as e:
-                atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
-
-            footer = None
-            if re.search("modredundant", str(header)):
-                footer = lines.search_for_block("^ The following ModRedundant input section", "^ $", count=1, join="\n")
-                if footer is not None:
-                    footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
-                    footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
-
-            bonds = parse.read_bonds(lines)
-            charge, multip =  lines.find_parameter("Multiplicity", expected_length=4, which_field=[1,3], split_on="=")[0]
-
-            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
-
-            molecules = [None] * len(geometries)
-            properties = [{} for _ in range(len(geometries))]
-            for idx, geom in enumerate(geometries):
-                molecules[idx] = Molecule(atomic_numbers, geom, charge=charge, multiplicity=multip, bonds=bonds)
-                if idx < len(energies):
-                    properties[idx]["energy"] = energies[idx]
-                if idx < len(scf_iterations):
-                    properties[idx]["scf_iterations"] = scf_iterations[idx]
-                properties[idx]["link1_idx"] = link1idx
-                properties[idx]["filename"] = filename
-                properties[idx]["iteration"] = idx
-
-            #### now for some job-type specific attributes
-            if GaussianJobType.OPT in job_types:
-                rms_forces = lines.find_parameter("RMS\s+Force", expected_length=5, which_field=2)
-                rms_displacements = lines.find_parameter("RMS\s+Displacement", expected_length=5, which_field=2)
-
-                if extended_opt_info:
-                    max_forces = lines.find_parameter("Maximum Force", expected_length=5, which_field=2)
-                    max_displacements = lines.find_parameter("Maximum Displacement", expected_length=5, which_field=2)
-                    max_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=3)
-                    rms_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=5)
-                    max_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=3)
-                    rms_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=5)
-                    delta_energy = lines.find_parameter("Predicted change in Energy", expected_length=4, which_field=3, cast_to_float=False)
-
-                for idx, force in enumerate(rms_forces):
-                    properties[idx]["rms_force"] = force
-                    properties[idx]["rms_displacement"] = rms_displacements[idx]
-
-                    if extended_opt_info:
-                        if idx < len(max_forces):
-                            properties[idx]["max_force"] = max_forces[idx]
-
-                        if idx < len(max_displacements):
-                            properties[idx]["max_displacement"] = max_displacements[idx]
-
-                        if idx < len(max_gradients):
-                            properties[idx]["max_gradient"] = max_gradients[idx]
-
-                        if idx < len(rms_gradients):
-                            properties[idx]["rms_gradient"] = rms_gradients[idx]
-
-                        if idx < len(max_int_forces):
-                            properties[idx]["max_internal_force"] = max_int_forces[idx]
-
-                        if idx < len(rms_int_forces):
-                            properties[idx]["rms_internal_force"] = rms_int_forces[idx]
-
-                        if idx < len(delta_energy):
-                            change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
-                            properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
-
-            if GaussianJobType.FREQ in job_types:
-                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
-                if len(enthalpies) == 1:
-                    properties[-1]["enthalpy"] = enthalpies[0]
-                elif len(enthalpies) > 1:
-                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
-
-                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
-                if len(gibbs_vals) == 1:
-                    properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
-                elif len(gibbs_vals) > 1:
-                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
-
-            if GaussianJobType.FREQ in job_types:
-                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
-                if len(enthalpies) == 1:
-                    properties[-1]["enthalpy"] = enthalpies[0]
-                elif len(enthalpies) > 1:
-                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
-
-                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
-                if len(gibbs_vals) == 1:
-                    properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
-                elif len(gibbs_vals) > 1:
-                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
-
-                frequencies = []
-                try:
-                    frequencies = sum(lines.find_parameter("Frequencies", expected_length=5, which_field=[2,3,4]), [])
-                    properties[-1]["frequencies"] = sorted(frequencies)
-                except Exception as e:
-                    raise ValueError("error finding frequencies")
-
-                #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
-                temperature = lines.find_parameter("Temperature", expected_length=6, which_field=1)
-                if len(temperature) == 1:
-                    properties[-1]["temperature"] = temperature[0]
-                    try:
-                        corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies, frequency_cutoff=100.0, temperature=temperature[0])
-                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(f"{float(corrected_free_energy):.6f}") # yes this is dumb
-                    except Exception as e:
-                        pass
-
-
-            if GaussianJobType.NMR in job_types:
-                nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
-                if nmr_shifts is not None:
-                    properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
-
-                if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search("nmr=spinspin", f.route_card,flags=re.IGNORECASE):
-                    couplings = parse.read_j_couplings(lines, molecules[0].num_atoms())
-                    if couplings is not None:
-                        properties[-1]["j_couplings"] = couplings
-
-            if GaussianJobType.FORCE in job_types:
-                assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
-                forces = parse.read_forces(lines)
-                properties[0]["forces"] = forces
-
-            if GaussianJobType.POP in job_types:
-                if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
-                    charges, spins = parse.read_hirshfeld_charges(lines)
-                    properties[-1]["hirshfeld_charges"] = charges
-                    properties[-1]["hirshfeld_spins"] = spins
-
-            try:
-                charges = parse.read_mulliken_charges(lines)
-                properties[-1]["mulliken_charges"] = charges
-            except Exception as e:
-                pass
-
-            try:
-                dipole = parse.read_dipole_moment(lines)
-                properties[-1]["dipole_moment"] = dipole
-            except Exception as e:
-                pass
-
-            for mol, prop in zip(molecules, properties):
-                f.ensemble.add_molecule(mol, properties=prop)
-
-            f.check_has_properties()
-            files.append(f)
-
-        if return_lines:
-            if len(link1_lines) == 1:
-                return files[0], link1_lines[0]
-            else:
-                return files, link1_lines
-        else:
-            if len(link1_lines) == 1:
-                return files[0]
-            else:
-                return files
-
+#    @classmethod
+#    def read_file(cls, filename, return_lines=False, extended_opt_info=False):
+#        """
+#        Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
+#        Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.
+#
+#        Note:
+#
+#        Will throw ``ValueError`` if there have been no successful iterations.
+#
+#        Args:
+#            filename (str): path to the out file
+#            return_lines (Bool): whether the lines of the file should be returned
+#            extended_opt_info (Bool): if full parameters about each opt step should be collected
+#                (by default, only ``rms_displacement`` and ``rms_force`` are collected)
+#        Returns:
+#            ``GaussianFile`` object (or list of ``GaussianFile`` objects for Link1 files)
+#            (optional) the lines of the file (or list of lines of file for Link1 files)
+#        """
+#        if re.search("gjf$", filename) or re.search("com$", filename):
+#            return cls._read_gjf_file(filename, return_lines)
+#
+#        link1_lines = parse.split_link1(filename)
+#        files = []
+#
+#        for link1idx, lines in enumerate(link1_lines):
+#            #### automatically assign job types based on header
+#            header = lines.search_for_block("#p", "----", format_line=lambda x: x.lstrip(), join="")
+#            if header is None:
+#                raise ValueError("can't find route card! (perhaps '#p' wasn't employed?)")
+#            job_types = cls._assign_job_types(header)
+#
+#            link0 = parse.extract_link0(lines)
+#
+#            title = ""
+#            title_block = lines.search_for_block("l101.exe", "Symbolic Z-matrix", join="\n")
+#            if title_block is not None:
+#                for line in title_block.split("\n")[1:]:
+#                    if not re.search("-----", line):
+#                        title += line
+#
+#
+#            (geometries, atom_list, energies, scf_iterations, success, elapsed_time) = parse.read_geometries_and_energies(lines)
+#            success, elapsed_time = parse.extract_success_and_time(lines)
+#            atomic_numbers = []
+#
+#            #### convert to right datatype
+#            try:
+#                atomic_numbers = np.array(atom_list, dtype=np.int8)
+#            except Exception:
+#                atomic_numbers = np.array(list(map(get_number, atom_list)), dtype=np.int8)
+#
+#            footer = None
+#            if re.search("modredundant", str(header)):
+#                footer = lines.search_for_block("^ The following ModRedundant input section", "^ $", count=1, join="\n")
+#                if footer is not None:
+#                    footer = "\n".join(list(footer.split("\n"))[1:])  # get rid of the first line
+#                    footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
+#
+#            bonds = parse.read_bonds(lines)
+#            charge, multip =  lines.find_parameter("Multiplicity", expected_length=4, which_field=[1,3], split_on="=")[0]
+#
+#            f = GaussianFile(job_types=job_types, route_card=header, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
+#
+#            molecules = [None] * len(geometries)
+#            properties = [{} for _ in range(len(geometries))]
+#            for idx, geom in enumerate(geometries):
+#                molecules[idx] = Molecule(atomic_numbers, geom, charge=charge, multiplicity=multip, bonds=bonds)
+#                if idx < len(energies):
+#                    properties[idx]["energy"] = energies[idx]
+#                if idx < len(scf_iterations):
+#                    properties[idx]["scf_iterations"] = scf_iterations[idx]
+#                properties[idx]["link1_idx"] = link1idx
+#                properties[idx]["filename"] = filename
+#                properties[idx]["iteration"] = idx
+#
+#            #### now for some job-type specific attributes
+#            if GaussianJobType.OPT in job_types:
+#                rms_forces = lines.find_parameter("RMS\s+Force", expected_length=5, which_field=2)
+#                rms_displacements = lines.find_parameter("RMS\s+Displacement", expected_length=5, which_field=2)
+#
+#                if extended_opt_info:
+#                    max_forces = lines.find_parameter("Maximum Force", expected_length=5, which_field=2)
+#                    max_displacements = lines.find_parameter("Maximum Displacement", expected_length=5, which_field=2)
+#                    max_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=3)
+#                    rms_gradients = lines.find_parameter("Cartesian Forces:", expected_length=6, which_field=5)
+#                    max_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=3)
+#                    rms_int_forces = lines.find_parameter("Internal  Forces:", expected_length=6, which_field=5)
+#                    delta_energy = lines.find_parameter("Predicted change in Energy", expected_length=4, which_field=3, cast_to_float=False)
+#
+#                for idx, force in enumerate(rms_forces):
+#                    properties[idx]["rms_force"] = force
+#                    properties[idx]["rms_displacement"] = rms_displacements[idx]
+#
+#                    if extended_opt_info:
+#                        if idx < len(max_forces):
+#                            properties[idx]["max_force"] = max_forces[idx]
+#
+#                        if idx < len(max_displacements):
+#                            properties[idx]["max_displacement"] = max_displacements[idx]
+#
+#                        if idx < len(max_gradients):
+#                            properties[idx]["max_gradient"] = max_gradients[idx]
+#
+#                        if idx < len(rms_gradients):
+#                            properties[idx]["rms_gradient"] = rms_gradients[idx]
+#
+#                        if idx < len(max_int_forces):
+#                            properties[idx]["max_internal_force"] = max_int_forces[idx]
+#
+#                        if idx < len(rms_int_forces):
+#                            properties[idx]["rms_internal_force"] = rms_int_forces[idx]
+#
+#                        if idx < len(delta_energy):
+#                            change_in_energy = re.sub(r"Energy=", "", delta_energy[idx])
+#                            properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
+#
+#            if GaussianJobType.FREQ in job_types:
+#                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
+#                if len(enthalpies) == 1:
+#                    properties[-1]["enthalpy"] = enthalpies[0]
+#                elif len(enthalpies) > 1:
+#                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+#
+#                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
+#                if len(gibbs_vals) == 1:
+#                    properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
+#                elif len(gibbs_vals) > 1:
+#                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
+#
+#            if GaussianJobType.FREQ in job_types:
+#                enthalpies = lines.find_parameter("thermal Enthalpies", expected_length=7, which_field=6)
+#                if len(enthalpies) == 1:
+#                    properties[-1]["enthalpy"] = enthalpies[0]
+#                elif len(enthalpies) > 1:
+#                    raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+#
+#                gibbs_vals = lines.find_parameter("thermal Free Energies", expected_length=8, which_field=7)
+#                if len(gibbs_vals) == 1:
+#                    properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
+#                elif len(gibbs_vals) > 1:
+#                    raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
+#
+#                frequencies = []
+#                try:
+#                    frequencies = sum(lines.find_parameter("Frequencies", expected_length=5, which_field=[2,3,4]), [])
+#                    properties[-1]["frequencies"] = sorted(frequencies)
+#                except Exception:
+#                    raise ValueError("error finding frequencies")
+#
+#                #  Temperature   298.150 Kelvin.  Pressure   1.00000 Atm.
+#                temperature = lines.find_parameter("Temperature", expected_length=6, which_field=1)
+#                if len(temperature) == 1:
+#                    properties[-1]["temperature"] = temperature[0]
+#                    try:
+#                        corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies, frequency_cutoff=100.0, temperature=temperature[0])
+#                        properties[-1]["quasiharmonic_gibbs_free_energy"] = float(f"{float(corrected_free_energy):.6f}") # yes this is dumb
+#                    except Exception:
+#                        pass
+#
+#
+#            if GaussianJobType.NMR in job_types:
+#                nmr_shifts = parse.read_nmr_shifts(lines, molecules[0].num_atoms())
+#                if nmr_shifts is not None:
+#                    properties[-1]["isotropic_shielding"] = nmr_shifts.view(OneIndexedArray)
+#
+#                if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search("nmr=spinspin", f.route_card,flags=re.IGNORECASE):
+#                    couplings = parse.read_j_couplings(lines, molecules[0].num_atoms())
+#                    if couplings is not None:
+#                        properties[-1]["j_couplings"] = couplings
+#
+#            if GaussianJobType.FORCE in job_types:
+#                assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
+#                forces = parse.read_forces(lines)
+#                properties[0]["forces"] = forces
+#
+#            if GaussianJobType.POP in job_types:
+#                if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card):
+#                    charges, spins = parse.read_hirshfeld_charges(lines)
+#                    properties[-1]["hirshfeld_charges"] = charges
+#                    properties[-1]["hirshfeld_spins"] = spins
+#
+#            try:
+#                charges = parse.read_mulliken_charges(lines)
+#                properties[-1]["mulliken_charges"] = charges
+#            except Exception:
+#                pass
+#
+#            try:
+#                dipole = parse.read_dipole_moment(lines)
+#                properties[-1]["dipole_moment"] = dipole
+#            except Exception:
+#                pass
+#
+#            for mol, prop in zip(molecules, properties):
+#                f.ensemble.add_molecule(mol, properties=prop)
+#
+#            f.check_has_properties()
+#            files.append(f)
+#
+#        if return_lines:
+#            if len(link1_lines) == 1:
+#                return files[0], link1_lines[0]
+#            else:
+#                return files, link1_lines
+#        else:
+#            if len(link1_lines) == 1:
+#                return files[0]
+#            else:
+#                return files
+#
     @classmethod
     def _read_gjf_file(cls, filename, return_lines=False):
         """
@@ -515,7 +515,7 @@ class GaussianFile(File):
                     in_geom = True
                     continue
 
-            if in_geom == True:
+            if in_geom is True:
                 if len(line.strip()) == 0:
                     in_geom = False
                 else:
@@ -525,7 +525,7 @@ class GaussianFile(File):
                     atomic_numbers.append(pieces[0])
                     geometry.append([pieces[1], pieces[2], pieces[3]])
 
-            if (in_geom == False) and (len(geometry) > 0):
+            if (in_geom is False) and (len(geometry) > 0):
                 if footer:
                     footer = footer + "\n" + line
                 else:
@@ -534,7 +534,7 @@ class GaussianFile(File):
 
         try:
             atomic_numbers = np.array(atomic_numbers, dtype=np.int8)
-        except Exception as e:
+        except Exception:
             atomic_numbers = np.array(list(map(get_number, atomic_numbers)), dtype=np.int8)
 
         job_types = cls._assign_job_types(header)
@@ -711,7 +711,6 @@ class GaussianFile(File):
 
     @classmethod
     def read_file(cls, filename, return_lines=False, extended_opt_info=False, fail_silently=True):
-#    def read_fast(cls, filename, return_lines=False, extended_opt_info=False):
         """
         Reads a Gaussian``.out`` or ``.gjf`` file and populates the attributes accordingly.
         Only footers from ``opt=modredundant`` can be read automatically --  ``genecep`` custom basis sets, &c must be specified manually.

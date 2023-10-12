@@ -1,5 +1,6 @@
 import numpy as np
-import re, warnings
+import re
+import warnings
 
 from cctk.helper_functions import get_number
 from cctk import OneIndexedArray, LazyLineObject
@@ -250,7 +251,7 @@ def read_nmr_shifts(lines, num_atoms):
         if len(fields) == 4:
             try:
                 shielding = float(fields[2])
-            except:
+            except Exception:
                 raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
             shieldings.append(shielding)
 

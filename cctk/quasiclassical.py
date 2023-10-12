@@ -3,7 +3,9 @@ Functions to assist in sampling thermally excited states through quasiclassical 
 """
 
 import numpy as np
-import math, copy, random
+import math
+import copy
+import random
 
 import cctk
 
@@ -223,7 +225,8 @@ def random_boltzmann_energy(temperature, cutoff=10, step1=0.01, step2=0.0001):
     random = np.random.uniform()
 
     # cumulative Boltzmann
-    cumulative_boltzmann = lambda e: math.erf(math.sqrt(e))
+    def cumulative_boltzmann(e):
+        return math.erf(math.sqrt(e))
 
     # now we need to numerically invert the cumulative Boltzmann
     # kT = 1 for all this math, we'll fix it at the end

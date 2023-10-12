@@ -90,13 +90,13 @@ def load_group(name):
 
     assert filename is not None, f"can't find name {name}!"
 
-    with pkg_resources.files(groups).joinpath(filename).open() as file:
-        mol = MOL2File.read_file(file).ensemble.molecules[0]
-        mol.assign_connectivity()
+    abs_filename = pkg_resources.files(groups).joinpath(filename)
+    mol = MOL2File.read_file(abs_filename).ensemble.molecules[0]
+    mol.assign_connectivity()
 
-        #### every molecule is set so you need to attach to atom 2
-        new_group = Group.new_from_molecule(attach_to=2, molecule=mol, isomorphic=iso)
-        return new_group
+    #### every molecule is set so you need to attach to atom 2
+    new_group = Group.new_from_molecule(attach_to=2, molecule=mol, isomorphic=iso)
+    return new_group
 
 def group_iterator(symmetric_only=False):
     """

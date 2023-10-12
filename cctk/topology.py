@@ -169,7 +169,7 @@ def exchange_identical_substituents(mol, center, self_permutations=None):
 
                     returns.append(new_mol)
 
-            except ValueError as e:
+            except ValueError:
                 pass # probably indicates a cycle
 
     if self_permutations is None:
@@ -220,7 +220,7 @@ def get_exchangeable_centers(mol):
             exchange_identical_substituents(mol, center)
             exchangeable_centers.append(center)
             continue
-        except Exception as e:
+        except Exception:
             pass
 
         mols = flip_meso_rings(mol, atoms=[center])

@@ -87,7 +87,7 @@ class Group(cctk.Molecule):
 
         try:
             add_to = int(add_to)
-        except:
+        except Exception:
             raise TypeError("add_to not castable to int")
 
         molecule = copy.deepcopy(molecule)
@@ -172,7 +172,7 @@ class Group(cctk.Molecule):
             else:
                 return molecule
         else:
-            raise ValueError(f"molecule contains conflicts!")
+            raise ValueError("molecule contains conflicts!")
 
     @staticmethod
     def remove_group_from_molecule(molecule, atom1, atom2, return_mapping=False):
@@ -198,7 +198,7 @@ class Group(cctk.Molecule):
         try:
             atom1 = int(atom1)
             atom2 = int(atom2)
-        except:
+        except Exception:
             raise TypeError("atom numbers not castable to int")
 
         molecule = copy.deepcopy(molecule)

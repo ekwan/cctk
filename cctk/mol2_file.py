@@ -136,7 +136,7 @@ class MOL2File(File):
                 in_bond_block = False
                 i += 1
                 line = lines[i]
-                if contains_conformers == True and len(all_symbols) > 0:
+                if contains_conformers is True and len(all_symbols) > 0:
                     this_symbols = all_symbols[0]
                     this_clean_symbols = all_clean_symbols[0]
             elif line.startswith("@<TRIPOS>BOND"):
@@ -152,7 +152,7 @@ class MOL2File(File):
                 # initialize connectivity graph
                 if len(this_geometry) == 0:
                     raise ValueError("got to bond table without a geometry")
-                if contains_conformers == True and len(all_bonds) > 0:
+                if contains_conformers is True and len(all_bonds) > 0:
                     this_bonds = all_bonds[0]
                 else:
                     this_bonds = nx.Graph()
@@ -168,14 +168,14 @@ class MOL2File(File):
                     break
                 x, y, z = float(fields[2]), float(fields[3]), float(fields[4])
                 this_geometry.append([x, y, z])
-                if contains_conformers != True or len(all_symbols)==0:
+                if contains_conformers is not True or len(all_symbols)==0:
                     symbol = fields[5]
                     clean_symbol = fields[1]
                     this_symbols.append(symbol)
                     this_clean_symbols.append(clean_symbol)
             elif in_bond_block:
                 fields = line.split()
-                if len(fields) == 4 and (len(all_bonds)==0 or contains_conformers != True):
+                if len(fields) == 4 and (len(all_bonds)==0 or contains_conformers is not True):
                     # parse bonds, checking that the bonds are increasing
                     try:
                         this_bond_number = int(fields[0])
@@ -199,7 +199,7 @@ class MOL2File(File):
                                 raise ValueError(f"inconsistent bond order definition: {line}")
                         this_bonds.add_edge(atom1, atom2, weight=bond_order)
                         this_bonds.add_edge(atom2, atom1, weight=bond_order)
-                    except Exception as e:
+                    except Exception:
                         # assume we have left the bond block
                         in_geometry_block = False
                         in_bond_block = False

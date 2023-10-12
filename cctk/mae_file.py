@@ -39,7 +39,7 @@ class MAEFile(File):
         (geometries, symbols, bonds, p_names, p_vals, conformers) = cls._read_mae(filename, **kwargs)
         atomic_numbers = np.array([get_number(z) for z in symbols], dtype=np.int8)
 
-        if conformers == True:
+        if conformers is True:
             file.ensemble = ConformationalEnsemble()
         else:
             file.ensemble = Ensemble()

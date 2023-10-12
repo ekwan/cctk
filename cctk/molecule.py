@@ -1,4 +1,6 @@
-import math, copy, re
+import math
+import copy
+import re
 import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cdist
@@ -56,12 +58,12 @@ class Molecule:
 
         try:
             atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8).view(cctk.OneIndexedArray)
-        except Exception as e:
+        except Exception:
             raise ValueError("invalid atom list")
 
         try:
             geometry = np.array(geometry, dtype=np.float32).view(cctk.OneIndexedArray)
-        except Exception as e:
+        except Exception:
             raise TypeError("geometry cannot be cast to ``np.ndarray`` of floats!")
 
         if name is not None:
@@ -71,13 +73,13 @@ class Molecule:
         if not isinstance(charge, int):
             try:
                 charge = int(charge)
-            except Exception as e:
+            except Exception:
                 raise TypeError("charge must be integer or castable to integer!")
 
         if not isinstance(multiplicity, int):
             try:
                 multiplicity = int(multiplicity)
-            except Exception as e:
+            except Exception:
                 raise TypeError("multiplicity must be positive integer or castable to positive integer")
         assert multiplicity > 0, "multiplicity must be positive"
 
@@ -304,7 +306,7 @@ class Molecule:
                 formula_dict[symbol] += 1
             else:
                 formula_dict[symbol] = 1
-        if return_dict == True:
+        if return_dict is True:
             return formula_dict
         else:
             formula = ""
@@ -440,7 +442,7 @@ class Molecule:
         vb = v2 - v1
 
         if np.linalg.norm(vb) - current_distance > 0.00001:
-            raise ValueError(f"Error calculating bond distance!")
+            raise ValueError("Error calculating bond distance!")
 
         #### move all the atoms
         delta = distance - current_distance
@@ -503,7 +505,7 @@ class Molecule:
 
         try:
             angle = float(angle)
-        except Exception as e:
+        except Exception:
             raise TypeError(f"angle {angle} cannot be converted to float!")
 
         if (not isinstance(angle, float)) or ((angle < 0) or (angle > 360)):
@@ -620,7 +622,7 @@ class Molecule:
 
         try:
             dihedral = float(dihedral)
-        except Exception as e:
+        except Exception:
             raise TypeError(f"dihedral angle {dihedral} cannot be converted to float!")
 
         if (not isinstance(dihedral, float)) or ((dihedral < 0) or (dihedral > 360)):
@@ -781,7 +783,7 @@ class Molecule:
         for index, atom in enumerate(atom_numbers):
             self._check_atom_number(atom)
             coords[index] = self.get_vector(atom)
-            if weighted == True:
+            if weighted is True:
                 weights[index] = self.atomic_numbers[atom]
 
         new_coord = list(np.average(coords, weights=weights, axis=0))
@@ -834,7 +836,7 @@ class Molecule:
             self.bonds = nx.convert_node_labels_to_integers(self.bonds, first_label=1, ordering="sorted")
 
             return self
-        except Exception as e:
+        except Exception:
             raise ValueError("removing atom {number} failed!")
 
     def get_atomic_number(self, atom):
@@ -871,8 +873,8 @@ class Molecule:
             atomic_symbols (cctk.OneIndexedArray): the atomic symbols
         """
         n_atoms = self.get_n_atoms()
-        l = [ self.get_atomic_symbol(i) for i in range(1,n_atoms+1) ]
-        return cctk.OneIndexedArray(l)
+        sym = [ self.get_atomic_symbol(i) for i in range(1,n_atoms+1) ]
+        return cctk.OneIndexedArray(sym)
 
     def get_n_atoms(self):
         """
@@ -932,7 +934,7 @@ class Molecule:
             try:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
-            except Exception as e:
+            except Exception:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -956,7 +958,7 @@ class Molecule:
             try:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
-            except Exception as e:
+            except Exception:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -993,7 +995,7 @@ class Molecule:
                 atom1 = int(atom1)
                 atom2 = int(atom2)
                 atom3 = int(atom3)
-            except Exception as e:
+            except Exception:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -1038,7 +1040,7 @@ class Molecule:
                 atom2 = int(atom2)
                 atom3 = int(atom3)
                 atom4 = int(atom4)
-            except Exception as e:
+            except Exception:
                 raise TypeError("atom numbers cannot be cast to int!")
 
             self._check_atom_number(atom1)
@@ -1118,7 +1120,7 @@ class Molecule:
         """
         try:
             atom = int(atom)
-        except Exception as e:
+        except Exception:
             raise TypeError(f"atom number {atom} cannot be cast to int!")
 
         self._check_atom_number(atom)
@@ -1187,7 +1189,7 @@ class Molecule:
         """
         try:
             atom = int(atom)
-        except Exception as e:
+        except Exception:
             raise ValueError("atom cannot be cast to int")
 
         self._check_atom_number(atom)
@@ -1413,7 +1415,7 @@ class Molecule:
                     if model_report[center] != report[center]:
                         try:
                             candidate = top.exchange_identical_substituents(candidate, center)
-                        except ValueError as e:
+                        except ValueError:
                             break
 
                 #### check that we actually fixed all the problems
@@ -1572,7 +1574,7 @@ class Molecule:
         try:
             Chem.EmbedMolecule(rdkm, maxAttempts=5000)
             Chem.MMFFOptimizeMolecule(rdkm)
-        except:
+        except Exception:
             Chem.EmbedMolecule(rdkm, maxAttempts=5000, useRandomCoords=True)
             Chem.MMFFOptimizeMolecule(rdkm)
 

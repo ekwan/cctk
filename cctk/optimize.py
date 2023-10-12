@@ -2,7 +2,10 @@
 Functions to assist in optimizing structures.
 """
 
-import os, tempfile, shutil, re
+import os
+import tempfile
+import shutil
+import re
 import cctk
 import subprocess as sp
 
@@ -91,7 +94,8 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
                 output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").get_molecule()
                 energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
                 fields = energy_file[1].split()
-                energy, gradient = float(fields[1]), float(fields[3])
+#                energy, gradient = float(fields[1]), float(fields[3])
+                energy = float(fields[1])
 
             else:
                 # stopgap solution but should work ok. XTB output files should actually be parsed eventually. 

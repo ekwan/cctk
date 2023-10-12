@@ -31,7 +31,7 @@ class PDBFile(File):
             symb = get_symbol(Z).upper()
             text += f"HETATM {idx:>4}  {symb:<2}    *     0     {line[0]:7.3f} {line[1]:7.3f} {line[2]:7.3f}  1.00  0.00          {symb:>2}\n"
 
-        text += f"ENDMDL\n"
+        text += "ENDMDL\n"
 
         if append:
             super().append_to_file(filename, text)
