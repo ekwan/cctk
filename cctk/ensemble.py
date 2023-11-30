@@ -380,9 +380,12 @@ class ConformationalEnsemble(Ensemble):
             if checks and not np.array_equal(molecule.atomic_numbers, initial_mol.atomic_numbers):
                 raise ValueError("wrong atom types for this ensemble")
 
+            #### ccw 11.30.23 - this is terrible, I'm deleting this! what about an IRC or something? the bonds are obviously different.
+            #### besides this is surprising and relatively undocumented behavior, which has been confusing me - minimize perplexity!!
+
             #### only save one copy to save space
-            molecule.bonds = initial_mol.bonds
-            molecule.atomic_numbers = initial_mol.atomic_numbers
+            #molecule.bonds = initial_mol.bonds
+            #molecule.atomic_numbers = initial_mol.atomic_numbers
 
         super().add_molecule(molecule, properties, copy)
 

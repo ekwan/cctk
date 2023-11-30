@@ -107,15 +107,15 @@ class OrcaFile(File):
             successful_NMR_EPR = 0
             is_scan_job = False
             # add identifiers for successful termination of other job types
-    
+
             elapsed_time = 0
-            for line in lines:        
+            for line in lines:
                 if line.startswith("FINAL SINGLE POINT ENERGY"):                                        #### SCF converged at least once
                     successful_scf_convergence += 1
                 elif line.strip().startswith("***        THE OPTIMIZATION HAS CONVERGED     ***"):      #### geometry converged
                     successful_opt += 1
                 elif line.startswith("VIBRATIONAL FREQUENCIES"):                                        #### a frequency job was completed
-                    successful_freq += 1                                                                
+                    successful_freq += 1
                 elif line.startswith("Maximum memory used throughout the entire EPRNMR-calculation:"):  #### an EPR NMR job was completed
                     successful_NMR_EPR += 1
                 elif line.strip().startswith("*    Relaxed Surface Scan    *"):                         #### this is a scan job
@@ -124,9 +124,9 @@ class OrcaFile(File):
                     fields = line.split()
                     assert len(fields) == 9 or len(fields) == 10, f"unexpected number of fields on elapsed time line:\n{line}"
                     elapsed_time = float(fields[5])
-    
+
             # different than G16 "successful termination"
-            success = 0   
+            success = 0
             if successful_opt > 0:
                 success += 1
             if successful_freq > 0:

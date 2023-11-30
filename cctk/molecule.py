@@ -1871,7 +1871,7 @@ class Molecule:
             Ixz -= mass * position[0] * position[2]
             Iyz -= mass * position[1] * position[2]
 
-        I = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]]).reshape(3,3)
+        I = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]]).reshape(3,3)  # noqa: E741
 
         # now we do an eigendecomposition on that tensor
         return np.linalg.eigh(I)
