@@ -155,6 +155,10 @@ class TestMolecule(unittest.TestCase):
         mol = cctk.Molecule.new_from_name("acetone")
         self.assertTrue(abs(mol.volume() - 62) < 1)
 
+    def test_smiles_utils(self):
+        mol = cctk.Molecule.new_from_smiles("[OH3+]")
+        self.assertEqual(mol.charge, 1)
+
     def test_renumber(self):
         mol = self.load_molecule()
         mol2 = mol.swap_atom_numbers(1, 2)

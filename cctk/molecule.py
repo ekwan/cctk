@@ -1564,10 +1564,13 @@ class Molecule:
 
         try:
             from rdkit.Chem import AllChem as Chem
+            from rdkit.Chem import rdmolops as rdmolops
         except ImportError as e:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
         rdkm = Chem.MolFromSmiles(smiles)
+        assert rdkm is not None, f"Molecule could not be generated from SMILES ``{smiles}``"
+
         rdkm = Chem.AddHs(rdkm)
 
         # https://github.com/rdkit/rdkit/issues/1433
@@ -1583,7 +1586,7 @@ class Molecule:
             nums.append(atom.GetAtomicNum())
         geom = rdkm.GetConformers()[0].GetPositions()
 
-        return cls(nums, geom)
+        return cls(nums, geom, charge=rdmolops.GetFormalCharge(rdkm))
 
     def fragment(self):
         """
