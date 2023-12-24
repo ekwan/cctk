@@ -1574,12 +1574,17 @@ class Molecule:
         rdkm = Chem.AddHs(rdkm)
 
         # https://github.com/rdkit/rdkit/issues/1433
+        # both Chem calls ought to return "0" if they worked properly, I think, and -1 indicates failure
         try:
-            Chem.EmbedMolecule(rdkm, maxAttempts=5000)
-            Chem.MMFFOptimizeMolecule(rdkm)
+            status1 = Chem.EmbedMolecule(rdkm, maxAttempts=5000)
+            assert status1 >= 0
+            status2 = Chem.MMFFOptimizeMolecule(rdkm, maxIters=200)
+            assert status2 >= 0
         except Exception:
-            Chem.EmbedMolecule(rdkm, maxAttempts=5000, useRandomCoords=True)
-            Chem.MMFFOptimizeMolecule(rdkm)
+            status1 = Chem.EmbedMolecule(rdkm, maxAttempts=5000, useRandomCoords=True)
+            assert status1 >= 0
+            status2 = Chem.MMFFOptimizeMolecule(rdkm, maxIters=200)
+            assert status2 >= 0
 
         nums = []
         for atom in rdkm.GetAtoms():
