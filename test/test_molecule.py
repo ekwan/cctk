@@ -205,6 +205,9 @@ class TestMolecule(unittest.TestCase):
         mol = cctk.Molecule.new_from_name("acetic acid")
         self.assertEqual(len(mol.atomic_numbers), 8)
 
+        with self.assertRaises(ValueError):
+            mol = cctk.Molecule.new_from_smiles("CCCCCCCCCCCCCCCCCCCC", max_num_atoms=10)
+
     def test_fragment(self):
         m = cctk.GaussianFile.read_file("test/static/periodic.gjf").get_molecule()
         m = m.assign_connectivity(periodic_boundary_conditions=np.array([20, 20, 20]))

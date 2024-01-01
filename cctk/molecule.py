@@ -1580,7 +1580,7 @@ class Molecule:
             raise ValueError(f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid chemistry!\n{e}")
 
         rdkm = Chem.AddHs(rdkm)
-        if (max_num_atoms is not None) and (rdkm.GetNumAtoms(rdkm) > max_num_atoms):
+        if (max_num_atoms is not None) and (rdkm.GetNumAtoms() > max_num_atoms):
             raise ValueError(f"Number of atoms exceeds user-defined threshold ``{max_num_atoms}``")
 
         # https://github.com/rdkit/rdkit/issues/1433
