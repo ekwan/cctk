@@ -1540,7 +1540,7 @@ class Molecule:
         return self
 
     @classmethod
-    def new_from_name(cls, name):
+    def new_from_name(cls, name, **kwargs):
         """
         Create a new ``Molecule`` instance using ``rdkit``.
         """
@@ -1551,12 +1551,12 @@ class Molecule:
             url_name = re.sub(" ", "%20", name)
             url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
             smiles = urlopen(url, timeout=5).read().decode('utf8')
-            return cls.new_from_smiles(smiles)
+            return cls.new_from_smiles(smiles, **kwargs)
         except Exception as e:
             raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")
 
     @classmethod
-    def new_from_smiles(cls, smiles):
+    def new_from_smiles(cls, smiles, max_num_atoms=None):
         """
         Create a new ``Molecule`` instance using ``rdkit``.
         """
@@ -1568,10 +1568,20 @@ class Molecule:
         except ImportError as e:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
-        rdkm = Chem.MolFromSmiles(smiles)
-        assert rdkm is not None, f"Molecule could not be generated from SMILES ``{smiles}``"
+        # two-part error handling here
+        # https://github.com/rdkit/rdkit/issues/2430
+
+        rdkm = Chem.MolFromSmiles(smiles, sanitize=False)
+        assert rdkm is not None, f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid SMILES!"
+
+        try:
+            Chem.SanitizeMol(rdkm)
+        except Exception as e:
+            raise ValueError(f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid chemistry!\n{e}")
 
         rdkm = Chem.AddHs(rdkm)
+        if (max_num_atoms is not None) and (rdkm.GetNumAtoms(rdkm) > max_num_atoms):
+            raise ValueError(f"Number of atoms exceeds user-defined threshold ``{max_num_atoms}``")
 
         # https://github.com/rdkit/rdkit/issues/1433
         # both Chem calls ought to return "0" if they worked properly, I think, and -1 indicates failure
