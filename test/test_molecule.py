@@ -159,6 +159,12 @@ class TestMolecule(unittest.TestCase):
         mol = cctk.Molecule.new_from_smiles("[OH3+]")
         self.assertEqual(mol.charge, 1)
 
+        mol = cctk.Molecule.new_from_smiles("C1[Br+]C1(C)C")
+        self.assertEqual(mol.charge, 1)
+
+        mol = cctk.Molecule.new_from_smiles("C1[Hg+](Cl)C1(C)C")
+        self.assertEqual(mol.charge, 1)
+
     def test_renumber(self):
         mol = self.load_molecule()
         mol2 = mol.swap_atom_numbers(1, 2)

@@ -1588,13 +1588,16 @@ class Molecule:
         try:
             status1 = Chem.EmbedMolecule(rdkm, maxAttempts=5000)
             assert status1 >= 0
-            status2 = Chem.MMFFOptimizeMolecule(rdkm, maxIters=200)
-            assert status2 >= 0
         except Exception:
             status1 = Chem.EmbedMolecule(rdkm, maxAttempts=5000, useRandomCoords=True)
-            assert status1 >= 0
+            if status1 < 0:
+                raise ValueError(f"Cannot embed molecule ``{smiles}``!")
+
+        try:
             status2 = Chem.MMFFOptimizeMolecule(rdkm, maxIters=200)
             assert status2 >= 0
+        except AssertionError:
+            pass
 
         nums = []
         for atom in rdkm.GetAtoms():
