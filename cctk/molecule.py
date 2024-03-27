@@ -1565,6 +1565,7 @@ class Molecule:
         try:
             from rdkit.Chem import AllChem as Chem
             from rdkit.Chem import rdmolops as rdmolops
+            from rdkit.Chem.Descriptors import NumRadicalElectrons
         except ImportError as e:
             raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
 
@@ -1604,7 +1605,7 @@ class Molecule:
             nums.append(atom.GetAtomicNum())
         geom = rdkm.GetConformers()[0].GetPositions()
 
-        return cls(nums, geom, charge=rdmolops.GetFormalCharge(rdkm))
+        return cls(nums, geom, charge=rdmolops.GetFormalCharge(rdkm), multiplicity=GetNumRadicalElectrons(rdkm))
 
     def fragment(self):
         """
