@@ -1,15 +1,17 @@
 import re
 from itertools import islice
 
+
 class LazyLineObject:
     """
     Instead of storing ``lines`` as an array, this object can be used.
     It reduces the memory usage drastically! It looks up lines only when needed.
     """
+
     def __init__(self, file, start, end):
-       self.file = file
-       self.start = start
-       self.end = end
+        self.file = file
+        self.start = start
+        self.end = end
 
     def __len__(self):
         return self.end - self.start
@@ -39,7 +41,9 @@ class LazyLineObject:
                 text += line.rstrip() + "\n"
         return text
 
-    def search_for_block(self, start, end, count=1, join=" ", max_len=1000, format_line=None):
+    def search_for_block(
+        self, start, end, count=1, join=" ", max_len=1000, format_line=None
+    ):
         """
         Search through a file (lines) and locate a block starting with "start" (inclusive) and ending with "end" (exclusive).
 
@@ -85,7 +89,9 @@ class LazyLineObject:
                         break
                 else:
                     if format_line is not None:
-                        current_match = current_match + join + format_line(line.lstrip())
+                        current_match = (
+                            current_match + join + format_line(line.lstrip())
+                        )
                     else:
                         current_match = current_match + join + line.lstrip()
                     current_len += 1
@@ -102,8 +108,9 @@ class LazyLineObject:
         else:
             return match
 
-
-    def find_parameter(self, parameter, expected_length, which_field, split_on=None, cast_to_float=True):
+    def find_parameter(
+        self, parameter, expected_length, which_field, split_on=None, cast_to_float=True
+    ):
         """
         Args:
             parameter (string): test to search for
@@ -132,7 +139,9 @@ class LazyLineObject:
         try:
             pattern = re.compile(parameter)
         except Exception:
-            raise ValueError("pattern {pattern} cannot be compiled as a regex; try again!")
+            raise ValueError(
+                "pattern {pattern} cannot be compiled as a regex; try again!"
+            )
 
         if pattern:
             for line in self:
@@ -160,4 +169,3 @@ class LazyLineObject:
                         else:
                             matches.append(desired_fields)
             return matches
-

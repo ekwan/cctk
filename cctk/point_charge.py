@@ -1,6 +1,7 @@
 import numpy as np
 
-class PointCharge():
+
+class PointCharge:
     """
     Represents a point charge.
 
@@ -10,7 +11,9 @@ class PointCharge():
     """
 
     def __init__(self, coordinates, charge):
-        assert isinstance(coordinates, (np.ndarray, list)), "coordinates must be list or ndarray!"
+        assert isinstance(
+            coordinates, (np.ndarray, list)
+        ), "coordinates must be list or ndarray!"
         assert len(coordinates) == 3, "coordinates must have len 3!"
         self.coordinates = np.array(coordinates)
 

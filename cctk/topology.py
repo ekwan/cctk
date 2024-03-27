@@ -12,6 +12,7 @@ from cctk.helper_functions import (
     compute_chirality,
 )
 
+
 def are_isomorphic(mol1, mol2, return_ordering=False):
     """
     Checks if two molecules are isomorphic (by comparing bond graphs and atomic numbers - not bond orders!).
@@ -25,14 +26,20 @@ def are_isomorphic(mol1, mol2, return_ordering=False):
         Boolean denoting if the molecules are isomorphic
         (optional) mapping list
     """
-    assert mol1.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-    assert mol2.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    assert (
+        mol1.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    assert (
+        mol2.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
 
     mol1._add_atomic_numbers_to_nodes()
     mol2._add_atomic_numbers_to_nodes()
 
     nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-    match = nx.algorithms.isomorphism.GraphMatcher(mol1.bonds, mol2.bonds, node_match=nm)
+    match = nx.algorithms.isomorphism.GraphMatcher(
+        mol1.bonds, mol2.bonds, node_match=nm
+    )
 
     if match.is_isomorphic():
         if return_ordering:
@@ -45,6 +52,7 @@ def are_isomorphic(mol1, mol2, return_ordering=False):
             return False, None
         else:
             return False
+
 
 def flip_meso_rings(mol, atoms):
     """
@@ -105,25 +113,46 @@ def flip_meso_rings(mol, atoms):
                 assert isinstance(graph2, nx.Graph), "can't find graph 1"
 
                 #### do our two ring-halves match?? if so, we swap them
-                nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-                match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
+                nm = nx.algorithms.isomorphism.categorical_node_match(
+                    "atomic_number", 0
+                )
+                match = nx.algorithms.isomorphism.GraphMatcher(
+                    graph1, graph2, node_match=nm
+                )
 
                 if match.is_isomorphic():
-                    for k,v in match.mapping.items():
+                    for k, v in match.mapping.items():
                         cpy = cpy.swap_atom_numbers(k, v)
 
                     #### redo all the bonds we ablated
                     if len(cycle) == 1:
-                        cpy.add_bond(frag1[-1], frag2[-1], mol.get_bond_order(frag1[-1], frag2[-1]))
+                        cpy.add_bond(
+                            frag1[-1],
+                            frag2[-1],
+                            mol.get_bond_order(frag1[-1], frag2[-1]),
+                        )
                     elif len(cycle) == 2:
-                        cpy.add_bond(frag1[-1], cycle[-1], mol.get_bond_order(frag1[-1], cycle[-1]))
-                        cpy.add_bond(frag2[-1], cycle[-1], mol.get_bond_order(frag2[-1], cycle[-1]))
-                    cpy.add_bond(frag1[0], cycle[0], mol.get_bond_order(frag1[0], cycle[0]))
-                    cpy.add_bond(frag2[0], cycle[0], mol.get_bond_order(frag2[0], cycle[0]))
+                        cpy.add_bond(
+                            frag1[-1],
+                            cycle[-1],
+                            mol.get_bond_order(frag1[-1], cycle[-1]),
+                        )
+                        cpy.add_bond(
+                            frag2[-1],
+                            cycle[-1],
+                            mol.get_bond_order(frag2[-1], cycle[-1]),
+                        )
+                    cpy.add_bond(
+                        frag1[0], cycle[0], mol.get_bond_order(frag1[0], cycle[0])
+                    )
+                    cpy.add_bond(
+                        frag2[0], cycle[0], mol.get_bond_order(frag2[0], cycle[0])
+                    )
 
                     new_returns.append(cpy)
             returns = returns + new_returns
     return returns
+
 
 def exchange_identical_substituents(mol, center, self_permutations=None):
     """
@@ -139,7 +168,9 @@ def exchange_identical_substituents(mol, center, self_permutations=None):
     Returns:
         ``Molecule`` object (or list if ``self_permutations`` is not ``None``)
     """
-    assert mol.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    assert (
+        mol.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
     mol._add_atomic_numbers_to_nodes()
     neighbors = list(mol.bonds[center])
 
@@ -147,9 +178,8 @@ def exchange_identical_substituents(mol, center, self_permutations=None):
     if self_permutations is not None:
         returns = self_permutations
 
-
     for i in range(len(neighbors)):
-        for j in range(i+1, len(neighbors)):
+        for j in range(i + 1, len(neighbors)):
             try:
                 _, frag1 = mol._get_bond_fragments(center, neighbors[i])
                 _, frag2 = mol._get_bond_fragments(center, neighbors[j])
@@ -157,12 +187,16 @@ def exchange_identical_substituents(mol, center, self_permutations=None):
                 graph1 = mol.bonds.subgraph(frag1)
                 graph2 = mol.bonds.subgraph(frag2)
 
-                nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-                match = nx.algorithms.isomorphism.GraphMatcher(graph1, graph2, node_match=nm)
+                nm = nx.algorithms.isomorphism.categorical_node_match(
+                    "atomic_number", 0
+                )
+                match = nx.algorithms.isomorphism.GraphMatcher(
+                    graph1, graph2, node_match=nm
+                )
                 if match.is_isomorphic():
                     for m in returns:
                         new_mol = copy.deepcopy(m)
-                        for k,v in match.mapping.items():
+                        for k, v in match.mapping.items():
                             new_mol = new_mol.swap_atom_numbers(k, v)
                         if self_permutations is None:
                             return new_mol
@@ -170,12 +204,13 @@ def exchange_identical_substituents(mol, center, self_permutations=None):
                     returns.append(new_mol)
 
             except ValueError:
-                pass # probably indicates a cycle
+                pass  # probably indicates a cycle
 
     if self_permutations is None:
         raise ValueError("could not find substituents to switch")
     else:
         return returns
+
 
 def get_chirality_report(mol, centers=None):
     """
@@ -196,18 +231,30 @@ def get_chirality_report(mol, centers=None):
     for center in centers:
         neighbors = list(mol.bonds[center])
         neighbors.sort()
-        assert len(neighbors) >= 4, f"atom {center} has fewer than 4 neighbors ({neighbors})!"
-        results[center] = compute_chirality(*[mol.get_vector(n, center) for n in neighbors])
+        assert (
+            len(neighbors) >= 4
+        ), f"atom {center} has fewer than 4 neighbors ({neighbors})!"
+        results[center] = compute_chirality(
+            *[mol.get_vector(n, center) for n in neighbors]
+        )
 
     return results
+
 
 def get_stereogenic_centers(mol):
     """
     Returns every atom making 4 or more bonds. A bit misleading, since diastereotopic protons/meso protons are also counted.
     """
-    assert mol.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-    num_neighbors = np.array([len(list(mol.bonds[x])) for x in range(1, mol.num_atoms() + 1)])
-    return [int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)] # love me some off-by-one indexing errors
+    assert (
+        mol.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    num_neighbors = np.array(
+        [len(list(mol.bonds[x])) for x in range(1, mol.num_atoms() + 1)]
+    )
+    return [
+        int(x) for x in list(np.ravel(np.argwhere(num_neighbors >= 4)) + 1)
+    ]  # love me some off-by-one indexing errors
+
 
 def get_exchangeable_centers(mol):
     """
@@ -229,6 +276,7 @@ def get_exchangeable_centers(mol):
 
     return exchangeable_centers
 
+
 def find_group(mol, group):
     """
     Finds instances of ``group`` within ``mol``.
@@ -240,8 +288,12 @@ def find_group(mol, group):
     Returns:
         list of dictionaries mapping from molecule atomic numbers to group atomic numbers
     """
-    assert mol.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
-    assert group.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    assert (
+        mol.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+    assert (
+        group.bonds.number_of_edges() > 0
+    ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
 
     mol._add_atomic_numbers_to_nodes()
     group._add_atomic_numbers_to_nodes()
@@ -249,7 +301,9 @@ def find_group(mol, group):
     group.remove_atom(group.attach_to)
 
     nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
-    match = nx.algorithms.isomorphism.GraphMatcher(mol.bonds, group.bonds, node_match=nm)
+    match = nx.algorithms.isomorphism.GraphMatcher(
+        mol.bonds, group.bonds, node_match=nm
+    )
 
     #### need to only find unique mappings - combinations, not permutations
     mappings = []
@@ -264,4 +318,3 @@ def find_group(mol, group):
 
     composition = [{k: group_map[v] for k, v in m.items()} for m in mappings]
     return composition
-

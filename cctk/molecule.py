@@ -25,6 +25,7 @@ from cctk.helper_functions import (
 )
 import cctk.topology as top
 
+
 class Molecule:
     """
     Class representing a single molecular geometry.
@@ -44,7 +45,16 @@ class Molecule:
         vibrational_modes (list of cctk.VibrationalMode): vibrational modes
     """
 
-    def __init__(self, atomic_numbers, geometry, name=None, bonds=None, charge=0, multiplicity=1, checks=True):
+    def __init__(
+        self,
+        atomic_numbers,
+        geometry,
+        name=None,
+        bonds=None,
+        charge=0,
+        multiplicity=1,
+        checks=True,
+    ):
         """
         Create new Molecule object, and assign connectivity if needed.
 
@@ -54,10 +64,14 @@ class Molecule:
         This option can be disabled by setting ``checks`` to False, but this is not recommended for external data.
         """
         if len(atomic_numbers) != len(geometry):
-            raise ValueError(f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}")
+            raise ValueError(
+                f"length of geometry ({len(geometry)}) and atomic_numbers ({len(atomic_numbers)}) does not match!\n{atomic_numbers}\n{geometry}"
+            )
 
         try:
-            atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8).view(cctk.OneIndexedArray)
+            atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8).view(
+                cctk.OneIndexedArray
+            )
         except Exception:
             raise ValueError("invalid atom list")
 
@@ -80,7 +94,9 @@ class Molecule:
             try:
                 multiplicity = int(multiplicity)
             except Exception:
-                raise TypeError("multiplicity must be positive integer or castable to positive integer")
+                raise TypeError(
+                    "multiplicity must be positive integer or castable to positive integer"
+                )
         assert multiplicity > 0, "multiplicity must be positive"
 
         self.atomic_numbers = atomic_numbers
@@ -94,11 +110,13 @@ class Molecule:
 
         if isinstance(bonds, nx.Graph):
             self.bonds = bonds
-        elif isinstance(bonds, (list,np.ndarray,nx.classes.reportviews.EdgeView)):
+        elif isinstance(bonds, (list, np.ndarray, nx.classes.reportviews.EdgeView)):
             if checks:
                 known_atomic_numbers = set()
                 for bond in bonds:
-                    assert len(bond)==2, f"unexpected number of atoms in bond, expected 2, got {len(bond)}"
+                    assert (
+                        len(bond) == 2
+                    ), f"unexpected number of atoms in bond, expected 2, got {len(bond)}"
                     if bond[0] not in known_atomic_numbers:
                         self._check_atom_number(bond[0])
                         known_atomic_numbers.add(bond[0])
@@ -111,7 +129,7 @@ class Molecule:
             self.bonds.add_edges_from(bonds, weight=1)
         elif bonds is None:
             self.bonds = nx.Graph()
-            self.bonds.add_nodes_from(range(1, len(atomic_numbers)+1))
+            self.bonds.add_nodes_from(range(1, len(atomic_numbers) + 1))
         else:
             raise ValueError(f"unexpected type for bonds: {type(bonds)}")
 
@@ -122,9 +140,9 @@ class Molecule:
             return f"Molecule ({len(self.atomic_numbers)} atoms)"
 
     def __repr__(self):
-        return str(self) # placeholder
+        return str(self)  # placeholder
 
-#    def __eq__(self, other):
+    #    def __eq__(self, other):
     @classmethod
     def equal(cls, mol1, mol2):
         """
@@ -140,7 +158,7 @@ class Molecule:
             np.array_equal(mol1.atomic_numbers, mol2.atomic_numbers),
             np.array_equal(mol1.geometry, mol2.geometry),
             mol1.charge == mol2.charge,
-            mol1.multiplicity == mol2.multiplicity
+            mol1.multiplicity == mol2.multiplicity,
         ]
 
         return all(comparisons)
@@ -171,7 +189,9 @@ class Molecule:
         else:
             # even 16 cdist calls is faster than any other implementation, i tested it
             pbc = periodic_boundary_conditions
-            assert isinstance(pbc, np.ndarray) and len(pbc) == 3, "Need 3-element ``np.ndarray`` for PBCs"
+            assert (
+                isinstance(pbc, np.ndarray) and len(pbc) == 3
+            ), "Need 3-element ``np.ndarray`` for PBCs"
 
             nearby_cells = [
                 [0, 0, 0],
@@ -184,8 +204,12 @@ class Molecule:
                 [pbc[0], pbc[1], pbc[2]],
             ]
 
-            dist_matrices = [cdist(g, g + np.array(nc), "euclidean") for nc in nearby_cells]
-            dist_matrices += [cdist(g, g - np.array(nc), "euclidean") for nc in nearby_cells]
+            dist_matrices = [
+                cdist(g, g + np.array(nc), "euclidean") for nc in nearby_cells
+            ]
+            dist_matrices += [
+                cdist(g, g - np.array(nc), "euclidean") for nc in nearby_cells
+            ]
             distances_3d = np.stack(dist_matrices)
             dist_matrix = distances_3d.min(axis=0)
 
@@ -193,10 +217,10 @@ class Molecule:
         radii_by_num = [covalent_radii[z] for z in self.atomic_numbers]
 
         for i in range(1, self.num_atoms() + 1):
-            r_i = radii_by_num[i-1]
+            r_i = radii_by_num[i - 1]
             for j in range(i + 1, self.num_atoms() + 1):
-                distance = dist_matrix[i-1][j-1]
-                r_j = radii_by_num[j-1]
+                distance = dist_matrix[i - 1][j - 1]
+                r_j = radii_by_num[j - 1]
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j + cutoff):
@@ -238,7 +262,7 @@ class Molecule:
 
                 # 0.5 A distance is used by RasMol and Chime (documentation available online) and works well, empirically
                 if distance < (r_i + r_j - min_buffer):
-#                    raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
+                    #                    raise ValueError(f"atoms {i} and {j} are too close - distance {distance} A!")
                     return False
 
         return True
@@ -255,7 +279,9 @@ class Molecule:
         if check:
             self._check_atom_number(atom1)
             self._check_atom_number(atom2)
-            assert isinstance(bond_order, int), f"bond order {bond_order} must be an integer"
+            assert isinstance(
+                bond_order, int
+            ), f"bond order {bond_order} must be an integer"
             assert bond_order >= 0, f"bond order {bond_order} must be positive"
 
         if self.bonds.has_edge(atom1, atom2):
@@ -278,7 +304,9 @@ class Molecule:
         Helper method which performs quick checks on the validity of a given atom number.
         """
         assert isinstance(number, int), "atomic number must be integer"
-        assert 0 < number <= self.num_atoms(), "atom number {number} too large! (or too small - needs to be >0)"
+        assert (
+            0 < number <= self.num_atoms()
+        ), "atom number {number} too large! (or too small - needs to be >0)"
 
     def formula(self, return_dict=False):
         """
@@ -344,7 +372,9 @@ class Molecule:
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
 
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
 
         bond_order = self.get_bond_order(atom1, atom2)
         if self.bonds.has_edge(atom1, atom2):
@@ -357,8 +387,12 @@ class Molecule:
             for fragment in fragments:
                 if atom1 in fragment:
                     if atom2 in fragment:
-                        self.add_bond(atom1, atom2, bond_order) # not adding back this bond causes some pretty pernicious errors
-                        raise ValueError(f"Atom {atom1} and atom {atom2} are in a ring or otherwise connected!")
+                        self.add_bond(
+                            atom1, atom2, bond_order
+                        )  # not adding back this bond causes some pretty pernicious errors
+                        raise ValueError(
+                            f"Atom {atom1} and atom {atom2} are in a ring or otherwise connected!"
+                        )
                     else:
                         fragment1 = fragment
                 if atom2 in fragment:
@@ -388,7 +422,9 @@ class Molecule:
             if atom in fragment:
                 return list(fragment)
 
-    def set_distance(self, atom1=None, atom2=None, distance=None, move="group", atoms=None):
+    def set_distance(
+        self, atom1=None, atom2=None, distance=None, move="group", atoms=None
+    ):
         """
         Adjusts the ``atom1`` -- ``atom2`` bond length to be a fixed distance by moving atom2.
 
@@ -408,12 +444,16 @@ class Molecule:
         """
 
         if (atom1 is None) and (atom2 is None):
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 2, "need 2 atom numbers to set distance"
             atom1 = atoms[0]
             atom2 = atoms[1]
 
-        assert isinstance(distance, (float, int, np.number)), "need distance to set distance"
+        assert isinstance(
+            distance, (float, int, np.number)
+        ), "need distance to set distance"
 
         self._check_atom_number(atom1)
         self._check_atom_number(atom2)
@@ -433,7 +473,9 @@ class Molecule:
             raise ValueError(f"Invalid option {move} for parameter 'move'!")
 
         if (atom1 in atoms_to_move and atom2 in atoms_to_move) and move == "group":
-            raise ValueError('both our atoms are connected which will preclude any movement with ``move`` set to "group"')
+            raise ValueError(
+                'both our atoms are connected which will preclude any movement with ``move`` set to "group"'
+            )
 
         current_distance = self.get_distance(atom1, atom2)
 
@@ -457,11 +499,15 @@ class Molecule:
 
         if np.linalg.norm(vbf) - distance > 0.001:
             new_dist = np.linalg.norm(vbf)
-            raise ValueError(f"Error moving bonds -- new distance is {new_dist:.3f}. Operation failed!")
+            raise ValueError(
+                f"Error moving bonds -- new distance is {new_dist:.3f}. Operation failed!"
+            )
 
         return self
 
-    def set_angle(self, atom1=None, atom2=None, atom3=None, angle=None, move="group", atoms=None):
+    def set_angle(
+        self, atom1=None, atom2=None, atom3=None, angle=None, move="group", atoms=None
+    ):
         """
         Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` bond angle to be a fixed value by moving ``atom3``.
 
@@ -481,8 +527,10 @@ class Molecule:
             the Molecule object
         """
 
-        if (atom1 is None) and (atom2 is None) and (atom3 is None) :
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+        if (atom1 is None) and (atom2 is None) and (atom3 is None):
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 3, "need 3 atom numbers to set angle"
             atom1 = atoms[0]
             atom2 = atoms[1]
@@ -558,12 +606,27 @@ class Molecule:
         final_angle = self.get_angle(atom1, atom2, atom3)
 
         #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
-        if np.abs(math.cos(math.radians(final_angle)) - math.cos(math.radians(angle))) > 0.001:
-            raise ValueError(f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!")
+        if (
+            np.abs(math.cos(math.radians(final_angle)) - math.cos(math.radians(angle)))
+            > 0.001
+        ):
+            raise ValueError(
+                f"Error rotating atoms -- expected angle {angle}, got {final_angle}  -- operation failed!"
+            )
 
         return self
 
-    def set_dihedral(self, atom1=None, atom2=None, atom3=None, atom4=None, dihedral=None, move="group34", check_result=True, atoms=None):
+    def set_dihedral(
+        self,
+        atom1=None,
+        atom2=None,
+        atom3=None,
+        atom4=None,
+        dihedral=None,
+        move="group34",
+        check_result=True,
+        atoms=None,
+    ):
         """
         Adjusts the ``atom1`` -- ``atom2`` -- ``atom3`` -- ``atom4`` dihedral angle to be a fixed value by moving atom 4.
 
@@ -588,14 +651,18 @@ class Molecule:
         """
 
         if (atom1 is None) and (atom2 is None) and (atom3 is None) and (atom4 is None):
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 4, "need 4 atom numbers to set dihedral"
             atom1 = atoms[0]
             atom2 = atoms[1]
             atom3 = atoms[2]
             atom4 = atoms[3]
 
-        assert isinstance(dihedral, (float, int, np.number)), "need angle to set dihedral angle"
+        assert isinstance(
+            dihedral, (float, int, np.number)
+        ), "need angle to set dihedral angle"
 
         # check atom numbers
         self._check_atom_number(atom1)
@@ -608,9 +675,13 @@ class Molecule:
 
         # check for collinearity
         angle = self.get_angle(atom1, atom2, atom3, check=False)
-        assert 0.0001 < angle < 179.9999, f"1/2/3 atoms {atom1}-{atom2}-{atom3} are collinear (angle={angle:.8f})"
+        assert (
+            0.0001 < angle < 179.9999
+        ), f"1/2/3 atoms {atom1}-{atom2}-{atom3} are collinear (angle={angle:.8f})"
         angle = self.get_angle(atom2, atom3, atom4, check=False)
-        assert 0.0001 < angle < 179.9999, f"2/3/4 atoms {atom2}-{atom3}-{atom4} are collinear (angle={angle:.8f})"
+        assert (
+            0.0001 < angle < 179.9999
+        ), f"2/3/4 atoms {atom2}-{atom3}-{atom4} are collinear (angle={angle:.8f})"
 
         for x in [atom1, atom2, atom3, atom4]:
             for y in [atom1, atom2, atom3, atom4]:
@@ -668,7 +739,9 @@ class Molecule:
             )
 
         if atom4 not in atoms_to_move:
-            raise ValueError(f"atom {atom4} is not going to be moved... this operation is doomed to fail!")
+            raise ValueError(
+                f"atom {atom4} is not going to be moved... this operation is doomed to fail!"
+            )
 
         current_dihedral = self.get_dihedral(atom1, atom2, atom3, atom4, check=False)
         delta = (dihedral - current_dihedral) % 360
@@ -682,7 +755,9 @@ class Molecule:
         self.translate_molecule(-v3)
 
         #### perform the actual rotation
-        rot_matrix = compute_rotation_matrix(-self.get_vector(atom2, check=False), delta)
+        rot_matrix = compute_rotation_matrix(
+            -self.get_vector(atom2, check=False), delta
+        )
 
         for atom in atoms_to_move:
             self.geometry[atom] = np.dot(rot_matrix, self.get_vector(atom, check=False))
@@ -695,8 +770,16 @@ class Molecule:
 
             #### need to compare cosines to prevent insidious phase difficulties (like 0.00 and 359.99)
             #### this will throw ValueError for differences of about 2 degrees
-            if np.abs(math.cos(math.radians(final_dihedral)) - math.cos(math.radians(dihedral))) > 0.001:
-                raise ValueError(f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!")
+            if (
+                np.abs(
+                    math.cos(math.radians(final_dihedral))
+                    - math.cos(math.radians(dihedral))
+                )
+                > 0.001
+            ):
+                raise ValueError(
+                    f"Error rotating atoms -- expected dihedral angle {dihedral}, got {final_dihedral}  -- operation failed!"
+                )
 
         return self
 
@@ -710,8 +793,8 @@ class Molecule:
         Returns:
             the Molecule object
         """
-#        for atom in range(1, self.num_atoms() + 1):
-#            self.geometry[atom] = self.geometry[atom] + vector
+        #        for atom in range(1, self.num_atoms() + 1):
+        #            self.geometry[atom] = self.geometry[atom] + vector
 
         self.geometry += vector
 
@@ -747,7 +830,9 @@ class Molecule:
 
         masses, weights = _recurse_through_formula(form_vec, [0], [1], **kwargs)
 
-        new_masses, indices = np.unique(np.round(masses, decimals=1), return_inverse=True)
+        new_masses, indices = np.unique(
+            np.round(masses, decimals=1), return_inverse=True
+        )
         new_weights = np.zeros_like(new_masses)
         for k in range(len(new_weights)):
             new_weights[k] = np.sum(weights[np.nonzero(indices == k)])
@@ -801,15 +886,21 @@ class Molecule:
             the Molecule object
         """
 
-        if (not isinstance(coordinates, (list, np.ndarray)) or (len(coordinates) != 3)):
+        if not isinstance(coordinates, (list, np.ndarray)) or (len(coordinates) != 3):
             raise TypeError("coordinates must be list with three elements")
 
         if not isinstance(symbol, str):
             raise TypeError(f"symbol {symbol} must be a string!")
 
         number = get_number(symbol)
-        self.atomic_numbers = np.append(self.atomic_numbers, [number]).astype(np.int8).view(cctk.OneIndexedArray)
-        self.geometry = np.append(self.geometry, [coordinates], axis=0).view(cctk.OneIndexedArray)
+        self.atomic_numbers = (
+            np.append(self.atomic_numbers, [number])
+            .astype(np.int8)
+            .view(cctk.OneIndexedArray)
+        )
+        self.geometry = np.append(self.geometry, [coordinates], axis=0).view(
+            cctk.OneIndexedArray
+        )
         self.bonds.add_node(self.num_atoms())
 
         return self
@@ -829,11 +920,17 @@ class Molecule:
 
         try:
             self.bonds.remove_node(number)
-            self.geometry = np.delete(self.geometry, number - 1, axis=0).view(cctk.OneIndexedArray)
-            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(cctk.OneIndexedArray)
+            self.geometry = np.delete(self.geometry, number - 1, axis=0).view(
+                cctk.OneIndexedArray
+            )
+            self.atomic_numbers = np.delete(self.atomic_numbers, number - 1).view(
+                cctk.OneIndexedArray
+            )
 
             #### need to renumber to fill gaps
-            self.bonds = nx.convert_node_labels_to_integers(self.bonds, first_label=1, ordering="sorted")
+            self.bonds = nx.convert_node_labels_to_integers(
+                self.bonds, first_label=1, ordering="sorted"
+            )
 
             return self
         except Exception:
@@ -861,7 +958,7 @@ class Molecule:
 
         Returns:
             atomic_symbol (str): the atomic symbol of that atom
-         """
+        """
         atomic_number = self.get_atomic_number(atom)
         return get_symbol(atomic_number)
 
@@ -873,7 +970,7 @@ class Molecule:
             atomic_symbols (cctk.OneIndexedArray): the atomic symbols
         """
         n_atoms = self.get_n_atoms()
-        sym = [ self.get_atomic_symbol(i) for i in range(1,n_atoms+1) ]
+        sym = [self.get_atomic_symbol(i) for i in range(1, n_atoms + 1)]
         return cctk.OneIndexedArray(sym)
 
     def get_n_atoms(self):
@@ -908,7 +1005,14 @@ class Molecule:
         else:
             return self.geometry[atom].view(np.ndarray)
 
-    def get_distance(self, atom1=None, atom2=None, check=True, _dist=compute_distance_between, atoms=None):
+    def get_distance(
+        self,
+        atom1=None,
+        atom2=None,
+        check=True,
+        _dist=compute_distance_between,
+        atoms=None,
+    ):
         """
         Wrapper to compute distance between two atoms.
 
@@ -925,7 +1029,9 @@ class Molecule:
             the distance, in Angstroms
         """
         if (atom1 is None) and (atom2 is None):
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 2, "need 2 atom numbers to get distance"
             atom1 = atoms[0]
             atom2 = atoms[1]
@@ -940,7 +1046,9 @@ class Molecule:
             self._check_atom_number(atom1)
             self._check_atom_number(atom2)
 
-        return _dist(self.get_vector(atom1, check=False), self.get_vector(atom2, check=False))
+        return _dist(
+            self.get_vector(atom1, check=False), self.get_vector(atom2, check=False)
+        )
 
     def get_sq_distance(self, atom1, atom2, check=True):
         """
@@ -966,7 +1074,15 @@ class Molecule:
 
         return np.sum(np.square(self.get_vector(atom1, atom2, check=False)))
 
-    def get_angle(self, atom1=None, atom2=None, atom3=None, check=True, _angle=compute_angle_between, atoms=None):
+    def get_angle(
+        self,
+        atom1=None,
+        atom2=None,
+        atom3=None,
+        check=True,
+        _angle=compute_angle_between,
+        atoms=None,
+    ):
         """
         Wrapper to compute angle between three atoms.
 
@@ -984,7 +1100,9 @@ class Molecule:
             the angle, in degrees
         """
         if (atom1 is None) and (atom2 is None) and (atom3 is None):
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 3, "need 3 atom numbers to get angle"
             atom1 = atoms[0]
             atom2 = atoms[1]
@@ -1008,7 +1126,16 @@ class Molecule:
 
         return _angle(v1 - v2, v3 - v2)
 
-    def get_dihedral(self, atom1=None, atom2=None, atom3=None, atom4=None, check=True, _dihedral=compute_dihedral_between, atoms=None):
+    def get_dihedral(
+        self,
+        atom1=None,
+        atom2=None,
+        atom3=None,
+        atom4=None,
+        check=True,
+        _dihedral=compute_dihedral_between,
+        atoms=None,
+    ):
         """
         Wrapper to compute dihedral angle between four atoms.
 
@@ -1027,7 +1154,9 @@ class Molecule:
             the dihedral angle, in degrees
         """
         if (atom1 is None) and (atom2 is None) and (atom3 is None) and (atom4 is None):
-            assert isinstance(atoms, (list, np.ndarray)), "atom numbers need to come from fields or list!"
+            assert isinstance(
+                atoms, (list, np.ndarray)
+            ), "atom numbers need to come from fields or list!"
             assert len(atoms) == 4, "need 4 atom numbers to get dihedral angle"
             atom1 = atoms[0]
             atom2 = atoms[1]
@@ -1218,7 +1347,7 @@ class Molecule:
         """
         Moves the centroid to the origin.
         """
-        atoms = np.arange(1, self.num_atoms()+1)
+        atoms = np.arange(1, self.num_atoms() + 1)
         self.translate_molecule(-self.geometry[atoms].mean(axis=0))
         return self
 
@@ -1237,13 +1366,17 @@ class Molecule:
             new ``Molecule`` object
         """
 
-        atoms = np.hstack((molecule1.atomic_numbers.T, molecule2.atomic_numbers.T)).view(cctk.OneIndexedArray)
-        geoms = np.vstack((molecule1.geometry, molecule2.geometry)).view(cctk.OneIndexedArray)
+        atoms = np.hstack(
+            (molecule1.atomic_numbers.T, molecule2.atomic_numbers.T)
+        ).view(cctk.OneIndexedArray)
+        geoms = np.vstack((molecule1.geometry, molecule2.geometry)).view(
+            cctk.OneIndexedArray
+        )
         charge = molecule1.charge + molecule2.charge
 
         s1 = (molecule1.multiplicity - 1) / 2
         s2 = (molecule2.multiplicity - 1) / 2
-        multiplicity = (s1+s2) * 2 + 1
+        multiplicity = (s1 + s2) * 2 + 1
 
         return Molecule(atoms, geoms, charge=charge, multiplicity=multiplicity)
 
@@ -1261,24 +1394,46 @@ class Molecule:
         """
         if not qhull:
             try:
-                assert isinstance(pts_per_angstrom, int), "Need an integer number of pts per Å!"
+                assert isinstance(
+                    pts_per_angstrom, int
+                ), "Need an integer number of pts per Å!"
                 assert pts_per_angstrom > 0, "Need a positive integer of pts per Å!"
 
                 box_max = np.max(self.geometry.view(np.ndarray), axis=0) + 4
                 box_min = np.min(self.geometry.view(np.ndarray), axis=0) - 4
 
-                box_volume = (box_max[0] - box_min[0]) * (box_max[1] - box_min[1]) * (box_max[2] - box_min[2])
+                box_volume = (
+                    (box_max[0] - box_min[0])
+                    * (box_max[1] - box_min[1])
+                    * (box_max[2] - box_min[2])
+                )
 
-                x_vals = np.linspace(box_min[0], box_max[0], int((box_max[0] - box_min[0]) * pts_per_angstrom))
-                y_vals = np.linspace(box_min[1], box_max[1], int((box_max[1] - box_min[1]) * pts_per_angstrom))
-                z_vals = np.linspace(box_min[2], box_max[2], int((box_max[2] - box_min[2]) * pts_per_angstrom))
+                x_vals = np.linspace(
+                    box_min[0],
+                    box_max[0],
+                    int((box_max[0] - box_min[0]) * pts_per_angstrom),
+                )
+                y_vals = np.linspace(
+                    box_min[1],
+                    box_max[1],
+                    int((box_max[1] - box_min[1]) * pts_per_angstrom),
+                )
+                z_vals = np.linspace(
+                    box_min[2],
+                    box_max[2],
+                    int((box_max[2] - box_min[2]) * pts_per_angstrom),
+                )
 
                 # generate list of box points
-                box_pts = np.stack([np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1)
+                box_pts = np.stack(
+                    [np.ravel(a) for a in np.meshgrid(x_vals, y_vals, z_vals)], axis=-1
+                )
 
                 # caching to speed call
                 vdw_radii = {z: get_vdw_radius(z) for z in set(self.atomic_numbers)}
-                radii_per_atom = np.array([vdw_radii[z] for z in self.atomic_numbers]).reshape(-1,1)
+                radii_per_atom = np.array(
+                    [vdw_radii[z] for z in self.atomic_numbers]
+                ).reshape(-1, 1)
 
                 # this is the slow part since it's approximately a zillion operations
                 dists_per_atom = cdist(self.geometry.view(np.ndarray), box_pts)
@@ -1291,6 +1446,7 @@ class Molecule:
 
         if qhull:
             import scipy
+
             hull = scipy.spatial.ConvexHull(self.geometry.view(np.ndarray))
             return hull.volume
 
@@ -1341,7 +1497,9 @@ class Molecule:
         self._check_atom_number(substituent1)
         self._check_atom_number(substituent2)
 
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
 
         adj = self.get_adjacent_atoms(center_atom)
         assert len(adj) == 4, "center atom must be making 4 bonds!"
@@ -1349,14 +1507,20 @@ class Molecule:
         assert substituent2 in adj, "2nd substituent is not bonded to center atom!"
 
         #### remove both substituents
-        mol, group1, mmap1, gmap1  = cctk.Group.remove_group_from_molecule(self, center_atom, substituent1, return_mapping=True)
-        mol, group2, mmap2, gmap2  = cctk.Group.remove_group_from_molecule(mol, mmap1[center_atom], mmap1[substituent2], return_mapping=True)
+        mol, group1, mmap1, gmap1 = cctk.Group.remove_group_from_molecule(
+            self, center_atom, substituent1, return_mapping=True
+        )
+        mol, group2, mmap2, gmap2 = cctk.Group.remove_group_from_molecule(
+            mol, mmap1[center_atom], mmap1[substituent2], return_mapping=True
+        )
 
         h1 = mol.num_atoms() - 1
         h2 = mol.num_atoms()
 
         #### add them back in the opposite fashion
-        mol, mmap3, gmap3 =  cctk.Group.add_group_to_molecule(mol, group2, h1, return_mapping=True)
+        mol, mmap3, gmap3 = cctk.Group.add_group_to_molecule(
+            mol, group2, h1, return_mapping=True
+        )
         mol = cctk.Group.add_group_to_molecule(mol, group1, mmap3[h2])
 
         #### relabel new graph to match original molecule
@@ -1377,7 +1541,9 @@ class Molecule:
             new ``Molecule`` object
         """
 
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
 
         #### use networkx to generate mapping
         #### you need the node matcher to distinguish between e.g. H, F, Cl
@@ -1385,10 +1551,12 @@ class Molecule:
         model._add_atomic_numbers_to_nodes()
         nm = nx.algorithms.isomorphism.categorical_node_match("atomic_number", 0)
 
-        match = nx.algorithms.isomorphism.GraphMatcher(model.bonds, self.bonds, node_match=nm)
+        match = nx.algorithms.isomorphism.GraphMatcher(
+            model.bonds, self.bonds, node_match=nm
+        )
         assert match.is_isomorphic(), "can't renumber non-isomorphic graphs!"
         new_ordering = [match.mapping[x] for x in range(1, self.num_atoms() + 1)]
-        inv_mapping = {v:k  for k,v in match.mapping.items()} # bit kludgy but works
+        inv_mapping = {v: k for k, v in match.mapping.items()}  # bit kludgy but works
 
         #### create renumbered molecule
         mol = copy.deepcopy(self)
@@ -1414,7 +1582,9 @@ class Molecule:
                 for center in check_chirality:
                     if model_report[center] != report[center]:
                         try:
-                            candidate = top.exchange_identical_substituents(candidate, center)
+                            candidate = top.exchange_identical_substituents(
+                                candidate, center
+                            )
                         except ValueError:
                             break
 
@@ -1429,16 +1599,26 @@ class Molecule:
                 if all_good:
                     return candidate
 
-        raise ValueError("can't get a proper renumbering: are you *sure* these two molecules can have the same chirality?")
+        raise ValueError(
+            "can't get a proper renumbering: are you *sure* these two molecules can have the same chirality?"
+        )
 
     def _add_atomic_numbers_to_nodes(self):
         """
         Add the atomic numbers to each node attribute, to allow for distinguishment of F and H during graph renumbering.
         """
-        nx.set_node_attributes(self.bonds, {z: {"atomic_number": self.atomic_numbers[z]} for z in range(1, self.num_atoms() +  1)})
+        nx.set_node_attributes(
+            self.bonds,
+            {
+                z: {"atomic_number": self.atomic_numbers[z]}
+                for z in range(1, self.num_atoms() + 1)
+            },
+        )
 
     def is_atom_in_ring(self, atom):
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
         cycles = nx.cycle_basis(self.bonds, root=atom)
         for cycle in cycles:
             if atom in cycle:
@@ -1449,11 +1629,20 @@ class Molecule:
         """
         Returns a list of all the connected components in a molecule.
         """
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
         fragments = nx.connected_components(self.bonds)
         return [list(f) for f in list(fragments)]
 
-    def limit_solvent_shell(self, solute=0, num_atoms=0, num_solvents=10, distance_from_atom=None, return_idxs=False):
+    def limit_solvent_shell(
+        self,
+        solute=0,
+        num_atoms=0,
+        num_solvents=10,
+        distance_from_atom=None,
+        return_idxs=False,
+    ):
         """
         Automatically detects solvent molecules and removes them until you have a set number of solvents or atoms.
 
@@ -1477,7 +1666,9 @@ class Molecule:
         solute_x = self.geometry[fragments[solute]].view(np.ndarray)
 
         if distance_from_atom:
-            assert distance_from_atom in fragments[solute], f"{distance_from_atom} is not in the solute fragment"
+            assert (
+                distance_from_atom in fragments[solute]
+            ), f"{distance_from_atom} is not in the solute fragment"
             solute_x = self.geometry[[distance_from_atom]].view(np.ndarray)
 
         distances = np.zeros(shape=len(fragments))
@@ -1507,7 +1698,7 @@ class Molecule:
 
             if current_num_atoms <= num_atoms or num_solvents == current_num_solvents:
                 if return_idxs:
-                    all_idxs = set(range(1,self.num_atoms()))
+                    all_idxs = set(range(1, self.num_atoms()))
                     return list(all_idxs - set(to_remove))
                 else:
                     #### have to remove in reverse direction for indexing consistency
@@ -1535,7 +1726,9 @@ class Molecule:
 
         for f in self.get_components():
             centroid = np.mean(self.geometry[f], axis=0)
-            self.geometry[f] += -1 * np.floor_divide(centroid, side_length) * side_length
+            self.geometry[f] += (
+                -1 * np.floor_divide(centroid, side_length) * side_length
+            )
 
         return self
 
@@ -1549,11 +1742,13 @@ class Molecule:
 
         try:
             url_name = re.sub(" ", "%20", name)
-            url = 'http://cactus.nci.nih.gov/chemical/structure/' + url_name + '/smiles'
-            smiles = urlopen(url, timeout=5).read().decode('utf8')
+            url = "http://cactus.nci.nih.gov/chemical/structure/" + url_name + "/smiles"
+            smiles = urlopen(url, timeout=5).read().decode("utf8")
             return cls.new_from_smiles(smiles, **kwargs)
         except Exception as e:
-            raise ValueError(f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}")
+            raise ValueError(
+                f"something went wrong auto-generating molecule {name}:\nurl: {url}\n{e}"
+            )
 
     @classmethod
     def new_from_smiles(cls, smiles, max_num_atoms=None):
@@ -1567,22 +1762,30 @@ class Molecule:
             from rdkit.Chem import rdmolops as rdmolops
             from rdkit.Chem.Descriptors import NumRadicalElectrons
         except ImportError as e:
-            raise ImportError(f"``rdkit`` must be installed for this function to work!\n{e}")
+            raise ImportError(
+                f"``rdkit`` must be installed for this function to work!\n{e}"
+            )
 
         # two-part error handling here
         # https://github.com/rdkit/rdkit/issues/2430
 
         rdkm = Chem.MolFromSmiles(smiles, sanitize=False)
-        assert rdkm is not None, f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid SMILES!"
+        assert (
+            rdkm is not None
+        ), f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid SMILES!"
 
         try:
             Chem.SanitizeMol(rdkm)
         except Exception as e:
-            raise ValueError(f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid chemistry!\n{e}")
+            raise ValueError(
+                f"Molecule could not be generated from SMILES ``{smiles}`` -- invalid chemistry!\n{e}"
+            )
 
         rdkm = Chem.AddHs(rdkm)
         if (max_num_atoms is not None) and (rdkm.GetNumAtoms() > max_num_atoms):
-            raise ValueError(f"Number of atoms exceeds user-defined threshold ``{max_num_atoms}``")
+            raise ValueError(
+                f"Number of atoms exceeds user-defined threshold ``{max_num_atoms}``"
+            )
 
         # https://github.com/rdkit/rdkit/issues/1433
         # both Chem calls ought to return "0" if they worked properly, I think, and -1 indicates failure
@@ -1605,7 +1808,12 @@ class Molecule:
             nums.append(atom.GetAtomicNum())
         geom = rdkm.GetConformers()[0].GetPositions()
 
-        return cls(nums, geom, charge=rdmolops.GetFormalCharge(rdkm), multiplicity=GetNumRadicalElectrons(rdkm))
+        return cls(
+            nums,
+            geom,
+            charge=rdmolops.GetFormalCharge(rdkm),
+            multiplicity=NumRadicalElectrons(rdkm) + 1,
+        )
 
     def fragment(self):
         """
@@ -1614,7 +1822,9 @@ class Molecule:
         fragments = list()
         indices = self.get_components()
         for idx in indices:
-            mol = cctk.Molecule(self.atomic_numbers[idx], self.geometry[idx]).assign_connectivity()
+            mol = cctk.Molecule(
+                self.atomic_numbers[idx], self.geometry[idx]
+            ).assign_connectivity()
             fragments.append(mol)
         return fragments
 
@@ -1632,16 +1842,16 @@ class Molecule:
             matches = top.find_group(self, group)
 
             for m in matches:
-                i = {v: k for k,v in m.items()}
+                i = {v: k for k, v in m.items()}
                 for n in group.isomorphic:
                     symmetric_sets.append([i[idx] for idx in n])
 
         #### some groups overlap (e.g. methyl and t-butyl), so now we collapse the overlapping sets
         for i, s1 in enumerate(symmetric_sets):
-            for j, s2 in enumerate(symmetric_sets[i+1:]):
+            for j, s2 in enumerate(symmetric_sets[i + 1 :]):
                 if set(s1).intersection(set(s2)):
                     symmetric_sets[i + j + 1] = list(set(s1).union(s2))
-                    symmetric_sets[i] = None # can't delete yet - messes up indexing
+                    symmetric_sets[i] = None  # can't delete yet - messes up indexing
 
         #### now we delete
         symmetric_sets = list(filter(None, symmetric_sets))
@@ -1664,8 +1874,11 @@ class Molecule:
             return_energy (Bool): whether to return energy or not
         """
         import cctk.optimize as opt
+
         assert isinstance(nprocs, int), "nprocs must be int!"
-        optimized, energy = opt.optimize_molecule(self, nprocs=nprocs, return_energy=True)
+        optimized, energy = opt.optimize_molecule(
+            self, nprocs=nprocs, return_energy=True
+        )
 
         if inplace:
             self.geometry = optimized.geometry
@@ -1687,11 +1900,21 @@ class Molecule:
             nprocs (int): number of processors to use
         """
         import cctk.optimize as opt
+
         assert isinstance(nprocs, int), "nprocs must be int!"
         energy = opt.get_energy(self, nprocs=nprocs)
         return energy
 
-    def csearch(self, nprocs=1, constraints=[], logfile=None, noncovalent=False, use_tempdir=True, gfn=2, additional_flags=None):
+    def csearch(
+        self,
+        nprocs=1,
+        constraints=[],
+        logfile=None,
+        noncovalent=False,
+        use_tempdir=True,
+        gfn=2,
+        additional_flags=None,
+    ):
         """
         Optimize molecule at the GFN2-xtb level of theory.
 
@@ -1708,8 +1931,18 @@ class Molecule:
             ConformationalEnsemble
         """
         import cctk.optimize as opt
+
         assert isinstance(nprocs, int), "nprocs must be int!"
-        return opt.csearch(molecule=self, nprocs=nprocs, constraints=constraints, noncovalent=noncovalent, logfile=logfile, use_tempdir=use_tempdir, gfn=gfn, additional_flags=additional_flags)
+        return opt.csearch(
+            molecule=self,
+            nprocs=nprocs,
+            constraints=constraints,
+            noncovalent=noncovalent,
+            logfile=logfile,
+            use_tempdir=use_tempdir,
+            gfn=gfn,
+            additional_flags=additional_flags,
+        )
 
     def num_neighbors_by_atom(self):
         """
@@ -1720,7 +1953,9 @@ class Molecule:
             result.append(len(self.get_adjacent_atoms(i)))
         return result
 
-    def atoms_moving_in_imaginary(self, max_num=5, percent_cutoff=0.03, return_string=False):
+    def atoms_moving_in_imaginary(
+        self, max_num=5, percent_cutoff=0.03, return_string=False
+    ):
         """
         Returns atoms moving in imaginary, ranked by how much they're moving.
 
@@ -1760,7 +1995,6 @@ class Molecule:
                     return string[:-2]
                 else:
                     return return_list
-
 
     def to_string(self):
         """
@@ -1805,11 +2039,17 @@ class Molecule:
 
             if check_version:
                 cctk_version = pkg_resources.get_distribution("cctk").version
-                assert cctk_version == store_dict["cctk_version"], f"Warning: the data was saved in cctk {store_dict['cctk_version']} but is being loaded in cctk {cctk_version}!"
+                assert (
+                    cctk_version == store_dict["cctk_version"]
+                ), f"Warning: the data was saved in cctk {store_dict['cctk_version']} but is being loaded in cctk {cctk_version}!"
 
-            atomic_numbers = bytes_to_numpy(store_dict["atomic_numbers"]).astype(np.int8)
+            atomic_numbers = bytes_to_numpy(store_dict["atomic_numbers"]).astype(
+                np.int8
+            )
             geometry = bytes_to_numpy(store_dict["geometry"]).astype(np.float32)
-            bonds = nx.convert_matrix.from_numpy_array(bytes_to_numpy(store_dict["bonds"]))
+            bonds = nx.convert_matrix.from_numpy_array(
+                bytes_to_numpy(store_dict["bonds"])
+            )
 
             mol = cls(
                 atomic_numbers,
@@ -1818,7 +2058,7 @@ class Molecule:
                 charge=store_dict["charge"],
                 multiplicity=store_dict["multiplicity"],
                 name=store_dict["name"],
-                checks=False, # trust nx data implicitly
+                checks=False,  # trust nx data implicitly
             )
 
             return mol
@@ -1835,7 +2075,9 @@ class Molecule:
         elif isinstance(charges, list):
             charges = cctk.OneIndexedArray(charges)
 
-        assert isinstance(charges, cctk.OneIndexedArray), "charges must be cctk.OneIndexedArray"
+        assert isinstance(
+            charges, cctk.OneIndexedArray
+        ), "charges must be cctk.OneIndexedArray"
         assert len(charges) == self.num_atoms(), "need a charge for every atom"
         assert isinstance(atoms1, list)
         assert isinstance(atoms2, list)
@@ -1847,7 +2089,7 @@ class Molecule:
         r1 = self.geometry[atoms1] / 0.529
         r2 = self.geometry[atoms2] / 0.529
 
-        R = cdist(r1, r2)**2
+        R = cdist(r1, r2) ** 2
         Q = np.outer(q1, q2)
 
         energy = 0
@@ -1856,13 +2098,15 @@ class Molecule:
             for j in range(len(atoms2)):
                 energy += Q[i][j] / R[i][j]
 
-        return energy * 627.509 # convert to kcal/mol
+        return energy * 627.509  # convert to kcal/mol
 
     def center_of_mass(self):
         """
         Returns the center-of-mass of the molecule, as a ``np.array``.
         """
-        masses = cctk.OneIndexedArray([get_avg_mass(z) for z in self.atomic_numbers]).reshape(-1,1)
+        masses = cctk.OneIndexedArray(
+            [get_avg_mass(z) for z in self.atomic_numbers]
+        ).reshape(-1, 1)
         return np.sum(masses * self.geometry, axis=0) / np.sum(masses)
 
     def principal_axes_of_rotation(self):
@@ -1880,22 +2124,22 @@ class Molecule:
         positions = copy.deepcopy(self.geometry.view(np.ndarray))
         positions += -1 * com
 
-        masses = np.array([get_avg_mass(z) for z in self.atomic_numbers]).reshape(-1,1)
-        np.testing.assert_allclose(np.sum(masses * positions, axis=0) / np.sum(masses), 0, atol=0.00001)
+        masses = np.array([get_avg_mass(z) for z in self.atomic_numbers]).reshape(-1, 1)
+        np.testing.assert_allclose(
+            np.sum(masses * positions, axis=0) / np.sum(masses), 0, atol=0.00001
+        )
 
         # build up mass moment of inertia tensor
         Ixx, Ixy, Ixz, Iyy, Iyz, Izz = 0, 0, 0, 0, 0, 0
         for mass, position in zip(masses, positions):
-            Ixx += mass * (position[2]*position[2] + position[1]*position[1])
-            Iyy += mass * (position[0]*position[0] + position[2]*position[2])
-            Izz += mass * (position[0]*position[0] + position[1]*position[1])
+            Ixx += mass * (position[2] * position[2] + position[1] * position[1])
+            Iyy += mass * (position[0] * position[0] + position[2] * position[2])
+            Izz += mass * (position[0] * position[0] + position[1] * position[1])
             Ixy -= mass * position[0] * position[1]
             Ixz -= mass * position[0] * position[2]
             Iyz -= mass * position[1] * position[2]
 
-        I = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]]).reshape(3,3)  # noqa: E741
+        I = np.array([[Ixx, Ixy, Ixz], [Ixy, Iyy, Iyz], [Ixz, Iyz, Izz]]).reshape(3, 3)  # noqa: E741
 
         # now we do an eigendecomposition on that tensor
         return np.linalg.eigh(I)
-
-

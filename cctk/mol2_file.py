@@ -34,7 +34,13 @@ class MOL2File(File):
 
         file = MOL2File(name=name)
 
-        (geometries, all_clean_symbols, all_symbols, all_bonds, conformers) = cls._read_mol2(filename, **kwargs)
+        (
+            geometries,
+            all_clean_symbols,
+            all_symbols,
+            all_bonds,
+            conformers,
+        ) = cls._read_mol2(filename, **kwargs)
         assert len(all_bonds) == len(geometries)
         for bonds in all_bonds:
             assert isinstance(bonds, nx.Graph)
@@ -44,10 +50,12 @@ class MOL2File(File):
             # convert atom types to atomic numbers
             atomic_numbers = []
             for atom_type in all_symbols[0]:
-                assert isinstance(atom_type,str), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
+                assert isinstance(
+                    atom_type, str
+                ), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
                 fields = atom_type.split(".")
                 symbol = fields[0]
-                symbol = re.sub("[^A-Za-z]","",symbol)
+                symbol = re.sub("[^A-Za-z]", "", symbol)
                 atomic_number = get_number(symbol)
                 atomic_numbers.append(atomic_number)
             atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
@@ -55,17 +63,21 @@ class MOL2File(File):
             # create ensemble
             file.ensemble = ConformationalEnsemble()
             for geometry in geometries:
-                molecule = Molecule(atomic_numbers, geometry, bonds=all_bonds[0].edges, checks=False)
+                molecule = Molecule(
+                    atomic_numbers, geometry, bonds=all_bonds[0].edges, checks=False
+                )
                 file.ensemble.add_molecule(molecule, checks=False)
         else:
             file.ensemble = Ensemble()
-            for this_symbols,geometry in zip(all_symbols,geometries):
-                atomic_numbers=[]
+            for this_symbols, geometry in zip(all_symbols, geometries):
+                atomic_numbers = []
                 for atom_type in this_symbols:
-                    assert isinstance(atom_type,str), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
+                    assert isinstance(
+                        atom_type, str
+                    ), f"unexpected atom_type type: {type(atom_type)} / {atom_type}"
                     fields = atom_type.split(".")
                     symbol = fields[0]
-                    symbol = re.sub("[^A-Za-z]","",symbol)
+                    symbol = re.sub("[^A-Za-z]", "", symbol)
                     atomic_number = get_number(symbol)
                     atomic_numbers.append(atomic_number)
                 atomic_numbers = np.asarray(atomic_numbers, dtype=np.int8)
@@ -76,7 +88,11 @@ class MOL2File(File):
 
     @classmethod
     def _read_mol2(
-        cls, filename, contains_conformers="check", save_memory_for_conformers=True, print_status_messages=False,
+        cls,
+        filename,
+        contains_conformers="check",
+        save_memory_for_conformers=True,
+        print_status_messages=False,
     ):
         """
         Reads .mol2 files into cctk.
@@ -168,14 +184,16 @@ class MOL2File(File):
                     break
                 x, y, z = float(fields[2]), float(fields[3]), float(fields[4])
                 this_geometry.append([x, y, z])
-                if contains_conformers is not True or len(all_symbols)==0:
+                if contains_conformers is not True or len(all_symbols) == 0:
                     symbol = fields[5]
                     clean_symbol = fields[1]
                     this_symbols.append(symbol)
                     this_clean_symbols.append(clean_symbol)
             elif in_bond_block:
                 fields = line.split()
-                if len(fields) == 4 and (len(all_bonds)==0 or contains_conformers is not True):
+                if len(fields) == 4 and (
+                    len(all_bonds) == 0 or contains_conformers is not True
+                ):
                     # parse bonds, checking that the bonds are increasing
                     try:
                         this_bond_number = int(fields[0])
@@ -196,7 +214,9 @@ class MOL2File(File):
                         if this_bonds.has_edge(atom1, atom2):
                             current_bond_order = this_bonds[atom1][atom2]["weight"]
                             if current_bond_order != bond_order:
-                                raise ValueError(f"inconsistent bond order definition: {line}")
+                                raise ValueError(
+                                    f"inconsistent bond order definition: {line}"
+                                )
                         this_bonds.add_edge(atom1, atom2, weight=bond_order)
                         this_bonds.add_edge(atom2, atom1, weight=bond_order)
                     except Exception:
@@ -234,7 +254,9 @@ class MOL2File(File):
             contains_conformers = True
             for symbols, bonds in zip(all_symbols[1:], all_bonds[1:]):
                 # must have the same symbols and bonds
-                if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(all_bonds[0], bonds):
+                if not (all_symbols[0] == symbols).all() or not nx.is_isomorphic(
+                    all_bonds[0], bonds
+                ):
                     contains_conformers = False
                     break
         elif isinstance(contains_conformers, bool):
@@ -250,7 +272,9 @@ class MOL2File(File):
                     n_atoms = len(all_geometries[0])
                     n_bonds = all_bonds[0].number_of_edges()
                     if print_status_messages:
-                        print(f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds).")
+                        print(
+                            f"read {n_geometries} conformers ({n_atoms} atoms and {n_bonds} bonds)."
+                        )
                 else:
                     min_n_atoms = len(all_geometries[0])
                     max_n_atoms = len(all_geometries[0])
@@ -267,14 +291,22 @@ class MOL2File(File):
                         elif bonds.number_of_edges() < min_n_bonds:
                             min_n_bonds = bonds.number_of_edges
                     if print_status_messages:
-                        print(f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds).")
+                        print(
+                            f"read {n_geometries} unrelated geometries ({min_n_atoms}-{max_n_atoms} atoms and {min_n_bonds}-{max_n_bonds}) bonds)."
+                        )
             else:
                 n_atoms = len(all_geometries)
                 n_bonds = all_bonds[0].number_of_edges()
                 if print_status_messages:
                     print(f"read one geometry ({n_atoms} atoms and {n_bonds} bonds).")
 
-        return (all_geometries, all_clean_symbols, all_symbols, all_bonds, contains_conformers)
+        return (
+            all_geometries,
+            all_clean_symbols,
+            all_symbols,
+            all_bonds,
+            contains_conformers,
+        )
 
     def get_molecule(self, num=None):
         """
@@ -302,7 +334,9 @@ class MOL2File(File):
             title (str): title of the file
             append (Bool): whether to write to file normally or append
         """
-        assert isinstance(molecule, Molecule), "molecule is not a valid Molecule object!"
+        assert isinstance(
+            molecule, Molecule
+        ), "molecule is not a valid Molecule object!"
 
         text = f"# {title}\n#\n#\n\n#\n#\n\n"
         text += f"@<TRIPOS>MOLECULE\n{title}\n{molecule.num_atoms()} {molecule.bonds.number_of_edges()}\nSMALL\nNO_CHARGES\n\n\n"

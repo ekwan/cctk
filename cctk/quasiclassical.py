@@ -14,10 +14,18 @@ Constants:
 """
 
 AMU_A2_FS2_PER_KCAL_MOL = 0.0004184
-BOLTZMANN_CONSTANT = 0.001985875 # kcal/mol•K
-TEMP_TO_eV = 8.61733238e-5 # eV/K
+BOLTZMANN_CONSTANT = 0.001985875  # kcal/mol•K
+TEMP_TO_eV = 8.61733238e-5  # eV/K
 
-def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities=False, which="quasiclassical", mode_options=None, do_rotation=True):
+
+def get_quasiclassical_perturbation(
+    molecule,
+    temperature=298,
+    return_velocities=False,
+    which="quasiclassical",
+    mode_options=None,
+    do_rotation=True,
+):
     """
     Perturbs molecule by treating each mode as a quantum harmonic oscillator and sampling from the distribution appropriate to the temperature.
 
@@ -42,14 +50,18 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
         velocities (cctk.OneIndexedArray)
     """
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule"
-    assert len(molecule.vibrational_modes) > 0, "molecule needs to have vibrational modes (try running a ``freq`` job)"
+    assert (
+        len(molecule.vibrational_modes) > 0
+    ), "molecule needs to have vibrational modes (try running a ``freq`` job)"
     assert isinstance(temperature, (int, float)), "temperature must be numeric"
 
     mol = copy.deepcopy(molecule)
     total_PE = 0
     total = 0
 
-    velocities = np.zeros_like(molecule.geometry.view(np.ndarray)).view(cctk.OneIndexedArray)
+    velocities = np.zeros_like(molecule.geometry.view(np.ndarray)).view(
+        cctk.OneIndexedArray
+    )
 
     if mode_options is None:
         mode_options = dict()
@@ -57,15 +69,19 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
     all_text = ""
     for idx, mode in enumerate(mol.vibrational_modes):
         # enumerate is 0-indexed but GaussView, etc 1-index the modes. so we're 1-indexing here too.
-        if idx+1 in mode_options:
-            PE, KE, TE, mode_velocity, text = apply_vibration(mol, mode, temperature=temperature, which=which, **mode_options[idx+1])
+        if idx + 1 in mode_options:
+            PE, KE, TE, mode_velocity, text = apply_vibration(
+                mol, mode, temperature=temperature, which=which, **mode_options[idx + 1]
+            )
         else:
-            PE, KE, TE, mode_velocity, text = apply_vibration(mol, mode, temperature=temperature, which=which)
+            PE, KE, TE, mode_velocity, text = apply_vibration(
+                mol, mode, temperature=temperature, which=which
+            )
         total_PE += PE
         total += TE
         all_text += f"Mode {idx+1}: {text}\n"
 
-        for idx in range(1,molecule.num_atoms()+1):
+        for idx in range(1, molecule.num_atoms() + 1):
             velocities[idx] += mode_velocity * mode.displacements[idx]
 
     if do_rotation:
@@ -77,34 +93,55 @@ def get_quasiclassical_perturbation(molecule, temperature=298, return_velocities
         # energy in kcal/mol, unlike Jprogdyn
         energy_axis1 = random_boltzmann_energy(temperature)
         if moments[0] > 0:
-            omega_axis1 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis1 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
+            omega_axis1 = (1 if random.random() < 0.5 else -1) * np.sqrt(
+                2 * energy_axis1 / (moments[0] * AMU_A2_FS2_PER_KCAL_MOL)
+            )
 
         energy_axis2 = random_boltzmann_energy(temperature)
         if moments[1] > 0:
-            omega_axis2 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis2 / (moments[0]*AMU_A2_FS2_PER_KCAL_MOL))
+            omega_axis2 = (1 if random.random() < 0.5 else -1) * np.sqrt(
+                2 * energy_axis2 / (moments[0] * AMU_A2_FS2_PER_KCAL_MOL)
+            )
 
         energy_axis3 = random_boltzmann_energy(temperature)
         if moments[2] > 0:
-            omega_axis3 = (1 if random.random() < 0.5 else -1) * np.sqrt(2*energy_axis3*AMU_A2_FS2_PER_KCAL_MOL / moments[2])
+            omega_axis3 = (1 if random.random() < 0.5 else -1) * np.sqrt(
+                2 * energy_axis3 * AMU_A2_FS2_PER_KCAL_MOL / moments[2]
+            )
 
         # add energy to total energy counter
         total += energy_axis1 + energy_axis2 + energy_axis3
 
         # total rotational velocity is linear combination along principal axes
-        omega = omega_axis1*axes_of_rotation[0] + omega_axis2*axes_of_rotation[1] + omega_axis3*axes_of_rotation[2]
+        omega = (
+            omega_axis1 * axes_of_rotation[0]
+            + omega_axis2 * axes_of_rotation[1]
+            + omega_axis3 * axes_of_rotation[2]
+        )
 
         # now turn this into Cartesian velocity for each atom
         shifted_positions = copy.deepcopy(mol.geometry)
         shifted_positions -= mol.center_of_mass()
-        for idx in range(1, mol.num_atoms()+1):
+        for idx in range(1, mol.num_atoms() + 1):
             velocities[idx] += np.cross(omega, shifted_positions[idx])
 
     if return_velocities:
         return mol, total_PE, total, all_text, velocities
-    else: # backwards compatibility
+    else:  # backwards compatibility
         return mol, total_PE, total, all_text
 
-def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False, which="quasiclassical", displacement=True, velocity="random", **kwargs):
+
+def apply_vibration(
+    molecule,
+    mode,
+    min_freq=50,
+    temperature=298,
+    verbose=False,
+    which="quasiclassical",
+    displacement=True,
+    velocity="random",
+    **kwargs,
+):
     """
     Apply a vibration to molecule ``molecule`` (modified in-place).
 
@@ -143,7 +180,9 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
         shift = 0
         method = "ts"
     else:
-        raise ValueError(f"``which`` must be ``classical``, ``quasiclassical``, or ``ts`` - {which} does not match!")
+        raise ValueError(
+            f"``which`` must be ``classical``, ``quasiclassical``, or ``ts`` - {which} does not match!"
+        )
 
     # the rest is common to all methods
 
@@ -157,28 +196,34 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
         print("Warning: attempted to calculate relative shift when max shift is 0!")
     else:
         if shift > max_shift:
-            print("Warning: requested shift of {shift:.4E} exceeds the max_shift of {max_shift:.4E}!")
+            print(
+                "Warning: requested shift of {shift:.4E} exceeds the max_shift of {max_shift:.4E}!"
+            )
             shift = max_shift
-        rel_shift = shift/max_shift
+        rel_shift = shift / max_shift
 
     # apply displacements and compute energy breakdown
     molecule.geometry += mode.displacements * rel_shift * max_shift
-    potential_energy = 0.5 * mode.force_constant * shift ** 2
+    potential_energy = 0.5 * mode.force_constant * shift**2
     kinetic_energy = energy - potential_energy
 
     # mode velocity = sqrt(2 * KE / reduced mass) - want value in Å/fs
     # https://stackoverflow.com/questions/46820182/randomly-generate-1-or-1-positive-or-negative-integer
-    mode_velocity = math.sqrt(2*kinetic_energy*AMU_A2_FS2_PER_KCAL_MOL/mode.reduced_mass)
+    mode_velocity = math.sqrt(
+        2 * kinetic_energy * AMU_A2_FS2_PER_KCAL_MOL / mode.reduced_mass
+    )
 
     # choose velocity sign
     if velocity == "random":
-        mode_velocity *= (1 if random.random() < 0.5 else -1)
+        mode_velocity *= 1 if random.random() < 0.5 else -1
     elif velocity == "negative":
         mode_velocity *= -1
     elif velocity == "zero":
         mode_velocity = 0
     elif velocity != "positive":
-        raise ValueError(f"unknown value {velocity} for keywork ``velocity`` - must be ``positive``, ``negative``, ``random``, or ``zero``")
+        raise ValueError(
+            f"unknown value {velocity} for keywork ``velocity`` - must be ``positive``, ``negative``, ``random``, or ``zero``"
+        )
 
     text = f"{mode.frequency:.1f} cm-1 ({energy:4.2f} kcal/mol)\t{method}\t Shift {shift:5.2f} of {max_shift:4.2f} Å ({rel_shift:5.0%})"
     text += f"\tPE = {potential_energy:4.2f} kcal/mol\tKE = {kinetic_energy:4.2f} kcal/mol\tk = {mode.force_constant:.1f} kcal/mol Å^-2"
@@ -191,6 +236,7 @@ def apply_vibration(molecule, mode, min_freq=50, temperature=298, verbose=False,
 
     return potential_energy, kinetic_energy, energy, mode_velocity, text
 
+
 def get_hermite_polynomial(n):
     """
     Returns a ``np.poly1d`` object representing the degree-n Hermite polynomial.
@@ -200,15 +246,20 @@ def get_hermite_polynomial(n):
     assert isinstance(n, int) and n >= 0, "need positive integer"
 
     Hr = [None] * (n + 1)
-    Hr[0] = np.poly1d([1.,])
+    Hr[0] = np.poly1d(
+        [
+            1.0,
+        ]
+    )
 
     if n > 0:
-        Hr[1] = np.poly1d([2., 0.])
+        Hr[1] = np.poly1d([2.0, 0.0])
 
     if n > 1:
-        for v in range(2, n+1):
-            Hr[v] = Hr[1]*Hr[v-1] - 2*(v-1)*Hr[v-2]
+        for v in range(2, n + 1):
+            Hr[v] = Hr[1] * Hr[v - 1] - 2 * (v - 1) * Hr[v - 2]
     return Hr[n]
+
 
 def random_boltzmann_energy(temperature, cutoff=10, step1=0.01, step2=0.0001):
     """
@@ -242,7 +293,7 @@ def random_boltzmann_energy(temperature, cutoff=10, step1=0.01, step2=0.0001):
         return cutoff * kT
 
     # retry in smaller increments
-    for i in np.arange(trial_energy, trial_energy+step1, step2):
+    for i in np.arange(trial_energy, trial_energy + step1, step2):
         if cumulative_boltzmann(i) > random:
             trial_energy = i - step2
             break

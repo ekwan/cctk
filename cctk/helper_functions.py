@@ -46,6 +46,7 @@ with pkg_resources.files(data).joinpath("isotopes.csv").open() as isotope_file:
 
 INV_ELEMENT_DICTIONARY = {v: int(k) for k, v in ELEMENT_DICTIONARY.items()}
 
+
 def get_symbol(atomic_number):
     """
     Gets element symbol from a given atomic number.
@@ -92,6 +93,7 @@ with pkg_resources.files(data).joinpath("covalent_radii.csv").open() as covalent
             continue
         COVALENT_RADII_DICTIONARY[line_fragments[0]] = line_fragments[2]
 
+
 def get_covalent_radius(atomic_number):
     """
     Gets the covalent radius for a given element.
@@ -109,6 +111,7 @@ def get_covalent_radius(atomic_number):
     else:
         raise ValueError("no covalent radius defined for atomic number ", atomic_number)
 
+
 """
 This code populates VDW_RADII_DICTIONARY from a static datafile.
 """
@@ -119,6 +122,7 @@ with pkg_resources.files(data).joinpath("vdw_radii.csv").open() as vdw_radii:
 
         #### There's a variable number from line to line, but the first three are always number, symbol, radius
         VDW_RADII_DICTIONARY[line_fragments[0]] = line_fragments[1]
+
 
 def get_vdw_radius(atomic_number):
     """
@@ -135,7 +139,10 @@ def get_vdw_radius(atomic_number):
     if atomic_number in VDW_RADII_DICTIONARY:
         return float(VDW_RADII_DICTIONARY[atomic_number])
     else:
-        raise ValueError("no van der Waals radius defined for atomic number ", atomic_number)
+        raise ValueError(
+            "no van der Waals radius defined for atomic number ", atomic_number
+        )
+
 
 def compute_distance_between(v1, v2, _norm=np.linalg.norm):
     """
@@ -250,6 +257,7 @@ def compute_rotation_matrix(axis, theta):
         ]
     )
 
+
 def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     """
     Rotates one set of points onto another using the Kabsch algorithm.
@@ -278,6 +286,7 @@ def align_matrices(P_partial, P_full, Q_partial, return_matrix=False):
     rotation = U @ middle @ Vt
     return P_full @ rotation
 
+
 def compute_RMSD(geometry1, geometry2, checks=True):
     """
     Computes the root mean squared difference between two geometries.
@@ -291,14 +300,22 @@ def compute_RMSD(geometry1, geometry2, checks=True):
         the root-mean-square distance between the two geometries
     """
     if checks and not isinstance(geometry1, cctk.OneIndexedArray):
-        raise ValueError(f"expected cctk.OneIndexedArray but got {str(type(geometry1))} instead")
+        raise ValueError(
+            f"expected cctk.OneIndexedArray but got {str(type(geometry1))} instead"
+        )
     if checks and not isinstance(geometry2, cctk.OneIndexedArray):
-        raise ValueError(f"expected cctk.OneIndexedArray but got {str(type(geometry2))} instead")
+        raise ValueError(
+            f"expected cctk.OneIndexedArray but got {str(type(geometry2))} instead"
+        )
 
     if checks and len(geometry2) != len(geometry1):
         raise ValueError("can't compare two geometries with different lengths!")
 
-    return np.sqrt( np.sum( ( geometry1.view(np.ndarray) - geometry2.view(np.ndarray) ) ** 2) / len(geometry1) )
+    return np.sqrt(
+        np.sum((geometry1.view(np.ndarray) - geometry2.view(np.ndarray)) ** 2)
+        / len(geometry1)
+    )
+
 
 def get_isotopic_distribution(z):
     """
@@ -316,12 +333,14 @@ def get_isotopic_distribution(z):
     weights = list(ISOTOPE_DICTIONARY[z].values())
     return np.array(masses), np.array(weights)
 
+
 def get_avg_mass(z):
     """
     For an element with number ``z``, return average mass of that element.
     """
     masses, weights = get_isotopic_distribution(z)
     return np.dot(masses, weights)
+
 
 def get_z_from_mass(desired_mass, tolerance=0.001):
     """
@@ -338,6 +357,7 @@ def get_z_from_mass(desired_mass, tolerance=0.001):
         if abs(desired_mass - mass) < tolerance:
             return z
 
+
 def draw_isotopologue(z):
     """
     For an element with number ``z``, return a weighted random atomic mass (so will return 12 99% of the time and 13 1% of the time for carbon).
@@ -346,15 +366,22 @@ def draw_isotopologue(z):
     masses, weights = get_isotopic_distribution(z)
     return np.random.choice(masses, p=weights)
 
+
 # dict: atomic symbol --> (slope, intercept)
 # defines the slope to be positive
 DEFAULT_NMR_SCALING_FACTORS = {
-        "H" : (1.0716,  31.6660),
-        "C" : (1.0300, 180.4300),
-        "N" : (0.9776, 244.5626)
+    "H": (1.0716, 31.6660),
+    "C": (1.0300, 180.4300),
+    "N": (0.9776, 244.5626),
 }
 
-def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="default", property_name="isotropic_shielding"):
+
+def scale_nmr_shifts(
+    ensemble,
+    symmetrical_atom_numbers=None,
+    scaling_factors="default",
+    property_name="isotropic_shielding",
+):
     """
     Apply linear scaling to isotropic shieldings to get chemical shifts.
     Shifts are calculated as (intercept-shielding)/slope.
@@ -379,53 +406,73 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
         shift_labels: np.array (also matches shape)
     """
     # check inputs
-    assert isinstance(ensemble, cctk.Ensemble), f"expected Ensemble but got {str(type(ensemble))} instead"
+    assert isinstance(
+        ensemble, cctk.Ensemble
+    ), f"expected Ensemble but got {str(type(ensemble))} instead"
     assert len(ensemble) > 0, "empty ensemble not allowed"
     if symmetrical_atom_numbers is None:
         symmetrical_atom_numbers = []
-    assert isinstance(symmetrical_atom_numbers, list), f"symmetrical atom numbers should be specified as a list of lists, but got {str(type(ensemble))} instead"
+    assert isinstance(
+        symmetrical_atom_numbers, list
+    ), f"symmetrical atom numbers should be specified as a list of lists, but got {str(type(ensemble))} instead"
     for n in symmetrical_atom_numbers:
-        assert isinstance(n, list), f"symmetrical atom numbers must be specified as lists, but got {str(type(n))} instead: {str(n)}"
+        assert isinstance(
+            n, list
+        ), f"symmetrical atom numbers must be specified as lists, but got {str(type(n))} instead: {str(n)}"
     if scaling_factors == "default":
         scaling_factors = DEFAULT_NMR_SCALING_FACTORS
     else:
         assert isinstance(scaling_factors, dict)
         assert len(scaling_factors) > 0, "must provide scaling factors"
-    assert isinstance(property_name, str) and len(property_name)>0, f"property_name {property_name} is invalid"
+    assert (
+        isinstance(property_name, str) and len(property_name) > 0
+    ), f"property_name {property_name} is invalid"
 
     # get shieldings and scale
     all_scaled_shifts = []
     all_shift_labels = []
-    for i,(molecule,properties) in enumerate(ensemble.items()):
+    for i, (molecule, properties) in enumerate(ensemble.items()):
         if property_name in properties:
             # get atom numbers and atomic elements as OneIndexedArrays
             atomic_numbers = molecule.atomic_numbers
             n_atoms = len(atomic_numbers)
-            atomic_symbols = [ get_symbol(n) for n in atomic_numbers ]
+            atomic_symbols = [get_symbol(n) for n in atomic_numbers]
             atomic_symbols = cctk.OneIndexedArray(atomic_symbols)
-            atom_numbers = list(range(1,n_atoms+1))
-#            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
-            all_labels = [ f"{current_symbol}{atom_number}" for current_symbol,atom_number in zip(atomic_symbols,atom_numbers) ]
+            atom_numbers = list(range(1, n_atoms + 1))
+            #            symbol_dict = dict(zip(atomic_numbers,atomic_symbols))
+            all_labels = [
+                f"{current_symbol}{atom_number}"
+                for current_symbol, atom_number in zip(atomic_symbols, atom_numbers)
+            ]
             all_labels = cctk.OneIndexedArray(all_labels)
 
             # check symmetrical atom numbers make sense
             n_atoms = len(atomic_numbers)
-            symmetrical_groups_dict = {}    # symbol --> [ [list1], [list2], ...] where each list is a group of symmetrical atom numbers
-            symmetrical_groups_dict2 = {}   # symbol --> [ union of all symmetrical atom numbers for this symbol ]
-#            unique_atoms_dict = {}          # symbol --> [ union of all unique atom numbers for this symbol ]
+            symmetrical_groups_dict = {}  # symbol --> [ [list1], [list2], ...] where each list is a group of symmetrical atom numbers
+            symmetrical_groups_dict2 = {}  # symbol --> [ union of all symmetrical atom numbers for this symbol ]
+            #            unique_atoms_dict = {}          # symbol --> [ union of all unique atom numbers for this symbol ]
             for symmetrical_group in symmetrical_atom_numbers:
-                assert len(symmetrical_group) > 1, "must be at least 2 symmetrical nuclei in a group"
-                assert len(symmetrical_group) == len(set(symmetrical_group)), f"check for duplicate atom numbers in {symmetrical_group}"
+                assert (
+                    len(symmetrical_group) > 1
+                ), "must be at least 2 symmetrical nuclei in a group"
+                assert len(symmetrical_group) == len(
+                    set(symmetrical_group)
+                ), f"check for duplicate atom numbers in {symmetrical_group}"
                 symmetrical_symbol = None
                 for atom_number in symmetrical_group:
-                    assert 1 <= atom_number <= n_atoms, f"atom number {atom_number} is out of range"
+                    assert (
+                        1 <= atom_number <= n_atoms
+                    ), f"atom number {atom_number} is out of range"
                     if symmetrical_symbol is None:
                         symmetrical_symbol = atomic_symbols[atom_number]
-                        assert symmetrical_symbol in scaling_factors, f"no scaling factors available for the element {symmetrical_symbol}"
-                    assert atomic_symbols[atom_number] == symmetrical_symbol,\
-                           (f"all atoms in a symmetrical group must correspond to the same element\n"
-                            f"expected element {symmetrical_symbol} for atom {atom_number},"
-                            f"but got element {atomic_symbols[atom_number]}")
+                        assert (
+                            symmetrical_symbol in scaling_factors
+                        ), f"no scaling factors available for the element {symmetrical_symbol}"
+                    assert atomic_symbols[atom_number] == symmetrical_symbol, (
+                        f"all atoms in a symmetrical group must correspond to the same element\n"
+                        f"expected element {symmetrical_symbol} for atom {atom_number},"
+                        f"but got element {atomic_symbols[atom_number]}"
+                    )
                 if symmetrical_symbol not in symmetrical_groups_dict:
                     symmetrical_groups_dict[symmetrical_symbol] = []
                 symmetrical_groups_dict[symmetrical_symbol].append(symmetrical_group)
@@ -439,15 +486,19 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
             # iterate through requested elements
             molecule_shifts = []
             molecule_labels = []
-            for symbol_of_interest,(slope,intercept) in scaling_factors.items():
+            for symbol_of_interest, (slope, intercept) in scaling_factors.items():
                 # sanity checks
-                assert isinstance(slope,float), f"expected slope to be float, but got {str(type(slope))}"
+                assert isinstance(
+                    slope, float
+                ), f"expected slope to be float, but got {str(type(slope))}"
                 assert slope != 0, "zero slope not allowed"
-                assert isinstance(intercept,float), f"expected intercept to be float, but got {str(type(intercept))}"
+                assert isinstance(
+                    intercept, float
+                ), f"expected intercept to be float, but got {str(type(intercept))}"
 
-                # determine unique atoms 
+                # determine unique atoms
                 unique_atom_numbers_list = []
-                for atomic_symbol,atom_number in zip(atomic_symbols,atom_numbers):
+                for atomic_symbol, atom_number in zip(atomic_symbols, atom_numbers):
                     if atomic_symbol != symbol_of_interest:
                         continue
                     if symbol_of_interest in symmetrical_groups_dict2:
@@ -475,16 +526,18 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
                         averaged_shielding = group_shieldings.mean()
                         selected_shieldings.append(averaged_shielding)
                         label = f"{current_atomic_symbol}"
-                        for j,atom_number in enumerate(symmetrical_group):
+                        for j, atom_number in enumerate(symmetrical_group):
                             label += f"{atom_number}"
                             if j < len(symmetrical_group) - 1:
                                 label += "/"
                         selected_labels.append(label)
 
                 # apply scaling
-                assert len(selected_shieldings) == len(selected_labels), "shieldings and labels should have 1:1 correspondence"
+                assert len(selected_shieldings) == len(
+                    selected_labels
+                ), "shieldings and labels should have 1:1 correspondence"
                 selected_shifts = np.array(selected_shieldings)
-                selected_shifts = (intercept-selected_shifts)/slope
+                selected_shifts = (intercept - selected_shifts) / slope
                 selected_labels = np.array(selected_labels)
 
                 # update results
@@ -497,7 +550,9 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
                 all_shift_labels.append(molecule_labels)
             else:
                 # assume this means a bug
-                raise ValueError("no relevant shieldings were extracted for this molecule!")
+                raise ValueError(
+                    "no relevant shieldings were extracted for this molecule!"
+                )
         else:
             # there are no shieldings available, so append None
             all_scaled_shifts.append(None)
@@ -507,6 +562,7 @@ def scale_nmr_shifts(ensemble, symmetrical_atom_numbers=None, scaling_factors="d
     scaled_shifts = np.array(all_scaled_shifts)
     shift_labels = np.array(all_shift_labels)
     return scaled_shifts, shift_labels
+
 
 def compute_chirality(v1, v2, v3, v4):
     """
@@ -522,10 +578,18 @@ def compute_chirality(v1, v2, v3, v4):
     Returns:
         value of 1 (R by CIP) or -1 (S by CIP)
     """
-    assert (isinstance(v1, np.ndarray) and len(v1) == 3), "v1 needs to be a 3-element np.ndarray!"
-    assert (isinstance(v2, np.ndarray) and len(v2) == 3), "v2 needs to be a 3-element np.ndarray!"
-    assert (isinstance(v3, np.ndarray) and len(v3) == 3), "v3 needs to be a 3-element np.ndarray!"
-    assert (isinstance(v4, np.ndarray) and len(v4) == 3), "v4 needs to be a 3-element np.ndarray!"
+    assert (
+        isinstance(v1, np.ndarray) and len(v1) == 3
+    ), "v1 needs to be a 3-element np.ndarray!"
+    assert (
+        isinstance(v2, np.ndarray) and len(v2) == 3
+    ), "v2 needs to be a 3-element np.ndarray!"
+    assert (
+        isinstance(v3, np.ndarray) and len(v3) == 3
+    ), "v3 needs to be a 3-element np.ndarray!"
+    assert (
+        isinstance(v4, np.ndarray) and len(v4) == 3
+    ), "v4 needs to be a 3-element np.ndarray!"
 
     e1 = np.array([1, 0, 0])
     e3 = np.array([0, 0, 1])
@@ -544,7 +608,9 @@ def compute_chirality(v1, v2, v3, v4):
 
     # rotate v1 so that it's pointing up!
     axis2 = v4
-    theta2 = compute_angle_between(np.array([0, v1[1], v1[2]]), e3) # projection of v1 onto e2•e3 plane
+    theta2 = compute_angle_between(
+        np.array([0, v1[1], v1[2]]), e3
+    )  # projection of v1 onto e2•e3 plane
 
     R2 = compute_rotation_matrix(axis2, np.sign(v1[1]) * theta2)
     v1 = R2 @ v1
@@ -552,73 +618,93 @@ def compute_chirality(v1, v2, v3, v4):
     v3 = R2 @ v3
     v4 = R2 @ v4
 
-    assert 1.0 > compute_angle_between(v4, e1), f"rotating v4 failed - 1.0 ≤ {compute_angle_between(v4, e1)}"
-    assert 1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]])), f"rotating v1 failed, - 1.0 ≤ {compute_angle_between(e3, np.array([0, 0, v1[2]]))}"
+    assert 1.0 > compute_angle_between(
+        v4, e1
+    ), f"rotating v4 failed - 1.0 ≤ {compute_angle_between(v4, e1)}"
+    assert (
+        1.0 > compute_angle_between(e3, np.array([0, 0, v1[2]]))
+    ), f"rotating v1 failed, - 1.0 ≤ {compute_angle_between(e3, np.array([0, 0, v1[2]]))}"
 
     answer = np.sign(v2[1])
-    assert np.sign(v3[1]) != answer, "at this point our two substituents are on the same side of the plane that's supposed to divide them"
+    assert (
+        np.sign(v3[1]) != answer
+    ), "at this point our two substituents are on the same side of the plane that's supposed to divide them"
     return answer
 
+
 # constants for calculating entropy
-ENTROPY_FACTOR_1 = 1.43877695998381562 # 2.99792458E10 * 6.62606957E-34 / 1.3806488E-23
-ENTROPY_FACTOR_2 = 1.9872041348        # 8.3144621 / 4.184
+ENTROPY_FACTOR_1 = 1.43877695998381562  # 2.99792458E10 * 6.62606957E-34 / 1.3806488E-23
+ENTROPY_FACTOR_2 = 1.9872041348  # 8.3144621 / 4.184
+
 
 def get_entropy(frequencies, temperature):
     """
-        Computes the total entropy of a given set of frequencies.
+    Computes the total entropy of a given set of frequencies.
 
-        Args:
-            frequencies (list): in cm-1
-            temperature (float): in K
+    Args:
+        frequencies (list): in cm-1
+        temperature (float): in K
 
-        Returns:
-            entropy (float): in hartree
+    Returns:
+        entropy (float): in hartree
     """
     factor0 = ENTROPY_FACTOR_1 / temperature
     entropy = 0.0
     for frequency in frequencies:
         factor = factor0 * frequency
-        temp = factor * 1.0/(math.exp(factor)-1.0) - math.log(1.0-math.exp(-factor))
+        temp = factor * 1.0 / (math.exp(factor) - 1.0) - math.log(
+            1.0 - math.exp(-factor)
+        )
         temp = temp * ENTROPY_FACTOR_2
         entropy += temp
     return entropy / 627.509469
 
-def get_corrected_free_energy(free_energy, frequencies, frequency_cutoff=100.0, temperature=298.15):
+
+def get_corrected_free_energy(
+    free_energy, frequencies, frequency_cutoff=100.0, temperature=298.15
+):
     """
-        Computes the free energy by moving all positive frequencies below ``frequency_cutoff``
-        to the cutoff.  See Cramer/Truhlar, J. Phys. Chem. B, 2011, 115, 14556.
+    Computes the free energy by moving all positive frequencies below ``frequency_cutoff``
+    to the cutoff.  See Cramer/Truhlar, J. Phys. Chem. B, 2011, 115, 14556.
 
-        Args:
-            free_energy (float): in hartree
-            frequencies (list): in cm-1
-            frequency_cutoff (float): in cm-1
-            temperature (float): in K
+    Args:
+        free_energy (float): in hartree
+        frequencies (list): in cm-1
+        frequency_cutoff (float): in cm-1
+        temperature (float): in K
 
-        Returns:
-            corrected_free_energy (float): in hartree
+    Returns:
+        corrected_free_energy (float): in hartree
     """
     low_frequencies = []
     for frequency in frequencies:
         if frequency > 0 and frequency < frequency_cutoff:
             low_frequencies.append(frequency)
     entropy_uncorrected = get_entropy(low_frequencies, temperature)
-    entropy_corrected = get_entropy([frequency_cutoff], temperature) * len(low_frequencies)
-    entropy_correction = (entropy_uncorrected - entropy_corrected)*temperature/1000.0
+    entropy_corrected = get_entropy([frequency_cutoff], temperature) * len(
+        low_frequencies
+    )
+    entropy_correction = (
+        (entropy_uncorrected - entropy_corrected) * temperature / 1000.0
+    )
     corrected_free_energy = free_energy + entropy_correction
     return corrected_free_energy
 
+
 def numpy_to_bytes(arr):
-    """ Utility function for pickling numpy arrays """
+    """Utility function for pickling numpy arrays"""
     arr_bytes = BytesIO()
     np.save(arr_bytes, arr, allow_pickle=True)
     arr_bytes = arr_bytes.getvalue()
     return arr_bytes
 
+
 def bytes_to_numpy(arr_bytes):
-    """ Utility function for unpickling numpy arrays """
+    """Utility function for unpickling numpy arrays"""
     load_bytes = BytesIO(arr_bytes)
     loaded_np = np.load(load_bytes, allow_pickle=True)
     return loaded_np
+
 
 def compute_mass_spectrum(formula_dict, **kwargs):
     """
@@ -648,7 +734,10 @@ def compute_mass_spectrum(formula_dict, **kwargs):
 
     return new_masses, new_weights
 
-def _recurse_through_formula(formula, masses, weights, cutoff=0.0000001, mass_precision=4, weight_precision=8):
+
+def _recurse_through_formula(
+    formula, masses, weights, cutoff=0.0000001, mass_precision=4, weight_precision=8
+):
     """
     Recurses through a formula and generates m/z isotopic pattern using tail recursion.
 
@@ -677,15 +766,17 @@ def _recurse_through_formula(formula, masses, weights, cutoff=0.0000001, mass_pr
     e_masses, e_weights = get_isotopic_distribution(current_e)
 
     # combinatorially add the new masses and weights to our current lists
-    new_masses = np.zeros(shape=(len(masses)*len(e_masses)))
-    new_weights = np.zeros(shape=(len(masses)*len(e_masses)))
+    new_masses = np.zeros(shape=(len(masses) * len(e_masses)))
+    new_weights = np.zeros(shape=(len(masses) * len(e_masses)))
     for i in range(len(masses)):
         for j in range(len(e_masses)):
-            new_masses[i*len(e_masses)+j] = masses[i] + e_masses[j]
-            new_weights[i*len(e_masses)+j] = weights[i] * e_weights[j]
+            new_masses[i * len(e_masses) + j] = masses[i] + e_masses[j]
+            new_weights[i * len(e_masses) + j] = weights[i] * e_weights[j]
 
     # delete duplicates and adjust weights (complicated)
-    newer_masses, indices = np.unique(np.round(new_masses, decimals=mass_precision), return_inverse=True)
+    newer_masses, indices = np.unique(
+        np.round(new_masses, decimals=mass_precision), return_inverse=True
+    )
     newer_weights = np.zeros_like(newer_masses)
     for k in range(len(newer_weights)):
         newer_weights[k] = np.sum(new_weights[np.nonzero(indices == k)])
@@ -694,7 +785,15 @@ def _recurse_through_formula(formula, masses, weights, cutoff=0.0000001, mass_pr
     # prune the low-abundance masses/weights and move on to the next element
     formula[current_e] += -1
     above_cutoff = np.nonzero(newer_weights > cutoff)
-    return _recurse_through_formula(formula, newer_masses[above_cutoff], newer_weights[above_cutoff], cutoff, mass_precision, weight_precision)
+    return _recurse_through_formula(
+        formula,
+        newer_masses[above_cutoff],
+        newer_weights[above_cutoff],
+        cutoff,
+        mass_precision,
+        weight_precision,
+    )
+
 
 def formula_dict_from_string(formula_string):
     """
@@ -706,4 +805,6 @@ def formula_dict_from_string(formula_string):
     Returns:
         formula_dict (dict): e.g. {'C': 10, 'H': 12, 'N': 2, 'O': 1}
     """
-    return {t[0]: int(t[1]) for t in re.findall(r"([a-z]+)([0-9]+)", formula_string, re.I)}
+    return {
+        t[0]: int(t[1]) for t in re.findall(r"([a-z]+)([0-9]+)", formula_string, re.I)
+    }

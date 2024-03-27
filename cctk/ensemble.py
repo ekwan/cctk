@@ -46,7 +46,9 @@ class Ensemble:
         if isinstance(key, (int, np.integer)):
             mol = self.molecule_list()[key]
             prop = self.properties_list()[key]
-            new = type(self)(name=self.name) # will return either Ensemble or subclass thereof
+            new = type(self)(
+                name=self.name
+            )  # will return either Ensemble or subclass thereof
             new.add_molecule(mol, properties=prop)
             return new
         elif isinstance(key, cctk.Molecule):
@@ -73,9 +75,13 @@ class Ensemble:
         if isinstance(idx, slice):
             start, stop, step = idx.indices(len(self))
             self[list(range(start, stop, step)), name] = item
-        elif isinstance(idx, (list, np.ndarray)) and isinstance(item, (list, np.ndarray)):
-            assert len(idx) == len(item), f"can't set {len(item)} items into {len(key)} variables (cf. pigeonhole principle)"
-            for (k, i) in zip(idx, item):
+        elif isinstance(idx, (list, np.ndarray)) and isinstance(
+            item, (list, np.ndarray)
+        ):
+            assert (
+                len(idx) == len(item)
+            ), f"can't set {len(item)} items into {len(key)} variables (cf. pigeonhole principle)"
+            for k, i in zip(idx, item):
                 self[k, name] = i
         elif isinstance(idx, (list, np.ndarray)):
             for k in idx:
@@ -86,7 +92,7 @@ class Ensemble:
         elif isinstance(idx, cctk.Molecule):
             if isinstance(name, (list, np.ndarray)):
                 for n in name:
-                    self[idx,n] = item
+                    self[idx, n] = item
             #### we can't assign multiple items to a list of names since that would preclude assigning a list to a single variable
             else:
                 self._items[idx][name] = item
@@ -113,7 +119,7 @@ class Ensemble:
 
     def properties_list(self):
         """
-        Returns a list of dictionaries. One dictionary per geometry. Each dictionary contains the property names and property values for each geometry in the ensemble. 
+        Returns a list of dictionaries. One dictionary per geometry. Each dictionary contains the property names and property values for each geometry in the ensemble.
         """
         return list(self.values())
 
@@ -137,8 +143,7 @@ class Ensemble:
         return combined
 
     def get_property(self, idx, prop):
-        """
-        """
+        """ """
         ensemble = self[idx]
         result = []
         for m, p in ensemble.items():
@@ -172,16 +177,18 @@ class Ensemble:
 
     def get_properties_dict(self, idx):
         """
-            Returns the dictionary of molecule properties for the specified molecule.
+        Returns the dictionary of molecule properties for the specified molecule.
 
-            Args:
-                idx (int or cctk.Molecule): a molecule belonging to this ensemble, either
-                                            0-indexed or given explicitly as a Molecule
+        Args:
+            idx (int or cctk.Molecule): a molecule belonging to this ensemble, either
+                                        0-indexed or given explicitly as a Molecule
 
-            Returns:
-                the property dict corresponding to this Molecule
+        Returns:
+            the property dict corresponding to this Molecule
         """
-        assert isinstance(idx, (int, np.integer, cctk.Molecule)), "index must be int or Molecule"
+        assert isinstance(
+            idx, (int, np.integer, cctk.Molecule)
+        ), "index must be int or Molecule"
         ensemble = self[idx]
         assert len(ensemble) == 1, "idx returned too many ensembles"
         return ensemble.properties_list()[0]
@@ -192,7 +199,7 @@ class Ensemble:
         """
         return self._items.items()
 
-    # object to allow convenient indexing of the molecules in the ensemble  
+    # object to allow convenient indexing of the molecules in the ensemble
     #
     # allowed use cases
     #
@@ -203,7 +210,7 @@ class Ensemble:
     # ensemble.molecules[0:4:2]: first and third molecules as a list
     #
     # setting molecule properties this way is not allowed
-    class _MoleculeIndexer():
+    class _MoleculeIndexer:
         def __init__(self, ensemble):
             self.ensemble = ensemble
 
@@ -214,25 +221,33 @@ class Ensemble:
                 self._check_key(key, n_items)
                 return items_list[key]
             if isinstance(key, np.ndarray):
-                assert len(np.shape(key)) == 1, f"multidimensional keys not allowed, shape was {np.shape(key)}"
+                assert (
+                    len(np.shape(key)) == 1
+                ), f"multidimensional keys not allowed, shape was {np.shape(key)}"
             if isinstance(key, (list, np.ndarray)):
                 return_list = []
                 for k in key:
-                    assert isinstance(k, (int, np.integer)), f"key {k} in {str(key)} is not an integer, type is {str(type(k))}"
+                    assert isinstance(
+                        k, (int, np.integer)
+                    ), f"key {k} in {str(key)} is not an integer, type is {str(type(k))}"
                     self._check_key(k, n_items)
                     return_list.append(items_list[k])
                 return return_list
             elif isinstance(key, slice):
                 start, stop, step = key.indices(n_items)
-                return [ items_list[i] for i in range(start, stop, step) ]
+                return [items_list[i] for i in range(start, stop, step)]
             else:
                 raise ValueError(f"cannot index with type {str(type(key))}")
 
         def __setitem__(self, key, item):
-            raise LookupError("cannot set molecule properties this way; use ensemble.set_property_dict(molecule, property_dict) instead")
+            raise LookupError(
+                "cannot set molecule properties this way; use ensemble.set_property_dict(molecule, property_dict) instead"
+            )
 
         def _check_key(self, key, n_items):
-            assert -n_items <= key < n_items, f"key {key} is out of range...must be between {-n_items} and {n_items-1} inclusive"
+            assert (
+                -n_items <= key < n_items
+            ), f"key {key} is out of range...must be between {-n_items} and {n_items-1} inclusive"
 
         def __iter__(self):
             return iter(self.ensemble.molecule_list())
@@ -259,15 +274,17 @@ class Ensemble:
         Returns:
             new Ensemble (current ensemble is not modified)
         """
-        property_list = self[:,property_name]
+        property_list = self[:, property_name]
         if property_list is None:
             raise ValueError(f"property '{property_name}' not found in ensemble")
         property_list = np.asarray(property_list)
-        n_missing_entries = np.count_nonzero(property_list==None) # noqa
+        n_missing_entries = np.count_nonzero(property_list == None)  # noqa
         if n_missing_entries > 0:
             error = "---sorting error---\n"
             error += str(property_list)
-            raise ValueError(f"{error}\nproperty '{property_name}' has {n_missing_entries} missing entries and cannot be sorted")
+            raise ValueError(
+                f"{error}\nproperty '{property_name}' has {n_missing_entries} missing entries and cannot be sorted"
+            )
         new_indices = np.argsort(property_list)
         if not ascending:
             new_indices = np.flip(new_indices)
@@ -293,7 +310,9 @@ class Ensemble:
             properties = {"placeholder": 1}
             del properties["placeholder"]
 
-        assert isinstance(properties, dict), f"properties must be a dict and not type {type(properties)}"
+        assert isinstance(
+            properties, dict
+        ), f"properties must be a dict and not type {type(properties)}"
 
         self._items[molecule] = properties
 
@@ -322,7 +341,9 @@ class Ensemble:
         """
         new_ensemble = Ensemble(name=name)
         for ensemble in ensembles:
-            assert isinstance(ensemble, Ensemble), "can't join an object that isn't an Ensemble!"
+            assert isinstance(
+                ensemble, Ensemble
+            ), "can't join an object that isn't an Ensemble!"
 
         for ensemble in ensembles:
             new_ensemble._items.update(ensemble.items())
@@ -340,12 +361,15 @@ class Ensemble:
             lowest ``Molecule`` (if num==1)
             ``list`` of ``Molecule`` (otherwise)
         """
-        assert isinstance(num, (int, np.integer)), f"num must be an integer, got {type(num)}"
+        assert isinstance(
+            num, (int, np.integer)
+        ), f"num must be an integer, got {type(num)}"
         assert num > 0, f"num must be > 0, got {num}"
         sorted_ensemble = self.sort_by(property_name)
         if num > 1:
             return sorted_ensemble.molecules[0:num]
         return sorted_ensemble.molecules[0]
+
 
 class ConformationalEnsemble(Ensemble):
     """
@@ -377,15 +401,17 @@ class ConformationalEnsemble(Ensemble):
             if molecule.multiplicity != initial_mol.multiplicity:
                 raise ValueError("wrong spin multiplicity for this ensemble")
 
-            if checks and not np.array_equal(molecule.atomic_numbers, initial_mol.atomic_numbers):
+            if checks and not np.array_equal(
+                molecule.atomic_numbers, initial_mol.atomic_numbers
+            ):
                 raise ValueError("wrong atom types for this ensemble")
 
             #### ccw 11.30.23 - this is terrible, I'm deleting this! what about an IRC or something? the bonds are obviously different.
             #### besides this is surprising and relatively undocumented behavior, which has been confusing me - minimize perplexity!!
 
             #### only save one copy to save space
-            #molecule.bonds = initial_mol.bonds
-            #molecule.atomic_numbers = initial_mol.atomic_numbers
+            # molecule.bonds = initial_mol.bonds
+            # molecule.atomic_numbers = initial_mol.atomic_numbers
 
         super().add_molecule(molecule, properties, copy)
 
@@ -402,7 +428,9 @@ class ConformationalEnsemble(Ensemble):
         """
         new_ensemble = ConformationalEnsemble(name=name)
         for ensemble in ensembles:
-            assert isinstance(ensemble, ConformationalEnsemble), "can't join an object that isn't a ConformationalEnsemble!"
+            assert isinstance(
+                ensemble, ConformationalEnsemble
+            ), "can't join an object that isn't a ConformationalEnsemble!"
 
         for ensemble in ensembles:
             for mol, prop in ensemble.items():
@@ -441,11 +469,17 @@ class ConformationalEnsemble(Ensemble):
                 comparison_atoms = np.arange(1, n_atoms + 1)
             elif comparison_atoms == "heavy":
                 comparison_atoms = self.molecules[0].get_heavy_atoms()
-        assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
+        assert isinstance(
+            comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)
+        ), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
         for a in comparison_atoms:
-            assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
+            assert (
+                1 <= a <= n_atoms
+            ), f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
 
-        assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
+        assert (
+            len(comparison_atoms) >= 3
+        ), f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
         # duplicate the ensemble
         new_ensemble = deepcopy(self)
@@ -468,21 +502,31 @@ class ConformationalEnsemble(Ensemble):
             full_geometry = molecule.geometry
             partial_geometry = full_geometry[comparison_atoms]
             if compute_RMSD:
-                before_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
+                before_RMSD = cctk.helper_functions.compute_RMSD(
+                    partial_template_geometry, partial_geometry
+                )
                 before_RMSDs.append(before_RMSD)
-            new_geometry = align_matrices(partial_geometry, full_geometry, partial_template_geometry)
+            new_geometry = align_matrices(
+                partial_geometry, full_geometry, partial_template_geometry
+            )
             molecule.geometry = new_geometry
             if compute_RMSD:
                 partial_geometry = new_geometry[comparison_atoms]
-                after_RMSD = cctk.helper_functions.compute_RMSD(partial_template_geometry, partial_geometry)
+                after_RMSD = cctk.helper_functions.compute_RMSD(
+                    partial_template_geometry, partial_geometry
+                )
                 after_RMSDs.append(after_RMSD)
-            assert len(molecule.geometry) == n_atoms, f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
+            assert (
+                len(molecule.geometry) == n_atoms
+            ), f"wrong number of geometry elements! expected {n_atoms}, got {len(molecule.geometry)}"
 
         if compute_RMSD:
             return new_ensemble, before_RMSDs, after_RMSDs
         return new_ensemble
 
-    def eliminate_redundant(self, RMSD_cutoff=0.5, comparison_atoms="heavy", return_RMSD=False):
+    def eliminate_redundant(
+        self, RMSD_cutoff=0.5, comparison_atoms="heavy", return_RMSD=False
+    ):
         """
         Aligns every geometry in this ensemble and then creates a new ensemble that contains only the non-redundant conformers.
         If energies are available, the lowest energy conformer will be kept for every redundancy.
@@ -508,20 +552,30 @@ class ConformationalEnsemble(Ensemble):
             elif comparison_atoms == "heavy":
                 comparison_atoms = self.molecules[0].get_heavy_atoms()
 
-        assert isinstance(comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
+        assert isinstance(
+            comparison_atoms, (list, np.ndarray, cctk.OneIndexedArray)
+        ), f"unexpected type for comparison_atoms: {str(type(comparison_atoms))}"
         for a in comparison_atoms:
-            assert 1 <= a <= n_atoms, f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
-        assert len(comparison_atoms) >= 3, f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
+            assert (
+                1 <= a <= n_atoms
+            ), f"atom number out of range: got {a}, but must be between 1 and {n_atoms}"
+        assert (
+            len(comparison_atoms) >= 3
+        ), f"need at least 3 atoms for alignment, but only got {len(comparison_atoms)}"
 
-        assert isinstance(RMSD_cutoff, (float, int)), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
+        assert isinstance(
+            RMSD_cutoff, (float, int)
+        ), f"RMSD cutoff must be a float but got {str(type(RMSD_cutoff))}"
         assert RMSD_cutoff > 0.0001, "must use a big enough RMSD cutoff"
 
         # align all molecules
-        old_ensemble = self.align(to_geometry=0, comparison_atoms=comparison_atoms, compute_RMSD=False)
+        old_ensemble = self.align(
+            to_geometry=0, comparison_atoms=comparison_atoms, compute_RMSD=False
+        )
 
         # sort molecules by energy if available
         energies_available = True
-        for molecule,properties in old_ensemble.items():
+        for molecule, properties in old_ensemble.items():
             if "energy" not in properties:
                 energies_available = False
                 break
@@ -529,7 +583,7 @@ class ConformationalEnsemble(Ensemble):
         n_molecules = len(old_ensemble)
         sorted_indices = list(range(n_molecules))
         if energies_available:
-            energies = old_ensemble[:,"energy"]
+            energies = old_ensemble[:, "energy"]
             sorted_indices = list(np.argsort(energies))
 
         # boolean indexing noticeably faster
@@ -549,16 +603,22 @@ class ConformationalEnsemble(Ensemble):
 
             candidate_rmsd = 0
             for existing_molecule in new_partial_geoms:
-                candidate_rmsd = cctk.helper_functions.compute_RMSD(partial_geoms[i], existing_molecule, checks=False)
+                candidate_rmsd = cctk.helper_functions.compute_RMSD(
+                    partial_geoms[i], existing_molecule, checks=False
+                )
                 if candidate_rmsd < RMSD_cutoff:
                     ok_to_add = False
                     break
 
             if ok_to_add:
                 candidate_molecule = old_ensemble.molecules[i]
-                candidate_molecule_properties = old_ensemble.get_properties_dict(candidate_molecule)
+                candidate_molecule_properties = old_ensemble.get_properties_dict(
+                    candidate_molecule
+                )
 
-                new_ensemble.add_molecule(candidate_molecule, candidate_molecule_properties)
+                new_ensemble.add_molecule(
+                    candidate_molecule, candidate_molecule_properties
+                )
                 new_partial_geoms.append(candidate_molecule.geometry[mask])
                 rmsds.append(candidate_rmsd)
 
@@ -610,7 +670,14 @@ class ConformationalEnsemble(Ensemble):
 
         return self
 
-    def boltzmann_average(self, which, energies=None, temp=298, energy_unit="hartree", return_weights=False):
+    def boltzmann_average(
+        self,
+        which,
+        energies=None,
+        temp=298,
+        energy_unit="hartree",
+        return_weights=False,
+    ):
         """
         Computes the Boltzmann-weighted average of a property over the whole ensemble.
 
@@ -626,9 +693,9 @@ class ConformationalEnsemble(Ensemble):
             weighted property, of the same shape as the individual property
         """
         if energies is None:
-            energies = self[:,"energy"]
+            energies = self[:, "energy"]
         elif isinstance(energies, str):
-            energies = self[:,energies]
+            energies = self[:, energies]
         elif isinstance(energies, (list, np.ndarray, cctk.OneIndexedArray)):
             pass
         else:
@@ -637,22 +704,26 @@ class ConformationalEnsemble(Ensemble):
         for i, (m, pd) in enumerate(self.items()):
             assert which in pd, f"molecule #{i} doesn't have property {which} defined!"
 
-        values = np.array(self[:,which], dtype=np.float64)
+        values = np.array(self[:, which], dtype=np.float64)
         energies = np.array(energies, dtype=np.float64)
 
         assert len(energies) == len(self)
         assert len(values) == len(self)
-        assert all([e is not None for e in energies]), "energy not defined for all molecules"
-        assert all([v is not None for v in values]), f"property {which} not defined for all molecules"
+        assert all(
+            [e is not None for e in energies]
+        ), "energy not defined for all molecules"
+        assert all(
+            [v is not None for v in values]
+        ), f"property {which} not defined for all molecules"
 
         # perhaps at some point we will need a real unit system like simtk/OpenMM, but not today!
         if energy_unit == "kcal_mol":
             energies = energies / 627.509
         energies = energies - np.min(energies)
 
-        R = 3.1668105e-6 # eH/K
+        R = 3.1668105e-6  # eH/K
 
-        weights = np.exp(-1*energies/(R*temp))
+        weights = np.exp(-1 * energies / (R * temp))
         weights = weights / np.sum(weights)
 
         try:

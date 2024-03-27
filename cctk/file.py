@@ -78,4 +78,3 @@ class File(ABC):
         with open(filename, "r") as filehandle:
             lines = filehandle.read().splitlines()
             return lines
-

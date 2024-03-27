@@ -10,7 +10,8 @@ MIN_FREQUENCY = 2
 MIN_TEMPERATURE = 10
 MAX_ZPE_RATIO = 0.999999
 
-BOLTZMANN_CONSTANT = 0.001985875 # kcal/mol•K
+BOLTZMANN_CONSTANT = 0.001985875  # kcal/mol•K
+
 
 class VibrationalMode:
     """
@@ -27,7 +28,10 @@ class VibrationalMode:
         velocities (cctk.OneIndexedArray): atom velocities
 
     """
-    def __init__(self, frequency, force_constant, reduced_mass, intensity, displacements):
+
+    def __init__(
+        self, frequency, force_constant, reduced_mass, intensity, displacements
+    ):
         assert isinstance(frequency, float)
         self.frequency = frequency
 
@@ -54,7 +58,7 @@ class VibrationalMode:
             return 0
 
         # zpe_ratio is probability of being in level i vs level i+1, by quantum harmonic oscillator
-        zpe_ratio = math.exp( -2 * self.energy() / (BOLTZMANN_CONSTANT * temperature))
+        zpe_ratio = math.exp(-2 * self.energy() / (BOLTZMANN_CONSTANT * temperature))
         if zpe_ratio > MAX_ZPE_RATIO:
             zpe_ratio = MAX_ZPE_RATIO
 
@@ -84,18 +88,22 @@ class VibrationalMode:
         Returns:
             energy (kcal/mol)
         """
-        assert isinstance(level, int) and level >= 0, "need positive integer for vibrational level"
+        assert (
+            isinstance(level, int) and level >= 0
+        ), "need positive integer for vibrational level"
 
         freq = self.frequency
         if freq < MIN_FREQUENCY:
             freq = MIN_FREQUENCY
 
         # 0.5 * h * c * frequency (c in cm/s bc wavenumbers)
-        # 0.5 * (6.626 * 10**-34) * (3 * 10**10) * (6.026 * 10**23) / 4184) = 0.0014305 
+        # 0.5 * (6.626 * 10**-34) * (3 * 10**10) * (6.026 * 10**23) / 4184) = 0.0014305
         zpe = 0.0014305 * freq
         return zpe * (2 * level + 1)
 
-    def random_displacement(self, energy=None, level=0, method="quasiclassical", max_attempts=1e5):
+    def random_displacement(
+        self, energy=None, level=0, method="quasiclassical", max_attempts=1e5
+    ):
         """
         Args:
             energy (float): energy of mode (for classical case)
@@ -122,7 +130,9 @@ class VibrationalMode:
                 else:
                     attempts += 1
 
-            raise ValueError("max_attempts exceeded - can't get a proper initialization for this mode!")
+            raise ValueError(
+                "max_attempts exceeded - can't get a proper initialization for this mode!"
+            )
         elif method == "classical":
             assert energy is not None, "need energy for classical displacement"
             min_val = self.classical_distribution_value(0)
@@ -131,7 +141,7 @@ class VibrationalMode:
 
             attempts = 0
             while attempts < max_attempts:
-                x = np.random.uniform(-1*max_x, max_x)
+                x = np.random.uniform(-1 * max_x, max_x)
                 p = self.classical_distribution_value(max_x)
 
                 y = np.random.uniform(min_val, max_val)
@@ -140,7 +150,9 @@ class VibrationalMode:
                 else:
                     attempts += 1
         else:
-            raise ValueError(f"invalid method {method} - only ``quasiclassical`` and ``classical`` implemented currently!")
+            raise ValueError(
+                f"invalid method {method} - only ``quasiclassical`` and ``classical`` implemented currently!"
+            )
 
         raise ValueError("Max attempts exceeded!")
 
@@ -152,26 +164,35 @@ class VibrationalMode:
             x (float): shift in Å
             level (int): vibrational level
         """
-        assert isinstance(level, int) and level >= 0, "need positive integer for vibrational level"
+        assert (
+            isinstance(level, int) and level >= 0
+        ), "need positive integer for vibrational level"
 
         freq = self.frequency
         if freq < MIN_FREQUENCY:
             freq = MIN_FREQUENCY
 
-        n = level # brevity is the soul of wit
+        n = level  # brevity is the soul of wit
         H = get_hermite_polynomial(n)
 
         # following https://github.com/ekwan/Jprogdyn/blob/master/src/main/java/edu/harvard/chemistry/ekwan/Jprogdyn/HarmonicOscillatorDistribution.java, line 109
         # 4 * pi * 3 * 10**8 / (1000 * 10**20 * 6.022 * 10**23 * 6.626 * 10^-34) = 0.000094411, take it or leave it
         omega_term = 9.4411e-5 * self.reduced_mass * freq
-        val = math.sqrt(omega_term) * math.exp(-1 * omega_term * math.pi * x ** 2 ) * (H(math.sqrt(omega_term * math.pi) * x) ** 2) / (2 ** n * math.factorial(n))
+        val = (
+            math.sqrt(omega_term)
+            * math.exp(-1 * omega_term * math.pi * x**2)
+            * (H(math.sqrt(omega_term * math.pi) * x) ** 2)
+            / (2**n * math.factorial(n))
+        )
         return val
 
     def quantum_distribution_max(self, level=0, num_pts=1e4):
         """
         Returns the maximum value of psi**2 for the quantum harmonic oscillator at a given level.
         """
-        assert isinstance(level, int) and level >= 0, "need positive integer for vibrational level"
+        assert (
+            isinstance(level, int) and level >= 0
+        ), "need positive integer for vibrational level"
 
         if level == 0:
             return self.quantum_distribution_value(0)
@@ -192,8 +213,8 @@ class VibrationalMode:
         Returns the value of the classical distribution at the specified ``x`` value.
         """
         max_x = self.classical_turning_point()
-        assert (x <= max_x) and (x >= -1*max_x), "x must be in [-max_x, max_x]"
-        return 1/(math.pi * math.sqrt(max_x**2 - x**2))
+        assert (x <= max_x) and (x >= -1 * max_x), "x must be in [-max_x, max_x]"
+        return 1 / (math.pi * math.sqrt(max_x**2 - x**2))
 
     def classical_turning_point(self, energy=None):
         """

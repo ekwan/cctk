@@ -31,27 +31,99 @@ filenames = [
 ]
 
 names = [
-    ["methyl", "Me", "CH3",],
-    ["ethyl", "Et", "C2H5",],
-    ["isopropyl", "iPr", "iC3H7",],
-    ["tert-butyl", "tBu", "tC4H9",],
-    ["hydroxy", "OH",],
-    ["methoxy", "MeO", "OMe", "CH3O",],
-    ["acetamido", "NHAc",],
-    ["amino", "NH2",],
-    ["dimethylamino", "Me2N", "NMe2",],
-    ["trifluoromethyl", "CF3",],
-    ["cyano", "CN",],
-    ["nitro", "NO2",],
-    ["carboxylmethyl", "MeO2C", "CO2Me",],
-    ["fluoro", "F",],
-    ["chloro", "Cl",],
-    ["bromo", "Br",],
-    ["iodo", "I",],
-    ["pentafluorosulfanyl", "SF5",],
-    ["sulfonyl", "SO3H",],
-    ["acetyl", "Ac", "COMe",],
-    ["formyl", "CHO",],
+    [
+        "methyl",
+        "Me",
+        "CH3",
+    ],
+    [
+        "ethyl",
+        "Et",
+        "C2H5",
+    ],
+    [
+        "isopropyl",
+        "iPr",
+        "iC3H7",
+    ],
+    [
+        "tert-butyl",
+        "tBu",
+        "tC4H9",
+    ],
+    [
+        "hydroxy",
+        "OH",
+    ],
+    [
+        "methoxy",
+        "MeO",
+        "OMe",
+        "CH3O",
+    ],
+    [
+        "acetamido",
+        "NHAc",
+    ],
+    [
+        "amino",
+        "NH2",
+    ],
+    [
+        "dimethylamino",
+        "Me2N",
+        "NMe2",
+    ],
+    [
+        "trifluoromethyl",
+        "CF3",
+    ],
+    [
+        "cyano",
+        "CN",
+    ],
+    [
+        "nitro",
+        "NO2",
+    ],
+    [
+        "carboxylmethyl",
+        "MeO2C",
+        "CO2Me",
+    ],
+    [
+        "fluoro",
+        "F",
+    ],
+    [
+        "chloro",
+        "Cl",
+    ],
+    [
+        "bromo",
+        "Br",
+    ],
+    [
+        "iodo",
+        "I",
+    ],
+    [
+        "pentafluorosulfanyl",
+        "SF5",
+    ],
+    [
+        "sulfonyl",
+        "SO3H",
+    ],
+    [
+        "acetyl",
+        "Ac",
+        "COMe",
+    ],
+    [
+        "formyl",
+        "CHO",
+    ],
 ]
 
 isomorphic = [
@@ -78,6 +150,7 @@ isomorphic = [
     None,
 ]
 
+
 def load_group(name):
     filename = None
     iso = None
@@ -97,6 +170,7 @@ def load_group(name):
     #### every molecule is set so you need to attach to atom 2
     new_group = Group.new_from_molecule(attach_to=2, molecule=mol, isomorphic=iso)
     return new_group
+
 
 def group_iterator(symmetric_only=False):
     """

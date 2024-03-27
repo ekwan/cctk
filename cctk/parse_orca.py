@@ -8,11 +8,19 @@ from cctk import OneIndexedArray, LazyLineObject
 """
 Functions to help with parsing Orca files
 """
+
+
 def read_geometries(lines, num_to_find):
     atomic_numbers = []
     geometries = []
 
-    geom_blocks = lines.search_for_block("CARTESIAN COORDINATES \(ANGSTROEM\)", "CARTESIAN COORDINATES", join="\n", count=num_to_find, max_len=1000)
+    geom_blocks = lines.search_for_block(
+        "CARTESIAN COORDINATES \(ANGSTROEM\)",
+        "CARTESIAN COORDINATES",
+        join="\n",
+        count=num_to_find,
+        max_len=1000,
+    )
     if num_to_find == 1:
         geom_blocks = [geom_blocks]
 
@@ -42,10 +50,12 @@ def read_geometries(lines, num_to_find):
         assert np.array_equiv(zs, atomic_numbers[0])
     return atomic_numbers[0], geometries
 
+
 def read_energies(lines):
     energies = lines.find_parameter("FINAL SINGLE POINT ENERGY", 5, 4)
     iters = lines.find_parameter("SCF CONVERGED AFTER", 7, 4)
     return energies, iters
+
 
 def split_multiple_inputs(filename):
     """
@@ -63,7 +73,9 @@ def split_multiple_inputs(filename):
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
             if re.search("COMPOUND JOB  \d{1,}", line):
-                output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
+                output_blocks.append(
+                    LazyLineObject(file=filename, start=start_block, end=idx)
+                )
                 start_block = idx
     output_blocks.append(LazyLineObject(file=filename, start=start_block, end=idx))
 
@@ -74,9 +86,10 @@ def split_multiple_inputs(filename):
     elif len(output_blocks) > 1:
         return output_blocks[1:]
 
+
 def read_mulliken_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
+    Reads charges. Returns charges on penultimate geometry for some scan jobs.
 
     Args:
         lines (list): list of lines in file
@@ -87,11 +100,13 @@ def read_mulliken_charges(lines, successful_opt, is_scan_job):
 
     count = successful_opt + 1
     if is_scan_job:
-        count = 2*successful_opt
-    else: 
+        count = 2 * successful_opt
+    else:
         count = successful_opt + 1
 
-    charge_block = lines.search_for_block("MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", count=count, join="\n")
+    charge_block = lines.search_for_block(
+        "MULLIKEN ATOMIC CHARGES", "Sum of atomic charges", count=count, join="\n"
+    )
     if not isinstance(charge_block, list):
         charge_block = [charge_block]
 
@@ -106,10 +121,9 @@ def read_mulliken_charges(lines, successful_opt, is_scan_job):
     return OneIndexedArray(charges)
 
 
-
 def read_loewdin_charges(lines, successful_opt, is_scan_job):
     """
-    Reads charges. Returns charges on penultimate geometry for some scan jobs. 
+    Reads charges. Returns charges on penultimate geometry for some scan jobs.
 
     Args:
         lines (list): list of lines in file
@@ -119,11 +133,13 @@ def read_loewdin_charges(lines, successful_opt, is_scan_job):
     """
     count = successful_opt + 1
     if is_scan_job:
-        count = 2*successful_opt
-    else: 
+        count = 2 * successful_opt
+    else:
         count = successful_opt + 1
 
-    charge_block = lines.search_for_block("LOEWDIN ATOMIC CHARGES", "^$", count=count, join="\n")
+    charge_block = lines.search_for_block(
+        "LOEWDIN ATOMIC CHARGES", "^$", count=count, join="\n"
+    )
     if not isinstance(charge_block, list):
         charge_block = [charge_block]
 
@@ -141,9 +157,10 @@ def read_loewdin_charges(lines, successful_opt, is_scan_job):
 def read_header(lines):
     for line in lines:
         if re.match("!", line):
-            if 'miniprint' in line.lower():
-                warnings.warn('The miniprint option may lead to parsing errors in cctk')
+            if "miniprint" in line.lower():
+                warnings.warn("The miniprint option may lead to parsing errors in cctk")
             return line
+
 
 def read_blocks_and_variables(lines):
     blocks = {}
@@ -169,8 +186,11 @@ def read_blocks_and_variables(lines):
 
     return variables, blocks
 
+
 def extract_input_file(lines):
-    input_block = lines.search_for_block("INPUT FILE", "\*\*\*\*END OF INPUT\*\*\*\*", join="\n")
+    input_block = lines.search_for_block(
+        "INPUT FILE", "\*\*\*\*END OF INPUT\*\*\*\*", join="\n"
+    )
     input_lines = []
     for line in input_block.split("\n")[3:]:
         [_, line] = line.split(">")
@@ -179,9 +199,14 @@ def extract_input_file(lines):
     return input_lines
 
 
-
 def read_freqs(lines, successful_freq):
-    freq_blocks = lines.search_for_block("VIBRATIONAL FREQUENCIES", "NORMAL MODES", count=successful_freq, join="\n", max_len=1000)
+    freq_blocks = lines.search_for_block(
+        "VIBRATIONAL FREQUENCIES",
+        "NORMAL MODES",
+        count=successful_freq,
+        join="\n",
+        max_len=1000,
+    )
     if freq_blocks is None:
         return []
 
@@ -194,7 +219,7 @@ def read_freqs(lines, successful_freq):
                     freqs.append(float(fields[1]))
         return freqs
 
-    elif successful_freq > 1 :
+    elif successful_freq > 1:
         freqs_lists = []
         for freq_block in freq_blocks:
             freqs = []
@@ -206,8 +231,11 @@ def read_freqs(lines, successful_freq):
             freqs_lists.append(freqs)
         return freqs_lists[-1]
 
+
 def read_gradients(lines, num_to_find):
-    grad_blocks = lines.search_for_block("Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find)
+    grad_blocks = lines.search_for_block(
+        "Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find
+    )
     if grad_blocks is None:
         return
 
@@ -231,6 +259,7 @@ def read_gradients(lines, num_to_find):
                     max_step.append(float(fields[2]))
 
     return rms_grad, max_grad, rms_step, max_step
+
 
 def read_nmr_shifts(lines, num_atoms):
     """
@@ -256,10 +285,10 @@ def read_nmr_shifts(lines, num_atoms):
             shieldings.append(shielding)
 
     if len(shieldings) != 0:
-        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        assert (
+            len(shieldings) == num_atoms
+        ), f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
         return np.asarray(shieldings).view(OneIndexedArray)
     else:
         #### we can catch this problem later if the file is finished
         return None
-
-

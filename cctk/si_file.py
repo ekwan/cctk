@@ -31,7 +31,9 @@ class SIFile(cctk.File):
         """
         first = True
         for title, (molecule, properties) in zip(self.titles, self.ensemble.items()):
-            assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
+            assert isinstance(
+                molecule, cctk.Molecule
+            ), "molecule is not a valid Molecule object!"
 
             text = f"{title}\n"
             for key, value in generate_info(molecule, properties).items():
@@ -45,7 +47,9 @@ class SIFile(cctk.File):
             text += "\n"
 
             if write_xyz and write_dir is not None:
-                cctk.XYZFile.write_molecule_to_file(f"{write_dir}/{title}.xyz", molecule)
+                cctk.XYZFile.write_molecule_to_file(
+                    f"{write_dir}/{title}.xyz", molecule
+                )
 
             if first:
                 super().write_file(filename, text)
@@ -81,9 +85,10 @@ def generate_info(molecule, properties):
     if "gibbs_free_energy" in properties:
         info["Gibbs Free Energy"] = properties["gibbs_free_energy"]
     if "quasiharmonic_gibbs_free_energy" in properties:
-        info["Gibbs Free Energy (Quasiharmonic Correction)"] = properties["quasiharmonic_gibbs_free_energy"]
+        info["Gibbs Free Energy (Quasiharmonic Correction)"] = properties[
+            "quasiharmonic_gibbs_free_energy"
+        ]
     if "dipole_moment" in properties:
         info["Dipole Moment (Debye)"] = properties["dipole_moment"]
 
     return info
-

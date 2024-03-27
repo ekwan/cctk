@@ -11,11 +11,14 @@ import subprocess as sp
 
 from enum import Enum
 
+
 class Methods(Enum):
     """
     Enum of different computational methods. For now, just GFN2-xtb is implemented.
     """
+
     GFN2_XTB = "xtb"
+
 
 def installed(command):
     if shutil.which(command) is not None:
@@ -24,6 +27,7 @@ def installed(command):
         return True
 
     return False
+
 
 def optimize_molecule(molecule, method=Methods.GFN2_XTB, nprocs=1, return_energy=False):
     """
@@ -45,6 +49,7 @@ def optimize_molecule(molecule, method=Methods.GFN2_XTB, nprocs=1, return_energy
     if method is Methods.GFN2_XTB:
         return run_xtb(molecule, nprocs=nprocs, return_energy=return_energy, opt=True)
 
+
 def get_energy(molecule, method=Methods.GFN2_XTB, nprocs=1):
     """
     Dispatcher method to connect method to molecule.
@@ -63,6 +68,7 @@ def get_energy(molecule, method=Methods.GFN2_XTB, nprocs=1):
     if method is Methods.GFN2_XTB:
         _, energy = run_xtb(molecule, nprocs=nprocs, return_energy=True, opt=False)
         return energy
+
 
 def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
     """
@@ -91,14 +97,16 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
 
             output_mol, energy = None, None
             if opt:
-                output_mol = cctk.XYZFile.read_file(f"{tmpdir}/xtbopt.xyz").get_molecule()
+                output_mol = cctk.XYZFile.read_file(
+                    f"{tmpdir}/xtbopt.xyz"
+                ).get_molecule()
                 energy_file = cctk.File.read_file(f"{tmpdir}/xtbopt.log")
                 fields = energy_file[1].split()
-#                energy, gradient = float(fields[1]), float(fields[3])
+                #                energy, gradient = float(fields[1]), float(fields[3])
                 energy = float(fields[1])
 
             else:
-                # stopgap solution but should work ok. XTB output files should actually be parsed eventually. 
+                # stopgap solution but should work ok. XTB output files should actually be parsed eventually.
                 # ccw 4.15.21
                 output_file = cctk.File.read_file(f"{tmpdir}/xtb-out.out")
                 r = re.compile("total energy\s+(-?\d+.\d+)", re.IGNORECASE)
@@ -114,6 +122,7 @@ def run_xtb(molecule, nprocs=1, return_energy=False, opt=False):
                 return output_mol
     except Exception as e:
         raise ValueError(f"Error running xtb:\n{e}")
+
 
 def csearch(use_tempdir=True, **kwargs):
     """
@@ -144,7 +153,17 @@ def csearch(use_tempdir=True, **kwargs):
 
     return ensemble
 
-def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=False, constraints=None, additional_flags=None):
+
+def _do_csearch(
+    molecule,
+    directory,
+    gfn=2,
+    nprocs=1,
+    logfile=None,
+    noncovalent=False,
+    constraints=None,
+    additional_flags=None,
+):
     assert isinstance(molecule, cctk.Molecule), "need a valid molecule!"
     assert isinstance(nprocs, int)
     assert isinstance(logfile, str)
@@ -161,8 +180,12 @@ def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=
     if constraints is not None:
         assert isinstance(constraints, list)
         assert all(isinstance(n, int) for n in constraints)
-        command = f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
-        result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
+        command = (
+            f"crest xtb-in.xyz --constrain {','.join([str(c) for c in constraints])}"
+        )
+        result = sp.run(
+            command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True
+        )
         result.check_returncode()
         command = f"crest xtb-in.xyz --gfn{gfn} --chrg {molecule.charge} -cinp .xcontrol.sample --uhf {molecule.multiplicity - 1} -T {nprocs} {nci}"
     else:
@@ -175,11 +198,10 @@ def _do_csearch(molecule, directory, gfn=2, nprocs=1, logfile=None, noncovalent=
         with open(logfile, "w") as f:
             result = sp.run(command, stdout=f, stderr=f, cwd=directory, shell=True)
     else:
-        result = sp.run(command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True)
+        result = sp.run(
+            command, stdout=sp.PIPE, stderr=sp.PIPE, cwd=directory, shell=True
+        )
     result.check_returncode()
 
     ensemble = cctk.XYZFile.read_ensemble(f"{directory}/crest_conformers.xyz").ensemble
     return ensemble
-
-
-

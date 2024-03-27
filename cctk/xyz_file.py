@@ -28,7 +28,11 @@ class XYZFile(cctk.File):
 
     def __getattribute__(self, name):
         if name == "molecule":
-            warnings.warn("XYZFile attribute ``molecule`` will be removed in upcoming releases of cctk. Use ``ensemble`` attribute instead!", DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                "XYZFile attribute ``molecule`` will be removed in upcoming releases of cctk. Use ``ensemble`` attribute instead!",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         return cctk.File.__getattribute__(self, name)
 
     @classmethod
@@ -56,7 +60,9 @@ class XYZFile(cctk.File):
         for line in lines:
             if re.search(r"^\s*\d+$", line) and len(current_lines) > 2:
                 if len(current_lines) > 0:
-                    t, m = cls.mol_from_lines(current_lines, charge=charge, multiplicity=multiplicity)
+                    t, m = cls.mol_from_lines(
+                        current_lines, charge=charge, multiplicity=multiplicity
+                    )
                     ensemble.add_molecule(m)
                     titles.append(t)
                     current_lines = list()
@@ -64,7 +70,9 @@ class XYZFile(cctk.File):
 
         # catch the last molecule
         if len(current_lines) > 0:
-            t, m = cls.mol_from_lines(current_lines, charge=charge, multiplicity=multiplicity)
+            t, m = cls.mol_from_lines(
+                current_lines, charge=charge, multiplicity=multiplicity
+            )
             ensemble.add_molecule(m)
             titles.append(t)
 
@@ -105,7 +113,9 @@ class XYZFile(cctk.File):
                 raise ValueError(f"can't parse line {index+2}: {line}")
 
         assert num_atoms == len(atomic_numbers), "wrong number of atoms!"
-        molecule = cctk.Molecule(atomic_numbers, geometry, charge=charge, multiplicity=multiplicity)
+        molecule = cctk.Molecule(
+            atomic_numbers, geometry, charge=charge, multiplicity=multiplicity
+        )
         return title, molecule
 
     @classmethod
@@ -119,7 +129,9 @@ class XYZFile(cctk.File):
             title (str): title of file
             append (Bool): whether or not to append to file
         """
-        assert isinstance(molecule, cctk.Molecule), "molecule is not a valid Molecule object!"
+        assert isinstance(
+            molecule, cctk.Molecule
+        ), "molecule is not a valid Molecule object!"
 
         text = f"{molecule.num_atoms()}\n"
         text += f"{title}\n"
@@ -141,7 +153,9 @@ class XYZFile(cctk.File):
             idx (int): the index of the molecule to write
         """
         assert isinstance(idx, int), "idx must be int"
-        self.write_molecule_to_file(filename, self.get_molecule(idx), title=self.titles[idx])
+        self.write_molecule_to_file(
+            filename, self.get_molecule(idx), title=self.titles[idx]
+        )
 
     @classmethod
     def read_trajectory(cls, filename, **kwargs):
@@ -170,27 +184,35 @@ class XYZFile(cctk.File):
                                                 molecules; if iterable, then the titles are assumed
                                                 to parallel the indexing of the list
         """
-        assert isinstance(filename, str), f"got {type(filename)} for filename but expected str"
-        assert isinstance(ensemble, cctk.Ensemble), f"ensemble {ensemble} is not a cctk.Ensemble"
-        assert len(ensemble)>0, "can't write empty Ensemble to xyz file"
+        assert isinstance(
+            filename, str
+        ), f"got {type(filename)} for filename but expected str"
+        assert isinstance(
+            ensemble, cctk.Ensemble
+        ), f"ensemble {ensemble} is not a cctk.Ensemble"
+        assert len(ensemble) > 0, "can't write empty Ensemble to xyz file"
 
         if titles is None:
             pass
         elif isinstance(titles, str):
             assert len(titles) > 0, "zero length title not allowed"
             titles = [titles] * len(ensemble)
-        elif isinstance(titles, (list,np.ndarray)):
+        elif isinstance(titles, (list, np.ndarray)):
             assert len(titles) == len(ensemble)
             for i, title in enumerate(titles):
-                assert isinstance(title, str), f"got {type(filename)} at index {i} of titles, but expected str"
+                assert isinstance(
+                    title, str
+                ), f"got {type(filename)} at index {i} of titles, but expected str"
         else:
-            raise ValueError(f"got {type(titles)} for title but expected None, str, or iterable")
+            raise ValueError(
+                f"got {type(titles)} for title but expected None, str, or iterable"
+            )
 
-        for idx,molecule in enumerate(ensemble._items):
+        for idx, molecule in enumerate(ensemble._items):
             append = idx > 0
             if titles is None:
                 title = molecule.name
-                if not (isinstance(title, str) and len(title)>0):
+                if not (isinstance(title, str) and len(title) > 0):
                     title = "title"
             else:
                 title = titles[idx]
@@ -207,5 +229,3 @@ class XYZFile(cctk.File):
             num = -1
         assert isinstance(num, int), "num must be int"
         return self.ensemble.molecule_list()[num]
-
-

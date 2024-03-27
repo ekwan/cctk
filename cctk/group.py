@@ -3,7 +3,11 @@ import numpy as np
 import networkx as nx
 
 import cctk
-from cctk.helper_functions import get_covalent_radius, compute_angle_between, compute_rotation_matrix
+from cctk.helper_functions import (
+    get_covalent_radius,
+    compute_angle_between,
+    compute_rotation_matrix,
+)
 
 
 class Group(cctk.Molecule):
@@ -26,7 +30,9 @@ class Group(cctk.Molecule):
         self._map_from_truncated = None
 
         if isomorphic is not None:
-            assert isinstance(isomorphic, list), "group.isomorphic must be list of lists!"
+            assert isinstance(
+                isomorphic, list
+            ), "group.isomorphic must be list of lists!"
         self.isomorphic = isomorphic
 
     @classmethod
@@ -34,7 +40,13 @@ class Group(cctk.Molecule):
         """
         Convenient method to convert ``molecule`` to ``group`` directly.
         """
-        group = Group(attach_to, atomic_numbers=molecule.atomic_numbers, geometry=molecule.geometry, bonds=molecule.bonds.edges(), **kwargs)
+        group = Group(
+            attach_to,
+            atomic_numbers=molecule.atomic_numbers,
+            geometry=molecule.geometry,
+            bonds=molecule.bonds.edges(),
+            **kwargs,
+        )
         return group
 
     def add_attachment_point(self, attach_to):
@@ -45,19 +57,25 @@ class Group(cctk.Molecule):
         """
         n_bonds = len(super().get_adjacent_atoms(attach_to))
         if n_bonds != 1:
-            raise ValueError(f"atom {attach_to} is making {n_bonds} but must make 1 bond to be a valid attachment point")
+            raise ValueError(
+                f"atom {attach_to} is making {n_bonds} but must make 1 bond to be a valid attachment point"
+            )
 
         self.attach_to = attach_to
 
         adjacent = super().get_adjacent_atoms(attach_to)
-        assert len(adjacent) == 1, "can't substitute an atom with more than one adjacent atom!"
+        assert (
+            len(adjacent) == 1
+        ), "can't substitute an atom with more than one adjacent atom!"
         self.adjacent = adjacent[0]
 
         adj_v = super().get_vector(self.adjacent)
         super().translate_molecule(-adj_v)
 
     @staticmethod
-    def add_group_to_molecule(molecule, group, add_to, optimize=True, return_mapping=False):
+    def add_group_to_molecule(
+        molecule, group, add_to, optimize=True, return_mapping=False
+    ):
         """
         Adds a `Group` object to a `Molecule` at the specified atom, and returns a new `Molecule` object (generated using `copy.deepcopy()`).
         Automatically attempts to prevent clashes by minimizing pairwise atomic distances.
@@ -98,7 +116,9 @@ class Group(cctk.Molecule):
         assert (
             len(adjacent_atom) > 0
         ), "can't substitute an atom without an adjacent atom! (are there bonds defined for this molecule? consider calling molecule.assign_connectivity()!)"
-        assert len(adjacent_atom) == 1, "can't substitute an atom with more than one adjacent atom!"
+        assert (
+            len(adjacent_atom) == 1
+        ), "can't substitute an atom with more than one adjacent atom!"
         adjacent_atom = adjacent_atom[0]
 
         attach_to = group.attach_to
@@ -113,8 +133,12 @@ class Group(cctk.Molecule):
 
         #### make the swap! (this only adds the atoms, still have to get the geometry right)
         molecule.atomic_numbers[add_to] = group.atomic_numbers[group.adjacent]
-        new_indices = [i + molecule.num_atoms() for i in range(1, np.sum(other_indices) + 1)]
-        molecule.atomic_numbers = np.hstack([molecule.atomic_numbers, group.atomic_numbers[other_indices]])
+        new_indices = [
+            i + molecule.num_atoms() for i in range(1, np.sum(other_indices) + 1)
+        ]
+        molecule.atomic_numbers = np.hstack(
+            [molecule.atomic_numbers, group.atomic_numbers[other_indices]]
+        )
         molecule.atomic_numbers = molecule.atomic_numbers.view(cctk.OneIndexedArray)
 
         #### have to keep track of what all the new indices are, to carry over connectivity
@@ -122,7 +146,7 @@ class Group(cctk.Molecule):
         new_indices.insert(attach_to - 1, adjacent_atom)
 
         #### track atom number mapping
-        molecule_to_new = {z : z for z in range(1, molecule.num_atoms() + 1)}
+        molecule_to_new = {z: z for z in range(1, molecule.num_atoms() + 1)}
         molecule_to_new[add_to] = None
 
         group_to_new = {}
@@ -136,7 +160,11 @@ class Group(cctk.Molecule):
         group_to_new[group.adjacent] = add_to
 
         #### adjust the bond length by moving add_to
-        molecule.set_distance(adjacent_atom, add_to, molecule.get_distance(adjacent_atom, add_to) + delta_rad)
+        molecule.set_distance(
+            adjacent_atom,
+            add_to,
+            molecule.get_distance(adjacent_atom, add_to) + delta_rad,
+        )
 
         #### rotate group to match the new positioning
         v_g = group.get_vector(group.attach_to, group.adjacent)
@@ -152,19 +180,26 @@ class Group(cctk.Molecule):
             molecule.geometry = molecule.geometry.view(cctk.OneIndexedArray)
 
         #### now we have to merge the new bonds
-        for (atom1, atom2) in group.bonds.edges():
-            molecule.add_bond(new_indices[atom1-1], new_indices[atom2-1])
-        assert molecule.get_bond_order(add_to, adjacent_atom), "we didn't add the bond we were supposed to form!"
+        for atom1, atom2 in group.bonds.edges():
+            molecule.add_bond(new_indices[atom1 - 1], new_indices[atom2 - 1])
+        assert molecule.get_bond_order(
+            add_to, adjacent_atom
+        ), "we didn't add the bond we were supposed to form!"
 
-        assert len(molecule.atomic_numbers) == len(
-            molecule.geometry
+        assert (
+            len(molecule.atomic_numbers) == len(molecule.geometry)
         ), f"molecule has {len(molecule.atomic_numbers)} atoms but {len(molecule.geometry)} geometry elements!"
 
         #### now we want to find the "lowest" energy conformation, defined as the rotamer which minimizes the RMS distance between all atoms
         if group.num_atoms() > 3 and optimize:
             adjacent_on_old_molecule = molecule.get_adjacent_atoms(adjacent_atom)[0]
             adjacent_on_new_molecule = molecule.get_adjacent_atoms(add_to)[-1]
-            molecule.optimize_dihedral(adjacent_on_old_molecule, adjacent_atom, add_to, adjacent_on_new_molecule)
+            molecule.optimize_dihedral(
+                adjacent_on_old_molecule,
+                adjacent_atom,
+                add_to,
+                adjacent_on_new_molecule,
+            )
 
         if molecule.check_for_conflicts():
             if return_mapping:
@@ -207,46 +242,76 @@ class Group(cctk.Molecule):
 
         #### define mapping dicts
         fragment1, fragment2 = molecule._get_bond_fragments(atom1, atom2)
-        molecule_to_molecule = {x: i+1 for i, x in enumerate(fragment1)}
-        molecule_to_group = {x: i+1 for i, x in enumerate(fragment2)}
+        molecule_to_molecule = {x: i + 1 for i, x in enumerate(fragment1)}
+        molecule_to_group = {x: i + 1 for i, x in enumerate(fragment2)}
 
         #### create new molecules
-        new_mol = cctk.Molecule(molecule.atomic_numbers[fragment1], molecule.geometry[fragment1])
-        group = cctk.Molecule(molecule.atomic_numbers[fragment2], molecule.geometry[fragment2])
+        new_mol = cctk.Molecule(
+            molecule.atomic_numbers[fragment1], molecule.geometry[fragment1]
+        )
+        group = cctk.Molecule(
+            molecule.atomic_numbers[fragment2], molecule.geometry[fragment2]
+        )
 
         #### add capping H to new_mol
         new_mol.add_atom("H", molecule.geometry[atom2])
         molecule_to_molecule[atom2] = new_mol.num_atoms()
         old_radius = get_covalent_radius(molecule.atomic_numbers[atom2])
         H_radius = get_covalent_radius(1)
-        new_dist = new_mol.get_distance(molecule_to_molecule[atom1], molecule_to_molecule[atom2]) - old_radius + H_radius
-        new_mol.set_distance(molecule_to_molecule[atom1], molecule_to_molecule[atom2], new_dist)
+        new_dist = (
+            new_mol.get_distance(
+                molecule_to_molecule[atom1], molecule_to_molecule[atom2]
+            )
+            - old_radius
+            + H_radius
+        )
+        new_mol.set_distance(
+            molecule_to_molecule[atom1], molecule_to_molecule[atom2], new_dist
+        )
         new_mol.add_bond(molecule_to_molecule[atom1], molecule_to_molecule[atom2])
 
         #### add capping H to new group
         group.add_atom("H", molecule.geometry[atom1])
         molecule_to_group[atom1] = group.num_atoms()
         old_radius = get_covalent_radius(molecule.atomic_numbers[atom1])
-        new_dist = group.get_distance(molecule_to_group[atom2], molecule_to_group[atom1]) - old_radius + H_radius
+        new_dist = (
+            group.get_distance(molecule_to_group[atom2], molecule_to_group[atom1])
+            - old_radius
+            + H_radius
+        )
         group.set_distance(molecule_to_group[atom2], molecule_to_group[atom1], new_dist)
         group.add_bond(molecule_to_group[atom2], molecule_to_group[atom1])
 
         #### add bonds to nascent molecules
         molecule.remove_bond(atom1, atom2)
-        for (a1, a2) in molecule.bonds.edges():
+        for a1, a2 in molecule.bonds.edges():
             if a1 in fragment1:
-                assert a2 in fragment1, "somehow we have another bond between the two groups!"
-                assert molecule_to_molecule[a1] is not None, f"we don't have a mapping for atom {a1}"
-                assert molecule_to_molecule[a2] is not None, f"we don't have a mapping for atom {a2}"
+                assert (
+                    a2 in fragment1
+                ), "somehow we have another bond between the two groups!"
+                assert (
+                    molecule_to_molecule[a1] is not None
+                ), f"we don't have a mapping for atom {a1}"
+                assert (
+                    molecule_to_molecule[a2] is not None
+                ), f"we don't have a mapping for atom {a2}"
                 new_mol.add_bond(molecule_to_molecule[a1], molecule_to_molecule[a2])
             elif a2 in fragment2:
-                assert a2 in fragment2, "somehow we have another bond between the two groups!"
-                assert molecule_to_group[a1] is not None, f"we don't have a mapping for atom {a1}"
-                assert molecule_to_group[a2] is not None, f"we don't have a mapping for atom {a2}"
+                assert (
+                    a2 in fragment2
+                ), "somehow we have another bond between the two groups!"
+                assert (
+                    molecule_to_group[a1] is not None
+                ), f"we don't have a mapping for atom {a1}"
+                assert (
+                    molecule_to_group[a2] is not None
+                ), f"we don't have a mapping for atom {a2}"
                 group.add_bond(molecule_to_group[a1], molecule_to_group[a2])
 
         #### create Group object from group
-        group = cctk.Group.new_from_molecule(attach_to=molecule_to_group[atom1], molecule=group)
+        group = cctk.Group.new_from_molecule(
+            attach_to=molecule_to_group[atom1], molecule=group
+        )
 
         if return_mapping:
             return new_mol, group, molecule_to_molecule, molecule_to_group
@@ -260,7 +325,9 @@ class Group(cctk.Molecule):
         if self._map_from_truncated is not None:
             return self._map_from_truncated
 
-        assert self.bonds.number_of_edges() > 0, "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
+        assert (
+            self.bonds.number_of_edges() > 0
+        ), "need a bond graph to perform this operation -- try calling self.assign_connectivity()!"
         g = copy.deepcopy(self)
         g._add_atomic_numbers_to_nodes()
         tg = copy.deepcopy(g)
@@ -272,6 +339,6 @@ class Group(cctk.Molecule):
         for sg in match.subgraph_isomorphisms_iter():
             if self.attach_to in sg.keys():
                 continue
-            sg = {v: k for k, v in sg.items()} # invert
+            sg = {v: k for k, v in sg.items()}  # invert
             self._map_from_truncated = sg
             return sg

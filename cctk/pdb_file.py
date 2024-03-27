@@ -1,6 +1,7 @@
 from cctk import File
 from cctk.helper_functions import get_symbol
 
+
 class PDBFile(File):
     """
     Generic class for all ``.pdb`` files.
@@ -38,7 +39,6 @@ class PDBFile(File):
         else:
             super().write_file(filename, text)
 
-
     @classmethod
     def write_ensemble_to_trajectory(cls, filename, ensemble):
         """
@@ -50,7 +50,8 @@ class PDBFile(File):
         """
         for idx, molecule in enumerate(ensemble.molecules):
             if idx == 0:
-                cls.write_molecule_to_file(filename, molecule, num=idx+1, append=False)
+                cls.write_molecule_to_file(
+                    filename, molecule, num=idx + 1, append=False
+                )
             else:
-                cls.write_molecule_to_file(filename, molecule, num=idx+1, append=True)
-
+                cls.write_molecule_to_file(filename, molecule, num=idx + 1, append=True)

@@ -9,8 +9,15 @@ from cctk.helper_functions import get_corrected_free_energy
 Functions to help with parsing Gaussian files
 """
 
-def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_info=False, fail_silently=True):
 
+def read_file_fast(
+    file_text,
+    filename,
+    link1idx,
+    max_len=50000,
+    extended_opt_info=False,
+    fail_silently=True,
+):
     #### "Make your bottleneck routines fast, everything else clear" - M. Scott Shell, UCSB
     #### Welcome to the fast part!
 
@@ -21,22 +28,22 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
         "Normal termination",
         "Elapsed time",
         "Multiplicity",
-        "RMS     Force", #5
+        "RMS     Force",  # 5
         "RMS     Displacement",
         "Maximum Force",
         "Maximum Displacement",
         "Cartesian Forces",
-        "Internal  Forces", #10
+        "Internal  Forces",  # 10
         "Predicted change in Energy",
         "thermal Enthalpies",
         "thermal Free Energies",
         "Frequencies",
-        "Temperature", #15
+        "Temperature",  # 15
         "Isotropic",
         "EUMP2",
         "EUMP3",
         "UMP4(SDTQ)",
-        "Wavefunction amplitudes converged", #20
+        "Wavefunction amplitudes converged",  # 20
     ]
 
     #### And here are the blocks of text
@@ -52,12 +59,16 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
             1000,
         ],
         ["Wallingford", "#p", 1],
-        ["Initial Parameters", "! A", 1], #5
+        ["Initial Parameters", "! A", 1],  # 5
         ["Total nuclear spin-spin coupling J", "Leave Link", 1],
         ["Forces (Hartrees/Bohr)", "Cartesian Forces", 1],
-        ["Hirshfeld charges, spin densities, dipoles, and CM5 charges", " Hirshfeld charges", 1],
+        [
+            "Hirshfeld charges, spin densities, dipoles, and CM5 charges",
+            " Hirshfeld charges",
+            1,
+        ],
         ["Mulliken charges", "Sum of Mulliken charges", 1],
-        ["Electronic spatial extent", "Quadrupole moment", 1], #10
+        ["Electronic spatial extent", "Quadrupole moment", 1],  # 10
         ["normal coordinates", "Thermochemistry", 1],
         ["Isotropic =", "Eigenvalues", 1000],
     ]
@@ -89,15 +100,15 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
 
             match = file_text[position]
             i = position + 1
-            while match[-1-stepsize:].find("\n") < 0:
-                match = match + file_text[i:i+stepsize]
+            while match[-1 - stepsize :].find("\n") < 0:
+                match = match + file_text[i : i + stepsize]
                 i += stepsize
 
             match = match.split("\n")[0]
 
             j = position
             while match[:stepsize].find("\n") < 0:
-                match = file_text[j-stepsize:j] + match
+                match = file_text[j - stepsize : j] + match
                 j += -1 * stepsize
 
             match = match.split("\n")[-1]
@@ -116,8 +127,11 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
             file_len = len(file_text)
 
             #### we're looking for the end, but we take steps with length ``stepsize`` to go faster
-            while match[-1 * (stepsize + len(end)):-1].count(end) == 0 and match.count("\n") < max_len:
-                match = match + file_text[i:i+stepsize]
+            while (
+                match[-1 * (stepsize + len(end)) : -1].count(end) == 0
+                and match.count("\n") < max_len
+            ):
+                match = match + file_text[i : i + stepsize]
                 i += stepsize
 
                 if i > file_len:
@@ -137,14 +151,18 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
             else:
                 block_matches[idx].append(match)
 
-    del file_text # here, have your RAM back!
+    del file_text  # here, have your RAM back!
 
     if len(block_matches[1]) == 0:
-        raise ValueError(f"Can't find a title block - something is wrong with {filename}! (cctk requires Gaussian output files to have been run in ``#p`` verbose mode)")
+        raise ValueError(
+            f"Can't find a title block - something is wrong with {filename}! (cctk requires Gaussian output files to have been run in ``#p`` verbose mode)"
+        )
 
     #### and from here, we're off to the races!
     n, g = parse_geometry(block_matches[3])
-    title, link0, route_card, footer, job_types = parse_header_footer(block_matches[0], block_matches[1], block_matches[2], block_matches[4])
+    title, link0, route_card, footer, job_types = parse_header_footer(
+        block_matches[0], block_matches[1], block_matches[2], block_matches[4]
+    )
     energies, scf_iterations = parse_energies(word_matches[0])
     success, elapsed_time = parse_success_elapsed_time(word_matches[2], word_matches[3])
     charge, multip = parse_charge_multiplicity(word_matches[4])
@@ -162,12 +180,22 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
     elif re.search("cisd", route_card, re.IGNORECASE):
         energies = parse_ci_energies(word_matches[20])
 
-    f = cctk.GaussianFile(job_types=job_types, route_card=route_card, link0=link0, footer=footer, success=success, elapsed_time=elapsed_time, title=title)
+    f = cctk.GaussianFile(
+        job_types=job_types,
+        route_card=route_card,
+        link0=link0,
+        footer=footer,
+        success=success,
+        elapsed_time=elapsed_time,
+        title=title,
+    )
 
     molecules = [None] * len(g)
     properties = [{} for _ in range(len(g))]
     for idx, geom in enumerate(g):
-        molecules[idx] = cctk.Molecule(n[0], geom, charge=charge, multiplicity=multip, bonds=bonds, checks=False)
+        molecules[idx] = cctk.Molecule(
+            n[0], geom, charge=charge, multiplicity=multip, bonds=bonds, checks=False
+        )
         if idx < len(energies):
             properties[idx]["energy"] = energies[idx]
         if idx < len(scf_iterations):
@@ -217,22 +245,32 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
 
                 if idx < len(delta_e):
                     change_in_energy = re.sub(r"Energy=", "", delta_e[idx])
-                    properties[idx]["predicted_change_in_energy"] = float(change_in_energy.replace('D', 'E'))
+                    properties[idx]["predicted_change_in_energy"] = float(
+                        change_in_energy.replace("D", "E")
+                    )
 
     if cctk.GaussianJobType.FREQ in job_types and len(molecules):
         enthalpies = extract_parameter(word_matches[12], 6)
         if len(enthalpies) == 1:
             properties[-1]["enthalpy"] = enthalpies[0]
         elif len(enthalpies) > 1:
-            raise ValueError(f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}")
+            raise ValueError(
+                f"unexpected # of enthalpies found!\nenthalpies = {enthalpies}"
+            )
 
         gibbs_vals = extract_parameter(word_matches[13], 7)
         if len(gibbs_vals) == 1:
             properties[-1]["gibbs_free_energy"] = gibbs_vals[0]
         elif len(gibbs_vals) > 1:
-            raise ValueError(f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}")
+            raise ValueError(
+                f"unexpected # gibbs free energies found!\ngibbs free energies = {gibbs_vals}"
+            )
 
-        vibrational_modes = parse_modes(block_matches[11], num_atoms=molecules[-1].num_atoms(), hpmodes=re.search("hpmodes", route_card))
+        vibrational_modes = parse_modes(
+            block_matches[11],
+            num_atoms=molecules[-1].num_atoms(),
+            hpmodes=re.search("hpmodes", route_card),
+        )
         molecules[-1].vibrational_modes = vibrational_modes
 
         frequencies = []
@@ -256,22 +294,37 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
         temperature = extract_parameter(word_matches[15], 1)
         if len(temperature) == 1:
             properties[-1]["temperature"] = temperature[0]
-            corrected_free_energy = get_corrected_free_energy(gibbs_vals[0], frequencies, frequency_cutoff=100.0, temperature=temperature[0])
-            properties[-1]["quasiharmonic_gibbs_free_energy"] = float(corrected_free_energy)
+            corrected_free_energy = get_corrected_free_energy(
+                gibbs_vals[0],
+                frequencies,
+                frequency_cutoff=100.0,
+                temperature=temperature[0],
+            )
+            properties[-1]["quasiharmonic_gibbs_free_energy"] = float(
+                corrected_free_energy
+            )
 
     if cctk.GaussianJobType.NMR in job_types:
-        nmr_shifts, shielding_tensors = read_nmr_shifts(block_matches[12], molecules[0].num_atoms())
+        nmr_shifts, shielding_tensors = read_nmr_shifts(
+            block_matches[12], molecules[0].num_atoms()
+        )
         if nmr_shifts is not None:
-            properties[-1]["isotropic_shielding"] = nmr_shifts.view(cctk.OneIndexedArray)
+            properties[-1]["isotropic_shielding"] = nmr_shifts.view(
+                cctk.OneIndexedArray
+            )
             properties[-1]["shielding_tensors"] = shielding_tensors
 
-        if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search("nmr=spinspin", f.route_card,flags=re.IGNORECASE):
+        if re.search("nmr=mixed", f.route_card, flags=re.IGNORECASE) or re.search(
+            "nmr=spinspin", f.route_card, flags=re.IGNORECASE
+        ):
             couplings = read_j_couplings(block_matches[6], molecules[0].num_atoms())
             if couplings is not None:
                 properties[-1]["j_couplings"] = couplings
 
     if cctk.GaussianJobType.FORCE in job_types and len(molecules):
-        assert len(molecules) == 1, "force jobs should not be combined with optimizations!"
+        assert (
+            len(molecules) == 1
+        ), "force jobs should not be combined with optimizations!"
         force_block = block_matches[7]
         if len(force_block) == 0:
             raise ValueError("no forces to parse!")
@@ -279,14 +332,20 @@ def read_file_fast(file_text, filename, link1idx, max_len=50000, extended_opt_in
         properties[0]["forces"] = forces
 
     if cctk.GaussianJobType.POP in job_types and len(molecules):
-        if re.search("hirshfeld", f.route_card) or re.search("cm5", f.route_card) and len(block_matches[8]) > 0:
+        if (
+            re.search("hirshfeld", f.route_card)
+            or re.search("cm5", f.route_card)
+            and len(block_matches[8]) > 0
+        ):
             charges, spins = parse_hirshfeld(block_matches[8])
             properties[-1]["hirshfeld_charges"] = charges
             properties[-1]["hirshfeld_spins"] = spins
 
     if len(molecules):
         try:
-            charges, dipole, dipole_v = parse_charges_dipole(block_matches[9], block_matches[10])
+            charges, dipole, dipole_v = parse_charges_dipole(
+                block_matches[9], block_matches[10]
+            )
             properties[-1]["mulliken_charges"] = charges
             properties[-1]["dipole_moment"] = dipole
             properties[-1]["dipole_vector"] = dipole_v
@@ -328,15 +387,18 @@ def parse_geometry(blocks):
                 continue
             try:
                 current_nums.append(int(pieces[1]))
-                current_geoms.append([float(pieces[3]), float(pieces[4]), float(pieces[5])])
+                current_geoms.append(
+                    [float(pieces[3]), float(pieces[4]), float(pieces[5])]
+                )
             except Exception:
-                #print(block)
-                #print("\n\n")
-                #print(line)
+                # print(block)
+                # print("\n\n")
+                # print(line)
                 pass
         nums.append(current_nums)
         geoms.append(current_geoms)
     return nums, geoms
+
 
 def parse_header_footer(route_block, title_block, footer_block, link0_block):
     link0 = dict()
@@ -352,8 +414,15 @@ def parse_header_footer(route_block, title_block, footer_block, link0_block):
         route_card += line.lstrip()
 
     if len(footer_block) > 0:
-        footer = "\n".join(list(footer_block[0].split("\n"))[1:])  # get rid of the first line
-        footer = "\n".join([" ".join(list(filter(None, line.split(" ")))) for line in footer.split("\n")])
+        footer = "\n".join(
+            list(footer_block[0].split("\n"))[1:]
+        )  # get rid of the first line
+        footer = "\n".join(
+            [
+                " ".join(list(filter(None, line.split(" "))))
+                for line in footer.split("\n")
+            ]
+        )
 
     for line in link0_block[0].split("\n"):
         if re.match(" \%", line):
@@ -368,6 +437,7 @@ def parse_header_footer(route_block, title_block, footer_block, link0_block):
 
     return title, link0, route_card, footer, job_types
 
+
 def parse_energies(scf_done_block):
     energies = []
     iters = []
@@ -379,17 +449,25 @@ def parse_energies(scf_done_block):
 
     return energies, iters
 
+
 def parse_success_elapsed_time(success_lines, time_lines):
     successes = len(success_lines)
     elapsed_time = 0
     for line in time_lines:
         fields = list(filter(None, line.split(" ")))
-        elapsed_time += int(fields[2]) * 86400 + int(fields[4]) * 3600 + int(fields[6]) * 60 + float(fields[8])
+        elapsed_time += (
+            int(fields[2]) * 86400
+            + int(fields[4]) * 3600
+            + int(fields[6]) * 60
+            + float(fields[8])
+        )
     return successes, elapsed_time
+
 
 def parse_charge_multiplicity(charge_line):
     fields = list(filter(None, charge_line[0].replace("=", " ").split(" ")))
     return int(fields[1]), int(fields[3])
+
 
 def parse_bonds(bonding_block):
     if len(bonding_block) == 0:
@@ -399,12 +477,17 @@ def parse_bonds(bonding_block):
     for line in bonding_block[0].split("\n"):
         if re.search(r"! R", line):
             pieces = list(filter(None, line.split(" ")))
-            atoms = pieces[2].replace("R", "").replace("(", "").replace(")", "").split(",")
+            atoms = (
+                pieces[2].replace("R", "").replace("(", "").replace(")", "").split(",")
+            )
             try:
                 bond_array.append([int(atoms[0]), int(atoms[1])])
             except Exception as e:
-                raise ValueError(f"error parsing line - can't extract atoms!\n{line}\e{e}")
+                raise ValueError(
+                    f"error parsing line - can't extract atoms!\n{line}\e{e}"
+                )
     return bond_array
+
 
 def split_link1_to_text(filename):
     link1_blocks = []
@@ -416,7 +499,8 @@ def split_link1_to_text(filename):
                 link1_blocks.append(current_text)
                 current_text = ""
         link1_blocks.append(current_text)
-    return link1_blocks[1:] #### the first block is just a few lines
+    return link1_blocks[1:]  #### the first block is just a few lines
+
 
 def extract_parameter(lines, position, cast_to_float=True):
     vals = []
@@ -432,14 +516,15 @@ def extract_parameter(lines, position, cast_to_float=True):
             vals.append(pieces[position])
     return vals
 
+
 def parse_forces(force_block):
     forces = []
     try:
         split_block = force_block[0].split("\n")[2:]
     except Exception as e:
-#        print(e)
-#        print("------force block-------")
-#        print(force_block)
+        #        print(e)
+        #        print("------force block-------")
+        #        print(force_block)
         raise e
     for line in split_block:
         fields = re.split(" +", line)
@@ -449,6 +534,7 @@ def parse_forces(force_block):
             forces.append([float(fields[2]), float(fields[3]), float(fields[4])])
 
     return cctk.OneIndexedArray(forces)
+
 
 def parse_charges_dipole(mulliken_block, dipole_block):
     charges = []
@@ -475,6 +561,7 @@ def parse_charges_dipole(mulliken_block, dipole_block):
 
     return cctk.OneIndexedArray(charges), dipole, dipole_v
 
+
 def parse_hirshfeld(hirshfeld_block):
     charges = []
     spins = []
@@ -491,6 +578,7 @@ def parse_hirshfeld(hirshfeld_block):
             spins.append(float(fields[3]))
 
     return cctk.OneIndexedArray(charges), cctk.OneIndexedArray(spins)
+
 
 def parse_modes(freq_block, num_atoms, hpmodes=False):
     freqs = list()
@@ -512,13 +600,15 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
 
         if hpmodes:
             num_cols = len(re.split(" +", lines[0])) - 2
-            current_displacements = [np.zeros(shape=(num_atoms, 3)) for x in range(num_cols)]
+            current_displacements = [
+                np.zeros(shape=(num_atoms, 3)) for x in range(num_cols)
+            ]
 
             if len(freqs):
                 new_freqs = list(filter(None, re.split(" +", lines[0])))[2:]
 
                 if float(new_freqs[-1]) <= float(freqs[-1]):
-                    break # want to skip the non-hpmodes section, so no looping allowed
+                    break  # want to skip the non-hpmodes section, so no looping allowed
                 else:
                     freqs += new_freqs
             else:
@@ -539,7 +629,9 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
                     break
 
                 for col_idx, val in enumerate(fields[3:]):
-                    current_displacements[col_idx][int(fields[1])-1][int(fields[0])-1] = val
+                    current_displacements[col_idx][int(fields[1]) - 1][
+                        int(fields[0]) - 1
+                    ] = val
 
             for d in current_displacements:
                 displacements.append(d.view(cctk.OneIndexedArray))
@@ -584,10 +676,19 @@ def parse_modes(freq_block, num_atoms, hpmodes=False):
 
     modes = list()
     for f, m, k, i, d in zip(freqs, masses, force_ks, intensities, displacements):
-        k *= 143.9326 # mdyne Å**-1 to kcal/mol Å**-2
-        modes.append(cctk.VibrationalMode(frequency=f, reduced_mass=m, force_constant=k, intensity=i, displacements=d))
+        k *= 143.9326  # mdyne Å**-1 to kcal/mol Å**-2
+        modes.append(
+            cctk.VibrationalMode(
+                frequency=f,
+                reduced_mass=m,
+                force_constant=k,
+                intensity=i,
+                displacements=d,
+            )
+        )
 
     return modes
+
 
 def read_j_couplings(lines, n_atoms):
     """
@@ -599,9 +700,9 @@ def read_j_couplings(lines, n_atoms):
         ``couplings`` symmetric 2D np.array of couplings (in Hz) with zero-indexed atoms on both axes
         or None if no couplings were found
     """
-    couplings = np.zeros((n_atoms,n_atoms))
-    n_full_blocks, lines_in_partial_block = divmod(n_atoms,5)
-    n_lines = 5 * (n_full_blocks * (n_full_blocks+1) / 2) + n_full_blocks + 1
+    couplings = np.zeros((n_atoms, n_atoms))
+    n_full_blocks, lines_in_partial_block = divmod(n_atoms, 5)
+    n_lines = 5 * (n_full_blocks * (n_full_blocks + 1) / 2) + n_full_blocks + 1
     if lines_in_partial_block > 0:
         n_lines += 1 + lines_in_partial_block
     n_lines = int(n_lines)
@@ -627,20 +728,20 @@ def read_j_couplings(lines, n_atoms):
 
         # read the column indices
         if read_column_indices:
-#            this_n_columns = len(fields)
-            this_column_indices = [ int(j)-1 for j in fields ]
+            #            this_n_columns = len(fields)
+            this_column_indices = [int(j) - 1 for j in fields]
             i += 1
             read_column_indices = False
             read_row = True
             continue
         elif read_row:
-            row = int(fields[0])-1
-            for j,value in enumerate(fields[1:]):
+            row = int(fields[0]) - 1
+            for j, value in enumerate(fields[1:]):
                 column = this_column_indices[j]
-                value = value.replace("D","E")
+                value = value.replace("D", "E")
                 value = float(value)
-                couplings[row,column] = value
-                couplings[column,row] = value
+                couplings[row, column] = value
+                couplings[column, row] = value
 
             # check if we have read the entire matrix
             if row == n_atoms - 1 and column == n_atoms - 1:
@@ -661,6 +762,7 @@ def read_j_couplings(lines, n_atoms):
 
     return couplings
 
+
 def parse_mp2_energies(lines):
     energies = []
     for line in lines:
@@ -669,6 +771,7 @@ def parse_mp2_energies(lines):
         energy_str = re.sub("D", "E", energy_str)
         energies.append(float(energy_str))
     return energies
+
 
 def parse_mp3_energies(lines):
     energies = []
@@ -679,6 +782,7 @@ def parse_mp3_energies(lines):
         energies.append(float(energy_str))
     return energies
 
+
 def parse_mp4_energies(lines):
     energies = []
     for line in lines:
@@ -687,6 +791,7 @@ def parse_mp4_energies(lines):
         energy_str = re.sub("D", "E", energy_str)
         energies.append(float(energy_str))
     return energies
+
 
 def parse_cc_energies(lines):
     energies = []
@@ -697,8 +802,10 @@ def parse_cc_energies(lines):
         energies.append(float(energy_str))
     return energies
 
+
 def parse_ci_energies(lines):
     return parse_cc_energies(lines)
+
 
 def read_nmr_shifts(blocks, num_atoms):
     """
@@ -715,17 +822,25 @@ def read_nmr_shifts(blocks, num_atoms):
     tensors = []
     for block in blocks:
         lines = block.split("\n")
-        tensor = np.zeros(shape=(3,3))
+        tensor = np.zeros(shape=(3, 3))
         for line in lines:
             fields = line.split()
             # there are 8 on each line but we truncate the first 2 in the block selection process
-            if len(fields) == 6 and fields[0] == "Isotropic" and fields[3] == "Anisotropy":
+            if (
+                len(fields) == 6
+                and fields[0] == "Isotropic"
+                and fields[3] == "Anisotropy"
+            ):
                 fields = line.split()
-                assert len(fields) == 6, f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
+                assert (
+                    len(fields) == 6
+                ), f"Expected 6 fields on an NMR shielding output line but found {len(fields)} instead!"
                 try:
                     shielding = float(fields[2])
                 except Exception:
-                    raise ValueError(f"Error parsing NMR shielding output line:\n{line}")
+                    raise ValueError(
+                        f"Error parsing NMR shielding output line:\n{line}"
+                    )
                 shieldings.append(shielding)
 
         # yes, this is very elegant.
@@ -741,13 +856,16 @@ def read_nmr_shifts(blocks, num_atoms):
         tensors.append(tensor)
 
     if len(shieldings) != 0:
-        assert len(shieldings) == num_atoms, f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
+        assert (
+            len(shieldings) == num_atoms
+        ), f"Expected {num_atoms} shieldings but found {len(shieldings)}!"
         for shielding, tensor in zip(shieldings, tensors):
-            assert 0.01 > abs(np.trace(tensor)/3 - shielding)
+            assert 0.01 > abs(np.trace(tensor) / 3 - shielding)
         return np.asarray(shieldings), tensors
     else:
         #### we can catch this problem later if the file is finished
         return None, None
+
 
 def split_link1(filename):
     """
@@ -763,10 +881,10 @@ def split_link1(filename):
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
             if re.search("Entering Link 1", line):
-                link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
+                link1_blocks.append(
+                    cctk.LazyLineObject(file=filename, start=start_block, end=idx)
+                )
                 start_block = idx
     link1_blocks.append(cctk.LazyLineObject(file=filename, start=start_block, end=idx))
 
-    return link1_blocks[1:] #### the first block is just a few lines
-
-
+    return link1_blocks[1:]  #### the first block is just a few lines
