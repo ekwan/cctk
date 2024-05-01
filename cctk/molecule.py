@@ -163,7 +163,7 @@ class Molecule:
 
         return all(comparisons)
 
-    def assign_connectivity(self, cutoff=0.2, periodic_boundary_conditions=None):
+    def assign_connectivity(self, cutoff=0.3, periodic_boundary_conditions=None):
         """
         Automatically recalculates bonds based on covalent radii. If two atoms are closer than the sum of their covalent radii + ``cutoff`` Angstroms,
         then they are considered bonded.
