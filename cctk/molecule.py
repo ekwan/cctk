@@ -142,6 +142,9 @@ class Molecule:
     def __repr__(self):
         return str(self)  # placeholder
 
+    def __len__(self):
+        return len(self.atomic_numbers)
+
     #    def __eq__(self, other):
     @classmethod
     def equal(cls, mol1, mol2):
