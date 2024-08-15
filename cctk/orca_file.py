@@ -275,7 +275,7 @@ class OrcaFile(File):
                 pass
 
             try:
-                dipole = lines.find_parameter("Magnitude \(Debye\)", 4, 3)
+                dipole = lines.find_parameter(r"Magnitude \(Debye\)", 4, 3)
                 properties[-1]["dipole_moment"] = dipole[0]
             except Exception:
                 pass

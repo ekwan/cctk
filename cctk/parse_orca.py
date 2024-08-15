@@ -15,7 +15,7 @@ def read_geometries(lines, num_to_find):
     geometries = []
 
     geom_blocks = lines.search_for_block(
-        "CARTESIAN COORDINATES \(ANGSTROEM\)",
+        r"CARTESIAN COORDINATES \(ANGSTROEM\)",
         "CARTESIAN COORDINATES",
         join="\n",
         count=num_to_find,
@@ -72,7 +72,7 @@ def split_multiple_inputs(filename):
     start_block = 0
     with open(filename, "r") as lines:
         for idx, line in enumerate(lines):
-            if re.search("COMPOUND JOB  \d{1,}", line):
+            if re.search(r"COMPOUND JOB  \d{1,}", line):
                 output_blocks.append(
                     LazyLineObject(file=filename, start=start_block, end=idx)
                 )
@@ -189,7 +189,7 @@ def read_blocks_and_variables(lines):
 
 def extract_input_file(lines):
     input_block = lines.search_for_block(
-        "INPUT FILE", "\*\*\*\*END OF INPUT\*\*\*\*", join="\n"
+        r"INPUT FILE", "\*\*\*\*END OF INPUT\*\*\*\*", join="\n"
     )
     input_lines = []
     for line in input_block.split("\n")[3:]:
@@ -234,7 +234,7 @@ def read_freqs(lines, successful_freq):
 
 def read_gradients(lines, num_to_find):
     grad_blocks = lines.search_for_block(
-        "Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find
+        r"Geometry convergence", "Max\(Bonds", join="\n", count=num_to_find
     )
     if grad_blocks is None:
         return

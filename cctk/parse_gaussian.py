@@ -425,7 +425,7 @@ def parse_header_footer(route_block, title_block, footer_block, link0_block):
         )
 
     for line in link0_block[0].split("\n"):
-        if re.match(" \%", line):
+        if re.match(r" \%", line):
             pieces = line[2:].split("=")
             link0[pieces[0]] = pieces[1]
 
@@ -844,15 +844,15 @@ def read_nmr_shifts(blocks, num_atoms):
                 shieldings.append(shielding)
 
         # yes, this is very elegant.
-        tensor[0][0] = float(re.search("XX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[0][1] = float(re.search("XY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[0][2] = float(re.search("XZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][0] = float(re.search("YX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][1] = float(re.search("YY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[1][2] = float(re.search("YZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][0] = float(re.search("ZX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][1] = float(re.search("ZY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
-        tensor[2][2] = float(re.search("ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][0] = float(re.search(r"XX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][1] = float(re.search(r"XY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[0][2] = float(re.search(r"XZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][0] = float(re.search(r"YX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][1] = float(re.search(r"YY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[1][2] = float(re.search(r"YZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][0] = float(re.search(r"ZX=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][1] = float(re.search(r"ZY=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
+        tensor[2][2] = float(re.search(r"ZZ=\s+(?P<val>-?\d+\.\d+)", block).group("val"))
         tensors.append(tensor)
 
     if len(shieldings) != 0:

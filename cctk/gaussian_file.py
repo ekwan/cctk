@@ -544,7 +544,7 @@ class GaussianFile(File):
 
         for idx, line in enumerate(lines):
             if header is None:
-                if re.match("\%", line):
+                if re.match(r"\%", line):
                     pieces = line[1:].split("=")
                     link0[pieces[0]] = pieces[1]
                     continue
