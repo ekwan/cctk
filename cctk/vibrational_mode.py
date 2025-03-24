@@ -213,7 +213,7 @@ class VibrationalMode:
         Returns the value of the classical distribution at the specified ``x`` value.
         """
         max_x = self.classical_turning_point()
-        assert (x <= max_x) and (x >= -1 * max_x), "x must be in [-max_x, max_x]"
+        assert (x <= max_x) and (x >= -1 * max_x), f"x ({x:.3f} must be in [{-max_x:.3f}, {max_x:.3f}]"
         return 1 / (math.pi * math.sqrt(max_x**2 - x**2))
 
     def classical_turning_point(self, energy=None):
