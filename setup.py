@@ -11,7 +11,7 @@ setup(
     packages=["cctk", "cctk.data", "cctk.groups"],
 #    include_package_data=True,
     package_data={"cctk.data": ["*"], "cctk.groups": ["*"],},
-    version="v0.2.26",
+    version="v0.2.27",
     license="Apache 2.0",
     description="computational chemistry toolkit",
     author="Corin Wagen and Eugene Kwan",
