@@ -4,7 +4,7 @@ import re
 import numpy as np
 import networkx as nx
 from scipy.spatial.distance import cdist
-import pkg_resources
+from importlib.metadata import version
 import yaml
 
 import cctk
@@ -2013,7 +2013,7 @@ class Molecule:
         if self.name is None:
             self.name = "name"
 
-        cctk_version = pkg_resources.get_distribution("cctk").version
+        cctk_version = version("wheel")
 
         store_dict = {
             "name": self.name,
@@ -2041,7 +2041,7 @@ class Molecule:
             store_dict = yaml.safe_load(string)
 
             if check_version:
-                cctk_version = pkg_resources.get_distribution("cctk").version
+                cctk_version = version("wheel")
                 assert (
                     cctk_version == store_dict["cctk_version"]
                 ), f"Warning: the data was saved in cctk {store_dict['cctk_version']} but is being loaded in cctk {cctk_version}!"
